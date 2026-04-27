@@ -8,14 +8,16 @@ use tracing::error;
 
 use app::state::AppState;
 use models::data::{Data, ShoppingData};
-use models::shopping::{ShoppingList, ShoppingListDetails, ShoppingListItemForCreate};
+use models::shopping::{
+    ShoppingList, ShoppingListDetails, ShoppingListItemForCreate, ShoppingListItemForUpdate,
+};
 use uuid::Uuid;
 
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::middleware::mw_auth::RequireAuth;
-use crate::schemas::shopping::ListItemPayload;
+use crate::schemas::shopping::{ListItemPayload, ListPayload};
 use crate::{Error, Result};
 
 /// Handles fetching the user's shopping lists.
@@ -85,6 +87,49 @@ pub async fn shopping_list_delete_handler(
     }
 
     (StatusCode::SEE_OTHER, [("HX-Redirect", "/shopping/lists")]).into_response()
+}
+
+pub async fn shopping_list_label_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path((list_id, label_id)): Path<(Uuid, i64)>,
+) -> impl IntoResponse {
+    match ShoppingList::label(&state.mm, label_id).await {
+        Ok(label) => {
+            templates::shopping::render_label_edit(label, list_id, label_id).into_response()
+        }
+        Err(err) => {
+            error!("Failed to get shopping list label: {err}");
+            broadcast_error(&state, user.id, "Failed to get shopping list label.").await;
+            Error::Database.into_response()
+        }
+    }
+}
+
+pub async fn shopping_list_label_put_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path((list_id, label_id)): Path<(Uuid, i64)>,
+    Form(payload): Form<ListPayload>,
+) -> impl IntoResponse {
+    let new_label_id = match ShoppingList::get_or_insert_label(&state.mm, &payload.name).await {
+        Ok(id) => id,
+        Err(err) => {
+            error!("Failed to update shopping list label: {err}");
+            broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    if let Err(err) =
+        ShoppingList::update_item_labels(&state.mm, list_id, label_id, new_label_id, user.id).await
+    {
+        error!("Failed to update shopping list label: {err}");
+        broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
+        return Error::Database.into_response();
+    }
+
+    templates::shopping::render_label(&payload.name, list_id, new_label_id).into_response()
 }
 
 pub async fn shopping_lists_post_handler(
@@ -168,4 +213,56 @@ pub async fn shopping_list_item_delete_handler(
     }
 
     (StatusCode::OK).into_response()
+}
+
+pub async fn shopping_list_item_put_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path((list_id, item_id)): Path<(Uuid, i64)>,
+    Form(payload): Form<ListItemPayload>,
+) -> impl IntoResponse {
+    let item_u = ShoppingListItemForUpdate {
+        ingredient: Some(payload.item),
+        quantity: payload.quantity,
+        label: None,
+        position: None,
+        is_checked: None,
+    };
+
+    if let Err(err) = ShoppingList::update_item(&state.mm, list_id, item_id, item_u, user.id).await
+    {
+        error!("Failed to update shopping list item: {err:?}");
+        broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
+        return Error::Database.into_response();
+    }
+
+    match ShoppingList::get_item(&state.mm, list_id, item_id, user.id).await {
+        Ok(item) => templates::shopping::render_shopping_list_item(list_id, &item).into_response(),
+        Err(err) => {
+            error!("Failed to get shopping list item: {err:?}");
+            broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
+            Error::Database.into_response()
+        }
+    }
+}
+
+pub async fn shopping_list_item_edit_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path((list_id, item_id)): Path<(Uuid, i64)>,
+) -> impl IntoResponse {
+    match ShoppingList::get_item(&state.mm, list_id, item_id, user.id).await {
+        Ok(item) => {
+            templates::shopping::shopping_list_item(list_id, Some(&item.label), Some(&item))
+                .into_response()
+        }
+        Err(err) => {
+            error!("Failed to get shopping list item: {err:?}");
+            broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
+            Error::EntityNotFound {
+                entity: "shopping_list_item",
+            }
+            .into_response()
+        }
+    }
 }

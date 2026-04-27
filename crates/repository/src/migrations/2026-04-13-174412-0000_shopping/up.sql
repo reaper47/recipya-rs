@@ -26,7 +26,7 @@ CREATE TABLE shopping_list_items (
   shopping_list_id uuid NOT NULL REFERENCES shopping_lists (id) ON DELETE CASCADE,
   ingredient text NOT NULL CHECK (trim(ingredient) <> ''),
   quantity text CHECK (trim(quantity) <> ''),
-  shopping_list_label_id int8 REFERENCES shopping_list_labels (id) ON DELETE SET NULL,
+  shopping_list_label_id int8 NOT NULL DEFAULT 1 REFERENCES shopping_list_labels (id) ON DELETE SET DEFAULT,
   position int4 NOT NULL DEFAULT 0 CHECK (position >= 0),
   is_checked boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -63,6 +63,14 @@ CREATE INDEX idx_shopping_list_items_shopping_list_label_id ON shopping_list_ite
 CREATE INDEX idx_shopping_list_recipes_recipe_id ON shopping_list_recipes (recipe_id);
 
 CREATE INDEX idx_shopping_list_items_list_order ON shopping_list_items (shopping_list_id, position);
+
+---
+--- Inserts
+---
+INSERT INTO
+  shopping_list_labels (name)
+VALUES
+  ('No label');
 
 ---
 --- Functions

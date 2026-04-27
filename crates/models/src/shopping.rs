@@ -50,16 +50,16 @@ struct ShoppingListLabelForInsert<'a> {
 #[diesel(belongs_to(ShoppingList), belongs_to(ShoppingListLabel))]
 #[diesel(table_name = schema::shopping_list_items)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-struct ShoppingListItem {
-    id: i64,
-    shopping_list_id: Uuid,
-    ingredient: String,
-    quantity: Option<String>,
-    shopping_list_label_id: Option<i64>,
-    position: i32,
-    is_checked: bool,
-    created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
+pub struct ShoppingListItem {
+    pub id: i64,
+    pub shopping_list_id: Uuid,
+    pub ingredient: String,
+    pub quantity: Option<String>,
+    pub shopping_list_label_id: i64,
+    pub position: i32,
+    pub is_checked: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 /// Represents a shopping list item for creation.
@@ -141,8 +141,7 @@ impl ShoppingListDetails {
         let mut map: IndexMap<&str, Vec<&ShoppingListItemDetails>> = IndexMap::new();
 
         for item in &self.items {
-            let label = item.label.as_deref().unwrap_or("No label");
-            map.entry(label)
+            map.entry(&item.label)
                 .and_modify(|v| v.push(item))
                 .or_insert(vec![item]);
         }
@@ -157,7 +156,8 @@ pub struct ShoppingListItemDetails {
     pub id: i64,
     pub ingredient: String,
     pub quantity: Option<String>,
-    pub label: Option<String>,
+    pub label_id: i64,
+    pub label: String,
     pub position: i32,
     pub recipe: Option<ShoppingListRecipeDetails>,
     pub is_checked: bool,
@@ -175,6 +175,12 @@ pub struct ShoppingListRecipeDetails {
 #[derive(QueryableByName)]
 struct IdRow {
     #[diesel(sql_type = diesel::sql_types::BigInt)]
+    id: i64,
+}
+
+#[derive(QueryableByName)]
+struct QueryableLabel {
+    #[diesel(sql_type = diesel::sql_types::Int8)]
     id: i64,
 }
 
@@ -257,7 +263,8 @@ impl ShoppingList {
             id: item.id,
             ingredient: item.ingredient,
             quantity: item.quantity,
-            label: item_c.label,
+            label_id: label_id.unwrap_or(1),
+            label: item_c.label.unwrap_or_else(|| "No label".to_string()),
             position: item.position,
             recipe: None,
             is_checked: false,
@@ -297,6 +304,86 @@ impl ShoppingList {
         Ok(())
     }
 
+    /// Gets the details of an item.
+    pub async fn get_item(
+        mm: &ModelManager,
+        list_id: Uuid,
+        item_id: i64,
+        user_id: Uuid,
+    ) -> Result<ShoppingListItemDetails> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        let (item, label) = schema::shopping_list_items::table
+            .inner_join(
+                schema::shopping_list_labels::table
+                    .on(schema::shopping_list_items::shopping_list_label_id
+                        .eq(schema::shopping_list_labels::id)),
+            )
+            .filter(schema::shopping_list_items::shopping_list_id.eq(list_id))
+            .filter(schema::shopping_list_items::id.eq(item_id))
+            .select((
+                ShoppingListItem::as_select(),
+                schema::shopping_list_labels::name,
+            ))
+            .first::<(ShoppingListItem, String)>(&mut conn)
+            .await
+            .map_err(|_| Error::EntityNotFound {
+                entity: "shopping_list_item",
+                id: item_id.to_string(),
+            })?;
+
+        Ok(ShoppingListItemDetails {
+            id: item.id,
+            ingredient: item.ingredient,
+            quantity: item.quantity,
+            label_id: item.shopping_list_label_id,
+            label,
+            position: item.position,
+            recipe: None,
+            is_checked: item.is_checked,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+        })
+    }
+
+    /// Returns the label of a shopping list item.
+    pub async fn label(mm: &ModelManager, label_id: i64) -> Result<String> {
+        let label = schema::shopping_list_labels::table
+            .filter(schema::shopping_list_labels::id.eq(label_id))
+            .select(schema::shopping_list_labels::name)
+            .first::<String>(&mut mm.pool.get().await?)
+            .await
+            .map_err(|_| Error::EntityNotFound {
+                entity: "shopping_list_label",
+                id: label_id.to_string(),
+            })?;
+
+        Ok(label)
+    }
+    /// Gets or inserts a label by name, returning the label ID.
+    pub async fn get_or_insert_label<T: AsRef<str>>(mm: &ModelManager, name: T) -> Result<i64> {
+        let mut conn = mm.pool.get().await?;
+
+        let mut name = name.as_ref();
+        if name.is_empty() {
+            name = "No label";
+        }
+
+        let label_id = diesel::sql_query(
+            "INSERT INTO shopping_list_labels (name) VALUES ($1)
+                ON CONFLICT (lower(name)) DO UPDATE SET name = EXCLUDED.name
+                RETURNING id",
+        )
+        .bind::<diesel::sql_types::Text, _>(name)
+        .get_result::<QueryableLabel>(&mut conn)
+        .await?
+        .id;
+
+        Ok(label_id)
+    }
+
     /// Updates the title of a shopping list.
     pub async fn update_title<T: AsRef<str>>(
         mm: &ModelManager,
@@ -311,6 +398,27 @@ impl ShoppingList {
         diesel::update(schema::shopping_lists::table)
             .filter(schema::shopping_lists::id.eq(list_id))
             .set(schema::shopping_lists::name.eq(title.as_ref()))
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Updates the labels of an item in a shopping list.
+    pub async fn update_item_labels(
+        mm: &ModelManager,
+        list_id: Uuid,
+        old_label_id: i64,
+        new_label_id: i64,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        let _ = diesel::update(schema::shopping_list_items::table)
+            .filter(schema::shopping_list_items::shopping_list_label_id.eq(old_label_id))
+            .set(schema::shopping_list_items::shopping_list_label_id.eq(new_label_id))
             .execute(&mut conn)
             .await?;
 
@@ -418,21 +526,16 @@ impl ShoppingListDetails {
 
         let items = schema::shopping_list_items::table
             .filter(schema::shopping_list_items::shopping_list_id.eq(list_id))
-            .left_join(schema::shopping_list_labels::table)
+            .inner_join(schema::shopping_list_labels::table)
             .left_join(schema::shopping_list_recipes::table.left_join(schema::recipes::table))
             .order(schema::shopping_list_items::position.asc())
             .select((
                 ShoppingListItem::as_select(),
-                schema::shopping_list_labels::name.nullable(),
+                schema::shopping_list_labels::name,
                 schema::recipes::id.nullable(),
                 schema::recipes::name.nullable(),
             ))
-            .load::<(
-                ShoppingListItem,
-                Option<String>,
-                Option<i64>,
-                Option<String>,
-            )>(&mut conn)
+            .load::<(ShoppingListItem, String, Option<i64>, Option<String>)>(&mut conn)
             .await?
             .into_iter()
             .map(
@@ -441,6 +544,7 @@ impl ShoppingListDetails {
                     ingredient: item.ingredient,
                     quantity: item.quantity,
                     position: item.position,
+                    label_id: item.shopping_list_label_id,
                     label: label_name,
                     is_checked: item.is_checked,
                     recipe: recipe_id
@@ -558,7 +662,8 @@ mod tests {
                     id: 1,
                     ingredient: "chicken".into(),
                     quantity: Some("1 cup".into()),
-                    label: Some("Meat".into()),
+                    label_id: 2,
+                    label: "Meat".into(),
                     position: 1,
                     recipe: None,
                     is_checked: false,
@@ -635,7 +740,8 @@ mod tests {
                         id: 1,
                         ingredient: "chicken".into(),
                         quantity: Some("1 cup".into()),
-                        label: Some("Meat".into()),
+                        label_id: 2,
+                        label: "Meat".into(),
                         position: 1,
                         recipe: None,
                         is_checked: false,
@@ -646,7 +752,8 @@ mod tests {
                         id: 2,
                         ingredient: "beef".into(),
                         quantity: Some("500g".into()),
-                        label: Some("Meat".into()),
+                        label_id: 2,
+                        label: "Meat".into(),
                         position: 2,
                         recipe: None,
                         is_checked: false,
@@ -696,7 +803,8 @@ mod tests {
                         id: 1,
                         ingredient: "chicken".into(),
                         quantity: Some("1 cup".into()),
-                        label: Some("Meat".into()),
+                        label_id: 2,
+                        label: "Meat".into(),
                         position: 1,
                         recipe: Some(ShoppingListRecipeDetails {
                             id: 1,
@@ -710,7 +818,8 @@ mod tests {
                         id: 2,
                         ingredient: "beef".into(),
                         quantity: Some("500g".into()),
-                        label: Some("Meat".into()),
+                        label_id: 2,
+                        label: "Meat".into(),
                         position: 2,
                         recipe: Some(ShoppingListRecipeDetails {
                             id: 2,
@@ -777,7 +886,8 @@ mod tests {
                 id: 1,
                 ingredient: new_item.ingredient,
                 quantity: new_item.quantity,
-                label: Some("Super C".into()),
+                label_id: 3,
+                label: "Super C".into(),
                 position: 1,
                 recipe: None,
                 is_checked: false,
@@ -852,6 +962,80 @@ mod tests {
         assert!(got.is_empty());
         let got_res = ShoppingListDetails::get(&state.mm, list_id, user_id).await;
         assert!(got_res.is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_item_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        let got = ShoppingList::get_item(&state.mm, list_id, item.id, user_id).await?;
+
+        assert_eq!(got.id, item.id);
+        assert_eq!(got.ingredient, a_meat_item().ingredient);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_label_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+
+        let got = ShoppingList::label(&state.mm, 1).await?;
+
+        assert_eq!(got, "No label");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_or_insert_label_label_exists_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        let got = ShoppingList::get_or_insert_label(&state.mm, "No label").await?;
+
+        assert_eq!(got, 1);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_or_insert_label_label_not_exists_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        let got = ShoppingList::get_or_insert_label(&state.mm, "Veggies").await?;
+
+        assert_eq!(got, 3);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_update_item_labels_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        ShoppingList::update_item_labels(&state.mm, list_id, item.label_id, 1, user_id).await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        assert_eq!(got.items[0].label, "No label");
         Ok(())
     }
 }

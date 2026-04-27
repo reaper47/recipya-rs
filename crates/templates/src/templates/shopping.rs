@@ -9,8 +9,8 @@ use uuid::Uuid;
 
 use crate::templates::{
     icons::{
-        icon_arrows_up_down, icon_carrot, icon_pencil, icon_plus, icon_plus_circle, icon_scale,
-        icon_trash,
+        icon_arrows_up_down, icon_carrot, icon_check, icon_pencil, icon_plus, icon_plus_circle,
+        icon_scale, icon_trash,
     },
     layouts,
     pagination::pagination,
@@ -69,9 +69,7 @@ fn render_lists_index(data: &Data) -> Markup {
                                     div class="min-w-[33rem] place-self-center" {
                                         @if list.items.is_empty() {
                                             details open {
-                                                summary class="text-left" {
-                                                    "No label"
-                                                }
+                                                (render_label("No label", list.id, 1))
                                                 ol class="list bg-base-100 rounded-box shadow-md" {
                                                     (new_shopping_list_item(list.id, None))
                                                 }
@@ -80,8 +78,14 @@ fn render_lists_index(data: &Data) -> Markup {
                                             @let items = list.items_per_label();
                                             @for (label, items) in items {
                                                 details open {
-                                                    summary class="text-left" {
+                                                    summary class="text-left cursor-default" {
                                                         (label)
+                                                        button class="btn join-item btn-square btn-sm ml-2 mb-1"
+                                                            hx-target="closest summary"
+                                                            hx-swap="outerHTML"
+                                                            hx-get=(format!("/shopping/lists/{}/labels/{}/edit", list.id, items.first().map_or(1, |i| i.label_id))) {
+                                                            (icon_pencil(false))
+                                                        }
                                                     }
                                                     ol class="list bg-base-100 rounded-box shadow-md" {
                                                         @for item in items {
@@ -190,9 +194,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
                 div class="grid" {
                     div class="min-w-[33rem] place-self-center" {
                         details open {
-                            summary class="text-left" {
-                                "No label"
-                            }
+                            (render_label("No label", list_id, 1))
                             ol class="list bg-base-100 rounded-box shadow-md" {
                                 (new_shopping_list_item(list_id, None))
                             }
@@ -233,29 +235,58 @@ fn shopping_list_actions(list_id: Uuid) -> Markup {
 }
 
 fn new_shopping_list_item(list_id: Uuid, label: Option<&str>) -> Markup {
+    shopping_list_item(list_id, label, None)
+}
+
+/// Renders a new shopping list item form as an HTML list item.
+pub fn shopping_list_item<T: AsRef<str>>(
+    list_id: Uuid,
+    label: Option<T>,
+    item: Option<&ShoppingListItemDetails>,
+) -> Markup {
+    let ingredient = item
+        .as_ref()
+        .map(|i| i.ingredient.as_str())
+        .unwrap_or_default();
+
+    let quantity = item
+        .as_ref()
+        .map(|i| i.quantity.as_deref().unwrap_or_default())
+        .unwrap_or_default();
+
     html! {
         li class="list-row grid grid-cols-[1fr_auto]" {
             div class="grid gap-1 min-w-0" {
                 label class="input input-sm" {
                     (icon_carrot())
-                    input required type="text" placeholder="Surloin steak" name="item";
+                    input required type="text" placeholder="Surloin steak" name="item" value=(ingredient);
                 }
                 label class="input input-sm" {
                     (icon_scale())
-                    input type="text" placeholder="500g (optional)" name="quantity";
+                    input type="text" placeholder="500g (optional)" name="quantity" value=(quantity);
                 }
-                @if let Some(label) = label {
+                @if let Some(label) = label.map(|l| l.as_ref().to_string()) {
                     input type="hidden" name="label" value=(label);
                 }
             }
             div class="grid grid-flow-col gap-1 place-self-end" {
                 div class="grid grid-col gap-2 w-12" {
-                    button class="btn join-item btn-sm"
-                        hx-post=(format!("/shopping/lists/{list_id}/items"))
-                        hx-include="closest li"
-                        hx-target="closest li"
-                        hx-swap="beforebegin" {
-                        (icon_plus())
+                    @if let Some(item) = item {
+                        button class="btn join-item btn-sm"
+                            hx-put=(format!("/shopping/lists/{list_id}/items/{}", item.id))
+                            hx-include="closest li"
+                            hx-target="closest li"
+                            hx-swap="outerHTML" {
+                            (icon_check())
+                        }
+                    } @else {
+                        button class="btn join-item btn-sm"
+                            hx-post=(format!("/shopping/lists/{list_id}/items"))
+                            hx-include="closest li"
+                            hx-target="closest li"
+                            hx-swap="beforebegin" {
+                            (icon_plus())
+                        }
                     }
                 }
             }
@@ -278,7 +309,10 @@ pub fn render_shopping_list_item(list_id: Uuid, item: &ShoppingListItemDetails) 
                 }
             }
             div class="flex gap-1" {
-                button class="btn join-item btn-square btn-sm" {
+                button class="btn join-item btn-square btn-sm"
+                    hx-target="closest li"
+                    hx-swap="outerHTML"
+                    hx-get=(format!("/shopping/lists/{list_id}/items/{}/edit", item.id)) {
                     (icon_pencil(false))
                 }
                 button class="btn join-item btn-square btn-sm"
@@ -289,6 +323,39 @@ pub fn render_shopping_list_item(list_id: Uuid, item: &ShoppingListItemDetails) 
                 }
                 button class="btn join-item btn-square btn-sm cursor-grab h-full" {
                     (icon_arrows_up_down())
+                }
+            }
+        }
+    }
+}
+
+/// Renders the label.
+pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Markup {
+    html! {
+        summary class="text-left cursor-default" {
+            (label.as_ref())
+            button class="btn join-item btn-square btn-sm ml-2 mb-1"
+                hx-target="closest summary"
+                hx-swap="outerHTML"
+                hx-get=(format!("/shopping/lists/{list_id}/labels/{label_id}/edit")) {
+                (icon_pencil(false))
+            }
+        }
+    }
+}
+
+/// Renders the edit label form.
+pub fn render_label_edit<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Markup {
+    html! {
+        summary class="text-left cursor-default" {
+            input type="text" name="name" class="input input-sm" value=(label.as_ref())
+            span {
+                button class="btn join-item btn-square btn-sm ml-2 mb-1"
+                    hx-include="closest summary"
+                    hx-target="closest summary"
+                    hx-swap="outerHTML"
+                    hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
+                    (icon_check())
                 }
             }
         }
