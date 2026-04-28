@@ -3,7 +3,7 @@ use maud::{Markup, html};
 use models::{
     data::{Data, PaginationData, ShoppingData},
     settings::UserSettingDetails,
-    shopping::ShoppingListItemDetails,
+    shopping::{ShoppingListDetails, ShoppingListItemDetails},
 };
 use uuid::Uuid;
 
@@ -63,40 +63,8 @@ fn render_lists_index(data: &Data) -> Markup {
                                     div {
                                         (shopping_list_actions(list.id))
                                     }
-                                    h1 class="text-2xl font-bold underline p-2" {
-                                        (list.name)
-                                    }
-                                    div class="min-w-[33rem] place-self-center" {
-                                        @if list.items.is_empty() {
-                                            details open {
-                                                (render_label("No label", list.id, 1))
-                                                ol class="list bg-base-100 rounded-box shadow-md" {
-                                                    (new_shopping_list_item(list.id, None))
-                                                }
-                                            }
-                                        } @else {
-                                            @let items = list.items_per_label();
-                                            @for (label, items) in items {
-                                                details open {
-                                                    summary class="text-left cursor-default" {
-                                                        (label)
-                                                        button class="btn join-item btn-square btn-sm ml-2 mb-1"
-                                                            hx-target="closest summary"
-                                                            hx-swap="outerHTML"
-                                                            hx-get=(format!("/shopping/lists/{}/labels/{}/edit", list.id, items.first().map_or(1, |i| i.label_id))) {
-                                                            (icon_pencil(false))
-                                                        }
-                                                    }
-                                                    ol class="list bg-base-100 rounded-box shadow-md" {
-                                                        @for item in items {
-                                                            (render_shopping_list_item(list.id, item))
-                                                        }
-                                                        (new_shopping_list_item(list.id, Some(label)))
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    (shopping_list_title(list.id, &list.name))
+                                    (item_sections(list))
                                 }
                                 None => {
                                     p class="text-left" {
@@ -107,6 +75,55 @@ fn render_lists_index(data: &Data) -> Markup {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+fn item_sections(list: &ShoppingListDetails) -> Markup {
+    html! {
+        div class="min-w-[33rem] place-self-center" {
+            @if list.items.is_empty() {
+                details open {
+                    (render_label("No label", list.id, 1))
+                    ol class="list bg-base-100 rounded-box shadow-md" {
+                        (new_shopping_list_item(list.id, None))
+                    }
+                }
+            } @else {
+                @let items = list.items_per_label();
+                @for (label, items) in items {
+                    details open {
+                        summary class="text-left cursor-default" {
+                            (label)
+                            button class="btn join-item btn-square btn-sm ml-2 mb-1"
+                                hx-target="closest summary"
+                                hx-swap="outerHTML"
+                                hx-get=(format!("/shopping/lists/{}/labels/{}/edit", list.id, items.first().map_or(1, |i| i.label_id))) {
+                                (icon_pencil(false))
+                            }
+                        }
+                        ol class="list bg-base-100 rounded-box shadow-md" {
+                            @for item in items {
+                                (render_shopping_list_item(list.id, item))
+                            }
+                            (new_shopping_list_item(list.id, Some(label)))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Renders the shopping list.
+pub fn render_shopping_list(list: &ShoppingListDetails) -> Markup {
+    html! {
+        div {
+            (shopping_list_actions(list.id))
+            (shopping_list_title(list.id, &list.name))
+            div class="grid" {
+                (item_sections(list))
             }
         }
     }
@@ -135,13 +152,14 @@ fn render_shopping_lists_list(shopping: &ShoppingData) -> Markup {
             @if shopping_lists.len() < 10 { " h-full" }
         } {
             @for (idx, list) in shopping_lists.iter().enumerate() {
-                li class=[selected.as_ref().map_or(idx == 0, |l| l.id == list.id).then_some("bg-base-300")]
+                li id=(format!("shopping-list-sidebar-{}", list.id))
+                    class=[selected.as_ref().map_or(idx == 0, |l| l.id == list.id).then_some("bg-base-300")]
                     hx-get=(format!("/shopping/lists/{}", list.id))
                     hx-target="#shopping-list-view-pane"
                     hx-push-url="false"
                     hx-trigger="mousedown"
                     hx-on:mousedown=(format!(
-                        "document.querySelectorAll('#shopping-list-menu li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{}';", list.id
+                        "document.querySelectorAll('#shopping-lists li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{}';", list.id
                     )) {
                     div class="flex justify-between items-center gap-2 w-full" {
                         div class="min-w-0" {
@@ -164,13 +182,14 @@ fn render_shopping_lists_list(shopping: &ShoppingData) -> Markup {
 /// Renders the new shopping list.
 pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
     html! {
-        li class="bg-base-300"
+        li id=(format!("shopping-list-sidebar-{list_id}"))
+            class="bg-base-300"
             hx-get=(&format!("/shopping/lists/{list_id}"))
             hx-target="#shopping-list-view-pane"
             hx-push-url="false"
             hx-trigger="mousedown"
             hx-on:mousedown=(format!(
-                "document.querySelectorAll('#shopping-list-menu li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{list_id}';"
+                "document.querySelectorAll('#shopping-lists li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{list_id}';"
             )) {
             div class="flex justify-between items-center gap-2 w-full" {
                 div class="min-w-0" {
@@ -190,6 +209,14 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
                 (shopping_list_actions(list_id))
                 h1 class="text-2xl font-bold underline p-2" {
                     (title.as_ref())
+                    span class="ml-2" {
+                        button class="btn join-item btn-square btn-sm"
+                            hx-target="closest h1"
+                            hx-swap="outerHTML"
+                            hx-get=(format!("/shopping/lists/{list_id}/edit")) {
+                            (icon_pencil(false))
+                        }
+                    }
                 }
                 div class="grid" {
                     div class="min-w-[33rem] place-self-center" {
@@ -287,6 +314,77 @@ pub fn shopping_list_item<T: AsRef<str>>(
                             hx-swap="beforebegin" {
                             (icon_plus())
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Renders the shopping list title.
+pub fn render_shopping_list_title<T: AsRef<str>>(
+    list_id: Uuid,
+    title: T,
+    num_items: i64,
+) -> Markup {
+    let title = title.as_ref();
+
+    html! {
+        (shopping_list_title(list_id, title))
+
+        li id=(format!("shopping-list-sidebar-{list_id}"))
+            class="bg-base-300"
+            hx-swap-oob="true"
+            hx-get=(format!("/shopping/lists/{list_id}"))
+            hx-target="#shopping-list-view-pane"
+            hx-push-url="false"
+            hx-trigger="mousedown"
+            hx-on:mousedown=(format!(
+                "document.querySelectorAll('#shopping-lists li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{list_id}'"
+            )) {
+            div class="flex justify-between items-center gap-2 w-full" {
+                div class="min-w-0" {
+                    p class="font-bold text-sm" {
+                        (title)
+                    }
+                }
+                div class="flex flex-col items-end gap-1 shrink-0" {
+                    div class="badge badge-xs badge-primary" {
+                        (num_items)
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn shopping_list_title<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
+    html! {
+        h1 class="text-2xl font-bold underline p-2" {
+            (title.as_ref())
+            span class="ml-2" {
+                button class="btn join-item btn-square btn-sm"
+                    hx-target="closest h1"
+                    hx-swap="outerHTML"
+                    hx-get=(format!("/shopping/lists/{}/edit", list_id)) {
+                    (icon_pencil(false))
+                }
+            }
+        }
+
+
+    }
+}
+
+/// Renders the shopping list title edit form.
+pub fn render_shopping_list_title_edit<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
+    html! {
+        form hx-put=(format!("/shopping/lists/{list_id}")) hx-swap="outerHTML" {
+            h1 class="text-2xl font-bold underline p-2" {
+                input required type="text" name="name" class="input input-lg text-center mr-1" value=(title.as_ref())
+                span class="ml-2" {
+                    button class="btn join-item btn-square btn-lg" {
+                        (icon_check())
                     }
                 }
             }

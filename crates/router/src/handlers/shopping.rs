@@ -75,6 +75,20 @@ pub async fn shopping_lists_handler(
     .into_response())
 }
 
+pub async fn shopping_list_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+) -> impl IntoResponse {
+    match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
+        Ok(list) => templates::shopping::render_shopping_list(&list).into_response(),
+        Err(err) => {
+            error!("Failed to get shopping list: {err}");
+            return Error::Database.into_response();
+        }
+    }
+}
+
 pub async fn shopping_list_delete_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -87,6 +101,55 @@ pub async fn shopping_list_delete_handler(
     }
 
     (StatusCode::SEE_OTHER, [("HX-Redirect", "/shopping/lists")]).into_response()
+}
+
+pub async fn shopping_list_put_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+    Form(payload): Form<ListPayload>,
+) -> impl IntoResponse {
+    if payload.name.is_empty() {
+        broadcast_error(&state, user.id, "Title cannot be empty.").await;
+        return Error::InvalidPayload.into_response();
+    }
+
+    match ShoppingList::update_title(&state.mm, list_id, &payload.name, user.id).await {
+        Ok(()) => {
+            let num_items = ShoppingList::get(&state.mm, list_id, user.id)
+                .await
+                .map_or(0, |l| l.num_items);
+
+            templates::shopping::render_shopping_list_title(list_id, &payload.name, num_items)
+                .into_response()
+        }
+        Err(err) if err.to_string().contains("duplicate key") => {
+            broadcast_error(&state, user.id, "Title already exists.").await;
+            Error::InvalidPayload.into_response()
+        }
+        Err(err) => {
+            error!("Failed to update shopping list title: {err}");
+            broadcast_error(&state, user.id, "Failed to update shopping list title.").await;
+            Error::Database.into_response()
+        }
+    }
+}
+
+pub async fn shopping_list_edit_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+) -> impl IntoResponse {
+    match ShoppingList::get(&state.mm, list_id, user.id).await {
+        Ok(list) => {
+            templates::shopping::render_shopping_list_title_edit(list_id, list.name).into_response()
+        }
+        Err(err) => {
+            error!("Failed to get shopping list: {err}");
+            broadcast_error(&state, user.id, "Failed to get shopping list.").await;
+            Error::Database.into_response()
+        }
+    }
 }
 
 pub async fn shopping_list_label_handler(

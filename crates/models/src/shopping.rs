@@ -203,14 +203,23 @@ impl ShoppingList {
         Ok(list_id)
     }
 
+    /// Gets a shopping list by its ID and user ID.
+    pub async fn get(mm: &ModelManager, list_id: Uuid, user_id: Uuid) -> Result<Self> {
+        let list = schema::shopping_lists::table
+            .filter(schema::shopping_lists::id.eq(list_id))
+            .filter(schema::shopping_lists::user_id.eq(user_id))
+            .first::<Self>(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(list)
+    }
+
     /// Gets all of the user's shopping lists.
     pub async fn get_all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let lists = schema::shopping_lists::table
             .filter(schema::shopping_lists::user_id.eq(user_id))
-            .order(schema::shopping_lists::created_at.asc())
-            .load::<Self>(&mut conn)
+            .order(schema::shopping_lists::created_at.desc())
+            .load::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(lists)
@@ -619,6 +628,20 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_get_shopping_list_by_id_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+
+        let list = ShoppingList::get(&state.mm, list_id, user_id).await?;
+
+        assert_eq!(list.name, a_list_name());
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn test_get_all_shopping_lists_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
@@ -634,9 +657,9 @@ mod tests {
         pretty_assertions::assert_eq!(
             lists.into_iter().map(|l| l.name).collect::<Vec<_>>(),
             vec![
-                "List 0".to_string(),
+                "List 2".to_string(),
                 "List 1".to_string(),
-                "List 2".to_string()
+                "List 0".to_string()
             ]
         );
         Ok(())
