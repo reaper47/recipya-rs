@@ -75,7 +75,8 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     struct Components {
-        _test_db: TestDb,
+        #[allow(unused)]
+        test_db: TestDb,
         state: AppState,
         user_id: Uuid,
         list_id: Uuid,
@@ -84,14 +85,14 @@ mod tests {
 
     impl Components {
         async fn setup_with_one_list() -> Result<Self> {
-            let (_test_db, config) = TestDb::new(None).await?;
+            let (test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
 
             Ok(Self {
-                _test_db,
+                test_db,
                 state,
                 user_id,
                 list_id,
@@ -206,15 +207,11 @@ mod tests {
                     &format!(
                         r#"<div id="shopping-lists-index" class="flex flex-col-reverse md:flex-row h-full"><aside class="relative max-h-full text-center pt-1 pl-2"><input id="selected-shopping-list-id" type="hidden" name="selected" value="{list_id}"><div id="shopping-list-container">"#
                     ),
-                    &format!(
-                        r##"<div class="grid grid-flow-col gap-2 place-items-center"><p class="text-center font-semibold text-lg underline">Shopping Lists</p><button class="btn btn-xs btn-square btn-ghost" hx-post="/shopping/lists" hx-prompt="Name of the new shopping list:" hx-target="#shopping-lists" hx-swap="afterbegin" hx-on:htmx:after-request="Array.from(document.getElementById('shopping-lists').children).forEach((item) =&gt; item.classList.remove('bg-base-300')); document.getElementById('shopping-lists').firstElementChild.classList.add('bg-base-300')"><svg xmlns="http://www.w3.org/2000/svg" class="size-6 hover:text-red-600" fill="none" viewBox="0 0 24 24" width="24px" height="24px" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></button></div>"##
-                    ),
+                    r##"<div class="grid grid-flow-col gap-2 place-items-center"><p class="text-center font-semibold text-lg underline">Shopping Lists</p><button class="btn btn-xs btn-square btn-ghost" hx-post="/shopping/lists" hx-prompt="Name of the new shopping list:" hx-target="#shopping-lists" hx-swap="afterbegin" hx-on:htmx:after-request="Array.from(document.getElementById('shopping-lists').children).forEach((item) =&gt; item.classList.remove('bg-base-300')); document.getElementById('shopping-lists').firstElementChild.classList.add('bg-base-300')"><svg xmlns="http://www.w3.org/2000/svg" class="size-6 hover:text-red-600" fill="none" viewBox="0 0 24 24" width="24px" height="24px" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></button></div>"##,
                     &format!(
                         r##"<ul id="shopping-lists" class="menu block bg-base-100 w-full overflow-y-auto max-h-[40vh] md:max-h-[89vh] pb-16 md:pb-0 h-full"><li id="shopping-list-sidebar-{list_id}" class="bg-base-300" hx-get="/shopping/lists/{list_id}" hx-target="#shopping-list-view-pane" hx-push-url="false" hx-trigger="mousedown" hx-on:mousedown="document.querySelectorAll('#shopping-lists li').forEach((el) =&gt; el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{list_id}';"><div class="flex justify-between items-center gap-2 w-full"><div class="min-w-0"><p class="font-bold text-sm">Test</p></div><div class="flex flex-col items-end gap-1 shrink-0"><div class="badge badge-xs badge-primary">1</div></div></div></li></ul>"##
                     ),
-                    &format!(
-                        r#"<div class="order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0"></div><div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3 max-h-[94vh]"><div id="shopping-list-view-pane" class="p-4 text-center grid">"#
-                    ),
+                    r#"<div class="order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0"></div><div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3 max-h-[94vh]"><div id="shopping-list-view-pane" class="p-4 text-center grid">"#,
                     &format!(
                         r#"<div class="grid"><div><div class="join border border-gray-700 mb-2 w-fit"><button class="btn join-item">Toggle Recipes</button><button class="btn join-item">View (default)</button><button class="btn join-item">Copy</button><button class="btn join-item">Share</button><button class="btn join-item">Export</button><button class="btn join-item">Upload to app</button><button class="btn join-item" hx-delete="/shopping/lists/{list_id}" hx-confirm="Are you sure you wish to delete this list?">Delete</button></div></div>"#
                     ),
@@ -340,7 +337,7 @@ mod tests {
             res.assert_status_bad_request();
             let list = ShoppingList::get(&state.mm, list_id, user_id).await?;
             assert_eq!(list.name, "Test2");
-            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Title already exists.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Title already exists.","status":"alert-warning","title":"Attention"}}"# ).await;
             Ok(())
         }
 

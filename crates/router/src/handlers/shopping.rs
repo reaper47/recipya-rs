@@ -84,7 +84,7 @@ pub async fn shopping_list_handler(
         Ok(list) => templates::shopping::render_shopping_list(&list).into_response(),
         Err(err) => {
             error!("Failed to get shopping list: {err}");
-            return Error::Database.into_response();
+            Error::Database.into_response()
         }
     }
 }
@@ -124,7 +124,7 @@ pub async fn shopping_list_put_handler(
                 .into_response()
         }
         Err(err) if err.to_string().contains("duplicate key") => {
-            broadcast_error(&state, user.id, "Title already exists.").await;
+            broadcast_warning(&state, user.id, "Title already exists.").await;
             Error::InvalidPayload.into_response()
         }
         Err(err) => {
