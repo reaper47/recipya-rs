@@ -659,10 +659,14 @@ EXECUTE FUNCTION delete_orphaned_nutrition ();
 ---
 DO $$
 BEGIN
-    IF current_database() = 'recipya' THEN
-        EXECUTE format('SELECT cron.schedule(%L, %L, %L)', 'delete_expired_links', '0 0 * * *', 'DELETE FROM shares_recipes WHERE expires_at < NOW()');
+    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+        PERFORM cron.schedule(
+            'delete_expired_links',
+            '0 0 * * *',
+            'DELETE FROM shares_recipes WHERE expires_at < NOW()'
+        );
     END IF;
-END
+END;
 $$;
 
 ---

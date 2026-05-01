@@ -1,16 +1,16 @@
 use maud::{Markup, html};
+use uuid::Uuid;
 
 use models::{
     data::{Data, PaginationData, ShoppingData},
     settings::UserSettingDetails,
     shopping::{ShoppingListDetails, ShoppingListItemDetails},
 };
-use uuid::Uuid;
 
 use crate::templates::{
     icons::{
         icon_arrows_up_down, icon_carrot, icon_check, icon_pencil, icon_plus, icon_plus_circle,
-        icon_scale, icon_trash,
+        icon_scale, icon_share, icon_trash,
     },
     layouts,
     pagination::pagination,
@@ -35,6 +35,21 @@ pub fn lists_index(path: &str, data: &Data, user_setting: &UserSettingDetails) -
 
 fn render_lists_index(data: &Data) -> Markup {
     html! {
+        @if !matches!(&data.share, Some(share) if share.is_shared) {
+             dialog #share-dialog .modal {
+                div class="modal-box w-4/5 sm:w-96" {
+                    div #share-dialog-result {}
+                    div class="modal-action block mt-4" {
+                        form method="dialog" {
+                            button class="btn btn-block btn-outline btn-sm" {
+                                "Close"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         @let Some(shopping) = data.shopping.as_ref() else {
             return html! {
                 p { "No shopping data provided." }
@@ -57,14 +72,18 @@ fn render_lists_index(data: &Data) -> Markup {
                             p class="text-left" {
                                 "← Create your first shopping list to get started."
                             }
+                            div id=[if data.is_hx_request { Some("navbar-actions") } else { None }]
+                                hx-swap-oob=[if data.is_hx_request { Some("true") } else { None }]
+                                class="join border border-gray-700 mb-2 w-fit" {}
                         } @else {
                             @match shopping.selected_shopping_list {
                                 Some(ref list) => {
-                                    div {
-                                        (shopping_list_actions(list.id))
-                                    }
                                     (shopping_list_title(list.id, &list.name))
                                     (item_sections(list))
+
+                                    @if data.is_hx_request {
+                                        (render_shopping_list_actions(data.is_hx_request, list.id))
+                                    }
                                 }
                                 None => {
                                     p class="text-left" {
@@ -105,7 +124,7 @@ fn item_sections(list: &ShoppingListDetails) -> Markup {
                         }
                         ol class="list bg-base-100 rounded-box shadow-md" {
                             @for item in items {
-                                (render_shopping_list_item(list.id, item))
+                                (render_shopping_list_item(list.id, item, false))
                             }
                             (new_shopping_list_item(list.id, Some(label)))
                         }
@@ -120,7 +139,6 @@ fn item_sections(list: &ShoppingListDetails) -> Markup {
 pub fn render_shopping_list(list: &ShoppingListDetails) -> Markup {
     html! {
         div {
-            (shopping_list_actions(list.id))
             (shopping_list_title(list.id, &list.name))
             div class="grid" {
                 (item_sections(list))
@@ -206,7 +224,6 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
         }
         div #shopping-list-view-pane hx-swap-oob="innerHTML" {
             div {
-                (shopping_list_actions(list_id))
                 h1 class="text-2xl font-bold underline p-2" {
                     (title.as_ref())
                     span class="ml-2" {
@@ -230,12 +247,16 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
                 }
             }
         }
+        (render_shopping_list_actions(true, list_id))
     }
 }
 
-fn shopping_list_actions(list_id: Uuid) -> Markup {
+/// Render shopping list actions.
+pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> Markup {
     html! {
-        div class="join border border-gray-700 mb-2 w-fit" {
+        div id=[if is_oob_swap { Some("navbar-actions") } else { None }]
+            hx-swap-oob=[if is_oob_swap { Some("true") } else { None }]
+            class="join border border-gray-700 mb-2 w-fit" {
             button class="btn join-item" {
                 "Toggle Recipes"
             }
@@ -246,16 +267,29 @@ fn shopping_list_actions(list_id: Uuid) -> Markup {
                 "Copy"
             }
             button class="btn join-item" {
-                "Share"
-            }
-            button class="btn join-item" {
                 "Export"
             }
             button class="btn join-item" {
                 "Upload to app"
             }
-            button class="btn join-item" hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
-                "Delete"
+            button title="Share list"
+                class="btn join-item"
+                hx-post=(format!("/shopping/lists/{list_id}/share"))
+                hx-target="#share-dialog-result"
+                hx-push-url="false"
+                _="on htmx:afterRequest from me
+                    if event.detail.successful
+                        if navigator.canShare
+                            set name to document.querySelector('[itemprop=name]').textContent then
+                            set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
+                            call navigator.share(data)
+                        else
+                            call #share-dialog.showModal()
+                    end" {
+                (icon_share())
+            }
+            button title="Delete list" class="btn join-item" hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
+                (icon_trash())
             }
         }
     }
@@ -371,8 +405,6 @@ fn shopping_list_title<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
                 }
             }
         }
-
-
     }
 }
 
@@ -393,34 +425,42 @@ pub fn render_shopping_list_title_edit<T: AsRef<str>>(list_id: Uuid, title: T) -
 }
 
 /// Renders a shopping list item as an HTML list item.
-pub fn render_shopping_list_item(list_id: Uuid, item: &ShoppingListItemDetails) -> Markup {
+pub fn render_shopping_list_item(
+    list_id: Uuid,
+    item: &ShoppingListItemDetails,
+    readonly: bool,
+) -> Markup {
     html! {
         li class="list-row grid grid-cols-[1fr_auto]" {
             div class="grid gap-1 min-w-0" {
                 label class="label text-base-content" {
-                    input class="checkbox" type="checkbox" checked[item.is_checked] checked[item.is_checked];
-                    @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
-                        (format!("{} ({q})", item.ingredient))
-                    } @else {
-                        (format!("{}", item.ingredient))
+                    input class="checkbox peer" type="checkbox" checked[item.is_checked] checked[item.is_checked];
+                    span class="peer-checked:line-through peer-checked:opacity-50 transition-all" {
+                        @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
+                            (format!("{} ({q})", item.ingredient))
+                        } @else {
+                            (format!("{}", item.ingredient))
+                        }
                     }
                 }
             }
-            div class="flex gap-1" {
-                button class="btn join-item btn-square btn-sm"
-                    hx-target="closest li"
-                    hx-swap="outerHTML"
-                    hx-get=(format!("/shopping/lists/{list_id}/items/{}/edit", item.id)) {
-                    (icon_pencil(false))
-                }
-                button class="btn join-item btn-square btn-sm"
-                    hx-target="closest li"
-                    hx-swap="delete"
-                    hx-delete=(format!("/shopping/lists/{list_id}/items/{}", item.id)) {
-                    (icon_trash())
-                }
-                button class="btn join-item btn-square btn-sm cursor-grab h-full" {
-                    (icon_arrows_up_down())
+            @if !readonly {
+                div class="flex gap-1" {
+                    button class="btn join-item btn-square btn-sm"
+                        hx-target="closest li"
+                        hx-swap="outerHTML"
+                        hx-get=(format!("/shopping/lists/{list_id}/items/{}/edit", item.id)) {
+                        (icon_pencil(false))
+                    }
+                    button class="btn join-item btn-square btn-sm"
+                        hx-target="closest li"
+                        hx-swap="delete"
+                        hx-delete=(format!("/shopping/lists/{list_id}/items/{}", item.id)) {
+                        (icon_trash())
+                    }
+                    button class="btn join-item btn-square btn-sm cursor-grab h-full" {
+                        (icon_arrows_up_down())
+                    }
                 }
             }
         }
@@ -454,6 +494,74 @@ pub fn render_label_edit<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) 
                     hx-swap="outerHTML"
                     hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
                     (icon_check())
+                }
+            }
+        }
+    }
+}
+
+pub fn render_view_shopping_list_details<T: AsRef<str>>(
+    path: T,
+    data: &Data,
+    user_settings: &UserSettingDetails,
+) -> Markup {
+    let content = data.shopping.as_ref().map_or_else(
+        || {
+            html! {
+                "No shopping list available."
+            }
+        },
+        |shopping| {
+            shopping
+                .selected_shopping_list
+                .as_ref()
+                .map(shopping_list_view_mode)
+                .unwrap_or_default()
+        },
+    );
+
+    html! {
+        @if data.is_hx_request {
+            title hx-swap-oob="true" { "Shopping Lists | Recipya" }
+            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
+            (content)
+            (pagination(&PaginationData::hidden()))
+        } @else {
+            (layouts::main("Shopping Lists", path.as_ref(), data, &content, user_settings, true))
+            (pagination(&PaginationData::hidden()))
+        }
+    }
+}
+
+fn shopping_list_view_mode(list: &ShoppingListDetails) -> Markup {
+    html! {
+        div .p-2 {
+            h1 class="text-center text-2xl font-bold underline p-2" {
+                (list.name)
+            }
+            div class="grid" {
+                @if list.items.is_empty() {
+                    div class="place-self-center" {
+                        p .text-center {
+                            "Shopping list has no items."
+                        }
+                    }
+                } @else {
+                    div class="min-w-full sm:min-w-[33vw] place-self-center" {
+                        @let items = list.items_per_label();
+                        @for (label, items) in items {
+                            details open {
+                                summary class="text-left cursor-default" {
+                                    (label)
+                                }
+                                ol class="list bg-base-100 rounded-box shadow-md" {
+                                    @for item in items {
+                                        (render_shopping_list_item(list.id, item, true))
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

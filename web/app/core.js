@@ -443,11 +443,16 @@ function updateAddCookbookUrl(selectedPage) {
 
 function copyToClipboard(text) {
   if (window.navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {});
-    const el = document.querySelector("#copy-button");
-    el.textContent = "Copied!";
-    el.setAttribute("disabled", "true");
-    el.classList.toggle(".btn-disabled");
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        showToast("", "Copied to clipboard.", "alert-success");
+        document.querySelector("#copy-button").closest("dialog").close();
+      })
+      .catch((err) => {
+        showToast("", `Failed to copy: ${err.message}`, "alert-error");
+        showToast();
+      });
   } else {
     alert(
       "Your browser does not support the clipboard feature. Please copy the link manually.",
@@ -628,7 +633,7 @@ function syncLayout() {
     ?.classList.toggle("hidden", !isAside || isMobile);
   document.getElementById("mobile-nav")?.classList.toggle("hidden", !isAside);
 
-  ["add-recipe", "pagination-recipes"].forEach((id) => {
+  ["navbar-actions", "pagination-recipes"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("hidden", !isAside);
   });
 

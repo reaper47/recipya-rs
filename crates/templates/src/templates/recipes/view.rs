@@ -497,11 +497,11 @@ fn render_right_controls(
                                 "Share"
                             }
                         }
-                    }
-                    li  _="on click document.activeElement.blur()" {
-                        button #duplicate-recipe hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
-                            (icon_document_duplicate())
-                            "Duplicate"
+                        li  _="on click document.activeElement.blur()" {
+                            button #duplicate-recipe hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
+                                (icon_document_duplicate())
+                                "Duplicate"
+                            }
                         }
                     }
                     li {
@@ -868,7 +868,9 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
         div #ingredients-instructions-container class="grid text-sm md:grid-cols-6 md:col-span-6" {
             div class="col-span-6 border-gray-700 border-y px-4 py-2 md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
-                    h2 class="font-semibold text-center underline pb-1" { "Tools" }
+                    h2 class="font-semibold text-center underline pb-1" {
+                        "Tools"
+                    }
                     ul class="list grid gap-1" {
                         @for tool in recipe.tools.iter() {
                             li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
@@ -922,7 +924,9 @@ fn render_ingredients_list(ingredients: &[Item]) -> Markup {
                  li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
                     label class="flex items-center w-full" {
                         input type="checkbox" class="checkbox";
-                        span class="px-2" { (ingredient.text) }
+                        span class="px-2" {
+                            (ingredient.text)
+                        }
                     }
                 }
             }
@@ -936,7 +940,7 @@ fn render_instructions_list(instructions: &[Item]) -> Markup {
             @for (idx, instruction) in instructions.iter().enumerate() {
                 li class="min-w-full py-2 select-none hover:bg-base-300" {
                     div class="flex" {
-                        div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
+                        div class="whitespace-pre-line w-full transition-all" _="on mousedown toggle .line-through toggle .opacity-40" {
                             (instruction.text)
                         }
                          @if let Some(d) = instruction.duration_seconds {

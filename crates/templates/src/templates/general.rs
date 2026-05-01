@@ -9,7 +9,7 @@ pub fn share_link(url: &str) -> Markup {
             label {
                 input type="url" value=(url) .input readonly="readonly";
             }
-            button #copy-button .btn.btn-neutral title="Copy to clipboard" onClick=(format!("copyToClipboard({url})")) { "Copy" }
+            button #copy-button .btn.btn-neutral title="Copy to clipboard" onClick=(format!("copyToClipboard('{url}')")) { "Copy" }
         }
     }
 }

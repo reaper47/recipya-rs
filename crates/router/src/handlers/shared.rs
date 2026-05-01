@@ -7,9 +7,10 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::Error::EntityNotFound;
-use models::data::{AboutData, Data, ShareData, ViewRecipe};
+use models::data::{AboutData, Data, ShareData, ShoppingData, ViewRecipe};
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
+use models::shopping::ShareShoppingList;
 use models::time::FormattedTimes;
 
 use crate::Error;
@@ -108,4 +109,52 @@ pub async fn share_recipe_handler(
             Error::Templates.into_response()
         }
     }
+}
+
+/// Renders the shared shopping list.
+pub async fn share_shopping_list_handler(
+    header_map: HeaderMap,
+    OriginalUri(uri): OriginalUri,
+    State(state): State<AppState>,
+    OptionalAuth(user): OptionalAuth,
+    Path(link): Path<Uuid>,
+) -> impl IntoResponse {
+    let (share, list) = match ShareShoppingList::get_by_link(&state.mm, link).await {
+        Ok(v) => v,
+        Err(err) => {
+            error!("Error fetching shared recipe '{link}': {err}");
+            return Error::Model(EntityNotFound {
+                id: "-1".into(),
+                entity: "shared recipe",
+            })
+            .into_response();
+        }
+    };
+
+    let user_settings = match user {
+        Some(ref user) => UserSettingDetails::get(&state.mm, user.id).await.ok(),
+        None => None,
+    };
+
+    templates::shopping::render_view_shopping_list_details(
+        uri.path(),
+        &Data {
+            is_admin: user.as_ref().map_or(false, |u| u.is_admin),
+            is_authenticated: user.is_some(),
+            is_autologin: state.config.read().await.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
+            share: Some(ShareData {
+                is_shared: true,
+                is_from_host: user.as_ref().map_or(false, |u| u.id == share.user_id),
+            }),
+            shopping: Some(ShoppingData {
+                shopping_lists: vec![],
+                selected_shopping_list: Some(list),
+            }),
+            ..Default::default()
+        },
+        &user_settings.unwrap_or_default(),
+    )
+    .into_response()
 }

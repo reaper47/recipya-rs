@@ -3,13 +3,15 @@ use axum::extract::{OriginalUri, Path};
 use axum::http::HeaderMap;
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::HX_PROMPT;
+use chrono::NaiveDateTime;
 use reqwest::StatusCode;
 use tracing::error;
 
 use app::state::AppState;
 use models::data::{Data, ShoppingData};
 use models::shopping::{
-    ShoppingList, ShoppingListDetails, ShoppingListItemForCreate, ShoppingListItemForUpdate,
+    ShareShoppingList, ShoppingList, ShoppingListDetails, ShoppingListItemForCreate,
+    ShoppingListItemForUpdate,
 };
 use uuid::Uuid;
 
@@ -17,6 +19,7 @@ use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::middleware::mw_auth::RequireAuth;
+use crate::recipes_router::params::ShareRecipeForm;
 use crate::schemas::shopping::{ListItemPayload, ListPayload};
 use crate::{Error, Result};
 
@@ -131,6 +134,42 @@ pub async fn shopping_list_put_handler(
             error!("Failed to update shopping list title: {err}");
             broadcast_error(&state, user.id, "Failed to update shopping list title.").await;
             Error::Database.into_response()
+        }
+    }
+}
+
+pub async fn shopping_list_share_post_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+    Form(form): Form<ShareRecipeForm>,
+) -> impl IntoResponse {
+    let expires_at: Option<NaiveDateTime> = form.datetime.and_then(|dt| {
+        NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%dT%H:%M")
+            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S%.f"))
+            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S"))
+            .inspect_err(|err| {
+                error!("Invalid datetime '{}': {}", dt, err);
+            })
+            .ok()
+    });
+
+    match ShareShoppingList::new(&state.mm, list_id, user.id, expires_at).await {
+        Ok(share) => {
+            let url = format!(
+                "{}/shared/sl/{}",
+                state.config.read().await.base_url,
+                share.link
+            );
+            templates::general::share_link(&url).into_response()
+        }
+        Err(err) => {
+            error!(
+                "Error generating shared recipe link for recipe '{list_id}' and user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Error creating shared shopping list link.").await;
+            Error::BadTimeFormat.into_response()
         }
     }
 }
@@ -261,7 +300,7 @@ pub async fn shopping_list_item_post_handler(
         }
     };
 
-    templates::shopping::render_shopping_list_item(list_id, &item).into_response()
+    templates::shopping::render_shopping_list_item(list_id, &item, false).into_response()
 }
 
 pub async fn shopping_list_item_delete_handler(
@@ -300,7 +339,9 @@ pub async fn shopping_list_item_put_handler(
     }
 
     match ShoppingList::get_item(&state.mm, list_id, item_id, user.id).await {
-        Ok(item) => templates::shopping::render_shopping_list_item(list_id, &item).into_response(),
+        Ok(item) => {
+            templates::shopping::render_shopping_list_item(list_id, &item, false).into_response()
+        }
         Err(err) => {
             error!("Failed to get shopping list item: {err:?}");
             broadcast_error(&state, user.id, "Failed to get shopping list item.").await;

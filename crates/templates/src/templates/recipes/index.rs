@@ -8,7 +8,7 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::list_recipes;
 use crate::recipes::search_bar;
-use crate::templates::layouts;
+use crate::templates::layouts::{self, render_recipe_button};
 use crate::templates::pagination::pagination;
 
 /// Renders the index page of recipes.
@@ -22,6 +22,7 @@ pub fn index(
     if data.is_hx_request {
         html! {
             (render_index(fs_support, path, data, data_dir))
+            (render_recipe_button(true))
         }
     } else {
         layouts::main(

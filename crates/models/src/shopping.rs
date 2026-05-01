@@ -165,6 +165,32 @@ pub struct ShoppingListItemDetails {
     pub updated_at: NaiveDateTime,
 }
 
+/// Represents a shared recipe
+#[derive(Debug, Eq, PartialEq, Queryable, Identifiable, Selectable)]
+#[diesel(belongs_to(User))]
+#[diesel(belongs_to(ShoppingList))]
+#[diesel(table_name = schema::shares_shopping_lists)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct ShareShoppingList {
+    pub id: i64,
+    pub link: Uuid,
+    pub user_id: Uuid,
+    pub list_id: Uuid,
+    pub created_at: NaiveDateTime,
+    pub expires_at: NaiveDateTime,
+    pub last_accessed: NaiveDateTime,
+    pub click_count: i32,
+}
+
+/// A struct for inserting a new shared recipe into the database.
+#[derive(Insertable)]
+#[diesel(table_name = schema::shares_shopping_lists)]
+pub(crate) struct ShareShoppingListForInsert {
+    pub user_id: Uuid,
+    pub list_id: Uuid,
+    pub expires_at: Option<NaiveDateTime>,
+}
+
 /// Represents a recipe with its details for a shopping list item.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ShoppingListRecipeDetails {
@@ -592,10 +618,50 @@ impl ShoppingListItemForCreate {
     }
 }
 
+impl ShareShoppingList {
+    /// Creates a new `ShareShoppingList` in the database.
+    pub async fn new(
+        mm: &ModelManager,
+        list_id: Uuid,
+        user_id: Uuid,
+        expires_at: Option<NaiveDateTime>,
+    ) -> Result<Self> {
+        diesel::insert_into(schema::shares_shopping_lists::table)
+            .values(&ShareShoppingListForInsert {
+                user_id,
+                list_id,
+                expires_at,
+            })
+            .on_conflict((
+                schema::shares_shopping_lists::user_id,
+                schema::shares_shopping_lists::list_id,
+            ))
+            .do_update()
+            .set(schema::shares_shopping_lists::last_accessed.eq(diesel::dsl::now))
+            .returning(Self::as_returning())
+            .get_result(&mut mm.pool.get().await?)
+            .await
+            .map_err(Error::from)
+    }
+
+    /// Retrieves a shared shopping list by its link UUID.
+    pub async fn get_by_link(mm: &ModelManager, link: Uuid) -> Result<(Self, ShoppingListDetails)> {
+        let share = schema::shares_shopping_lists::table
+            .filter(schema::shares_shopping_lists::link.eq(link))
+            .first::<Self>(&mut mm.pool.get().await?)
+            .await
+            .map_err(Error::from)?;
+
+        let list = ShoppingListDetails::get(mm, share.list_id, share.user_id).await?;
+
+        Ok((share, list))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use test_db::TestDb;
-    use test_utils::{build_server_anonymous, create_app_state};
+    use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
 
     use crate::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
 
@@ -1060,5 +1126,166 @@ mod tests {
         let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
         assert_eq!(got.items[0].label, "No label");
         Ok(())
+    }
+
+    mod tests_share {
+        use app::state::AppState;
+        use config::Config;
+
+        use super::*;
+        use crate::user::UserForCreate;
+
+        async fn insert_recipe(config: &Config, state: &AppState, user_id: Uuid) -> Result<()> {
+            let _ = build_server_logged_in(config.clone()).await?;
+            let (recipe, _) = a_complete_recipe_for_create();
+            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            Ok(())
+        }
+
+        async fn add_user(mm: &ModelManager) -> Result<User> {
+            Ok(User::new(
+                mm,
+                UserForCreate {
+                    email: "another@gmail.com".into(),
+                    password_clear: "12345677".into(),
+                },
+            )
+            .await?)
+        }
+
+        fn assert_share_list(got: &ShareShoppingList, want: &ShareShoppingList) {
+            pretty_assertions::assert_eq!(got.id, want.id);
+            pretty_assertions::assert_ne!(got.link, Uuid::nil());
+            pretty_assertions::assert_eq!(got.user_id, want.user_id);
+            pretty_assertions::assert_eq!(got.list_id, want.list_id);
+            pretty_assertions::assert_eq!(got.click_count, want.click_count);
+
+            let diff = (got.created_at - want.created_at)
+                .num_nanoseconds()
+                .unwrap_or(i64::MAX);
+            assert!(diff.abs() <= 1000, "Created at");
+
+            let diff = (got.expires_at - want.expires_at)
+                .num_nanoseconds()
+                .unwrap_or(i64::MAX);
+            assert!(diff.abs() <= 1000, "Expires at");
+
+            let diff = (got.last_accessed - want.last_accessed)
+                .num_nanoseconds()
+                .unwrap_or(i64::MAX);
+            assert!(diff.abs() <= 1000, "Last accessed at");
+        }
+
+        mod tests_new {
+            use super::*;
+
+            #[tokio::test]
+            async fn test_default_expiration_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let user_id = add_user(&state.mm).await?.id;
+                insert_recipe(&config, &state, user_id).await?;
+                let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+
+                let got = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
+
+                assert_share_list(
+                    &got,
+                    &ShareShoppingList {
+                        id: 1,
+                        link: got.link,
+                        user_id,
+                        list_id,
+                        created_at: got.created_at,
+                        expires_at: got.expires_at,
+                        last_accessed: got.last_accessed,
+                        click_count: 0,
+                    },
+                );
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_custom_expiration_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let user_id = add_user(&state.mm).await?.id;
+                insert_recipe(&config, &state, user_id).await?;
+                let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+                let expires_at = chrono::Utc::now() + chrono::Duration::days(14);
+
+                let got = ShareShoppingList::new(
+                    &state.mm,
+                    list_id,
+                    user_id,
+                    Some(expires_at.naive_local()),
+                )
+                .await?;
+
+                assert_share_list(
+                    &got,
+                    &ShareShoppingList {
+                        id: 1,
+                        link: got.link,
+                        user_id,
+                        list_id,
+                        created_at: got.created_at,
+                        expires_at: expires_at.naive_local(),
+                        last_accessed: got.last_accessed,
+                        click_count: 0,
+                    },
+                );
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_already_shared_err() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let user_id = add_user(&state.mm).await?.id;
+                insert_recipe(&config, &state, user_id).await?;
+                let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+                let share = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
+
+                let res = ShareShoppingList::new(&state.mm, list_id, user_id, None).await;
+
+                assert!(matches!(res, Ok(got) if got.id == share.id));
+                Ok(())
+            }
+        }
+
+        mod tests_fetch_by_link {
+            use super::*;
+
+            #[tokio::test]
+            async fn test_exists_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let user = add_user(&state.mm).await?;
+                insert_recipe(&config, &state, user.id).await?;
+                let list_id = ShoppingList::create(&state.mm, a_list_name(), user.id).await?;
+                let shared = ShareShoppingList::new(&state.mm, list_id, user.id, None).await?;
+
+                let (got, _) = ShareShoppingList::get_by_link(&state.mm, shared.link).await?;
+
+                pretty_assertions::assert_eq!(got.id, shared.id);
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_exists_err() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let state = create_app_state(config.clone()).await;
+                let user = add_user(&state.mm).await?;
+                insert_recipe(&config, &state, user.id).await?;
+
+                let res = ShareShoppingList::get_by_link(&state.mm, user.id).await;
+
+                match res {
+                    Ok(_) => panic!("Entry should not have been found"),
+                    Err(_) => Ok(()),
+                }
+            }
+        }
     }
 }

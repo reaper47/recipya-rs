@@ -22,13 +22,13 @@ pub async fn share_recipe_post_handler(
     Form(form): Form<ShareRecipeForm>,
 ) -> impl IntoResponse {
     let expires_at: Option<NaiveDateTime> = form.datetime.and_then(|dt| {
-        match NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%dT%H:%M") {
-            Ok(parsed) => Some(parsed),
-            Err(err) => {
-                error!("Invalid datetime: {}", err);
-                None
-            }
-        }
+        NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%dT%H:%M")
+            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S%.f"))
+            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S"))
+            .inspect_err(|err| {
+                error!("Invalid datetime '{}': {}", dt, err);
+            })
+            .ok()
     });
 
     match ShareRecipe::new(&state.mm, recipe_id, user.id, expires_at).await {
@@ -45,7 +45,7 @@ pub async fn share_recipe_post_handler(
                 "Error generating shared recipe link for recipe '{recipe_id}' and user '{}': {err}",
                 user.id
             );
-            broadcast_error(&state, user.id, "Error parsing datetime.").await;
+            broadcast_error(&state, user.id, "Error creating shared recipe link.").await;
             Error::BadTimeFormat.into_response()
         }
     }

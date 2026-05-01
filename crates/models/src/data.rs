@@ -239,6 +239,7 @@ impl SearchbarData {
 }
 
 /// Holds information on the entity being shared.
+#[derive(Debug)]
 pub struct ShareData {
     pub is_from_host: bool,
     pub is_shared: bool,

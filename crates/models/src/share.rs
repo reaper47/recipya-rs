@@ -52,28 +52,29 @@ impl ShareRecipe {
         user_id: Uuid,
         expires_at: Option<NaiveDateTime>,
     ) -> Result<Self> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::insert_into(schema::shares_recipes::table)
             .values(&SharedRecipeForInsert {
                 user_id,
                 recipe_id,
                 expires_at,
             })
-            .on_conflict_do_nothing()
+            .on_conflict((
+                schema::shares_recipes::user_id,
+                schema::shares_recipes::recipe_id,
+            ))
+            .do_update()
+            .set(schema::shares_recipes::last_accessed.eq(diesel::dsl::now))
             .returning(Self::as_returning())
-            .get_result(&mut conn)
+            .get_result(&mut mm.pool.get().await?)
             .await
             .map_err(Error::from)
     }
 
     /// Retrieves a shared recipe by its link UUID.
     pub async fn get_by_link(mm: &ModelManager, link: Uuid) -> Result<(Self, RecipeDetails)> {
-        let mut conn = mm.pool.get().await?;
-
         let share = schema::shares_recipes::table
             .filter(schema::shares_recipes::link.eq(link))
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await
             .map_err(Error::from)?;
 
@@ -172,14 +173,12 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let user_id = add_user(&state.mm).await?.id;
             insert_recipe(&config, &state, user_id).await?;
-            let _ = ShareRecipe::new(&state.mm, 1, user_id, None).await?;
+            let share = ShareRecipe::new(&state.mm, 1, user_id, None).await?;
 
             let res = ShareRecipe::new(&state.mm, 1, user_id, None).await;
 
-            match res {
-                Ok(_) => panic!("Should not have inserted an entry in the database"),
-                Err(_) => Ok(()),
-            }
+            assert!(matches!(res, Ok(got) if got.id == share.id));
+            Ok(())
         }
 
         fn assert_share_recipe(got: &ShareRecipe, want: &ShareRecipe) {
