@@ -339,6 +339,17 @@ impl ShoppingList {
         Ok(())
     }
 
+    /// Gets the number of items in a shopping list.
+    pub async fn items_count(mm: &ModelManager, list_id: Uuid) -> Result<i64> {
+        let count = schema::shopping_list_items::table
+            .filter(schema::shopping_list_items::shopping_list_id.eq(list_id))
+            .count()
+            .get_result(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(count)
+    }
+
     /// Gets the details of an item.
     pub async fn get_item(
         mm: &ModelManager,
@@ -763,12 +774,10 @@ mod tests {
                 updated_at: got.updated_at,
             }
         );
-        let mut conn = state.mm.pool.get().await?;
-        let count: i64 = schema::users_shopping_list_labels::table
-            .count()
-            .get_result(&mut conn)
-            .await?;
-        assert_eq!(count, 1);
+        let num_items = ShoppingList::items_count(&state.mm, list_id)
+            .await
+            .unwrap_or_default();
+        assert_eq!(num_items, 1);
         Ok(())
     }
 

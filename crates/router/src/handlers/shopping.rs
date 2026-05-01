@@ -300,7 +300,12 @@ pub async fn shopping_list_item_post_handler(
         }
     };
 
-    templates::shopping::render_shopping_list_item(list_id, &item, false).into_response()
+    let num_items = ShoppingList::items_count(&state.mm, list_id)
+        .await
+        .unwrap_or_default();
+
+    templates::shopping::render_shopping_list_item_with_count(list_id, &item, num_items, false)
+        .into_response()
 }
 
 pub async fn shopping_list_item_delete_handler(
@@ -314,7 +319,11 @@ pub async fn shopping_list_item_delete_handler(
         return Error::Database.into_response();
     }
 
-    (StatusCode::OK).into_response()
+    let num_items = ShoppingList::items_count(&state.mm, list_id)
+        .await
+        .unwrap_or_default();
+
+    templates::shopping::render_shopping_list_item_count(list_id, num_items, true).into_response()
 }
 
 pub async fn shopping_list_item_put_handler(
@@ -332,6 +341,9 @@ pub async fn shopping_list_item_put_handler(
     };
 
     if let Err(err) = ShoppingList::update_item(&state.mm, list_id, item_id, item_u, user.id).await
+        && !err
+            .to_string()
+            .contains("shopping_list_items_quantity_check")
     {
         error!("Failed to update shopping list item: {err:?}");
         broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
@@ -340,7 +352,14 @@ pub async fn shopping_list_item_put_handler(
 
     match ShoppingList::get_item(&state.mm, list_id, item_id, user.id).await {
         Ok(item) => {
-            templates::shopping::render_shopping_list_item(list_id, &item, false).into_response()
+            let num_items = ShoppingList::items_count(&state.mm, list_id)
+                .await
+                .unwrap_or_default();
+
+            templates::shopping::render_shopping_list_item_with_count(
+                list_id, &item, num_items, false,
+            )
+            .into_response()
         }
         Err(err) => {
             error!("Failed to get shopping list item: {err:?}");

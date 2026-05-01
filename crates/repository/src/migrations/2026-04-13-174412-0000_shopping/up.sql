@@ -113,16 +113,29 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION update_shopping_list_num_items () RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION update_shopping_list_num_items () RETURNS TRIGGER AS $$
+DECLARE
+  list_id UUID;
 BEGIN
+  IF TG_OP = 'DELETE' THEN
+    list_id := OLD.shopping_list_id;
+  ELSE
+    list_id := NEW.shopping_list_id;
+  END IF;
+
   UPDATE shopping_lists
   SET num_items = (
     SELECT COUNT(*)
     FROM shopping_list_items
-    WHERE shopping_list_id = NEW.shopping_list_id
+    WHERE shopping_list_id = list_id
   )
-  WHERE id = NEW.shopping_list_id;
-  RETURN NEW;
+  WHERE id = list_id;
+
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -143,5 +156,6 @@ EXECUTE FUNCTION update_shopping_list_items_position ();
 CREATE TRIGGER update_shopping_list_num_items
 AFTER INSERT
 OR
-UPDATE ON shopping_list_items FOR EACH ROW
+UPDATE
+OR DELETE ON shopping_list_items FOR EACH ROW
 EXECUTE FUNCTION update_shopping_list_num_items ();

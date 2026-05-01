@@ -186,9 +186,7 @@ fn render_shopping_lists_list(shopping: &ShoppingData) -> Markup {
                             }
                         }
                         div class="flex flex-col items-end gap-1 shrink-0" {
-                            div class="badge badge-xs badge-primary" {
-                                (list.num_items)
-                            }
+                            (render_shopping_list_item_count(list.id, list.num_items, false))
                         }
                     }
                 }
@@ -216,9 +214,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
                     }
                 }
                 div class="flex flex-col items-end gap-1 shrink-0" {
-                    div class="badge badge-xs badge-primary" {
-                        (0)
-                    }
+                    (render_shopping_list_item_count(list_id, 0, false))
                 }
             }
         }
@@ -248,6 +244,16 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
             }
         }
         (render_shopping_list_actions(true, list_id))
+    }
+}
+
+pub fn render_shopping_list_item_count(list_id: Uuid, num_items: i64, is_swap_oob: bool) -> Markup {
+    html! {
+        div id=(format!("shopping-list-item-count-{list_id}"))
+            class="badge badge-xs badge-primary"
+            hx-swap-oob=[if is_swap_oob { Some("true") } else { None }] {
+            (num_items)
+        }
     }
 }
 
@@ -315,40 +321,53 @@ pub fn shopping_list_item<T: AsRef<str>>(
         .map(|i| i.quantity.as_deref().unwrap_or_default())
         .unwrap_or_default();
 
-    html! {
-        li class="list-row grid grid-cols-[1fr_auto]" {
-            div class="grid gap-1 min-w-0" {
-                label class="input input-sm" {
-                    (icon_carrot())
-                    input required type="text" placeholder="Surloin steak" name="item" value=(ingredient);
-                }
-                label class="input input-sm" {
-                    (icon_scale())
-                    input type="text" placeholder="500g (optional)" name="quantity" value=(quantity);
-                }
-                @if let Some(label) = label.map(|l| l.as_ref().to_string()) {
-                    input type="hidden" name="label" value=(label);
-                }
+    let label = html! {
+        div class="grid gap-1 min-w-0" {
+            label class="input input-sm" {
+                (icon_carrot())
+                input required autofocus type="text" placeholder="Surloin steak" name="item" value=(ingredient);
             }
+            label class="input input-sm" {
+                (icon_scale())
+                input type="text" placeholder="500g (optional)" name="quantity" value=(quantity);
+            }
+            @if let Some(label) = label.map(|l| l.as_ref().to_string()) {
+                input type="hidden" name="label" value=(label);
+            }
+        }
+    };
+
+    let action = |icon: Markup| {
+        html! {
             div class="grid grid-flow-col gap-1 place-self-end" {
                 div class="grid grid-col gap-2 w-12" {
-                    @if let Some(item) = item {
-                        button class="btn join-item btn-sm"
-                            hx-put=(format!("/shopping/lists/{list_id}/items/{}", item.id))
-                            hx-include="closest li"
-                            hx-target="closest li"
-                            hx-swap="outerHTML" {
-                            (icon_check())
-                        }
-                    } @else {
-                        button class="btn join-item btn-sm"
-                            hx-post=(format!("/shopping/lists/{list_id}/items"))
-                            hx-include="closest li"
-                            hx-target="closest li"
-                            hx-swap="beforebegin" {
-                            (icon_plus())
-                        }
+                    button class="btn join-item btn-sm" {
+                        (icon)
                     }
+                }
+            }
+        }
+    };
+
+    html! {
+        li class="list-row grid grid-cols-[1fr_auto]" {
+            @if let Some(item) = item {
+                form class="contents"
+                    hx-put=(format!("/shopping/lists/{list_id}/items/{}", item.id))
+                    hx-target="closest li"
+                    hx-swap="outerHTML"
+                    hx-on--after-request="if(event.detail.successful) { this.reset(); this.querySelector('input').focus(); }" {
+                    (label)
+                    (action(icon_check()))
+                }
+            } @else {
+                form class="contents"
+                    hx-post=(format!("/shopping/lists/{list_id}/items"))
+                    hx-target="closest li"
+                    hx-swap="beforebegin"
+                    hx-on--after-request="if(event.detail.successful) { this.reset(); this.querySelector('input').focus(); }" {
+                    (label)
+                    (action(icon_plus()))
                 }
             }
         }
@@ -413,7 +432,7 @@ pub fn render_shopping_list_title_edit<T: AsRef<str>>(list_id: Uuid, title: T) -
     html! {
         form hx-put=(format!("/shopping/lists/{list_id}")) hx-swap="outerHTML" {
             h1 class="text-2xl font-bold underline p-2" {
-                input required type="text" name="name" class="input input-lg text-center mr-1" value=(title.as_ref())
+                input required autofocus type="text" name="name" class="input input-lg text-center mr-1" value=(title.as_ref()) _="on load wait 50ms then call me.select()";
                 span class="ml-2" {
                     button class="btn join-item btn-square btn-lg" {
                         (icon_check())
@@ -421,6 +440,19 @@ pub fn render_shopping_list_title_edit<T: AsRef<str>>(list_id: Uuid, title: T) -
                 }
             }
         }
+    }
+}
+
+/// Renders a shopping list item with a count.
+pub fn render_shopping_list_item_with_count(
+    list_id: Uuid,
+    item: &ShoppingListItemDetails,
+    num_items: i64,
+    readonly: bool,
+) -> Markup {
+    html! {
+        (render_shopping_list_item(list_id, item, readonly))
+        (render_shopping_list_item_count(list_id, num_items, true))
     }
 }
 
@@ -486,7 +518,7 @@ pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Ma
 pub fn render_label_edit<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Markup {
     html! {
         summary class="text-left cursor-default" {
-            input type="text" name="name" class="input input-sm" value=(label.as_ref())
+            input autofocus type="text" name="name" class="input input-sm" value=(label.as_ref()) _="on load wait 50ms then call me.select()";
             span {
                 button class="btn join-item btn-square btn-sm ml-2 mb-1"
                     hx-include="closest summary"
@@ -556,7 +588,7 @@ fn shopping_list_view_mode(list: &ShoppingListDetails) -> Markup {
                                 }
                                 ol class="list bg-base-100 rounded-box shadow-md" {
                                     @for item in items {
-                                        (render_shopping_list_item(list.id, item, true))
+                                        (render_shopping_list_item(list.id, item,  true))
                                     }
                                 }
                             }
