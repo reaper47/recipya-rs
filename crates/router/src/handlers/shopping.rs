@@ -138,6 +138,24 @@ pub async fn shopping_list_put_handler(
     }
 }
 
+pub async fn shopping_list_print_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+) -> impl IntoResponse {
+    let list = match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
+        Ok(list) => list,
+        Err(err) => {
+            error!("Failed to get shopping list: {err}");
+            return Error::Database.into_response();
+        }
+    };
+
+    let content = templates::shopping::render_shopping_list_print_mode(&list);
+
+    templates::general::render_print_view(content).into_response()
+}
+
 pub async fn shopping_list_share_post_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -174,38 +192,31 @@ pub async fn shopping_list_share_post_handler(
     }
 }
 
-pub async fn shopping_list_edit_handler(
+pub async fn shopping_list_labels_post_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     Path(list_id): Path<Uuid>,
+    Form(form): Form<ListPayload>,
 ) -> impl IntoResponse {
-    match ShoppingList::get(&state.mm, list_id, user.id).await {
-        Ok(list) => {
-            templates::shopping::render_shopping_list_title_edit(list_id, list.name).into_response()
-        }
-        Err(err) => {
-            error!("Failed to get shopping list: {err}");
-            broadcast_error(&state, user.id, "Failed to get shopping list.").await;
-            Error::Database.into_response()
-        }
+    if form.name.is_empty() {
+        broadcast_warning(&state, user.id, "Label name cannot be empty.").await;
+        return Error::InvalidPayload.into_response();
     }
+
+    if let Err(err) = ShoppingList::new_label(&state.mm, &form.name, user.id).await {
+        broadcast_error(&state, user.id, "Error creating shopping list label.").await;
+        error!("Failed to create shopping list label: {err}");
+        return Error::Database.into_response();
+    }
+
+    templates::shopping::render_shopping_list_items(form.name, list_id, &[], true).into_response()
 }
 
-pub async fn shopping_list_label_handler(
-    RequireAuth(user): RequireAuth,
-    State(state): State<AppState>,
-    Path((list_id, label_id)): Path<(Uuid, i64)>,
+pub async fn shopping_list_labels_new_handler(
+    RequireAuth(_): RequireAuth,
+    Path(list_id): Path<Uuid>,
 ) -> impl IntoResponse {
-    match ShoppingList::label(&state.mm, label_id).await {
-        Ok(label) => {
-            templates::shopping::render_label_edit(label, list_id, label_id).into_response()
-        }
-        Err(err) => {
-            error!("Failed to get shopping list label: {err}");
-            broadcast_error(&state, user.id, "Failed to get shopping list label.").await;
-            Error::Database.into_response()
-        }
-    }
+    templates::shopping::render_label_new(list_id).into_response()
 }
 
 pub async fn shopping_list_label_put_handler(

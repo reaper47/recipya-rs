@@ -59,7 +59,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_recipe_exists_ok() -> Result<()> {
+        async fn test_edit_recipe_exists_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;

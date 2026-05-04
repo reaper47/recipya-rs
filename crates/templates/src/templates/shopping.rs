@@ -9,8 +9,8 @@ use models::{
 
 use crate::templates::{
     icons::{
-        icon_arrows_up_down, icon_carrot, icon_check, icon_pencil, icon_plus, icon_plus_circle,
-        icon_scale, icon_share, icon_trash,
+        icon_arrows_up_down, icon_carrot, icon_check, icon_check_circle, icon_pencil, icon_plus,
+        icon_plus_circle, icon_printer, icon_scale, icon_share, icon_trash,
     },
     layouts,
     pagination::pagination,
@@ -112,25 +112,35 @@ fn item_sections(list: &ShoppingListDetails) -> Markup {
             } @else {
                 @let items = list.items_per_label();
                 @for (label, items) in items {
-                    details open {
-                        summary class="text-left cursor-default" {
-                            (label)
-                            button class="btn join-item btn-square btn-sm ml-2 mb-1"
-                                hx-target="closest summary"
-                                hx-swap="outerHTML"
-                                hx-get=(format!("/shopping/lists/{}/labels/{}/edit", list.id, items.first().map_or(1, |i| i.label_id))) {
-                                (icon_pencil(false))
-                            }
-                        }
-                        ol class="list bg-base-100 rounded-box shadow-md" {
-                            @for item in items {
-                                (render_shopping_list_item(list.id, item, false))
-                            }
-                            (new_shopping_list_item(list.id, Some(label)))
-                        }
-                    }
+                    (render_shopping_list_items(label, list.id, items.as_slice(), false))
                 }
             }
+            (add_label(list.id))
+        }
+    }
+}
+
+/// Renders the shopping list items section for a given label.
+pub fn render_shopping_list_items<T: AsRef<str>>(
+    label: T,
+    list_id: Uuid,
+    items: &[&ShoppingListItemDetails],
+    is_add_new_label: bool,
+) -> Markup {
+    let label = label.as_ref();
+
+    html! {
+        details open {
+            (render_label(label, list_id, items.first().map_or(1, |i| i.label_id)))
+            ol class="list bg-base-100 rounded-box shadow-md" {
+                @for item in items {
+                    (render_shopping_list_item(list_id, item, false))
+                }
+                (new_shopping_list_item(list_id, Some(label)))
+            }
+        }
+        @if is_add_new_label {
+            (add_label(list_id))
         }
     }
 }
@@ -220,17 +230,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
         }
         div #shopping-list-view-pane hx-swap-oob="innerHTML" {
             div {
-                h1 class="text-2xl font-bold underline p-2" {
-                    (title.as_ref())
-                    span class="ml-2" {
-                        button class="btn join-item btn-square btn-sm"
-                            hx-target="closest h1"
-                            hx-swap="outerHTML"
-                            hx-get=(format!("/shopping/lists/{list_id}/edit")) {
-                            (icon_pencil(false))
-                        }
-                    }
-                }
+                (shopping_list_title(list_id, title))
                 div class="grid" {
                     div class="min-w-[33rem] place-self-center" {
                         details open {
@@ -277,6 +277,9 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
             }
             button class="btn join-item" {
                 "Upload to app"
+            }
+            a title="Print list" class="btn join-item" href=(format!("/shopping/lists/{list_id}/print")) target="_blank" {
+                (icon_printer())
             }
             button title="Share list"
                 class="btn join-item"
@@ -413,29 +416,23 @@ pub fn render_shopping_list_title<T: AsRef<str>>(
 
 fn shopping_list_title<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
     html! {
-        h1 class="text-2xl font-bold underline p-2" {
-            (title.as_ref())
-            span class="ml-2" {
-                button class="btn join-item btn-square btn-sm"
-                    hx-target="closest h1"
-                    hx-swap="outerHTML"
-                    hx-get=(format!("/shopping/lists/{}/edit", list_id)) {
-                    (icon_pencil(false))
+        div {
+            h1 class="text-2xl font-bold underline p-2" {
+                (title.as_ref())
+                span class="ml-2" {
+                    button class="btn join-item btn-square btn-sm"
+                        _="on click add .hidden to closest <h1/> then remove .hidden from next <form/> from closest <h1/> then call (next <input/> from closest <h1/>).select()" {
+                        (icon_pencil(false))
+                    }
                 }
             }
-        }
-    }
-}
-
-/// Renders the shopping list title edit form.
-pub fn render_shopping_list_title_edit<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
-    html! {
-        form hx-put=(format!("/shopping/lists/{list_id}")) hx-swap="outerHTML" {
-            h1 class="text-2xl font-bold underline p-2" {
-                input required autofocus type="text" name="name" class="input input-lg text-center mr-1" value=(title.as_ref()) _="on load wait 50ms then call me.select()";
-                span class="ml-2" {
-                    button class="btn join-item btn-square btn-lg" {
-                        (icon_check())
+            form class="hidden" hx-put=(format!("/shopping/lists/{list_id}")) hx-swap="outerHTML" {
+                h1 class="text-2xl font-bold underline p-2" {
+                    input required autofocus type="text" name="name" class="input input-lg text-center mr-1" value=(title.as_ref());
+                    span class="ml-2" {
+                        button class="btn join-item btn-square btn-lg" {
+                            (icon_check())
+                        }
                     }
                 }
             }
@@ -501,31 +498,30 @@ pub fn render_shopping_list_item(
 
 /// Renders the label.
 pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Markup {
-    html! {
-        summary class="text-left cursor-default" {
-            (label.as_ref())
-            button class="btn join-item btn-square btn-sm ml-2 mb-1"
-                hx-target="closest summary"
-                hx-swap="outerHTML"
-                hx-get=(format!("/shopping/lists/{list_id}/labels/{label_id}/edit")) {
-                (icon_pencil(false))
-            }
-        }
-    }
-}
+    let id = format!("label-{label_id}",);
 
-/// Renders the edit label form.
-pub fn render_label_edit<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Markup {
     html! {
-        summary class="text-left cursor-default" {
-            input autofocus type="text" name="name" class="input input-sm" value=(label.as_ref()) _="on load wait 50ms then call me.select()";
+        summary id=(id) class="text-left cursor-default" {
+            // View mode
             span {
+                (label.as_ref())
                 button class="btn join-item btn-square btn-sm ml-2 mb-1"
-                    hx-include="closest summary"
-                    hx-target="closest summary"
-                    hx-swap="outerHTML"
-                    hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
-                    (icon_check())
+                    _="on click add .hidden to closest <span/> then remove .hidden from next <span/> from closest <span/> then call (next <input/> from closest <span/>).select()" {
+                    (icon_pencil(false))
+                }
+            }
+
+            // Edit mode
+            span class="hidden text-left cursor-default" {
+                input autofocus type="text" name="name" class="input input-sm" value=(label.as_ref()) _="on load wait 50ms then call me.select()";
+                span {
+                    button class="btn join-item btn-square btn-sm ml-2 mb-1"
+                        hx-include="closest summary"
+                        hx-target="closest summary"
+                        hx-swap="outerHTML"
+                        hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
+                        (icon_check())
+                    }
                 }
             }
         }
@@ -592,6 +588,77 @@ fn shopping_list_view_mode(list: &ShoppingListDetails) -> Markup {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn add_label(list_id: Uuid) -> Markup {
+    html! {
+        div .divider {
+            div class="grid grid-flow-col gap-2 w-full" {
+                btn class="btn btn-sm btn-outline" hx-get=(format!("/shopping/lists/{list_id}/labels/new")) hx-swap="outerHTML" {
+                    "Add label"
+                }
+            }
+        }
+    }
+}
+
+pub fn render_label_new(list_id: Uuid) -> Markup {
+    html! {
+        form hx-post=(format!("/shopping/lists/{list_id}/labels")) hx-target="closest div.divider" hx-swap="outerHTML" {
+            input autofocus type="text" name="name" class="input input-sm gap-1";
+            button type="submit" class="btn btn-sm btn-ghost" {
+                (icon_check_circle())
+            }
+        }
+    }
+}
+
+pub fn render_shopping_list_print_mode(list: &ShoppingListDetails) -> Markup {
+    let render_list = |items: &[&ShoppingListItemDetails]| {
+        html! {
+            ul {
+                @for item in items {
+                    li style="list-style-type: none;" {
+                        label {
+                            input class="checkbox" type="checkbox" style="margin-right: .5rem;";
+                            @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
+                                (format!("{} ({q})", item.ingredient))
+                            } @else {
+                                (format!("{}", item.ingredient))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    html! {
+        h1 style="text-align: center; text-decoration: underline;" {
+            (list.name)
+        }
+        div {
+            @if list.items.is_empty() {
+                p {
+                    "Shopping list has no items."
+                }
+            } @else {
+                @let items = list.items_per_label();
+                @for (label, items) in items {
+                    @if label == "No label" {
+                        (render_list(items.as_slice()))
+                    } @else {
+                        details open {
+                            summary {
+                                (label)
+                            }
+                            (render_list(items.as_slice()))
                         }
                     }
                 }

@@ -61,7 +61,8 @@ pub fn main(
                           hx-get=[if data.is_authenticated { Some("/") } else { None }]
                           hx-push-url=[if data.is_authenticated { Some("true") } else { None }]
                           hx-target=[if data.is_authenticated { Some("#content") } else { None }]
-                          href=[if data.is_authenticated { None } else { Some("/") }] {
+                          href=[if data.is_authenticated { None } else { Some("/") }]
+                          hx-swap="innerHTML transition:true" {
                             img src="/data/images/Icon/android-chrome-192x192.png" alt="Logo" style="width: 2rem";
                             "Recipya"
                         }
@@ -221,7 +222,8 @@ pub(super) fn render_recipe_button(is_oob_swap: bool) -> Markup {
             hx-get="/recipes/add"
             hx-target="#content"
             hx-trigger="mousedown"
-            hx-push-url="true" {
+            hx-push-url="true"
+            hx-swap="innerHTML transition:true" {
             "Add recipe"
         }
     }

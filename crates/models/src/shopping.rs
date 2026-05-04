@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
-use diesel_async::{AsyncPgConnection, RunQueryDsl};
+use diesel::{prelude::*, sql_types::Text};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
 use uuid::Uuid;
 
@@ -428,6 +428,64 @@ impl ShoppingList {
         .id;
 
         Ok(label_id)
+    }
+
+    /// Creates a new label by name, returning the label ID.
+    pub async fn new_label<T: AsRef<str>>(
+        mm: &ModelManager,
+        name: T,
+        user_id: Uuid,
+    ) -> Result<i64> {
+        if name.as_ref().is_empty() {
+            return Err(Error::EmptyInput);
+        }
+
+        let name = name.as_ref();
+
+        mm.pool
+            .get()
+            .await?
+            .transaction::<i64, Error, _>(|conn| {
+                Box::pin(async move {
+                    let maybe_id = diesel::insert_into(schema::shopping_list_labels::table)
+                        .values(schema::shopping_list_labels::name.eq(name))
+                        .on_conflict(diesel::dsl::sql::<Text>("(lower(name))"))
+                        .do_nothing()
+                        .returning(schema::shopping_list_labels::id)
+                        .get_result::<i64>(conn)
+                        .await
+                        .optional()?;
+
+                    let label_id = match maybe_id {
+                        Some(id) => id,
+                        None => {
+                            schema::shopping_list_labels::table
+                                .filter(
+                                    diesel::dsl::sql::<diesel::sql_types::Bool>(
+                                        "lower(name) = lower(",
+                                    )
+                                    .bind::<diesel::sql_types::Text, _>(name)
+                                    .sql(")"),
+                                )
+                                .select(schema::shopping_list_labels::id)
+                                .get_result::<i64>(conn)
+                                .await?
+                        }
+                    };
+
+                    diesel::insert_into(schema::users_shopping_list_labels::table)
+                        .values((
+                            schema::users_shopping_list_labels::user_id.eq(user_id),
+                            schema::users_shopping_list_labels::label_id.eq(label_id),
+                        ))
+                        .on_conflict_do_nothing()
+                        .execute(conn)
+                        .await?;
+
+                    Ok(label_id)
+                })
+            })
+            .await
     }
 
     /// Updates the title of a shopping list.

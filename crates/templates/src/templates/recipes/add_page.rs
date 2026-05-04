@@ -158,7 +158,8 @@ fn render_manual_recipe_card() -> Markup {
                     class="btn btn-outline btn-sm btn-block"
                     hx-get="/recipes/add/manual"
                     hx-target="#content"
-                    hx-push-url="true" {
+                    hx-push-url="true"
+                    hx-swap="innerHTML transition:true" {
                     "Fill In"
                 }
             }
