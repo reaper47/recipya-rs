@@ -735,9 +735,7 @@ mod tests {
                     &format!(
                         r#"<li class="list-row grid grid-cols-[1fr_auto]"><form class="contents" hx-put="/shopping/lists/{list_id}/items/1" hx-target="closest li" hx-swap="outerHTML" hx-on--after-request="if(event.detail.successful) {{ this.reset(); this.querySelector('input').focus(); }}"><div class="grid gap-1 min-w-0"><label class="input input-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" height="20" width="22.5" fill="currentColor"><path d="M453.1 27.3L440.9 39.4C409.7 70.6 409.7 121.3 440.9 152.5C456.5 168.1 472.1 183.7 487.8 199.4C519 230.6 569.7 230.6 600.9 199.4L613 187.3C619.2 181.1 619.2 170.9 613 164.7L600.9 152.6C569.7 121.4 519 121.4 487.8 152.6C519 121.4 519 70.7 487.8 39.5L475.7 27.3C469.5 21.1 459.3 21.1 453.1 27.3zM331.6 160C286.4 160 244.5 180.4 216.6 214.3L273.3 271C282.7 280.4 282.7 295.6 273.3 304.9C263.9 314.2 248.7 314.3 239.4 304.9L191.6 257.2L67.2 530.8C61.7 542.9 64.3 557.2 73.7 566.7C83.1 576.2 97.4 578.7 109.6 573.2L251.2 508.8L207.4 465C198 455.6 198 440.4 207.4 431.1C216.8 421.8 232 421.7 241.3 431.1L297.8 487.6L393.1 444.3C446.2 420.2 480.3 367.2 480.3 308.8C480.3 226.6 413.7 160 331.5 160z"></svg><input required autofocus type="text" placeholder="Surloin steak" name="item" value="Spaghetti"></label><label class="input input-sm"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z"></svg><input type="text" placeholder="500g (optional)" name="quantity" value=""></label><input type="hidden" name="label" value="No label"></div><div class="grid grid-flow-col gap-1 place-self-end"><div class="grid grid-col gap-2 w-12">"#
                     ),
-                    &format!(
-                        r#"<button class="btn join-item btn-sm"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></svg></button>"#
-                    ),
+                    r#"<button class="btn join-item btn-sm"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></svg></button>"#,
                 ],
             );
             Ok(())
@@ -975,7 +973,7 @@ mod tests {
                 &[
                     r#"<!DOCTYPE html><html><head><meta charset="utf-8"><title>Print View</title></head><body class="p-8">"#,
                     r#"<h1 style="text-align: center; text-decoration: underline;">Test</h1><div><p>Shopping list has no items.</p>"#,
-                    r#"<script>window.onload = function() { window.print(); window.close(); }</script></body></html>"#,
+                    "<script>window.onload = function() { window.print(); window.close(); }</script></body></html>",
                 ],
             );
             Ok(())
@@ -998,7 +996,7 @@ mod tests {
                 &[
                     r#"<!DOCTYPE html><html><head><meta charset="utf-8"><title>Print View</title></head><body class="p-8">"#,
                     r#"<h1 style="text-align: center; text-decoration: underline;">Test</h1><div><ul><li style="list-style-type: none;"><label><input class="checkbox" type="checkbox" style="margin-right: .5rem;">Spaghetti</label></li></ul></div>"#,
-                    r#"<script>window.onload = function() { window.print(); window.close(); }</script></body></html>"#,
+                    "<script>window.onload = function() { window.print(); window.close(); }</script></body></html>",
                 ],
             );
             Ok(())
@@ -1021,7 +1019,7 @@ mod tests {
                 &[
                     r#"<!DOCTYPE html><html><head><meta charset="utf-8"><title>Print View</title></head><body class="p-8">"#,
                     r#"<h1 style="text-align: center; text-decoration: underline;">Test</h1><div><details open><summary>Meat</summary><ul><li style="list-style-type: none;"><label><input class="checkbox" type="checkbox" style="margin-right: .5rem;">chicken (1 cup)</label></li></ul></details>"#,
-                    r#"<script>window.onload = function() { window.print(); window.close(); }</script></body></html>"#,
+                    r"<script>window.onload = function() { window.print(); window.close(); }</script></body></html>",
                 ],
             );
             Ok(())

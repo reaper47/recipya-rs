@@ -498,7 +498,7 @@ pub fn render_shopping_list_item(
 
 /// Renders the label.
 pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Markup {
-    let id = format!("label-{label_id}",);
+    let id = format!("label-{label_id}");
 
     html! {
         summary id=(id) class="text-left cursor-default" {

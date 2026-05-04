@@ -139,14 +139,14 @@ pub async fn share_shopping_list_handler(
     templates::shopping::render_view_shopping_list_details(
         uri.path(),
         &Data {
-            is_admin: user.as_ref().map_or(false, |u| u.is_admin),
+            is_admin: user.as_ref().is_some_and(|u| u.is_admin),
             is_authenticated: user.is_some(),
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             share: Some(ShareData {
                 is_shared: true,
-                is_from_host: user.as_ref().map_or(false, |u| u.id == share.user_id),
+                is_from_host: user.as_ref().is_some_and(|u| u.id == share.user_id),
             }),
             shopping: Some(ShoppingData {
                 shopping_lists: vec![],

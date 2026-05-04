@@ -3,7 +3,7 @@ use maud::{DOCTYPE, Markup, html};
 use super::layouts;
 
 /// Renders content for the print view of a component.
-pub fn render_print_view(content: Markup) -> Markup {
+pub fn render_print_view(content: &Markup) -> Markup {
     html! {
         (DOCTYPE)
         html {

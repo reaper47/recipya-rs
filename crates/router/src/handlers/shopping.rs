@@ -153,7 +153,7 @@ pub async fn shopping_list_print_handler(
 
     let content = templates::shopping::render_shopping_list_print_mode(&list);
 
-    templates::general::render_print_view(content).into_response()
+    templates::general::render_print_view(&content).into_response()
 }
 
 pub async fn shopping_list_share_post_handler(
