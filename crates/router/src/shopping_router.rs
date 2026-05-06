@@ -8,12 +8,12 @@ use app::state::AppState;
 
 use crate::{
     handlers::shopping::{
-        shopping_list_delete_handler, shopping_list_handler, shopping_list_item_delete_handler,
-        shopping_list_item_edit_handler, shopping_list_item_post_handler,
-        shopping_list_item_put_handler, shopping_list_label_put_handler,
-        shopping_list_labels_new_handler, shopping_list_labels_post_handler,
-        shopping_list_print_handler, shopping_list_put_handler, shopping_list_share_post_handler,
-        shopping_lists_handler, shopping_lists_post_handler,
+        shopping_list_copy_handler, shopping_list_delete_handler, shopping_list_export_handler,
+        shopping_list_handler, shopping_list_item_delete_handler, shopping_list_item_edit_handler,
+        shopping_list_item_post_handler, shopping_list_item_put_handler,
+        shopping_list_label_put_handler, shopping_list_labels_new_handler,
+        shopping_list_labels_post_handler, shopping_list_print_handler, shopping_list_put_handler,
+        shopping_list_share_post_handler, shopping_lists_handler, shopping_lists_post_handler,
     },
     middleware::mw_auth::mw_refresh_token,
 };
@@ -31,6 +31,11 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
             get(shopping_list_handler)
                 .delete(shopping_list_delete_handler)
                 .put(shopping_list_put_handler),
+        )
+        .route("/lists/{:list_id}/copy", get(shopping_list_copy_handler))
+        .route(
+            "/lists/{:list_id}/export",
+            get(shopping_list_export_handler),
         )
         .route("/lists/{:list_id}/print", get(shopping_list_print_handler))
         .route(
@@ -1022,6 +1027,118 @@ mod tests {
                     r"<script>window.onload = function() { window.print(); window.close(); }</script></body></html>",
                 ],
             );
+            Ok(())
+        }
+    }
+
+    mod tests_shopping_list_copy {
+        use mime_guess::mime::TEXT_PLAIN_UTF_8;
+        use reqwest::header::CONTENT_TYPE;
+
+        use super::*;
+
+        fn base_uri(list_id: Uuid, format: Option<&str>) -> String {
+            format!(
+                "/shopping/lists/{list_id}/copy?format={}",
+                format.unwrap_or_default()
+            )
+        }
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, &base_uri(Uuid::new_v4(), Some("text"))).await
+        }
+
+        #[tokio::test]
+        async fn test_copy_no_items_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+
+            let res = server.get(&base_uri(list_id, Some("text"))).await;
+
+            res.assert_status_internal_server_error();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Shopping list is empty.","status":"alert-warning","title":"Attention"}}"# ).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_copy_list_with_items_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+            let _ = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
+
+            let res = server.get(&base_uri(list_id, Some("text"))).await;
+
+            res.assert_status_ok();
+            res.assert_header(CONTENT_TYPE, TEXT_PLAIN_UTF_8.to_string());
+            res.assert_text("Test\n----\n\n- Spaghetti\n");
+            Ok(())
+        }
+    }
+
+    mod tests_shopping_list_export {
+        use axum_htmx::HX_TRIGGER;
+        use models::download::Download;
+
+        use super::*;
+
+        fn base_uri(list_id: Uuid, format: Option<&str>) -> String {
+            format!(
+                "/shopping/lists/{list_id}/export?format={}",
+                format.unwrap_or_default()
+            )
+        }
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, &base_uri(Uuid::new_v4(), Some("text"))).await
+        }
+
+        #[tokio::test]
+        async fn test_export_no_items_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+
+            let res = server.get(&base_uri(list_id, Some("text"))).await;
+
+            res.assert_status_internal_server_error();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Shopping list is empty.","status":"alert-warning","title":"Attention"}}"# ).await;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_export_list_with_items_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+            let _ = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
+
+            let res = server.get(&base_uri(list_id, Some("text"))).await;
+
+            res.assert_status_ok();
+            let hx_trigger = res.header(HX_TRIGGER);
+            let hx_str = hx_trigger.to_str()?;
+            assert!(hx_str.contains("downloadReady"));
+            assert!(hx_str.contains("/download?token="));
+            let token_str = hx_str
+                .split_once("/download?token=")
+                .and_then(|(_, after)| after.split('"').next())
+                .expect("HX-Trigger should contain a download token");
+            let token = token_str.parse::<uuid::Uuid>()?;
+            let dl = Download::find_by_token(&state.mm, token).await?.unwrap();
+            assert_eq!(dl.user_id, user_id);
+            assert_eq!(dl.file_path, "/tmp/Test.txt");
             Ok(())
         }
     }

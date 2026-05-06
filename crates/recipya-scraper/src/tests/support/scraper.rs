@@ -159,11 +159,11 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes().await?)
-                    .inspect_err(|err| error!("Could not write {website}: {err:?}"))
+                    .inspect_err(|err| error!("Could not write {website}: {err}"))
                     .unwrap();
             }
             Err(err) => {
-                error!("Could not fetch {website}: {err:?}");
+                error!("Could not fetch {website}: {err}");
             }
         }
     }

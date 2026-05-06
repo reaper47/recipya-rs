@@ -193,7 +193,7 @@ where
                     });
 
                     if let Err(err) = save_media_field(field, &mut images, &mut videos).await {
-                        error!("Saving media failed: {err:?}");
+                        error!("Saving media failed: {err}");
                     }
                 }
                 "comment" => form.comment = text_trim(field).await,

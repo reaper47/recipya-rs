@@ -73,7 +73,7 @@ mod tests {
                     );
                 }
                 Err(err) => {
-                    panic!("{err:?} for text '{text}'");
+                    panic!("{err} for text '{text}'");
                 }
             }
         }

@@ -1,10 +1,17 @@
 use axum::Form;
-use axum::extract::{OriginalUri, Path};
+use axum::body::Body;
+use axum::extract::{OriginalUri, Path, Query};
 use axum::http::HeaderMap;
+use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
-use axum_htmx::HX_PROMPT;
+use axum_htmx::{HX_PROMPT, HX_TRIGGER};
 use chrono::NaiveDateTime;
+use mime_guess::mime::TEXT_PLAIN_UTF_8;
+use models::download::{Download, DownloadForCreate};
+use models::params::ShoppingListExportParams;
 use reqwest::StatusCode;
+use reqwest::header::CONTENT_TYPE;
+use serde_json::json;
 use tracing::error;
 
 use app::state::AppState;
@@ -35,10 +42,7 @@ pub async fn shopping_lists_handler(
     let shopping_lists = match ShoppingList::get_all(&state.mm, user.id).await {
         Ok(lists) => lists,
         Err(err) => {
-            error!(
-                "Failed to get shopping lists for user '{}': {err:?}",
-                user.id
-            );
+            error!("Failed to get shopping lists for user '{}': {err}", user.id);
             broadcast_error(&state, user.id, "Failed to get shopping lists.").await;
             return Err(Error::Database);
         }
@@ -49,7 +53,7 @@ pub async fn shopping_lists_handler(
             Ok(details) => Some(details),
             Err(err) => {
                 error!(
-                    "Failed to get shopping list details of list '{}' for user '{}': {err:?}",
+                    "Failed to get shopping list details of list '{}' for user '{}': {err}",
                     list.id, user.id
                 );
                 broadcast_error(&state, user.id, "Failed to get shopping list details.").await;
@@ -134,6 +138,97 @@ pub async fn shopping_list_put_handler(
             error!("Failed to update shopping list title: {err}");
             broadcast_error(&state, user.id, "Failed to update shopping list title.").await;
             Error::Database.into_response()
+        }
+    }
+}
+
+pub async fn shopping_list_copy_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+    Query(params): Query<ShoppingListExportParams>,
+) -> Result<impl IntoResponse> {
+    let list = ShoppingListDetails::get(&state.mm, list_id, user.id).await?;
+
+    let mut writer = Vec::new();
+
+    let res = match params.format {
+        models::export::ExportType::Markdown => list.write_markdown(&mut writer),
+        models::export::ExportType::Text => list.write_text(&mut writer),
+        models::export::ExportType::Json | models::export::ExportType::Pdf => {
+            unimplemented!()
+        }
+    };
+
+    let body = match res {
+        Ok(()) => Body::from(String::from_utf8(writer).unwrap_or_default()),
+        Err(models::Error::EmptyInput) => {
+            broadcast_warning(&state, user.id, "Shopping list is empty.").await;
+            return Err(Error::Write);
+        }
+        Err(err) => {
+            error!(
+                "Failed to write shopping list to '{:?}': {err}",
+                params.format
+            );
+            broadcast_error(&state, user.id, "Failed to write shopping list.").await;
+            return Err(Error::Write);
+        }
+    };
+
+    Ok(Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, TEXT_PLAIN_UTF_8.to_string())
+        .body(body)?)
+}
+
+pub async fn shopping_list_export_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+    Query(params): Query<ShoppingListExportParams>,
+) -> Result<impl IntoResponse> {
+    let list = ShoppingListDetails::get(&state.mm, list_id, user.id).await?;
+
+    let path = match list.export(&params.format) {
+        Ok(f) => f,
+        Err(models::Error::EmptyInput) => {
+            broadcast_warning(&state, user.id, "Shopping list is empty.").await;
+            return Err(Error::Write);
+        }
+        Err(err) => {
+            error!("Failed to export shopping list: {err}");
+            broadcast_error(&state, user.id, "Failed to export shopping list.").await;
+            return Err(Error::Database);
+        }
+    };
+
+    let token = Uuid::new_v4();
+    let dl_c = DownloadForCreate::new(user.id, token, path);
+
+    if let Err(err) = Download::create(&state.mm, dl_c).await {
+        error!("Failed to create download for user {}: {err}", user.id);
+        broadcast_error(&state, user.id, "Failed to create export data response.").await;
+        return Err(Error::Database);
+    }
+
+    match Response::builder()
+        .header(
+            HX_TRIGGER,
+            json!({
+                "downloadReady": {
+                    "url": format!("/download?token={}", token)
+                }
+            })
+            .to_string(),
+        )
+        .body(Body::empty())
+    {
+        Ok(res) => Ok(res),
+        Err(err) => {
+            error!("Failed to create response for user {}: {err}", user.id);
+            broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Err(Error::Fs)
         }
     }
 }
@@ -262,7 +357,7 @@ pub async fn shopping_lists_post_handler(
     let list_id = match ShoppingList::create(&state.mm, title, user.id).await {
         Ok(id) => id,
         Err(err) => {
-            error!("Failed to create shopping list: {err:?}");
+            error!("Failed to create shopping list: {err}");
             broadcast_error(&state, user.id, "Failed to create shopping list.").await;
             return Error::Database.into_response();
         }
@@ -305,7 +400,7 @@ pub async fn shopping_list_item_post_handler(
             .into_response();
         }
         Err(err) => {
-            error!("Failed to add shopping list item: {err:?}");
+            error!("Failed to add shopping list item: {err}");
             broadcast_error(&state, user.id, "Failed to add shopping list item.").await;
             return Error::Database.into_response();
         }
@@ -356,7 +451,7 @@ pub async fn shopping_list_item_put_handler(
             .to_string()
             .contains("shopping_list_items_quantity_check")
     {
-        error!("Failed to update shopping list item: {err:?}");
+        error!("Failed to update shopping list item: {err}");
         broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
         return Error::Database.into_response();
     }
@@ -373,7 +468,7 @@ pub async fn shopping_list_item_put_handler(
             .into_response()
         }
         Err(err) => {
-            error!("Failed to get shopping list item: {err:?}");
+            error!("Failed to get shopping list item: {err}");
             broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
             Error::Database.into_response()
         }
@@ -391,7 +486,7 @@ pub async fn shopping_list_item_edit_handler(
                 .into_response()
         }
         Err(err) => {
-            error!("Failed to get shopping list item: {err:?}");
+            error!("Failed to get shopping list item: {err}");
             broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
             Error::EntityNotFound {
                 entity: "shopping_list_item",

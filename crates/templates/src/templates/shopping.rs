@@ -9,8 +9,9 @@ use models::{
 
 use crate::templates::{
     icons::{
-        icon_arrows_up_down, icon_carrot, icon_check, icon_check_circle, icon_pencil, icon_plus,
-        icon_plus_circle, icon_printer, icon_scale, icon_share, icon_trash,
+        icon_arrow_down_tray, icon_arrows_up_down, icon_carrot, icon_check, icon_check_circle,
+        icon_clipboard_document, icon_pencil, icon_plus, icon_plus_circle, icon_printer,
+        icon_scale, icon_share, icon_trash,
     },
     layouts,
     pagination::pagination,
@@ -270,13 +271,11 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                 "View (default)"
             }
             button class="btn join-item" {
-                "Copy"
-            }
-            button class="btn join-item" {
-                "Export"
-            }
-            button class="btn join-item" {
                 "Upload to app"
+            }
+            button class="btn join-item" style="anchor-name:--anchor-copy-list" popovertarget="shopping-list-copy-popover" {
+                "Export"
+                span class="mb-1" { "⌄" }
             }
             a title="Print list" class="btn join-item" href=(format!("/shopping/lists/{list_id}/print")) target="_blank" {
                 (icon_printer())
@@ -299,6 +298,57 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
             }
             button title="Delete list" class="btn join-item" hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
                 (icon_trash())
+            }
+        }
+
+        div #shopping-list-copy-popover
+            class="dropdown rounded-box bg-base-100 shadow-sm"
+            popover style="anchor-name:--anchor-copy-list" {
+            ul class="list bg-base-100 rounded-box shadow-md" {
+                li .list-row {
+                    p .place-content-center {
+                        "Text"
+                    }
+                    div class="place-self-end grid grid-flow-col" {
+                        button title="Copy" class="btn btn-square btn-ghost"
+                            hx-get=(format!("/shopping/lists/{list_id}/copy?format=text"))
+                            hx-swap="none"
+                            hx-on--after-request="copyHtmxResponseToClipboard(event)"
+                            _="on click call #shopping-list-copy-popover.hidePopover()" {
+                            (icon_clipboard_document())
+                        }
+                        form title="Download"
+                            hx-get=(format!("/shopping/lists/{list_id}/export?format=text"))
+                            hx-swap="none"
+                            hx-on:download-ready="document.getElementById('shopping-list-copy-popover').hidePopover(); window.location.href = event.detail.url;" {
+                                button title="Download" class="btn btn-square btn-ghost" {
+                                    (icon_arrow_down_tray())
+                                }
+                            }
+                    }
+                }
+                li . list-row {
+                    p .place-content-center {
+                        "Markdown"
+                    }
+                    div class="place-self-end grid grid-flow-col" {
+                        button title="Copy" class="btn btn-square btn-ghost"
+                            hx-get=(format!("/shopping/lists/{list_id}/copy?format=markdown"))
+                            hx-swap="none"
+                            hx-on--after-request="copyHtmxResponseToClipboard(event)"
+                            _="on click call #shopping-list-copy-popover.hidePopover()" {
+                            (icon_clipboard_document())
+                        }
+                        form title="Download"
+                            hx-get=(format!("/shopping/lists/{list_id}/export?format=markdown"))
+                            hx-swap="none"
+                            hx-on:download-ready="document.getElementById('shopping-list-copy-popover').hidePopover(); window.location.href = event.detail.url;" {
+                                button title="Download" class="btn btn-square btn-ghost" {
+                                    (icon_arrow_down_tray())
+                                }
+                            }
+                    }
+                }
             }
         }
     }

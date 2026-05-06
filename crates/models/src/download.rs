@@ -90,7 +90,11 @@ impl Download {
     }
 
     /// Deletes a download item by its token and deletes the file associated with it.
-    pub async fn delete_by_token(mm: &ModelManager, token: Uuid, file_path: String) -> Result<()> {
+    pub async fn delete_by_token<T: AsRef<str>>(
+        mm: &ModelManager,
+        token: Uuid,
+        file_path: T,
+    ) -> Result<()> {
         let mut conn = mm.pool.get().await?;
 
         diesel::delete(schema::downloads::table)
@@ -98,7 +102,7 @@ impl Download {
             .execute(&mut conn)
             .await?;
 
-        tokio::fs::remove_file(file_path).await?;
+        tokio::fs::remove_file(file_path.as_ref()).await?;
 
         Ok(())
     }

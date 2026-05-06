@@ -447,7 +447,10 @@ function copyToClipboard(text) {
       .writeText(text)
       .then(() => {
         showToast("", "Copied to clipboard.", "alert-success");
-        document.querySelector("#copy-button").closest("dialog").close();
+        const copyButton = document.querySelector("#copy-button");
+        if (copyButton) {
+          copyButton.closest("dialog").close();
+        }
       })
       .catch((err) => {
         showToast("", `Failed to copy: ${err.message}`, "alert-error");
@@ -706,4 +709,10 @@ function checkExportDataSubmit() {
 
   button.disabled = isDisabled;
   button.parentElement.classList.toggle("cursor-not-allowed", isDisabled);
+}
+
+function copyHtmxResponseToClipboard(event) {
+  if (event.detail.successful) {
+    copyToClipboard(event.detail.xhr.responseText);
+  }
 }

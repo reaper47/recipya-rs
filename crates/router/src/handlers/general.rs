@@ -1,5 +1,6 @@
 use std::fmt::Write;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::path::Path;
 
 use axum::Json;
 use axum::body::Body;
@@ -54,7 +55,7 @@ pub async fn download_handler(
         }
         Err(err) => {
             error!(
-                "Failed to find download token '{token}' for user {}: {err:?}",
+                "Failed to find download token '{token}' for user {}: {err}",
                 user.id
             );
             broadcast_error(&state, user.id, "Failed to find download token.").await;
@@ -62,11 +63,21 @@ pub async fn download_handler(
         }
     };
 
+    let file_name = Path::new(&file_path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("download");
+
+    let mime_type = mime_guess::from_path(&file_path)
+        .first()
+        .map(|m| m.to_string())
+        .unwrap_or_default();
+
     let file = match tokio::fs::File::open(&file_path).await {
         Ok(f) => f,
         Err(err) => {
             error!(
-                "Failed to open file '{file_path}' for user {}: {err:?}",
+                "Failed to open file '{file_path}' for user {}: {err}",
                 user.id
             );
             broadcast_error(&state, user.id, "Failed to open export file.").await;
@@ -75,10 +86,11 @@ pub async fn download_handler(
     };
 
     let mm = state.mm.clone();
+    let file_path = file_path.clone();
     let stream = ReaderStream::new(file).chain(futures::stream::once(async move {
         if let Err(err) = Download::delete_by_token(&mm, token, file_path).await {
             error!(
-                "Failed to delete download token '{token}' for user {}: {err:?}",
+                "Failed to delete download token '{token}' for user {}: {err}",
                 user.id
             );
         }
@@ -86,16 +98,16 @@ pub async fn download_handler(
     }));
 
     match Response::builder()
-        .header(CONTENT_TYPE, "application/zip")
+        .header(CONTENT_TYPE, mime_type)
         .header(
             CONTENT_DISPOSITION,
-            "attachment; filename=\"recipya-data-export.zip\"",
+            format!("attachment; filename=\"{file_name}\""),
         )
         .body(Body::from_stream(stream))
     {
         Ok(res) => res,
         Err(err) => {
-            error!("Failed to create response for user {}: {err:?}", user.id);
+            error!("Failed to create response for user {}: {err}", user.id);
             broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Error::Fs.into_response()
         }

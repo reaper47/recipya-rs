@@ -54,6 +54,7 @@ pub enum Error {
     InvalidQuery,
     NoUser,
     NoRecipe,
+    Write,
 
     // Network
     DNSResolution,
@@ -67,6 +68,8 @@ pub enum Error {
     HumanTime(humantime::DurationError),
     #[from]
     Email(email::Error),
+    #[from]
+    Http(axum::http::Error),
     #[from]
     Integration(integrations::Error),
     #[from]

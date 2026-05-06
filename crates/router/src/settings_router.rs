@@ -213,7 +213,7 @@ mod tests {
                         r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" class="checkbox" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked then call checkExportDataSubmit()"></label></th><th class="py-1 text-left">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-results">"#,
                         r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="1" _="on change call checkExportDataSubmit()"></label></td><td class="py-1">Best Chinese Kale</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/1" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
                         r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="2" _="on change call checkExportDataSubmit()"></label></td><td class="py-1">Taco Tuesday</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/2" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
-                        r#"</tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="export-data-submit-button" type="submit" class="btn btn-sm" disabled><img id="export-data-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading..."><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></div></form>"#,
+                        r#"</tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="export-data-submit-button" type="submit" class="btn btn-sm" disabled><img id="export-data-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading..."><svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></div></form>"#,
                     ],
                 );
                 Ok(())
@@ -221,6 +221,7 @@ mod tests {
         }
 
         mod tests_post {
+            use axum_htmx::HX_TRIGGER;
             use models::download::Download;
             use test_db::TestDb;
             use test_models::a_complete_recipe_for_create;
@@ -287,7 +288,7 @@ mod tests {
                     .await;
 
                 res.assert_status_ok();
-                let hx_trigger = res.header("HX-Trigger");
+                let hx_trigger = res.header(HX_TRIGGER);
                 let hx_str = hx_trigger.to_str()?;
                 assert!(hx_str.contains("downloadReady"));
                 assert!(hx_str.contains("/download?token="));
@@ -296,8 +297,9 @@ mod tests {
                     .and_then(|(_, after)| after.split('"').next())
                     .expect("HX-Trigger should contain a download token");
                 let token = token_str.parse::<uuid::Uuid>()?;
-                let dl = Download::find_by_token(&state.mm, token).await?;
-                assert_eq!(dl.unwrap().user_id, user_id);
+                let dl = Download::find_by_token(&state.mm, token).await?.unwrap();
+                assert_eq!(dl.user_id, user_id);
+                assert_eq!(dl.file_path, "/tmp/recipya-data-export.zip");
                 Ok(())
             }
 

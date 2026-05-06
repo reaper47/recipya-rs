@@ -52,7 +52,7 @@ impl AuthConfig {
 
         warn!("Auth config not found, generating a new one");
         fs::create_dir_all(&data_dir).map_err(|err| {
-            error!("Failed to create auth config directory: {err:?}");
+            error!("Failed to create auth config directory: {err}");
             Error::ConfigFileWriteFailed
         })?;
 
@@ -71,7 +71,7 @@ impl AuthConfig {
         })?;
 
         if let Err(err) = fs::rename(&tmp_path, &config_path) {
-            error!("Failed to rename auth config (race condition): {err:?}");
+            error!("Failed to rename auth config (race condition): {err}");
             let s = fs::read_to_string(&config_path).map_err(|_| Error::ConfigFileWriteFailed)?;
             return Self::from_str(&s);
         }

@@ -85,12 +85,12 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
                 .execute(conn)
                 .map(|_| ())
                 .map_err(|err| {
-                    error!("Failed to create database '{db_name}': {err:?}");
+                    error!("Failed to create database '{db_name}': {err}");
                     err
                 })
         }
         Err(err) => {
-            error!("Error checking database existence: {err:?}");
+            error!("Error checking database existence: {err}");
             Err(err)
         }
     }
@@ -102,7 +102,7 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
         .expect("error connecting to database")
         .run_pending_migrations(MIGRATIONS)
         .unwrap_or_else(|err| {
-            panic!("migrations should have been applied for {database_url}: {err:?}")
+            panic!("migrations should have been applied for {database_url}: {err}")
         });
 
     if database_url.contains("localhost") || database_url.contains("host.docker.internal") {

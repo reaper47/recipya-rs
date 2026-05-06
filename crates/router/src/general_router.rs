@@ -197,6 +197,7 @@ mod tests {
             download::{Download, DownloadForCreate},
             user::User,
         };
+        use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 
         use super::*;
 
@@ -238,10 +239,10 @@ mod tests {
             let res = server.get(&url(token)).await;
 
             res.assert_status_ok();
-            res.assert_header("content-type", "application/zip");
+            res.assert_header(CONTENT_TYPE, "application/zip");
             res.assert_header(
-                "content-disposition",
-                "attachment; filename=\"recipya-data-export.zip\"",
+                CONTENT_DISPOSITION,
+                "attachment; filename=\"test_export.zip\"",
             );
             assert!(Download::find_by_token(&state.mm, token).await?.is_none());
             assert!(!tokio::fs::try_exists(&file_path).await?);

@@ -34,7 +34,7 @@ enum Commands {
 async fn main() -> Result<()> {
     if let Err(err) = dotenv() {
         warn!(
-            "Could not load .env file ({err:?}). This is expected when environment variables are injected by the host"
+            "Could not load .env file ({err}). This is expected when environment variables are injected by the host"
         );
     }
     init_crypto();

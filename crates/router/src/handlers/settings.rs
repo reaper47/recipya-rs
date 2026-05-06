@@ -3,7 +3,7 @@ use axum::body::Body;
 use axum::extract::{RawForm, State};
 use axum::http::{HeaderMap, Response, StatusCode};
 use axum::response::IntoResponse;
-use axum_htmx::HX_CURRENT_URL;
+use axum_htmx::{HX_CURRENT_URL, HX_TRIGGER};
 use iso8601::DateTime;
 use models::download::{Download, DownloadForCreate};
 use serde_json::json;
@@ -177,7 +177,7 @@ pub async fn export_data_post_handler(
         Ok(r) => r,
         Err(err) => {
             error!(
-                "Failed to fetch recipes for user '{}' with payload {:?}: {err:?}",
+                "Failed to fetch recipes for user '{}' with payload {:?}: {err}",
                 user.id, payload
             );
             broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
@@ -196,24 +196,24 @@ pub async fn export_data_post_handler(
     {
         Ok(file) => file,
         Err(err) => {
-            error!("Failed to export recipes for user {}: {err:?}", user.id);
+            error!("Failed to export recipes for user {}: {err}", user.id);
             broadcast_error(&state, user.id, "Failed to export recipes.").await;
             return Error::Fs.into_response();
         }
     };
 
     let token = Uuid::new_v4();
-    if let Err(err) =
-        Download::create(&state.mm, DownloadForCreate::new(user.id, token, file_path)).await
-    {
-        error!("Failed to create download for user {}: {err:?}", user.id);
+    let dl_c = DownloadForCreate::new(user.id, token, file_path);
+
+    if let Err(err) = Download::create(&state.mm, dl_c).await {
+        error!("Failed to create download for user {}: {err}", user.id);
         broadcast_error(&state, user.id, "Failed to create export data response.").await;
         return Error::Database.into_response();
     }
 
     match Response::builder()
         .header(
-            "HX-Trigger",
+            HX_TRIGGER,
             json!({
                 "downloadReady": {
                     "url": format!("/download?token={}", token)
@@ -225,7 +225,7 @@ pub async fn export_data_post_handler(
     {
         Ok(res) => res,
         Err(err) => {
-            error!("Failed to create response for user {}: {err:?}", user.id);
+            error!("Failed to create response for user {}: {err}", user.id);
             broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Error::Fs.into_response()
         }
