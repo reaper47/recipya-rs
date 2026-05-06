@@ -26,7 +26,7 @@ base64 = "0.22.1"
 chrono = "0.4.44"
 config = { path = "./crates/config" }
 derive_more = { version = "2.1.1", features = ["from", "display"] }
-diesel = { version = "2.3.7", features = ["postgres", "chrono", "serde_json", "time", "uuid"] }
+diesel = { version = "2.3.8", features = ["postgres", "chrono", "serde_json", "time", "uuid"] }
 diesel-async = { version = "0.8.0", features = ["postgres", "bb8", "async-connection-wrapper"] }
 diesel_full_text_search = "2.3.0"
 dotenvy = "0.15.7"
