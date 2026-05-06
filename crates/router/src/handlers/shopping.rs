@@ -495,3 +495,17 @@ pub async fn shopping_list_item_edit_handler(
         }
     }
 }
+
+pub async fn shopping_list_item_toggle_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path((list_id, item_id)): Path<(Uuid, i64)>,
+) -> impl IntoResponse {
+    if let Err(err) = ShoppingList::toggle_item_check(&state.mm, list_id, item_id, user.id).await {
+        error!("Failed to toggle item check: {err}");
+        broadcast_error(&state, user.id, "Failed to toggle item check.").await;
+        return Error::Database.into_response();
+    }
+
+    ().into_response()
+}

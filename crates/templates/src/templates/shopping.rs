@@ -513,8 +513,12 @@ pub fn render_shopping_list_item(
         li class="list-row grid grid-cols-[1fr_auto]" {
             div class="grid gap-1 min-w-0" {
                 label class="label text-base-content" {
-                    input class="checkbox peer" type="checkbox" checked[item.is_checked] checked[item.is_checked];
-                    span class="peer-checked:line-through peer-checked:opacity-50 transition-all" {
+                    input type="checkbox"
+                        class="checkbox peer"
+                        hx-post=(format!("/shopping/lists/{list_id}/items/{}/toggle", item.id))
+                        checked[item.is_checked];
+
+                    span class="[input:checked~&]:line-through [input:checked~&]:opacity-50 transition-all" {
                         @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
                             (format!("{} ({q})", item.ingredient))
                         } @else {
@@ -525,19 +529,19 @@ pub fn render_shopping_list_item(
             }
             @if !readonly {
                 div class="flex gap-1" {
-                    button class="btn join-item btn-square btn-sm"
+                    button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:hidden transition-all"
                         hx-target="closest li"
                         hx-swap="outerHTML"
                         hx-get=(format!("/shopping/lists/{list_id}/items/{}/edit", item.id)) {
                         (icon_pencil(false))
                     }
-                    button class="btn join-item btn-square btn-sm"
+                    button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:opacity-50 transition-all"
                         hx-target="closest li"
                         hx-swap="delete"
                         hx-delete=(format!("/shopping/lists/{list_id}/items/{}", item.id)) {
                         (icon_trash())
                     }
-                    button class="btn join-item btn-square btn-sm cursor-grab h-full" {
+                    button class="btn join-item btn-square btn-sm cursor-grab h-full [li:has(input:checked)_&]:hidden transition-all" {
                         (icon_arrows_up_down())
                     }
                 }

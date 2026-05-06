@@ -582,6 +582,29 @@ impl ShoppingList {
             .await
     }
 
+    /// Toggles the checked state of an item in a shopping list.
+    pub async fn toggle_item_check(
+        mm: &ModelManager,
+        list_id: Uuid,
+        item_id: i64,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        diesel::update(schema::shopping_list_items::table)
+            .filter(schema::shopping_list_items::id.eq(item_id))
+            .set(
+                schema::shopping_list_items::is_checked
+                    .eq(diesel::dsl::not(schema::shopping_list_items::is_checked)),
+            )
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
     /// Updates the title of a shopping list.
     pub async fn update_title<T: AsRef<str>>(
         mm: &ModelManager,
@@ -1289,6 +1312,39 @@ mod tests {
         Ok(())
     }
 
+    #[tokio::test]
+    async fn test_toggle_check_item_once_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        ShoppingList::toggle_item_check(&state.mm, list_id, item.id, user_id).await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        assert!(got.items[0].is_checked);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_toggle_check_item_twice_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+
+        ShoppingList::toggle_item_check(&state.mm, list_id, item.id, user_id).await?;
+        ShoppingList::toggle_item_check(&state.mm, list_id, item.id, user_id).await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        assert!(!got.items[0].is_checked);
+        Ok(())
+    }
+
     mod tests_share {
         use app::state::AppState;
         use config::Config;
@@ -1448,240 +1504,240 @@ mod tests {
                 }
             }
         }
+    }
 
-        mod tests_write {
+    mod tests_write {
+        use super::*;
+
+        fn a_recipe() -> ShoppingListRecipeDetails {
+            ShoppingListRecipeDetails {
+                id: 1,
+                name: "Grandma's slow-cooker chicken".into(),
+            }
+        }
+
+        fn other_recipe() -> ShoppingListRecipeDetails {
+            ShoppingListRecipeDetails {
+                id: 2,
+                name: "Blueberry pie".into(),
+            }
+        }
+
+        fn a_list_with_no_items() -> ShoppingListDetails {
+            let now = chrono::Local::now().naive_local();
+
+            ShoppingListDetails {
+                id: Uuid::new_v4(),
+                name: "Main Shopping List".into(),
+                items: vec![],
+                created_at: now,
+                updated_at: now,
+            }
+        }
+
+        fn a_list_with_items_no_labels() -> ShoppingListDetails {
+            let now = chrono::Local::now().naive_local();
+
+            ShoppingListDetails {
+                id: Uuid::new_v4(),
+                name: "Main Shopping List".into(),
+                items: vec![
+                    ShoppingListItemDetails {
+                        id: 1,
+                        ingredient: "chicken".into(),
+                        quantity: Some("500g".into()),
+                        label_id: 1,
+                        label: "No label".into(),
+                        position: 1,
+                        recipe: None,
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                    ShoppingListItemDetails {
+                        id: 2,
+                        ingredient: "vegetable broth".into(),
+                        quantity: None,
+                        label_id: 1,
+                        label: "No label".into(),
+                        position: 2,
+                        recipe: Some(a_recipe()),
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                    ShoppingListItemDetails {
+                        id: 3,
+                        ingredient: "paprika".into(),
+                        quantity: Some("5g".into()),
+                        label_id: 1,
+                        label: "No label".into(),
+                        position: 3,
+                        recipe: Some(a_recipe()),
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                ],
+                created_at: now,
+                updated_at: now,
+            }
+        }
+
+        fn a_list_with_mix_labels() -> ShoppingListDetails {
+            let now = chrono::Local::now().naive_local();
+
+            ShoppingListDetails {
+                id: Uuid::new_v4(),
+                name: "Main Shopping List".into(),
+                items: vec![
+                    ShoppingListItemDetails {
+                        id: 1,
+                        ingredient: "Sugar".into(),
+                        quantity: Some("1 bag".into()),
+                        label_id: 1,
+                        label: "No label".into(),
+                        position: 1,
+                        recipe: None,
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                    ShoppingListItemDetails {
+                        id: 2,
+                        ingredient: "Blueberries".into(),
+                        quantity: None,
+                        label_id: 1,
+                        label: "No label".into(),
+                        position: 2,
+                        recipe: Some(other_recipe()),
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                    ShoppingListItemDetails {
+                        id: 3,
+                        ingredient: "paprika".into(),
+                        quantity: Some("5g".into()),
+                        label_id: 2,
+                        label: "Spices".into(),
+                        position: 3,
+                        recipe: None,
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                    ShoppingListItemDetails {
+                        id: 3,
+                        ingredient: "ground chili pepper".into(),
+                        quantity: Some("15g".into()),
+                        label_id: 2,
+                        label: "Spices".into(),
+                        position: 3,
+                        recipe: None,
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                    ShoppingListItemDetails {
+                        id: 3,
+                        ingredient: "Pork necks".into(),
+                        quantity: Some("1kg".into()),
+                        label_id: 3,
+                        label: "Meat".into(),
+                        position: 5,
+                        recipe: Some(a_recipe()),
+                        is_checked: false,
+                        created_at: now,
+                        updated_at: now,
+                    },
+                ],
+                created_at: now,
+                updated_at: now,
+            }
+        }
+
+        mod tests_text {
             use super::*;
 
-            fn a_recipe() -> ShoppingListRecipeDetails {
-                ShoppingListRecipeDetails {
-                    id: 1,
-                    name: "Grandma's slow-cooker chicken".into(),
-                }
+            #[test]
+            fn test_no_items_err() {
+                let list = a_list_with_no_items();
+
+                let mut text = Vec::new();
+                let res = list.write_text(&mut text);
+
+                assert!(matches!(res, Err(Error::EmptyInput)));
             }
 
-            fn other_recipe() -> ShoppingListRecipeDetails {
-                ShoppingListRecipeDetails {
-                    id: 2,
-                    name: "Blueberry pie".into(),
-                }
+            #[test]
+            fn test_items_no_labels_ok() -> Result<()> {
+                let list = a_list_with_items_no_labels();
+
+                let mut text = Vec::new();
+                list.write_text(&mut text)?;
+
+                pretty_assertions::assert_eq!(
+                    String::from_utf8(text)?,
+                    "Main Shopping List\n------------------\n\n- chicken (500g)\n- vegetable broth | Grandma's slow-cooker chicken\n- paprika (5g) | Grandma's slow-cooker chicken\n"
+                );
+                Ok(())
             }
 
-            fn a_list_with_no_items() -> ShoppingListDetails {
-                let now = chrono::Local::now().naive_local();
+            #[test]
+            fn test_mix_labels_ok() -> Result<()> {
+                let list = a_list_with_mix_labels();
 
-                ShoppingListDetails {
-                    id: Uuid::new_v4(),
-                    name: "Main Shopping List".into(),
-                    items: vec![],
-                    created_at: now,
-                    updated_at: now,
-                }
+                let mut text = Vec::new();
+                list.write_text(&mut text)?;
+
+                pretty_assertions::assert_eq!(
+                    String::from_utf8(text)?,
+                    "Main Shopping List\n------------------\n\n- Sugar (1 bag)\n- Blueberries | Blueberry pie\n\n[Spices]\n- paprika (5g)\n- ground chili pepper (15g)\n\n[Meat]\n- Pork necks (1kg) | Grandma's slow-cooker chicken\n"
+                );
+                Ok(())
+            }
+        }
+
+        mod tests_markdown {
+            use super::*;
+
+            #[test]
+            fn test_no_items_err() {
+                let list = a_list_with_no_items();
+
+                let mut text = Vec::new();
+                let res = list.write_markdown(&mut text);
+
+                assert!(matches!(res, Err(Error::EmptyInput)));
             }
 
-            fn a_list_with_items_no_labels() -> ShoppingListDetails {
-                let now = chrono::Local::now().naive_local();
+            #[test]
+            fn test_items_no_labels_ok() -> Result<()> {
+                let list = a_list_with_items_no_labels();
 
-                ShoppingListDetails {
-                    id: Uuid::new_v4(),
-                    name: "Main Shopping List".into(),
-                    items: vec![
-                        ShoppingListItemDetails {
-                            id: 1,
-                            ingredient: "chicken".into(),
-                            quantity: Some("500g".into()),
-                            label_id: 1,
-                            label: "No label".into(),
-                            position: 1,
-                            recipe: None,
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                        ShoppingListItemDetails {
-                            id: 2,
-                            ingredient: "vegetable broth".into(),
-                            quantity: None,
-                            label_id: 1,
-                            label: "No label".into(),
-                            position: 2,
-                            recipe: Some(a_recipe()),
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                        ShoppingListItemDetails {
-                            id: 3,
-                            ingredient: "paprika".into(),
-                            quantity: Some("5g".into()),
-                            label_id: 1,
-                            label: "No label".into(),
-                            position: 3,
-                            recipe: Some(a_recipe()),
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                    ],
-                    created_at: now,
-                    updated_at: now,
-                }
+                let mut text = Vec::new();
+                list.write_markdown(&mut text)?;
+
+                pretty_assertions::assert_eq!(
+                    String::from_utf8(text)?,
+                    "## Main Shopping List\n\n- [ ] chicken (500g)\n- [ ] vegetable broth | **Grandma's slow-cooker chicken**\n- [ ] paprika (5g) | **Grandma's slow-cooker chicken**\n"
+                );
+                Ok(())
             }
 
-            fn a_list_with_mix_labels() -> ShoppingListDetails {
-                let now = chrono::Local::now().naive_local();
+            #[test]
+            fn test_mix_labels_ok() -> Result<()> {
+                let list = a_list_with_mix_labels();
 
-                ShoppingListDetails {
-                    id: Uuid::new_v4(),
-                    name: "Main Shopping List".into(),
-                    items: vec![
-                        ShoppingListItemDetails {
-                            id: 1,
-                            ingredient: "Sugar".into(),
-                            quantity: Some("1 bag".into()),
-                            label_id: 1,
-                            label: "No label".into(),
-                            position: 1,
-                            recipe: None,
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                        ShoppingListItemDetails {
-                            id: 2,
-                            ingredient: "Blueberries".into(),
-                            quantity: None,
-                            label_id: 1,
-                            label: "No label".into(),
-                            position: 2,
-                            recipe: Some(other_recipe()),
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                        ShoppingListItemDetails {
-                            id: 3,
-                            ingredient: "paprika".into(),
-                            quantity: Some("5g".into()),
-                            label_id: 2,
-                            label: "Spices".into(),
-                            position: 3,
-                            recipe: None,
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                        ShoppingListItemDetails {
-                            id: 3,
-                            ingredient: "ground chili pepper".into(),
-                            quantity: Some("15g".into()),
-                            label_id: 2,
-                            label: "Spices".into(),
-                            position: 3,
-                            recipe: None,
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                        ShoppingListItemDetails {
-                            id: 3,
-                            ingredient: "Pork necks".into(),
-                            quantity: Some("1kg".into()),
-                            label_id: 3,
-                            label: "Meat".into(),
-                            position: 5,
-                            recipe: Some(a_recipe()),
-                            is_checked: false,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                    ],
-                    created_at: now,
-                    updated_at: now,
-                }
-            }
+                let mut text = Vec::new();
+                list.write_markdown(&mut text)?;
 
-            mod tests_text {
-                use super::*;
-
-                #[test]
-                fn test_no_items_err() {
-                    let list = a_list_with_no_items();
-
-                    let mut text = Vec::new();
-                    let res = list.write_text(&mut text);
-
-                    assert!(matches!(res, Err(Error::EmptyInput)));
-                }
-
-                #[test]
-                fn test_items_no_labels_ok() -> Result<()> {
-                    let list = a_list_with_items_no_labels();
-
-                    let mut text = Vec::new();
-                    list.write_text(&mut text)?;
-
-                    pretty_assertions::assert_eq!(
-                        String::from_utf8(text)?,
-                        "Main Shopping List\n------------------\n\n- chicken (500g)\n- vegetable broth | Grandma's slow-cooker chicken\n- paprika (5g) | Grandma's slow-cooker chicken\n"
-                    );
-                    Ok(())
-                }
-
-                #[test]
-                fn test_mix_labels_ok() -> Result<()> {
-                    let list = a_list_with_mix_labels();
-
-                    let mut text = Vec::new();
-                    list.write_text(&mut text)?;
-
-                    pretty_assertions::assert_eq!(
-                        String::from_utf8(text)?,
-                        "Main Shopping List\n------------------\n\n- Sugar (1 bag)\n- Blueberries | Blueberry pie\n\n[Spices]\n- paprika (5g)\n- ground chili pepper (15g)\n\n[Meat]\n- Pork necks (1kg) | Grandma's slow-cooker chicken\n"
-                    );
-                    Ok(())
-                }
-            }
-
-            mod tests_markdown {
-                use super::*;
-
-                #[test]
-                fn test_no_items_err() {
-                    let list = a_list_with_no_items();
-
-                    let mut text = Vec::new();
-                    let res = list.write_markdown(&mut text);
-
-                    assert!(matches!(res, Err(Error::EmptyInput)));
-                }
-
-                #[test]
-                fn test_items_no_labels_ok() -> Result<()> {
-                    let list = a_list_with_items_no_labels();
-
-                    let mut text = Vec::new();
-                    list.write_markdown(&mut text)?;
-
-                    pretty_assertions::assert_eq!(
-                        String::from_utf8(text)?,
-                        "## Main Shopping List\n\n- [ ] chicken (500g)\n- [ ] vegetable broth | **Grandma's slow-cooker chicken**\n- [ ] paprika (5g) | **Grandma's slow-cooker chicken**\n"
-                    );
-                    Ok(())
-                }
-
-                #[test]
-                fn test_mix_labels_ok() -> Result<()> {
-                    let list = a_list_with_mix_labels();
-
-                    let mut text = Vec::new();
-                    list.write_markdown(&mut text)?;
-
-                    pretty_assertions::assert_eq!(
-                        String::from_utf8(text)?,
-                        "## Main Shopping List\n\n- [ ] Sugar (1 bag)\n- [ ] Blueberries | **Blueberry pie**\n\n### Spices\n\n- [ ] paprika (5g)\n- [ ] ground chili pepper (15g)\n\n### Meat\n\n- [ ] Pork necks (1kg) | **Grandma's slow-cooker chicken**\n"
-                    );
-                    Ok(())
-                }
+                pretty_assertions::assert_eq!(
+                    String::from_utf8(text)?,
+                    "## Main Shopping List\n\n- [ ] Sugar (1 bag)\n- [ ] Blueberries | **Blueberry pie**\n\n### Spices\n\n- [ ] paprika (5g)\n- [ ] ground chili pepper (15g)\n\n### Meat\n\n- [ ] Pork necks (1kg) | **Grandma's slow-cooker chicken**\n"
+                );
+                Ok(())
             }
         }
     }
