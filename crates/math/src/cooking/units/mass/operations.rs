@@ -103,7 +103,7 @@ mod tests {
         ];
 
         for (mass, expected) in test_cases {
-            assert_eq!(mass.abbrev(), expected, "Failed for mass variant: {mass:?}",);
+            assert_eq!(mass.abbrev(), expected, "Failed for mass variant: {mass:?}");
         }
     }
 

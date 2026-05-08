@@ -231,13 +231,10 @@ impl MealieRecipe {
 
         let category = categories.next().map(|c| vec![c]).unwrap_or_default();
 
-        let mut keywords = categories.collect::<Vec<_>>();
-        keywords.extend(self.tags.iter().flatten().map(|tag| tag.name.clone()));
-
         (
             category,
-            keywords
-                .into_iter()
+            categories
+                .chain(self.tags.iter().flatten().map(|tag| tag.name.clone()))
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
         )
