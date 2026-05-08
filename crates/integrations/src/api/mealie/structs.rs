@@ -231,12 +231,13 @@ impl MealieRecipe {
 
         let category = categories.next().map(|c| vec![c]).unwrap_or_default();
 
-        let keywords = categories
-            .chain(self.tags.iter().flatten().map(|tag| tag.name.clone()))
-            .map(RecipeKeywordsFieldEnum::TextOrURL)
-            .collect();
-
-        (category, keywords)
+        (
+            category,
+            categories
+                .chain(self.tags.iter().flatten().map(|tag| tag.name.clone()))
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
+        )
     }
 }
 

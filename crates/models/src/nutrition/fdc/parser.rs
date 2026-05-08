@@ -197,180 +197,178 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
 
         let mut conn = mm.pool.get().await?;
 
-        conn.transaction::<_, Error, _>(|mut conn| {
-            Box::pin(async move {
-                diesel::sql_query(
-                    "TRUNCATE TABLE
+        conn.transaction::<_, Error, _>(async |mut conn| {
+            diesel::sql_query(
+                "TRUNCATE TABLE
                         fdc_foods,
                         fdc_nutrients,
                         fdc_food_portions,
                         fdc_foods_fdc_nutrients,
                         fdc_food_portions_fdc_foods
                     RESTART IDENTITY CASCADE",
+            )
+            .execute(conn)
+            .await?;
+
+            let foundation_foods = &self.srlegacy_food_data;
+
+            // fdc_foods
+            let fdc_foods_ids: Vec<i64> = diesel::insert_into(fdc_foods::table)
+                .values(
+                    foundation_foods
+                        .iter()
+                        .map(|food| FoundationFoodForInsert {
+                            food_class: &food.food_class,
+                            description: &food.description,
+                            food_category: &food.food_category.description,
+                            fdc_id: food.fdc_id,
+                        })
+                        .collect::<Vec<_>>(),
                 )
-                .execute(conn)
+                .returning(schema::fdc_foods::id)
+                .get_results(&mut conn)
                 .await?;
 
-                let foundation_foods = &self.srlegacy_food_data;
+            // fdc_nutrients
+            let unique_nutrients: BTreeSet<FdcNutrientForInsert> = foundation_foods
+                .iter()
+                .flat_map(|food| {
+                    food.food_nutrients
+                        .iter()
+                        .map(|nutrient| FdcNutrientForInsert {
+                            fdc_id: nutrient.nutrient.id,
+                            name: &nutrient.nutrient.name,
+                            unit_name: &nutrient.nutrient.unit_name,
+                        })
+                })
+                .collect();
 
-                // fdc_foods
-                let fdc_foods_ids: Vec<i64> = diesel::insert_into(fdc_foods::table)
-                    .values(
-                        foundation_foods
-                            .iter()
-                            .map(|food| FoundationFoodForInsert {
-                                food_class: &food.food_class,
-                                description: &food.description,
-                                food_category: &food.food_category.description,
-                                fdc_id: food.fdc_id,
-                            })
-                            .collect::<Vec<_>>(),
-                    )
-                    .returning(schema::fdc_foods::id)
-                    .get_results(&mut conn)
-                    .await?;
-
-                // fdc_nutrients
-                let unique_nutrients: BTreeSet<FdcNutrientForInsert> = foundation_foods
-                    .iter()
-                    .flat_map(|food| {
-                        food.food_nutrients
-                            .iter()
-                            .map(|nutrient| FdcNutrientForInsert {
-                                fdc_id: nutrient.nutrient.id,
-                                name: &nutrient.nutrient.name,
-                                unit_name: &nutrient.nutrient.unit_name,
-                            })
-                    })
-                    .collect();
-
-                for chunk in unique_nutrients
-                    .into_iter()
-                    .collect::<Vec<_>>()
-                    .chunks(BATCH_SIZE)
-                {
-                    diesel::insert_into(schema::fdc_nutrients::table)
-                        .values(chunk)
-                        .on_conflict((
-                            schema::fdc_nutrients::name,
-                            schema::fdc_nutrients::unit_name,
-                        ))
-                        .do_nothing()
-                        .execute(&mut conn)
-                        .await?;
-                }
-
-                let fdc_nutrients: Vec<(i64, String, String)> = schema::fdc_nutrients::table
-                    .select((
-                        schema::fdc_nutrients::id,
+            for chunk in unique_nutrients
+                .into_iter()
+                .collect::<Vec<_>>()
+                .chunks(BATCH_SIZE)
+            {
+                diesel::insert_into(schema::fdc_nutrients::table)
+                    .values(chunk)
+                    .on_conflict((
                         schema::fdc_nutrients::name,
                         schema::fdc_nutrients::unit_name,
                     ))
-                    .load(&mut conn)
-                    .await?;
-
-                let fdc_nutrients_map: HashMap<(String, String), i64> = fdc_nutrients
-                    .clone()
-                    .into_iter()
-                    .map(|(id, name, unit_name)| ((name, unit_name), id))
-                    .collect();
-
-                // fdc_foods_fdc_nutrients
-                let mut ids = Vec::new();
-                for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids.clone()) {
-                    ff.food_nutrients.iter().for_each(|food_nutrient| {
-                        let food_nutrient = food_nutrient.clone();
-
-                        let id = *fdc_nutrients_map
-                            .get(&(
-                                food_nutrient.nutrient.name.into_owned(),
-                                food_nutrient.nutrient.unit_name.into_owned(),
-                            ))
-                            .unwrap();
-
-                        ids.push((
-                            fdc_food_db_id,
-                            id,
-                            food_nutrient.amount,
-                            food_nutrient.min.unwrap_or_default(),
-                            food_nutrient.max.unwrap_or_default(),
-                        ));
-                    });
-                }
-
-                let records = ids
-                    .into_iter()
-                    .map(
-                        |(food_id, nutrient_id, amount, min, max)| FdcFoodFdcNutrientForInsert {
-                            food_id,
-                            nutrient_id,
-                            amount,
-                            min,
-                            max,
-                        },
-                    )
-                    .collect::<Vec<_>>();
-
-                for chunk in records.chunks(BATCH_SIZE) {
-                    diesel::insert_into(schema::fdc_foods_fdc_nutrients::table)
-                        .values(chunk)
-                        .execute(&mut conn)
-                        .await?;
-                }
-
-                // fdc_food_portions
-                let all_portions: Vec<FdcFoodPortionForInsert> = foundation_foods
-                    .iter()
-                    .flat_map(|food| {
-                        food.food_portions
-                            .iter()
-                            .map(|portion| FdcFoodPortionForInsert {
-                                value: portion.value,
-                                modifier: portion.modifier.clone().into_owned(),
-                                gram_weight: portion.gram_weight,
-                                amount: portion.amount,
-                            })
-                    })
-                    .collect();
-
-                let mut portion_ids = Vec::with_capacity(all_portions.len());
-
-                for chunk in all_portions.chunks(BATCH_SIZE) {
-                    let ids: Vec<i64> = diesel::insert_into(schema::fdc_food_portions::table)
-                        .values(chunk)
-                        .returning(schema::fdc_food_portions::id)
-                        .get_results(&mut conn)
-                        .await?;
-
-                    portion_ids.extend(ids);
-                }
-
-                // fdc_food_portions_fdc_foods
-                let mut portion_ids = VecDeque::from(portion_ids);
-
-                let mut ids = Vec::new();
-                for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids) {
-                    ff.food_portions.iter().for_each(|_| {
-                        if let Some(id) = portion_ids.pop_front() {
-                            ids.push((fdc_food_db_id, id));
-                        }
-                    });
-                }
-
-                diesel::insert_into(schema::fdc_food_portions_fdc_foods::table)
-                    .values(
-                        ids.into_iter()
-                            .map(|(food_id, portion_id)| FdcFoodPortionFdcFoodForInsert {
-                                food_id,
-                                portion_id,
-                            })
-                            .collect::<Vec<_>>(),
-                    )
+                    .do_nothing()
                     .execute(&mut conn)
                     .await?;
+            }
 
-                Ok(())
-            })
+            let fdc_nutrients: Vec<(i64, String, String)> = schema::fdc_nutrients::table
+                .select((
+                    schema::fdc_nutrients::id,
+                    schema::fdc_nutrients::name,
+                    schema::fdc_nutrients::unit_name,
+                ))
+                .load(&mut conn)
+                .await?;
+
+            let fdc_nutrients_map: HashMap<(String, String), i64> = fdc_nutrients
+                .clone()
+                .into_iter()
+                .map(|(id, name, unit_name)| ((name, unit_name), id))
+                .collect();
+
+            // fdc_foods_fdc_nutrients
+            let mut ids = Vec::new();
+            for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids.clone()) {
+                ff.food_nutrients.iter().for_each(|food_nutrient| {
+                    let food_nutrient = food_nutrient.clone();
+
+                    let id = *fdc_nutrients_map
+                        .get(&(
+                            food_nutrient.nutrient.name.into_owned(),
+                            food_nutrient.nutrient.unit_name.into_owned(),
+                        ))
+                        .unwrap();
+
+                    ids.push((
+                        fdc_food_db_id,
+                        id,
+                        food_nutrient.amount,
+                        food_nutrient.min.unwrap_or_default(),
+                        food_nutrient.max.unwrap_or_default(),
+                    ));
+                });
+            }
+
+            let records = ids
+                .into_iter()
+                .map(
+                    |(food_id, nutrient_id, amount, min, max)| FdcFoodFdcNutrientForInsert {
+                        food_id,
+                        nutrient_id,
+                        amount,
+                        min,
+                        max,
+                    },
+                )
+                .collect::<Vec<_>>();
+
+            for chunk in records.chunks(BATCH_SIZE) {
+                diesel::insert_into(schema::fdc_foods_fdc_nutrients::table)
+                    .values(chunk)
+                    .execute(&mut conn)
+                    .await?;
+            }
+
+            // fdc_food_portions
+            let all_portions: Vec<FdcFoodPortionForInsert> = foundation_foods
+                .iter()
+                .flat_map(|food| {
+                    food.food_portions
+                        .iter()
+                        .map(|portion| FdcFoodPortionForInsert {
+                            value: portion.value,
+                            modifier: portion.modifier.clone().into_owned(),
+                            gram_weight: portion.gram_weight,
+                            amount: portion.amount,
+                        })
+                })
+                .collect();
+
+            let mut portion_ids = Vec::with_capacity(all_portions.len());
+
+            for chunk in all_portions.chunks(BATCH_SIZE) {
+                let ids: Vec<i64> = diesel::insert_into(schema::fdc_food_portions::table)
+                    .values(chunk)
+                    .returning(schema::fdc_food_portions::id)
+                    .get_results(&mut conn)
+                    .await?;
+
+                portion_ids.extend(ids);
+            }
+
+            // fdc_food_portions_fdc_foods
+            let mut portion_ids = VecDeque::from(portion_ids);
+
+            let mut ids = Vec::new();
+            for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids) {
+                ff.food_portions.iter().for_each(|_| {
+                    if let Some(id) = portion_ids.pop_front() {
+                        ids.push((fdc_food_db_id, id));
+                    }
+                });
+            }
+
+            diesel::insert_into(schema::fdc_food_portions_fdc_foods::table)
+                .values(
+                    ids.into_iter()
+                        .map(|(food_id, portion_id)| FdcFoodPortionFdcFoodForInsert {
+                            food_id,
+                            portion_id,
+                        })
+                        .collect::<Vec<_>>(),
+                )
+                .execute(&mut conn)
+                .await?;
+
+            Ok(())
         })
         .await
         .inspect_err(|err| error!("Failed to push data into database: {err}"))?;

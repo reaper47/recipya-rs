@@ -61,136 +61,132 @@ impl Recipe {
         let mut conn = mm.pool.get().await?;
 
         let recipe_id = conn
-            .transaction::<i64, Error, _>(|mut conn| {
-                Box::pin(async move {
-                    let user_settings = UserSettingDetails::get(mm, user_id).await?;
+            .transaction::<i64, Error, _>(async move |mut conn| {
+                let user_settings = UserSettingDetails::get(mm, user_id).await?;
 
-                    // Images
-                    let (main_image, additional_images) = recipe_c.first_and_rest_images();
+                // Images
+                let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
-                    let insert_result = diesel::insert_into(schema::recipes::table)
-                        .values(&RecipeForInsert {
-                            name: recipe_c.name.clone(),
-                            description: recipe_c.description.clone(),
-                            image: main_image,
-                            r#yield: recipe_c.r#yield,
-                            language: recipe_c.detect_language().code().to_string(),
-                            notes: recipe_c.notes.clone(),
-                            source: recipe_c.source.clone(),
-                            is_favourite: recipe_c.is_favourite,
-                            rating: recipe_c.rating,
-                            user_id,
-                        })
-                        .on_conflict((
-                            schema::recipes::name,
-                            schema::recipes::source,
-                            schema::recipes::yield_,
-                            schema::recipes::user_id,
-                        ))
-                        .do_nothing()
-                        .returning(schema::recipes::id)
+                let insert_result = diesel::insert_into(schema::recipes::table)
+                    .values(&RecipeForInsert {
+                        name: recipe_c.name.clone(),
+                        description: recipe_c.description.clone(),
+                        image: main_image,
+                        r#yield: recipe_c.r#yield,
+                        language: recipe_c.detect_language().code().to_string(),
+                        notes: recipe_c.notes.clone(),
+                        source: recipe_c.source.clone(),
+                        is_favourite: recipe_c.is_favourite,
+                        rating: recipe_c.rating,
+                        user_id,
+                    })
+                    .on_conflict((
+                        schema::recipes::name,
+                        schema::recipes::source,
+                        schema::recipes::yield_,
+                        schema::recipes::user_id,
+                    ))
+                    .do_nothing()
+                    .returning(schema::recipes::id)
+                    .get_result::<i64>(&mut conn)
+                    .await
+                    .optional()?;
+
+                let Some(recipe_id) = insert_result else {
+                    let recipe_id = schema::recipes::table
+                        .filter(schema::recipes::name.eq(&recipe_c.name))
+                        .select(schema::recipes::id)
                         .get_result::<i64>(&mut conn)
-                        .await
-                        .optional()?;
-
-                    let Some(recipe_id) = insert_result else {
-                        let recipe_id = schema::recipes::table
-                            .filter(schema::recipes::name.eq(&recipe_c.name))
-                            .select(schema::recipes::id)
-                            .get_result::<i64>(&mut conn)
-                            .await?;
-                        return Err(Error::DuplicateEntityWithID(recipe_id));
-                    };
-
-                    // Additional Images
-                    insert_additional_images(&mut conn, recipe_id, additional_images).await?;
-
-                    // Category
-                    let category_id = get_category_id(conn, recipe_c.category.as_ref()).await?;
-
-                    diesel::insert_into(schema::categories_recipes::table)
-                        .values(&CategoryRecipe {
-                            category_id,
-                            recipe_id,
-                        })
-                        .execute(&mut conn)
                         .await?;
+                    return Err(Error::DuplicateEntityWithID(recipe_id));
+                };
 
-                    diesel::insert_into(schema::users_categories::table)
-                        .values(&UserCategory {
-                            user_id,
-                            category_id,
-                        })
-                        .on_conflict_do_nothing()
-                        .execute(&mut conn)
-                        .await?;
+                // Additional Images
+                insert_additional_images(&mut conn, recipe_id, additional_images).await?;
 
-                    // Cuisine
-                    if let Some(cuisine) = recipe_c.cuisine.as_ref() {
-                        let cuisine_id = get_cuisine_id(conn, cuisine.into()).await?;
+                // Category
+                let category_id = get_category_id(conn, recipe_c.category.as_ref()).await?;
 
-                        diesel::insert_into(schema::cuisines_recipes::table)
-                            .values(&CuisineRecipe {
-                                cuisine_id,
-                                recipe_id,
-                            })
-                            .execute(&mut conn)
-                            .await?;
-                    }
-
-                    // Sections for ingredients and instructions
-                    let sections_map = insert_sections(conn, recipe_c).await?;
-
-                    // Ingredients
-                    insert_ingredients(conn, &sections_map, &recipe_c.ingredients, recipe_id)
-                        .await?;
-
-                    // Instructions
-                    insert_instructions(conn, &sections_map, &recipe_c.instructions, recipe_id)
-                        .await?;
-
-                    // Keywords
-                    insert_keywords(&mut conn, &recipe_c.keywords, user_id, recipe_id).await?;
-
-                    // Nutrition
-                    insert_nutrition(
-                        conn,
+                diesel::insert_into(schema::categories_recipes::table)
+                    .values(&CategoryRecipe {
+                        category_id,
                         recipe_id,
-                        &recipe_c.nutrition,
-                        recipe_c.ingredients.items_as_text().as_slice(),
-                        user_settings.nutrition_source,
-                        recipe_c.r#yield.unwrap_or(1),
-                    )
+                    })
+                    .execute(&mut conn)
                     .await?;
 
-                    // Times
-                    let times = recipe_c.times.clone().unwrap_or_default();
+                diesel::insert_into(schema::users_categories::table)
+                    .values(&UserCategory {
+                        user_id,
+                        category_id,
+                    })
+                    .on_conflict_do_nothing()
+                    .execute(&mut conn)
+                    .await?;
 
-                    diesel::insert_into(schema::times::table)
-                        .values(&TimesForInsert {
+                // Cuisine
+                if let Some(cuisine) = recipe_c.cuisine.as_ref() {
+                    let cuisine_id = get_cuisine_id(conn, cuisine.into()).await?;
+
+                    diesel::insert_into(schema::cuisines_recipes::table)
+                        .values(&CuisineRecipe {
+                            cuisine_id,
                             recipe_id,
-                            prep_seconds: times.prep_seconds,
-                            cook_seconds: times.cook_seconds,
                         })
                         .execute(&mut conn)
                         .await?;
+                }
 
-                    // Tools
-                    insert_tools(conn, &recipe_c.tools, recipe_id).await?;
+                // Sections for ingredients and instructions
+                let sections_map = insert_sections(conn, recipe_c).await?;
 
-                    // Videos
-                    insert_videos(conn, &recipe_c.videos, recipe_id).await?;
+                // Ingredients
+                insert_ingredients(conn, &sections_map, &recipe_c.ingredients, recipe_id).await?;
 
-                    diesel::insert_into(schema::users_recipes::table)
-                        .values((
-                            schema::users_recipes::user_id.eq(user_id),
-                            schema::users_recipes::recipe_id.eq(recipe_id),
-                        ))
-                        .execute(&mut conn)
-                        .await?;
+                // Instructions
+                insert_instructions(conn, &sections_map, &recipe_c.instructions, recipe_id).await?;
 
-                    Ok(recipe_id)
-                })
+                // Keywords
+                insert_keywords(&mut conn, &recipe_c.keywords, user_id, recipe_id).await?;
+
+                // Nutrition
+                insert_nutrition(
+                    conn,
+                    recipe_id,
+                    &recipe_c.nutrition,
+                    recipe_c.ingredients.items_as_text().as_slice(),
+                    user_settings.nutrition_source,
+                    recipe_c.r#yield.unwrap_or(1),
+                )
+                .await?;
+
+                // Times
+                let times = recipe_c.times.clone().unwrap_or_default();
+
+                diesel::insert_into(schema::times::table)
+                    .values(&TimesForInsert {
+                        recipe_id,
+                        prep_seconds: times.prep_seconds,
+                        cook_seconds: times.cook_seconds,
+                    })
+                    .execute(&mut conn)
+                    .await?;
+
+                // Tools
+                insert_tools(conn, &recipe_c.tools, recipe_id).await?;
+
+                // Videos
+                insert_videos(conn, &recipe_c.videos, recipe_id).await?;
+
+                diesel::insert_into(schema::users_recipes::table)
+                    .values((
+                        schema::users_recipes::user_id.eq(user_id),
+                        schema::users_recipes::recipe_id.eq(recipe_id),
+                    ))
+                    .execute(&mut conn)
+                    .await?;
+
+                Ok(recipe_id)
             })
             .await?;
 
