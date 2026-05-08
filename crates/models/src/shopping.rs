@@ -539,8 +539,7 @@ impl ShoppingList {
         mm.pool
             .get()
             .await?
-            .transaction::<i64, Error, _>(|conn| {
-                Box::pin(async move {
+            .transaction::<i64, Error, _>(async|conn| {
                     let maybe_id = diesel::insert_into(schema::shopping_list_labels::table)
                         .values(schema::shopping_list_labels::name.eq(name))
                         .on_conflict(diesel::dsl::sql::<Text>("(lower(name))"))
@@ -577,7 +576,6 @@ impl ShoppingList {
                         .await?;
 
                     Ok(label_id)
-                })
             })
             .await
     }

@@ -10,7 +10,7 @@ pub enum Error {
     Server(String),
 
     #[from]
-    CLI(lexopt::Error),
+    Cli(lexopt::Error),
     #[from]
     Fs(support::fs::Error),
     #[from]
