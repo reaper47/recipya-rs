@@ -1,6 +1,5 @@
 use diesel::dsl::not;
 use diesel::prelude::*;
-use diesel_async::scoped_futures::ScopedFutureExt;
 use diesel_async::{AsyncConnection, RunQueryDsl};
 use uuid::Uuid;
 
@@ -61,202 +60,192 @@ impl Recipe {
         mm.pool
             .get()
             .await?
-            .transaction::<_, Error, _>(|conn| {
-                async move {
-                    diesel::update(
-                        schema::recipes::table.filter(schema::recipes::id.eq(recipe_id)),
-                    )
+            .transaction::<_, Error, _>(async |conn| {
+                diesel::update(schema::recipes::table.filter(schema::recipes::id.eq(recipe_id)))
                     .set(&recipe)
                     .execute(conn)
                     .await?;
 
-                    // Additional images
+                // Additional images
+                diesel::delete(
+                    schema::additional_images_recipe::table
+                        .filter(schema::additional_images_recipe::recipe_id.eq(recipe_id)),
+                )
+                .execute(conn)
+                .await?;
+
+                insert_additional_images(conn, recipe_id, additional_images).await?;
+
+                // Category
+                match &new_recipe.category {
+                    None if old_recipe.category != *"uncategorized" => {
+                        update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
+                            .await?;
+                    }
+                    Some(category) if old_recipe.category != *category => {
+                        update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
+                            .await?;
+                    }
+                    _ => {}
+                }
+
+                // Cuisine
+                match &new_recipe.cuisine {
+                    Some(cuisine) if old_recipe.cuisine != new_recipe.cuisine => {
+                        let cuisine_id = get_cuisine_id(conn, cuisine.into()).await?;
+
+                        diesel::delete(
+                            schema::cuisines_recipes::table
+                                .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id)),
+                        )
+                        .execute(conn)
+                        .await?;
+
+                        diesel::insert_into(schema::cuisines_recipes::table)
+                            .values((
+                                schema::cuisines_recipes::recipe_id.eq(recipe_id),
+                                schema::cuisines_recipes::cuisine_id.eq(cuisine_id),
+                            ))
+                            .execute(conn)
+                            .await?;
+                    }
+                    None => {
+                        diesel::delete(
+                            schema::cuisines_recipes::table
+                                .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id)),
+                        )
+                        .execute(conn)
+                        .await?;
+                    }
+                    _ => {}
+                }
+
+                // Sections
+                let sections_map = insert_sections(conn, new_recipe).await?;
+
+                // Ingredients
+                let old_ingredients = &old_recipe.ingredients;
+                let new_ingredients = &new_recipe.ingredients;
+                let is_ingredients_changed = old_ingredients != new_ingredients;
+                if is_ingredients_changed {
                     diesel::delete(
-                        schema::additional_images_recipe::table
-                            .filter(schema::additional_images_recipe::recipe_id.eq(recipe_id)),
+                        schema::ingredients_recipes::table
+                            .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id)),
                     )
                     .execute(conn)
                     .await?;
 
-                    insert_additional_images(conn, recipe_id, additional_images).await?;
-
-                    // Category
-                    match &new_recipe.category {
-                        None if old_recipe.category != *"uncategorized" => {
-                            update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
-                                .await?;
-                        }
-                        Some(category) if old_recipe.category != *category => {
-                            update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
-                                .await?;
-                        }
-                        _ => {}
-                    }
-
-                    // Cuisine
-                    match &new_recipe.cuisine {
-                        Some(cuisine) if old_recipe.cuisine != new_recipe.cuisine => {
-                            let cuisine_id = get_cuisine_id(conn, cuisine.into()).await?;
-
-                            diesel::delete(
-                                schema::cuisines_recipes::table
-                                    .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id)),
-                            )
-                            .execute(conn)
-                            .await?;
-
-                            diesel::insert_into(schema::cuisines_recipes::table)
-                                .values((
-                                    schema::cuisines_recipes::recipe_id.eq(recipe_id),
-                                    schema::cuisines_recipes::cuisine_id.eq(cuisine_id),
-                                ))
-                                .execute(conn)
-                                .await?;
-                        }
-                        None => {
-                            diesel::delete(
-                                schema::cuisines_recipes::table
-                                    .filter(schema::cuisines_recipes::recipe_id.eq(recipe_id)),
-                            )
-                            .execute(conn)
-                            .await?;
-                        }
-                        _ => {}
-                    }
-
-                    // Sections
-                    let sections_map = insert_sections(conn, new_recipe).await?;
-
-                    // Ingredients
-                    let old_ingredients = &old_recipe.ingredients;
-                    let new_ingredients = &new_recipe.ingredients;
-                    let is_ingredients_changed = old_ingredients != new_ingredients;
-                    if is_ingredients_changed {
-                        diesel::delete(
-                            schema::ingredients_recipes::table
-                                .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id)),
-                        )
-                        .execute(conn)
+                    insert_ingredients(conn, &sections_map, &new_recipe.ingredients, recipe_id)
                         .await?;
+                }
 
-                        insert_ingredients(conn, &sections_map, &new_recipe.ingredients, recipe_id)
-                            .await?;
-                    }
+                // Instructions
+                let old_instructions = &old_recipe.instructions;
+                let new_instructions = &new_recipe.instructions;
+                if old_instructions != new_instructions {
+                    diesel::delete(
+                        schema::instructions_recipes::table
+                            .filter(schema::instructions_recipes::recipe_id.eq(recipe_id)),
+                    )
+                    .execute(conn)
+                    .await?;
 
-                    // Instructions
-                    let old_instructions = &old_recipe.instructions;
-                    let new_instructions = &new_recipe.instructions;
-                    if old_instructions != new_instructions {
-                        diesel::delete(
-                            schema::instructions_recipes::table
-                                .filter(schema::instructions_recipes::recipe_id.eq(recipe_id)),
-                        )
-                        .execute(conn)
+                    insert_instructions(conn, &sections_map, &new_recipe.instructions, recipe_id)
                         .await?;
+                }
 
-                        insert_instructions(
-                            conn,
-                            &sections_map,
-                            &new_recipe.instructions,
-                            recipe_id,
-                        )
-                        .await?;
-                    }
+                // Keywords
+                old_recipe.keywords.sort();
+                new_recipe.keywords.sort();
+                new_recipe.keywords.dedup();
 
-                    // Keywords
-                    old_recipe.keywords.sort();
-                    new_recipe.keywords.sort();
-                    new_recipe.keywords.dedup();
+                if old_recipe.keywords != new_recipe.keywords {
+                    diesel::delete(
+                        schema::keywords_recipes::table
+                            .filter(schema::keywords_recipes::recipe_id.eq(recipe_id)),
+                    )
+                    .execute(conn)
+                    .await?;
 
-                    if old_recipe.keywords != new_recipe.keywords {
-                        diesel::delete(
-                            schema::keywords_recipes::table
-                                .filter(schema::keywords_recipes::recipe_id.eq(recipe_id)),
-                        )
-                        .execute(conn)
-                        .await?;
+                    insert_keywords(conn, &new_recipe.keywords, user_id, recipe_id).await?;
+                }
 
-                        insert_keywords(conn, &new_recipe.keywords, user_id, recipe_id).await?;
-                    }
+                // Nutrition
+                let all_new_ingredients = new_ingredients.items_as_text();
+                let new_ingredients_slice = &all_new_ingredients.as_slice();
 
-                    // Nutrition
-                    let all_new_ingredients = new_ingredients.items_as_text();
-                    let new_ingredients_slice = &all_new_ingredients.as_slice();
+                if is_ingredients_changed {
+                    insert_nutrition(
+                        conn,
+                        recipe_id,
+                        &new_recipe.nutrition,
+                        new_ingredients_slice,
+                        user_settings.nutrition_source,
+                        new_recipe.r#yield.unwrap_or(1),
+                    )
+                    .await?;
+                } else if old_recipe.nutrition.is_precalculated() {
+                    let new_recipe_nutrition = NutritionDetails::from(&new_recipe.nutrition);
 
-                    if is_ingredients_changed {
+                    if new_recipe_nutrition != old_recipe.nutrition {
                         insert_nutrition(
                             conn,
                             recipe_id,
                             &new_recipe.nutrition,
-                            new_ingredients_slice,
+                            all_new_ingredients.as_slice(),
                             user_settings.nutrition_source,
                             new_recipe.r#yield.unwrap_or(1),
                         )
                         .await?;
-                    } else if old_recipe.nutrition.is_precalculated() {
-                        let new_recipe_nutrition = NutritionDetails::from(&new_recipe.nutrition);
-
-                        if new_recipe_nutrition != old_recipe.nutrition {
-                            insert_nutrition(
-                                conn,
-                                recipe_id,
-                                &new_recipe.nutrition,
-                                all_new_ingredients.as_slice(),
-                                user_settings.nutrition_source,
-                                new_recipe.r#yield.unwrap_or(1),
-                            )
-                            .await?;
-                        }
                     }
-
-                    // Times
-                    let times = new_recipe.times.clone().unwrap_or_default();
-                    let old_times_for_insert = TimesForInsert {
-                        recipe_id,
-                        prep_seconds: old_recipe.times.prep_seconds,
-                        cook_seconds: old_recipe.times.cook_seconds,
-                    };
-                    let new_times_for_insert = TimesForInsert {
-                        recipe_id,
-                        prep_seconds: new_recipe
-                            .times
-                            .clone()
-                            .unwrap_or_else(|| times.clone())
-                            .prep_seconds,
-                        cook_seconds: new_recipe.times.clone().unwrap_or(times).cook_seconds,
-                    };
-                    if old_times_for_insert != new_times_for_insert {
-                        diesel::update(
-                            schema::times::table.filter(schema::times::recipe_id.eq(recipe_id)),
-                        )
-                        .set(&new_times_for_insert)
-                        .execute(conn)
-                        .await?;
-                    }
-
-                    // Tools
-                    diesel::delete(
-                        schema::tools_recipes::table
-                            .filter(schema::tools_recipes::recipe_id.eq(recipe_id)),
-                    )
-                    .execute(conn)
-                    .await?;
-
-                    insert_tools(conn, &new_recipe.tools, recipe_id).await?;
-
-                    // Videos
-                    diesel::delete(
-                        schema::videos_recipes::table
-                            .filter(schema::videos_recipes::recipe_id.eq(recipe_id)),
-                    )
-                    .execute(conn)
-                    .await?;
-
-                    insert_videos(conn, &new_recipe.videos, recipe_id).await?;
-
-                    Ok(())
                 }
-                .scope_boxed()
+
+                // Times
+                let times = new_recipe.times.clone().unwrap_or_default();
+                let old_times_for_insert = TimesForInsert {
+                    recipe_id,
+                    prep_seconds: old_recipe.times.prep_seconds,
+                    cook_seconds: old_recipe.times.cook_seconds,
+                };
+                let new_times_for_insert = TimesForInsert {
+                    recipe_id,
+                    prep_seconds: new_recipe
+                        .times
+                        .clone()
+                        .unwrap_or_else(|| times.clone())
+                        .prep_seconds,
+                    cook_seconds: new_recipe.times.clone().unwrap_or(times).cook_seconds,
+                };
+                if old_times_for_insert != new_times_for_insert {
+                    diesel::update(
+                        schema::times::table.filter(schema::times::recipe_id.eq(recipe_id)),
+                    )
+                    .set(&new_times_for_insert)
+                    .execute(conn)
+                    .await?;
+                }
+
+                // Tools
+                diesel::delete(
+                    schema::tools_recipes::table
+                        .filter(schema::tools_recipes::recipe_id.eq(recipe_id)),
+                )
+                .execute(conn)
+                .await?;
+
+                insert_tools(conn, &new_recipe.tools, recipe_id).await?;
+
+                // Videos
+                diesel::delete(
+                    schema::videos_recipes::table
+                        .filter(schema::videos_recipes::recipe_id.eq(recipe_id)),
+                )
+                .execute(conn)
+                .await?;
+
+                insert_videos(conn, &new_recipe.videos, recipe_id).await?;
+
+                Ok(())
             })
             .await?;
 

@@ -310,7 +310,7 @@ mod tests {
 
         let mut got = ViewReport::fetch_all(&state.mm, 1, user.id).await?;
 
-        got.sort_by(|a, b| a.id.cmp(&b.id));
+        got.sort_by_key(|a| a.id);
         pretty_assertions::assert_eq!(
             got,
             vec![
