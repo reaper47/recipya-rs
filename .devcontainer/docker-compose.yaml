@@ -11,7 +11,8 @@ services:
     command: sleep infinity
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/recipya_test
-   
+    network_mode: host
+
   db:
     container_name: recipya-rs-db
     build:
