@@ -37,7 +37,7 @@ pub fn test_database_url() -> String {
     if base.ends_with("/recipya_test") {
         base
     } else {
-        format!("{base}/recipya_test",)
+        format!("{base}/recipya_test")
     }
 }
 
