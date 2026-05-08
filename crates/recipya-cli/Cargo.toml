@@ -18,11 +18,11 @@ rust-version.workspace = true
 app.workspace = true
 auth.workspace = true
 axum.workspace = true
-clap = { version = "4.6.0", features = ["derive"] }
 config.workspace = true
 derive_more.workspace = true
 diesel.workspace = true
 dotenvy.workspace = true
+lexopt = "0.3.2"
 models.workspace = true
 rand.workspace = true
 recipya-scraper.workspace = true
@@ -37,13 +37,13 @@ tracing.workspace = true
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 [target.'aarch64-unknown-linux-gnu'.dependencies]
-openssl = { version = "0.10.79", features = ["vendored"] }
+openssl = { version = "0.10.78", features = ["vendored"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
 
 [target.'x86_64-unknown-linux-gnu'.dependencies]
-openssl = { version = "0.10.79", features = ["vendored"] }
+openssl = { version = "0.10.78", features = ["vendored"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
 
 [target.'x86_64-unknown-linux-musl'.dependencies]
-openssl = { version = "0.10.79", features = ["vendored"] }
+openssl = { version = "0.10.78", features = ["vendored"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
