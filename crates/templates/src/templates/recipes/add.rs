@@ -184,7 +184,7 @@ pub(super) fn render_ingredients(view: Option<&ViewRecipe>) -> Markup {
                                             input type="text"
                                                 name="section-ingredient"
                                                 placeholder="Section name"
-                                                class="input input-sm"
+                                                class="input input-sm w-fit"
                                                 value=(format!("{}", section.title))
                                                 onfocusout="renumberSections(this.closest('ol'), 'ingredient')";
                                             btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'ingredient')" {
@@ -221,7 +221,7 @@ fn render_instructions(view: Option<&ViewRecipe>) -> Markup {
             span .underline { "Instructions" }
             sup .text-red-600 { "*" }
         }
-        ol #instructions-list class="grid [counter-reset:steps] list-none" {
+        ol #instructions-list class="grid [counter-reset:steps]" {
             @if let Some(v) = view {
                 @let instructions = &v.recipe_details.instructions;
                  @if !instructions.is_empty() {
@@ -234,7 +234,7 @@ fn render_instructions(view: Option<&ViewRecipe>) -> Markup {
                                             input type="text"
                                                 name="section-instruction"
                                                 placeholder="Section name"
-                                                class="input input-sm"
+                                                class="input input-sm w-fit"
                                                 value=(format!("{}", section.title))
                                                 onfocusout="renumberSections(this.closest('ol'), 'instruction')";
                                             btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'instruction')" {
@@ -250,15 +250,15 @@ fn render_instructions(view: Option<&ViewRecipe>) -> Markup {
                         },
                         SectionComponents::Flat(items) => {
                             @for ins in items.iter() {
-                                (add_instruction(&ins.text))
+                                (add_instruction(&ins.text, None))
                             }
                         },
                     }
                 } @else {
-                    (add_instruction(""))
+                    (add_instruction("", None))
                 }
             } @else {
-                (add_instruction(""))
+                (add_instruction("", None))
             }
         }
     }
@@ -365,7 +365,7 @@ fn render_times(view: Option<&ViewRecipe>) -> Markup {
                             .filter(|s| !s.is_empty())
                             .unwrap_or("00:15:00")
                     )
-                    class="input input-xs max-w-24 html-duration-picker";
+                    class="input input-sm max-w-24 html-duration-picker";
             }
         }
         div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
@@ -380,7 +380,7 @@ fn render_times(view: Option<&ViewRecipe>) -> Markup {
                             .filter(|s| !s.is_empty())
                             .unwrap_or("00:30:00")
                     )
-                    class="input input-xs max-w-24 html-duration-picker";
+                    class="input input-sm max-w-24 html-duration-picker";
             }
         }
     }

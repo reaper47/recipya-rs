@@ -115,7 +115,7 @@ fn render_edit_recipe(
                                     div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
                                         (render_keywords(view, keywords))
                                     }
-                                    div class="grid grid-flow-col col-span-6 py-1 border-b" {
+                                    div class="grid grid-flow-col col-span-6 py-1 border-b md:border-gray-700" {
                                         div class="contents grid grid-flow-col" {
                                             (render_times(view))
                                         }
@@ -193,7 +193,7 @@ fn render_ingredients(view: &ViewRecipe) -> Markup {
                                         input type="text"
                                             name="section-ingredient"
                                             placeholder="Section name"
-                                            class="input input-sm"
+                                            class="input input-sm w-fit"
                                             value=(format!("{}", section.title))
                                             onfocusout="renumberSections(this.closest('ol'), 'ingredient')";
                                         btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'ingredient')" {
@@ -234,17 +234,22 @@ fn render_instructions(view: &ViewRecipe) -> Markup {
                  @match instructions {
                     SectionComponents::Grouped(section_items) => {
                         @for section in section_items.iter() {
-                            li .list-none {
-                                div .divider {
-                                    div class="grid grid-flow-col gap-2 w-full" {
-                                        input type="text"
-                                            name="section-instruction"
-                                            placeholder="Section name"
-                                            class="input input-sm"
-                                            value=(format!("{}", section.title))
-                                            onfocusout="renumberSections(this.closest('ol'), 'instruction')";
-                                        btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'instruction')" {
-                                            (icon_x_circle())
+                            li .list-none data-drag-row {
+                                div class="flex items-center" data-drageable draggable="true" {
+                                    div class="inline-flex size-6 cursor-grab items-center justify-center text-2xl" data-drag-handle {
+                                        "⠿"
+                                    }
+                                    div class="divider flex-1" {
+                                        div class="flex gap-2" {
+                                            input type="text"
+                                                name="section-instruction"
+                                                placeholder="Section name"
+                                                class="input input-sm w-fit"
+                                                value=(format!("{}", section.title))
+                                                onfocusout="renumberSections(this.closest('ol'), 'instruction')";
+                                            btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'instruction')" {
+                                                (icon_x_circle())
+                                            }
                                         }
                                     }
                                 }
@@ -256,12 +261,12 @@ fn render_instructions(view: &ViewRecipe) -> Markup {
                     },
                     SectionComponents::Flat(items) => {
                         @for ins in items.iter() {
-                            (add_instruction(&ins.text))
+                            (add_instruction(&ins.text, Some("list-none")))
                         }
                     },
                 }
             } @else {
-                (add_instruction(""))
+                (add_instruction("", None))
             }
         }
     }
@@ -467,7 +472,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             label {
                 input type="text" name="time-prep"
                     value=(if view.formatted_times.prep_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.prep_edit.clone() })
-                    class="input input-xs max-w-24 html-duration-picker";
+                    class="input input-sm max-w-24 html-duration-picker";
             }
         }
         div class="flex justify-self-center items-center gap-1 cursor-default" {
@@ -477,7 +482,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             label {
                 input type="text" name="time-cook"
                     value=(if view.formatted_times.cook_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.cook_edit.clone() })
-                    class="input input-xs max-w-24 html-duration-picker";
+                    class="input input-sm max-w-24 html-duration-picker";
             }
         }
     }

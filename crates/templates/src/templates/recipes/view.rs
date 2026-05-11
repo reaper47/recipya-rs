@@ -871,12 +871,14 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                     h2 class="font-semibold text-center underline pb-1" {
                         "Tools"
                     }
-                    ul class="list grid gap-1" {
+                    ul id="tools-list-container" class="list grid gap-1" {
                         @for tool in recipe.tools.iter() {
-                            li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
-                                label class="flex items-center w-full" {
+                            li class="swipeable-item list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                label class="flex items-center w-full" data-swipeable {
                                     input type="checkbox" class="checkbox";
-                                    span class="px-2" { (tool.quantity.to_string()) " " (tool.name) }
+                                    span class="px-2 [input:checked~&]:opacity-50" {
+                                        (tool.quantity.to_string()) " " (tool.name)
+                                    }
                                 }
                             }
                         }
@@ -919,15 +921,15 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
 
 fn render_ingredients_list(ingredients: &[Item]) -> Markup {
     html! {
-        ul class="list grid gap-1" {
+        ul id="ingredients-list-container" class="list grid gap-1" {
             @for ingredient in ingredients {
-                 li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
-                    label class="flex items-center w-full" {
-                        input type="checkbox" class="checkbox";
-                        span class="px-2" {
-                            (ingredient.text)
-                        }
-                    }
+                 li class="swipeable-item list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" data-drag-row {
+                     label class="flex items-center" data-swipeable {
+                         input type="checkbox" class="checkbox peer";
+                         span class="px-2 [input:checked~&]:opacity-50" {
+                             (ingredient.text)
+                         }
+                     }
                 }
             }
         }
@@ -938,14 +940,15 @@ fn render_instructions_list(instructions: &[Item]) -> Markup {
     html! {
         ol class="grid list-decimal" {
             @for (idx, instruction) in instructions.iter().enumerate() {
-                li class="min-w-full py-2 select-none hover:bg-base-300" {
+                li class="min-w-full py-2 select-none hover:bg-base-300"
+                    _="on mousedown toggle .line-through toggle .opacity-40 then if I match .line-through then add .invisible to .timer in me else remove .invisible from .timer in me" {
                     div class="flex" {
-                        div class="whitespace-pre-line w-full transition-all" _="on mousedown toggle .line-through toggle .opacity-40" {
+                        div class="whitespace-pre-line w-full transition-all" {
                             (instruction.text)
                         }
                          @if let Some(d) = instruction.duration_seconds {
-                            div id=(format!("timer-container-{idx}")) class="timer-container" {
-                                button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                            div id=(format!("timer-container-{idx}")) class="timer-container" _="on mousedown halt the event"{
+                                button class="timer btn btn-sm btn-wide btn-ghost" title=(format_timer_label(d))
                                        _="on click add .hidden to me
                                           remove .hidden from the next <div/>
                                           call initTimer(event)" {

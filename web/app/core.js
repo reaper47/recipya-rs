@@ -83,35 +83,35 @@ function initNotes(elementId, initialValue) {
 function initRecipeFormJS() {
   HtmlDurationPicker.init();
 
-  const inputs = [
-    { name: "tool", type: "input" },
-    { name: "ingredient", type: "input" },
-    { name: "instruction", type: "textarea" },
-  ];
-  inputs.forEach(({ name, type }) => {
-    const list = document.querySelector(`#${name}s-list`);
-    if (list) {
-      const existing = Sortable.get(list);
-      if (existing) {
-        existing.destroy();
-      }
+  const inputs = ["tool", "ingredient", "instruction"];
+  inputs.forEach((name) => {
+    const el = document.querySelector(`#${name}s-list`);
+    initDrag(el, (_) => {
+      document.body.classList.remove("dragging");
+      renumberSections(el, el.id.replace("s-list", ""));
+    });
+  });
+}
 
-      new Sortable.create(list, {
-        handle: ".handle",
-        animation: 150,
-        forceFallback: true,
-        chosenClass: "is-chosen",
-        dragClass: "is-dragging",
-        ghostClass: "is-ghost",
-        onStart(_event) {
-          document.body.classList.add("dragging");
-        },
-        onEnd(event) {
-          document.body.classList.remove("dragging");
-          renumberSections(event.target, event.target.id.replace("s-list", ""));
-        },
-      });
+function initRecipeViewJS() {
+  ["tools", "ingredients"].forEach((name) => {
+    const el = document.querySelector(`[id^='${name}-list-container']`);
+    if (!el || el.dataset.swipeInit) {
+      return;
     }
+
+    el.dataset.swipeInit = "true";
+
+    initSwipe(el, {
+      onComplete: (containerEl) => {
+        const checkbox = containerEl?.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      },
+      onDelete: () => {},
+    });
   });
 }
 
@@ -237,11 +237,13 @@ function addItem(event, isPastedText = false) {
   }
 
   const component = event.target.closest("ol").id.replace("s-list", "");
-  const sectionClone = document
-    .getElementById(`section-base-${component}`)
-    .cloneNode(true);
-  sectionClone.id = "";
-  sectionClone.classList.remove("hidden");
+
+  const section = document.getElementById(`section-base-${component}`);
+  const sectionClone = section?.cloneNode(true);
+  if (sectionClone) {
+    sectionClone.id = "";
+    sectionClone.classList.remove("hidden");
+  }
 
   const clone = event.target.closest("li").cloneNode(true);
   let el = "input";
@@ -253,12 +255,17 @@ function addItem(event, isPastedText = false) {
     clone.querySelector(el).value = "";
   }
 
-  _hyperscript.processNode(sectionClone);
-  _hyperscript.processNode(clone);
-  htmx.process(sectionClone);
-  htmx.process(clone);
-  ol.appendChild(sectionClone);
-  ol.appendChild(clone);
+  if (sectionClone) {
+    [sectionClone, clone].forEach((node) => {
+      _hyperscript.processNode(node);
+      htmx.process(node);
+      ol.appendChild(node);
+    });
+  } else {
+    _hyperscript.processNode(clone);
+    htmx.process(clone);
+    ol.appendChild(clone);
+  }
 
   clone.querySelector(el).focus();
 }
