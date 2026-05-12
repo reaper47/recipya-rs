@@ -109,9 +109,40 @@ function initRecipeViewJS() {
           checkbox.checked = !checkbox.checked;
           checkbox.dispatchEvent(new Event("change", { bubbles: true }));
         }
+        ea;
       },
       onDelete: () => {},
     });
+  });
+}
+
+function initShoppingListJS() {
+  document
+    .querySelectorAll("[id^='shopping-list-items-container']")
+    .forEach((el) => {
+      initDrag(el, (_) => {
+        document.body.classList.remove("dragging");
+        updateShoppingListItemPositions();
+      });
+    });
+}
+
+function updateShoppingListItemPositions() {
+  const data = new URLSearchParams();
+
+  for (const section of document.getElementsByTagName("details")) {
+    for (const [idx, item] of section
+      .querySelectorAll("input[type='checkbox']")
+      .entries()) {
+      data.append(item.closest("li").getAttribute("data-item-id"), idx);
+    }
+  }
+
+  const list_id = document.getElementById("selected-shopping-list-id").value;
+
+  fetch(`${window.location.origin}/shopping/lists/${list_id}/items/positions`, {
+    method: "PUT",
+    body: data,
   });
 }
 
@@ -126,7 +157,7 @@ function addKeyword(event) {
   div.classList.remove("hidden");
   div.querySelector("input").value = keyword;
   div.querySelector("span").textContent = keyword;
-  _hyperscript.processNode(div);
+  _hyperscript.process(div);
   htmx.process(div);
 
   const container = document.querySelector("#empty-keyword");
@@ -194,7 +225,7 @@ function pasteText(inputEl, values) {
         input.value = value;
       }
 
-      _hyperscript.processNode(clone);
+      _hyperscript.process(clone);
       htmx.process(clone);
 
       ol.appendChild(clone);
@@ -257,12 +288,12 @@ function addItem(event, isPastedText = false) {
 
   if (sectionClone) {
     [sectionClone, clone].forEach((node) => {
-      _hyperscript.processNode(node);
+      _hyperscript.process(node);
       htmx.process(node);
       ol.appendChild(node);
     });
   } else {
-    _hyperscript.processNode(clone);
+    _hyperscript.process(clone);
     htmx.process(clone);
     ol.appendChild(clone);
   }

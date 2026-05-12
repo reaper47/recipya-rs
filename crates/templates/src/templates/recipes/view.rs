@@ -373,7 +373,7 @@ fn render_right_controls(
                                                 set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
                                                 call navigator.share(data)
                                             else
-                                                call #share-dialog.showModal()
+                                                open #share-dialog
                                         end" {
                                 (icon_share())
                                 "Share"
@@ -432,7 +432,7 @@ fn render_right_controls(
                         hx-get=(format!("/recipes/{recipe_id}/timeline"))
                         hx-target="#timeline-dialog-result"
                         hx-push-url="false"
-                        _="on htmx:afterRequest from me call #timeline-dialog.showModal()" {
+                        _="on htmx:afterRequest from me open #timeline-dialog" {
                     (icon_timeline())
                 }
             }
@@ -453,7 +453,7 @@ fn render_right_controls(
                             }
                         }
                         li _="on click document.activeElement.blur()" {
-                            button _="on click call #timeline-new-event-dialog.showModal()" {
+                            button _="on click open #timeline-new-event-dialog" {
                                 (icon_fire())
                                 "Recipe made"
                             }
@@ -464,7 +464,7 @@ fn render_right_controls(
                                 hx-get=(format!("/recipes/{recipe_id}/timeline"))
                                 hx-target="#timeline-dialog-result"
                                 hx-push-url="false"
-                                _="on htmx:afterRequest from me call #timeline-dialog.showModal()" {
+                                _="on htmx:afterRequest from me open #timeline-dialog" {
                                 (icon_timeline())
                                 "Timeline"
                             }
@@ -491,7 +491,7 @@ fn render_right_controls(
                                             set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
                                             call navigator.share(data)
                                         else
-                                            call #share-dialog.showModal()
+                                            open #share-dialog
                                     end" {
                                 (icon_share())
                                 "Share"

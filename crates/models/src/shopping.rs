@@ -1,4 +1,4 @@
-use std::{io::Write, path::PathBuf};
+use std::{collections::HashMap, io::Write, path::PathBuf};
 
 use chrono::NaiveDateTime;
 use diesel::{prelude::*, sql_types::Text};
@@ -539,43 +539,41 @@ impl ShoppingList {
         mm.pool
             .get()
             .await?
-            .transaction::<i64, Error, _>(async|conn| {
-                    let maybe_id = diesel::insert_into(schema::shopping_list_labels::table)
-                        .values(schema::shopping_list_labels::name.eq(name))
-                        .on_conflict(diesel::dsl::sql::<Text>("(lower(name))"))
-                        .do_nothing()
-                        .returning(schema::shopping_list_labels::id)
-                        .get_result::<i64>(conn)
-                        .await
-                        .optional()?;
+            .transaction::<i64, Error, _>(async |conn| {
+                let maybe_id = diesel::insert_into(schema::shopping_list_labels::table)
+                    .values(schema::shopping_list_labels::name.eq(name))
+                    .on_conflict(diesel::dsl::sql::<Text>("(lower(name))"))
+                    .do_nothing()
+                    .returning(schema::shopping_list_labels::id)
+                    .get_result::<i64>(conn)
+                    .await
+                    .optional()?;
 
-                    let label_id = match maybe_id {
-                        Some(id) => id,
-                        None => {
-                            schema::shopping_list_labels::table
-                                .filter(
-                                    diesel::dsl::sql::<diesel::sql_types::Bool>(
-                                        "lower(name) = lower(",
-                                    )
+                let label_id = match maybe_id {
+                    Some(id) => id,
+                    None => {
+                        schema::shopping_list_labels::table
+                            .filter(
+                                diesel::dsl::sql::<diesel::sql_types::Bool>("lower(name) = lower(")
                                     .bind::<diesel::sql_types::Text, _>(name)
                                     .sql(")"),
-                                )
-                                .select(schema::shopping_list_labels::id)
-                                .get_result::<i64>(conn)
-                                .await?
-                        }
-                    };
+                            )
+                            .select(schema::shopping_list_labels::id)
+                            .get_result::<i64>(conn)
+                            .await?
+                    }
+                };
 
-                    diesel::insert_into(schema::users_shopping_list_labels::table)
-                        .values((
-                            schema::users_shopping_list_labels::user_id.eq(user_id),
-                            schema::users_shopping_list_labels::label_id.eq(label_id),
-                        ))
-                        .on_conflict_do_nothing()
-                        .execute(conn)
-                        .await?;
+                diesel::insert_into(schema::users_shopping_list_labels::table)
+                    .values((
+                        schema::users_shopping_list_labels::user_id.eq(user_id),
+                        schema::users_shopping_list_labels::label_id.eq(label_id),
+                    ))
+                    .on_conflict_do_nothing()
+                    .execute(conn)
+                    .await?;
 
-                    Ok(label_id)
+                Ok(label_id)
             })
             .await
     }
@@ -671,12 +669,45 @@ impl ShoppingList {
             .filter(schema::shopping_list_items::id.eq(item_id))
             .set(&ShoppingListItemForUpdateInternal {
                 ingredient: item_u.ingredient,
-                quantity: item_u.quantity,
+                quantity: item_u.quantity.filter(|s| !s.is_empty()),
                 shopping_list_label_id: label_id,
                 position: item_u.position,
                 is_checked: item_u.is_checked,
             })
             .get_result::<ShoppingListItem>(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Updates the positions of items in a shopping list.
+    pub async fn update_item_positions(
+        mm: &ModelManager,
+        list_id: Uuid,
+        values: HashMap<i64, i32>,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, list_id, user_id).await?;
+
+        let mut sorted = values.into_iter().collect::<Vec<_>>();
+        sorted.sort_by_key(|(id, _)| *id);
+
+        mm.pool
+            .get()
+            .await?
+            .transaction::<_, Error, _>(async |conn| {
+                for (item_id, position) in sorted {
+                    diesel::update(schema::shopping_list_items::table)
+                        .filter(schema::shopping_list_items::id.eq(item_id))
+                        .set(schema::shopping_list_items::position.eq(position))
+                        .execute(conn)
+                        .await?;
+                }
+
+                Ok(())
+            })
             .await?;
 
         Ok(())

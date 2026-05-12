@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use axum::Form;
 use axum::body::Body;
 use axum::extract::{OriginalUri, Path, Query};
@@ -82,6 +84,7 @@ pub async fn shopping_lists_handler(
     .into_response())
 }
 
+/// Handles GET requests to retrieve a shopping list.
 pub async fn shopping_list_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -96,6 +99,7 @@ pub async fn shopping_list_handler(
     }
 }
 
+/// Handles DELETE requests to delete a shopping list.
 pub async fn shopping_list_delete_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -110,6 +114,7 @@ pub async fn shopping_list_delete_handler(
     (StatusCode::SEE_OTHER, [("HX-Redirect", "/shopping/lists")]).into_response()
 }
 
+/// Handles PUT requests to update the title of a shopping list.
 pub async fn shopping_list_put_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -142,6 +147,7 @@ pub async fn shopping_list_put_handler(
     }
 }
 
+/// Handles POST requests to copy a shopping list.
 pub async fn shopping_list_copy_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -182,6 +188,7 @@ pub async fn shopping_list_copy_handler(
         .body(body)?)
 }
 
+/// Handles GET requests to export a shopping list.
 pub async fn shopping_list_export_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -233,6 +240,7 @@ pub async fn shopping_list_export_handler(
     }
 }
 
+/// Handles GET requests to print a shopping list.
 pub async fn shopping_list_print_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -251,6 +259,7 @@ pub async fn shopping_list_print_handler(
     templates::general::render_print_view(&content).into_response()
 }
 
+/// Handles POST requests to share a shopping list.
 pub async fn shopping_list_share_post_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -287,6 +296,7 @@ pub async fn shopping_list_share_post_handler(
     }
 }
 
+/// Handles POST requests to add a label to a shopping list.
 pub async fn shopping_list_labels_post_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -307,6 +317,7 @@ pub async fn shopping_list_labels_post_handler(
     templates::shopping::render_shopping_list_items(form.name, list_id, &[], true).into_response()
 }
 
+/// Handles GET requests to add a new label to a shopping list.
 pub async fn shopping_list_labels_new_handler(
     RequireAuth(_): RequireAuth,
     Path(list_id): Path<Uuid>,
@@ -314,6 +325,7 @@ pub async fn shopping_list_labels_new_handler(
     templates::shopping::render_label_new(list_id).into_response()
 }
 
+/// Handles PUT requests to update a label on a shopping list.
 pub async fn shopping_list_label_put_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -340,6 +352,7 @@ pub async fn shopping_list_label_put_handler(
     templates::shopping::render_label(&payload.name, list_id, new_label_id).into_response()
 }
 
+/// Handles POST requests to create a new shopping list.
 pub async fn shopping_lists_post_handler(
     header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
@@ -366,6 +379,7 @@ pub async fn shopping_lists_post_handler(
     templates::shopping::render_new_shopping_list(list_id, title).into_response()
 }
 
+/// Handles POST requests to add an item to a shopping list.
 pub async fn shopping_list_item_post_handler(
     RequireAuth(user): RequireAuth,
     Path(list_id): Path<Uuid>,
@@ -414,6 +428,28 @@ pub async fn shopping_list_item_post_handler(
         .into_response()
 }
 
+/// Handles PUT requests to update the positions of shopping list items.
+pub async fn shopping_list_items_positions_put_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+    Form(payload): Form<HashMap<i64, i32>>,
+) -> impl IntoResponse {
+    if let Err(err) =
+        ShoppingList::update_item_positions(&state.mm, list_id, payload, user.id).await
+        && !err
+            .to_string()
+            .contains("shopping_list_items_quantity_check")
+    {
+        error!("Failed to update shopping list item: {err}");
+        broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
+        return Error::Database.into_response();
+    }
+
+    ().into_response()
+}
+
+/// Handles DELETE requests to delete a shopping list item.
 pub async fn shopping_list_item_delete_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -432,6 +468,7 @@ pub async fn shopping_list_item_delete_handler(
     templates::shopping::render_shopping_list_item_count(list_id, num_items, true).into_response()
 }
 
+/// Handles PUT requests to update a shopping list item.
 pub async fn shopping_list_item_put_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -442,7 +479,7 @@ pub async fn shopping_list_item_put_handler(
         ingredient: Some(payload.item),
         quantity: payload.quantity,
         label: None,
-        position: None,
+        position: payload.position,
         is_checked: None,
     };
 
@@ -475,6 +512,7 @@ pub async fn shopping_list_item_put_handler(
     }
 }
 
+/// Handles GET requests to edit a shopping list item.
 pub async fn shopping_list_item_edit_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -496,6 +534,7 @@ pub async fn shopping_list_item_edit_handler(
     }
 }
 
+/// Handles PUT requests to update a shopping list item.
 pub async fn shopping_list_item_toggle_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,

@@ -249,7 +249,7 @@ mod tests {
                 &[
                     r#"<div id="content" class="flex-1 pb-0"><div class="p-2"><h1 class="text-center text-2xl font-bold underline p-2">Costco</h1>"#,
                     &format!(
-                        r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/{list_id}/items/1/toggle"><span class="[input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all">Spaghetti</span></label></div></li></ol></details></div>"#
+                        r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]" data-item-id="1" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/{list_id}/items/1/toggle"><span class="[input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all">Spaghetti</span></label></div></div></li></ol></details></div>"#
                     ),
                 ],
             );
@@ -290,7 +290,7 @@ mod tests {
                 &[
                     r#"<div id="content" class="flex-1 pb-0"><div class="p-2"><h1 class="text-center text-2xl font-bold underline p-2">Costco</h1>"#,
                     &format!(
-                        r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/{list_id}/items/1/toggle"><span class="[input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all">Spaghetti</span></label></div></li></ol></details></div>"#
+                        r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]" data-item-id="1" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/{list_id}/items/1/toggle"><span class="[input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all">Spaghetti</span></label></div></div></li></ol></details></div>"#
                     ),
                 ],
             );

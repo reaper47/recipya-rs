@@ -67,14 +67,14 @@ fn render_fetch_websites_card() -> Markup {
                     class="underline"
                     hx-get="/recipes/supported-websites"
                     hx-target="#search-results"
-                    onclick="document.querySelector('#supported-websites-dialog').showModal()" {
+                    _="on click open #supported-websites-dialog" {
                     "supported"
                 }
                 " websites. If the website is unsupported, the software will try to extract "
                 "the recipe, but there is no guarantee of success."
             }
             div class="card-actions justify-end" {
-                button class="btn btn-outline btn-sm btn-block" onclick="document.querySelector('#websites-dialog').showModal()" {
+                button class="btn btn-outline btn-sm btn-block" _="on click open #websites-dialog" {
                     "Fetch"
                 }
             }
@@ -96,7 +96,7 @@ fn render_import_apps_card() -> Markup {
                 button class="underline cursor-pointer"
                     hx-get="/recipes/supported-applications"
                     hx-target="#application-results"
-                    onclick="document.querySelector('#supported-apps-import-dialog').showModal()" {
+                    _="on click open #supported-apps-import-dialog" {
                     "various apps,"
                 }
                 " and raw JSON files adhering to the "
@@ -135,7 +135,7 @@ fn render_import_apps_card() -> Markup {
                 "."
             }
             div class="card-actions" {
-                button class="btn btn-outline btn-sm btn-block" onclick="document.querySelector('#import-recipes-dialog').showModal()" {
+                button class="btn btn-outline btn-sm btn-block" _="on click open #import-recipes-dialog" {
                     "Import"
                 }
             }

@@ -9,9 +9,8 @@ use models::{
 
 use crate::templates::{
     icons::{
-        icon_arrow_down_tray, icon_arrows_up_down, icon_carrot, icon_check, icon_check_circle,
-        icon_clipboard_document, icon_pencil, icon_plus, icon_plus_circle, icon_printer,
-        icon_scale, icon_share, icon_trash,
+        icon_arrow_down_tray, icon_carrot, icon_check, icon_check_circle, icon_clipboard_document,
+        icon_pencil, icon_plus, icon_plus_circle, icon_printer, icon_scale, icon_share, icon_trash,
     },
     layouts,
     pagination::pagination,
@@ -106,7 +105,7 @@ fn item_sections(list: &ShoppingListDetails) -> Markup {
             @if list.items.is_empty() {
                 details open {
                     (render_label("No label", list.id, 1))
-                    ol class="list bg-base-100 rounded-box shadow-md" {
+                    ol #shopping-list-items-container class="list bg-base-100 rounded-box shadow-md" {
                         (new_shopping_list_item(list.id, None))
                     }
                 }
@@ -129,11 +128,15 @@ pub fn render_shopping_list_items<T: AsRef<str>>(
     is_add_new_label: bool,
 ) -> Markup {
     let label = label.as_ref();
+    let label_no_spaces = label
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect::<String>();
 
     html! {
         details open {
             (render_label(label, list_id, items.first().map_or(1, |i| i.label_id)))
-            ol class="list bg-base-100 rounded-box shadow-md" {
+            ol id=(format!("shopping-list-items-container-{label_no_spaces}")) class="list bg-base-100 rounded-box shadow-md" {
                 @for item in items {
                     (render_shopping_list_item(list_id, item, false))
                 }
@@ -292,7 +295,7 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                             set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
                             call navigator.share(data)
                         else
-                            call #share-dialog.showModal()
+                            open #share-dialog
                     end" {
                 (icon_share())
             }
@@ -510,39 +513,41 @@ pub fn render_shopping_list_item(
     readonly: bool,
 ) -> Markup {
     html! {
-        li class="list-row grid grid-cols-[1fr_auto]" {
-            div class="grid gap-1 min-w-0" {
-                label class="label text-base-content" {
-                    input type="checkbox"
-                        class="checkbox peer"
-                        hx-post=(format!("/shopping/lists/{list_id}/items/{}/toggle", item.id))
-                        checked[item.is_checked];
+        li class="list-row grid grid-cols-[1fr_auto]" data-item-id=(item.id) data-drag-row {
+            div class="grid grid-flow-col" data-drageable draggable="true" {
+                div class="grid gap-1 min-w-0" {
+                    label class="label text-base-content" {
+                        input type="checkbox"
+                            class="checkbox peer"
+                            hx-post=(format!("/shopping/lists/{list_id}/items/{}/toggle", item.id))
+                            checked[item.is_checked];
 
-                    span class="[input:checked~&]:line-through [input:checked~&]:opacity-50 transition-all" {
-                        @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
-                            (format!("{} ({q})", item.ingredient))
-                        } @else {
-                            (format!("{}", item.ingredient))
+                        span class="[input:checked~&]:line-through [input:checked~&]:opacity-50 transition-all" {
+                            @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
+                                (format!("{} ({q})", item.ingredient))
+                            } @else {
+                                (format!("{}", item.ingredient))
+                            }
                         }
                     }
                 }
-            }
-            @if !readonly {
-                div class="flex gap-1" {
-                    button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:hidden transition-all"
-                        hx-target="closest li"
-                        hx-swap="outerHTML"
-                        hx-get=(format!("/shopping/lists/{list_id}/items/{}/edit", item.id)) {
-                        (icon_pencil(false))
-                    }
-                    button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:opacity-50 transition-all"
-                        hx-target="closest li"
-                        hx-swap="delete"
-                        hx-delete=(format!("/shopping/lists/{list_id}/items/{}", item.id)) {
-                        (icon_trash())
-                    }
-                    button class="btn join-item btn-square btn-sm cursor-grab h-full [li:has(input:checked)_&]:hidden transition-all" {
-                        (icon_arrows_up_down())
+                @if !readonly {
+                    div class="flex gap-1 place-content-end" {
+                        button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:hidden transition-all"
+                            hx-target="closest li"
+                            hx-swap="outerHTML"
+                            hx-get=(format!("/shopping/lists/{list_id}/items/{}/edit", item.id)) {
+                            (icon_pencil(false))
+                        }
+                        button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:opacity-50 transition-all"
+                            hx-target="closest li"
+                            hx-swap="delete"
+                            hx-delete=(format!("/shopping/lists/{list_id}/items/{}", item.id)) {
+                            (icon_trash())
+                        }
+                        div class="inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl [li:has(input:checked)_&]:hidden transition-all" data-drag-handle {
+                            "⠿"
+                        }
                     }
                 }
             }

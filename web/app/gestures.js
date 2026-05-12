@@ -2,6 +2,10 @@ function maybeInitRecipe() {
   if (/^\/recipes\/\d+$/.test(window.location.pathname)) {
     initRecipeViewJS();
   }
+
+  if (/^\/shopping\/lists$/.test(window.location.pathname)) {
+    initShoppingListJS();
+  }
 }
 
 document.addEventListener("htmx:afterSettle", maybeInitRecipe);

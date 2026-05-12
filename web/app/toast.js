@@ -87,7 +87,7 @@ function showToast(title, message, background, action) {
   }
 
   htmx.process(toast);
-  _hyperscript.processNode(toast);
+  _hyperscript.process(toast);
 
   container = document.querySelector("#toast-container");
   container.classList.remove("hidden");

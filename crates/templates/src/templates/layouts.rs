@@ -141,7 +141,7 @@ pub fn main(
                                             "Guide"
                                         }
                                     }
-                                    li class="cursor-pointer" onclick="document.querySelector('#settings-dialog').showModal()" {
+                                    li class="cursor-pointer" _="on click open #settings-dialog" {
                                         a hx-get="/settings" hx-target="#settings-dialog-content" {
                                             (icon_cog_6_tooth())
                                             "Settings"

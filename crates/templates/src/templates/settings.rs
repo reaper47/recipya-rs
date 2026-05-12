@@ -213,7 +213,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                     p class="text-xs" {
                         "Choose the nutrition database used to calculate nutrition facts."
                     }
-                    button class="btn btn-xs mt-2" onclick="document.querySelector('#supported-nutrition-sources-dialog').showModal()"  {
+                    button class="btn btn-xs mt-2" _="on click open #supported-nutrition-sources-dialog" {
                         "View sources"
                     }
                 }

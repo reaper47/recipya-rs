@@ -23,9 +23,10 @@ pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
         li class="pb-2" data-drag-row {
             div class="grid grid-flow-col items-center" {
                 label class="flex gap-1" {
-                    div class="inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl"
+                    div class="inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl" {
                         data-drageable draggable="true" data-drag-handle {
-                        "⠿"
+                            "⠿"
+                        }
                     }
                     input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full"
                         value=(

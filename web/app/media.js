@@ -45,7 +45,7 @@ if (!window.__mediaLoaded) {
     }
     labels = document.querySelectorAll("#media label");
     labels[labels.length - 1].classList.remove("hidden");
-    _hyperscript.processNode(cloneMedia);
+    _hyperscript.process(cloneMedia);
 
     let target = event.target;
     while (["svg", "circle"].includes(target.tagName)) {
@@ -58,7 +58,7 @@ if (!window.__mediaLoaded) {
     cloneButton.textContent = `Media ${buttons.length}`;
     cloneButton.setAttribute("onclick", "switchMedia(event)");
     target.previousElementSibling.parentNode.insertBefore(cloneButton, target);
-    _hyperscript.processNode(cloneButton);
+    _hyperscript.process(cloneButton);
     htmx.process(cloneMedia);
   }
 
