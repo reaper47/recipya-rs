@@ -26,6 +26,7 @@ CREATE TABLE shopping_list_items (
   shopping_list_id uuid NOT NULL REFERENCES shopping_lists (id) ON DELETE CASCADE,
   ingredient text NOT NULL CHECK (trim(ingredient) <> ''),
   quantity text CHECK (trim(quantity) <> ''),
+  notes text,
   shopping_list_label_id int8 NOT NULL DEFAULT 1 REFERENCES shopping_list_labels (id) ON DELETE SET DEFAULT,
   position int4 NOT NULL DEFAULT 0 CHECK (position >= 0),
   is_checked boolean NOT NULL DEFAULT false,

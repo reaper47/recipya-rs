@@ -13,4 +13,5 @@ pub struct ListItemPayload {
     pub quantity: Option<String>,
     pub label: Option<String>,
     pub position: Option<i32>,
+    pub notes: Option<String>,
 }

@@ -560,6 +560,7 @@ diesel::table! {
         shopping_list_id -> Uuid,
         ingredient -> Text,
         quantity -> Nullable<Text>,
+        notes -> Nullable<Text>,
         shopping_list_label_id -> Int8,
         position -> Int4,
         is_checked -> Bool,

@@ -9,8 +9,6 @@ use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
 use chrono::NaiveDateTime;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
-use models::download::{Download, DownloadForCreate};
-use models::params::ShoppingListExportParams;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
@@ -18,6 +16,8 @@ use tracing::error;
 
 use app::state::AppState;
 use models::data::{Data, ShoppingData};
+use models::download::{Download, DownloadForCreate};
+use models::params::ShoppingListExportParams;
 use models::shopping::{
     ShareShoppingList, ShoppingList, ShoppingListDetails, ShoppingListItemForCreate,
     ShoppingListItemForUpdate,
@@ -399,6 +399,7 @@ pub async fn shopping_list_item_post_handler(
             payload.quantity.filter(|q| !q.is_empty()),
             item,
             payload.label,
+            payload.notes,
             None,
         ),
         user.id,
@@ -481,6 +482,7 @@ pub async fn shopping_list_item_put_handler(
         label: None,
         position: payload.position,
         is_checked: None,
+        notes: payload.notes,
     };
 
     if let Err(err) = ShoppingList::update_item(&state.mm, list_id, item_id, item_u, user.id).await

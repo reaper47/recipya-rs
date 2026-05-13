@@ -606,17 +606,23 @@ function initGlobalKeyboardShortcuts() {
             }
             break;
           case "s":
-            event.preventDefault();
-            event.stopPropagation();
-
             if (
               window.location.pathname === "/recipes/add/manual" ||
               window.location.pathname.match(/^\/recipes\/(\d+)\/edit$/)
             ) {
+              event.preventDefault();
+              event.stopPropagation();
+
               const form = document.querySelector("form.card-body");
               if (form) {
                 form.requestSubmit();
               }
+            }
+            break;
+          case "p":
+            if (window.location.pathname === "/shopping/lists") {
+              event.preventDefault();
+              document.getElementById("print-shopping-list-button").click();
             }
             break;
           case "x":

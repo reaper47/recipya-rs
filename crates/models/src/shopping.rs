@@ -58,6 +58,7 @@ pub struct ShoppingListItem {
     pub shopping_list_id: Uuid,
     pub ingredient: String,
     pub quantity: Option<String>,
+    pub notes: Option<String>,
     pub shopping_list_label_id: i64,
     pub position: i32,
     pub is_checked: bool,
@@ -71,6 +72,7 @@ pub struct ShoppingListItemForCreate {
     pub quantity: Option<String>,
     pub label: Option<String>,
     pub recipe_id: Option<i64>,
+    pub notes: Option<String>,
 }
 
 #[derive(Insertable)]
@@ -79,6 +81,7 @@ struct ShoppingListItemForInsert {
     shopping_list_id: Uuid,
     ingredient: String,
     quantity: Option<String>,
+    notes: Option<String>,
     shopping_list_label_id: Option<i64>,
 }
 
@@ -88,6 +91,7 @@ pub struct ShoppingListItemForUpdate {
     pub ingredient: Option<String>,
     pub quantity: Option<String>,
     pub label: Option<String>,
+    pub notes: Option<String>,
     pub position: Option<i32>,
     pub is_checked: Option<bool>,
 }
@@ -107,6 +111,7 @@ impl ShoppingListItemForUpdate {
 struct ShoppingListItemForUpdateInternal {
     ingredient: Option<String>,
     quantity: Option<String>,
+    notes: Option<String>,
     shopping_list_label_id: Option<i64>,
     position: Option<i32>,
     is_checked: Option<bool>,
@@ -250,6 +255,7 @@ pub struct ShoppingListItemDetails {
     pub id: i64,
     pub ingredient: String,
     pub quantity: Option<String>,
+    pub notes: Option<String>,
     pub label_id: i64,
     pub label: String,
     pub position: i32,
@@ -372,6 +378,7 @@ impl ShoppingList {
                 shopping_list_id: list_id,
                 ingredient: item_c.ingredient,
                 quantity: item_c.quantity,
+                notes: item_c.notes,
                 shopping_list_label_id: label_id,
             })
             .returning(ShoppingListItem::as_select())
@@ -392,6 +399,7 @@ impl ShoppingList {
             id: item.id,
             ingredient: item.ingredient,
             quantity: item.quantity,
+            notes: item.notes,
             label_id: label_id.unwrap_or(1),
             label: item_c.label.unwrap_or_else(|| "No label".to_string()),
             position: item.position,
@@ -478,6 +486,7 @@ impl ShoppingList {
             id: item.id,
             ingredient: item.ingredient,
             quantity: item.quantity,
+            notes: item.notes,
             label_id: item.shopping_list_label_id,
             label,
             position: item.position,
@@ -670,6 +679,7 @@ impl ShoppingList {
             .set(&ShoppingListItemForUpdateInternal {
                 ingredient: item_u.ingredient,
                 quantity: item_u.quantity.filter(|s| !s.is_empty()),
+                notes: item_u.notes,
                 shopping_list_label_id: label_id,
                 position: item_u.position,
                 is_checked: item_u.is_checked,
@@ -793,6 +803,7 @@ impl ShoppingListDetails {
                     id: item.id,
                     ingredient: item.ingredient,
                     quantity: item.quantity,
+                    notes: item.notes,
                     position: item.position,
                     label_id: item.shopping_list_label_id,
                     label: label_name,
@@ -822,12 +833,14 @@ impl ShoppingListItemForCreate {
         quantity: Option<impl Into<String>>,
         ingredient: impl Into<String>,
         label: Option<String>,
+        notes: Option<String>,
         recipe_id: Option<i64>,
     ) -> Self {
         Self {
             ingredient: ingredient.into(),
             quantity: quantity.map(Into::into),
             label,
+            notes,
             recipe_id,
         }
     }
@@ -885,11 +898,23 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     fn a_meat_item() -> ShoppingListItemForCreate {
-        ShoppingListItemForCreate::new(Some("1 cup"), "chicken", Some("Meat".into()), None)
+        ShoppingListItemForCreate::new(
+            Some("1 cup"),
+            "chicken",
+            Some("Meat".into()),
+            Some("new notes".into()),
+            None,
+        )
     }
 
     fn other_meat_item() -> ShoppingListItemForCreate {
-        ShoppingListItemForCreate::new(Some("500g"), "beef", Some("Meat".into()), None)
+        ShoppingListItemForCreate::new(
+            Some("500g"),
+            "beef",
+            Some("Meat".into()),
+            Some("other notes".into()),
+            None,
+        )
     }
 
     fn a_list_name() -> String {
@@ -966,6 +991,7 @@ mod tests {
                     id: 1,
                     ingredient: "chicken".into(),
                     quantity: Some("1 cup".into()),
+                    notes: Some("new notes".into()),
                     label_id: 2,
                     label: "Meat".into(),
                     position: 1,
@@ -1042,6 +1068,7 @@ mod tests {
                         id: 1,
                         ingredient: "chicken".into(),
                         quantity: Some("1 cup".into()),
+                        notes: Some("new notes".into()),
                         label_id: 2,
                         label: "Meat".into(),
                         position: 1,
@@ -1054,6 +1081,7 @@ mod tests {
                         id: 2,
                         ingredient: "beef".into(),
                         quantity: Some("500g".into()),
+                        notes: Some("other notes".into()),
                         label_id: 2,
                         label: "Meat".into(),
                         position: 2,
@@ -1105,6 +1133,7 @@ mod tests {
                         id: 1,
                         ingredient: "chicken".into(),
                         quantity: Some("1 cup".into()),
+                        notes: Some("new notes".into()),
                         label_id: 2,
                         label: "Meat".into(),
                         position: 1,
@@ -1120,6 +1149,7 @@ mod tests {
                         id: 2,
                         ingredient: "beef".into(),
                         quantity: Some("500g".into()),
+                        notes: Some("other notes".into()),
                         label_id: 2,
                         label: "Meat".into(),
                         position: 2,
@@ -1172,6 +1202,7 @@ mod tests {
             ShoppingListItemForUpdate {
                 ingredient: Some(new_item.ingredient.clone()),
                 quantity: new_item.quantity.clone(),
+                notes: new_item.notes.clone(),
                 position: None,
                 label: Some("Super C".into()),
                 ..Default::default()
@@ -1188,6 +1219,7 @@ mod tests {
                 id: 1,
                 ingredient: new_item.ingredient,
                 quantity: new_item.quantity,
+                notes: Some("other notes".into()),
                 label_id: 3,
                 label: "Super C".into(),
                 position: 1,
@@ -1575,6 +1607,7 @@ mod tests {
                         id: 1,
                         ingredient: "chicken".into(),
                         quantity: Some("500g".into()),
+                        notes: Some("new notes".into()),
                         label_id: 1,
                         label: "No label".into(),
                         position: 1,
@@ -1587,6 +1620,7 @@ mod tests {
                         id: 2,
                         ingredient: "vegetable broth".into(),
                         quantity: None,
+                        notes: None,
                         label_id: 1,
                         label: "No label".into(),
                         position: 2,
@@ -1599,6 +1633,7 @@ mod tests {
                         id: 3,
                         ingredient: "paprika".into(),
                         quantity: Some("5g".into()),
+                        notes: Some("other notes".into()),
                         label_id: 1,
                         label: "No label".into(),
                         position: 3,
@@ -1624,6 +1659,7 @@ mod tests {
                         id: 1,
                         ingredient: "Sugar".into(),
                         quantity: Some("1 bag".into()),
+                        notes: Some("big notes".into()),
                         label_id: 1,
                         label: "No label".into(),
                         position: 1,
@@ -1636,6 +1672,7 @@ mod tests {
                         id: 2,
                         ingredient: "Blueberries".into(),
                         quantity: None,
+                        notes: None,
                         label_id: 1,
                         label: "No label".into(),
                         position: 2,
@@ -1648,6 +1685,7 @@ mod tests {
                         id: 3,
                         ingredient: "paprika".into(),
                         quantity: Some("5g".into()),
+                        notes: Some("yay notes".into()),
                         label_id: 2,
                         label: "Spices".into(),
                         position: 3,
@@ -1660,6 +1698,7 @@ mod tests {
                         id: 3,
                         ingredient: "ground chili pepper".into(),
                         quantity: Some("15g".into()),
+                        notes: Some("some notes".into()),
                         label_id: 2,
                         label: "Spices".into(),
                         position: 3,
@@ -1672,6 +1711,7 @@ mod tests {
                         id: 3,
                         ingredient: "Pork necks".into(),
                         quantity: Some("1kg".into()),
+                        notes: None,
                         label_id: 3,
                         label: "Meat".into(),
                         position: 5,
