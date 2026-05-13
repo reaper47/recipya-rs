@@ -66,6 +66,14 @@ pub async fn shopping_lists_handler(
         None
     };
 
+    let labels = match ShoppingList::labels(&state.mm, user.id).await {
+        Ok(labels) => Some(labels),
+        Err(err) => {
+            error!("Failed to fetch the labels for user '{}': {err}", user.id);
+            None
+        }
+    };
+
     Ok(templates::shopping::lists_index(
         uri.path(),
         &Data {
@@ -74,6 +82,7 @@ pub async fn shopping_lists_handler(
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             shopping: Some(ShoppingData {
+                labels,
                 shopping_lists,
                 selected_shopping_list,
             }),
@@ -332,14 +341,15 @@ pub async fn shopping_list_label_put_handler(
     Path((list_id, label_id)): Path<(Uuid, i64)>,
     Form(payload): Form<ListPayload>,
 ) -> impl IntoResponse {
-    let new_label_id = match ShoppingList::get_or_insert_label(&state.mm, &payload.name).await {
-        Ok(id) => id,
-        Err(err) => {
-            error!("Failed to update shopping list label: {err}");
-            broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
-            return Error::Database.into_response();
-        }
-    };
+    let new_label_id =
+        match ShoppingList::get_or_insert_label(&state.mm, &payload.name, user.id).await {
+            Ok(id) => id,
+            Err(err) => {
+                error!("Failed to update shopping list label: {err}");
+                broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
+                return Error::Database.into_response();
+            }
+        };
 
     if let Err(err) =
         ShoppingList::update_item_labels(&state.mm, list_id, label_id, new_label_id, user.id).await

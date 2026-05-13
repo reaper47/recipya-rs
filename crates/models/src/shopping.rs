@@ -511,8 +511,29 @@ impl ShoppingList {
 
         Ok(label)
     }
+
+    /// Returns all of the user's labels.
+    pub async fn labels(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
+        let labels = schema::users_shopping_list_labels::table
+            .inner_join(schema::shopping_list_labels::table.on(
+                schema::shopping_list_labels::id.eq(schema::users_shopping_list_labels::label_id),
+            ))
+            .filter(schema::users_shopping_list_labels::user_id.eq(user_id))
+            .select(schema::shopping_list_labels::name)
+            .distinct()
+            .order(schema::shopping_list_labels::name.asc())
+            .load::<String>(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(labels)
+    }
+
     /// Gets or inserts a label by name, returning the label ID.
-    pub async fn get_or_insert_label<T: AsRef<str>>(mm: &ModelManager, name: T) -> Result<i64> {
+    pub async fn get_or_insert_label<T: AsRef<str>>(
+        mm: &ModelManager,
+        name: T,
+        user_id: Uuid,
+    ) -> Result<i64> {
         let mut conn = mm.pool.get().await?;
 
         let mut name = name.as_ref();
@@ -529,6 +550,15 @@ impl ShoppingList {
         .get_result::<QueryableLabel>(&mut conn)
         .await?
         .id;
+
+        diesel::insert_into(schema::users_shopping_list_labels::table)
+            .values((
+                schema::users_shopping_list_labels::user_id.eq(user_id),
+                schema::users_shopping_list_labels::label_id.eq(label_id),
+            ))
+            .on_conflict_do_nothing()
+            .execute(&mut conn)
+            .await?;
 
         Ok(label_id)
     }
@@ -830,7 +860,7 @@ impl ShoppingListDetails {
 impl ShoppingListItemForCreate {
     /// Creates a new `ShoppingListItemForCreate` with the given quantity, ingredient, label, and recipe ID.
     pub fn new(
-        quantity: Option<impl Into<String>>,
+        quantity: Option<String>,
         ingredient: impl Into<String>,
         label: Option<String>,
         notes: Option<String>,
@@ -838,7 +868,7 @@ impl ShoppingListItemForCreate {
     ) -> Self {
         Self {
             ingredient: ingredient.into(),
-            quantity: quantity.map(Into::into),
+            quantity,
             label,
             notes,
             recipe_id,
@@ -899,7 +929,7 @@ mod tests {
 
     fn a_meat_item() -> ShoppingListItemForCreate {
         ShoppingListItemForCreate::new(
-            Some("1 cup"),
+            Some("1 cup".into()),
             "chicken",
             Some("Meat".into()),
             Some("new notes".into()),
@@ -909,7 +939,7 @@ mod tests {
 
     fn other_meat_item() -> ShoppingListItemForCreate {
         ShoppingListItemForCreate::new(
-            Some("500g"),
+            Some("500g".into()),
             "beef",
             Some("Meat".into()),
             Some("other notes".into()),
@@ -1328,6 +1358,28 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_labels_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let _ = ShoppingList::add_item(
+            &state.mm,
+            list_id,
+            ShoppingListItemForCreate::new(None, "Beans", Some("Produce".into()), None, None),
+            user_id,
+        )
+        .await?;
+
+        let got = ShoppingList::labels(&state.mm, user_id).await?;
+
+        pretty_assertions::assert_eq!(got, vec!["Meat", "Produce"]);
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn test_get_or_insert_label_label_exists_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
@@ -1336,7 +1388,7 @@ mod tests {
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
-        let got = ShoppingList::get_or_insert_label(&state.mm, "No label").await?;
+        let got = ShoppingList::get_or_insert_label(&state.mm, "No label", user_id).await?;
 
         assert_eq!(got, 1);
         Ok(())
@@ -1351,7 +1403,7 @@ mod tests {
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
-        let got = ShoppingList::get_or_insert_label(&state.mm, "Veggies").await?;
+        let got = ShoppingList::get_or_insert_label(&state.mm, "Veggies", user_id).await?;
 
         assert_eq!(got, 3);
         Ok(())

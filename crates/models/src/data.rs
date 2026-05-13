@@ -247,6 +247,7 @@ pub struct ShareData {
 
 /// Holds data related to the shopping module.
 pub struct ShoppingData {
+    pub labels: Option<Vec<String>>,
     pub shopping_lists: Vec<ShoppingList>,
     pub selected_shopping_list: Option<ShoppingListDetails>,
 }

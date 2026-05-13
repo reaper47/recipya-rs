@@ -103,6 +103,15 @@ fn render_lists_index(data: &Data) -> Markup {
                 }
             }
         }
+
+        @if let Some(labels) = &shopping.labels {
+            datalist id="labels" {
+                @for label in labels {
+                    option { (label) }
+                }
+            }
+        }
+
     }
 }
 
@@ -501,7 +510,14 @@ fn shopping_list_title<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
             }
             form class="hidden" hx-put=(format!("/shopping/lists/{list_id}")) hx-swap="outerHTML" {
                 h1 class="text-2xl font-bold underline p-2" {
-                    input required autofocus type="text" name="name" class="input input-lg text-center mr-1" value=(title.as_ref());
+                    input type="text" required
+                        autofocus
+                        name="name"
+                        class="input input-lg text-center mr-1"
+                        value=(title.as_ref())
+                        list="labels"
+                        autocomplete="off";
+
                     span class="ml-2" {
                         button class="btn join-item btn-square btn-lg" {
                             (icon_check())
@@ -579,21 +595,28 @@ pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Ma
             span {
                 (label.as_ref())
                 button class="btn join-item btn-square btn-sm ml-2 mb-1"
-                    _="on click add .hidden to closest <span/> then remove .hidden from next <span/> from closest <span/> then call (next <input/> from closest <span/>).select()" {
+                    _="on click add .hidden to closest <span/> then remove .hidden from next <span/> from closest <span/> then add .inline-flex to next <span/> from closest <span/> then call (next <input/> from closest <span/>).select()" {
                     (icon_pencil(false))
                 }
             }
 
             // Edit mode
-            span class="hidden text-left cursor-default" {
-                input autofocus type="text" name="name" class="input input-sm" value=(label.as_ref()) _="on load wait 50ms then call me.select()";
-                span {
-                    button class="btn join-item btn-square btn-sm ml-2 mb-1"
-                        hx-include="closest summary"
-                        hx-target="closest summary"
-                        hx-swap="outerHTML"
-                        hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
-                        (icon_check())
+            span class="hidden text-left cursor-default " {
+                form .flex hx-target="closest summary" hx-swap="outerHTML" hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
+                    input autofocus
+                        type="text"
+                        required
+                        name="name"
+                        class="input input-sm"
+                        value=(label.as_ref())
+                        list="labels"
+                        autocomplete="off"
+                        _="on load wait 50ms then call me.select()";
+
+                    span {
+                        button class="btn join-item btn-square btn-sm ml-2 mb-1" {
+                            (icon_check())
+                        }
                     }
                 }
             }
@@ -684,7 +707,13 @@ fn add_label(list_id: Uuid) -> Markup {
 pub fn render_label_new(list_id: Uuid) -> Markup {
     html! {
         form hx-post=(format!("/shopping/lists/{list_id}/labels")) hx-target="closest div.divider" hx-swap="outerHTML" {
-            input autofocus type="text" name="name" class="input input-sm gap-1";
+            input autofocus
+                type="text"
+                name="name"
+                class="input input-sm gap-1"
+                list="labels"
+                autocomplete="off";
+
             button type="submit" class="btn btn-sm btn-ghost" {
                 (icon_check_circle())
             }

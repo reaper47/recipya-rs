@@ -149,6 +149,7 @@ pub async fn share_shopping_list_handler(
                 is_from_host: user.as_ref().is_some_and(|u| u.id == share.user_id),
             }),
             shopping: Some(ShoppingData {
+                labels: None,
                 shopping_lists: vec![],
                 selected_shopping_list: Some(list),
             }),
