@@ -1,7 +1,7 @@
 use std::{collections::HashMap, io::Write, path::PathBuf};
 
 use chrono::NaiveDateTime;
-use diesel::{prelude::*, sql_types::Text};
+use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
 use tempfile::{NamedTempFile, env::temp_dir};
@@ -86,7 +86,7 @@ struct ShoppingListItemForInsert {
 }
 
 /// Represents a shopping list item for update.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ShoppingListItemForUpdate {
     pub ingredient: Option<String>,
     pub quantity: Option<String>,
@@ -176,9 +176,16 @@ impl ShoppingListDetails {
                 if let Some(q) = &item.quantity {
                     write!(writer, " ({q})")?;
                 }
+
                 if let Some(recipe) = &item.recipe {
                     write!(writer, " | {}", recipe.name)?;
                 }
+
+                if let Some(notes) = &item.notes {
+                    writeln!(writer)?;
+                    write!(writer, "\t*{notes}")?;
+                }
+
                 writeln!(writer)?;
             }
         }
@@ -205,9 +212,16 @@ impl ShoppingListDetails {
                 if let Some(q) = &item.quantity {
                     write!(writer, " ({q})")?;
                 }
+
                 if let Some(recipe) = &item.recipe {
                     write!(writer, " | **{}**", recipe.name)?;
                 }
+
+                if let Some(notes) = &item.notes {
+                    writeln!(writer)?;
+                    write!(writer, "\t* {notes}")?;
+                }
+
                 writeln!(writer)?;
             }
         }
@@ -567,6 +581,7 @@ impl ShoppingList {
     pub async fn new_label<T: AsRef<str>>(
         mm: &ModelManager,
         name: T,
+        list_id: Uuid,
         user_id: Uuid,
     ) -> Result<i64> {
         if name.as_ref().is_empty() {
@@ -602,6 +617,18 @@ impl ShoppingList {
                             .await?
                     }
                 };
+
+                let is_label_in_list: bool = diesel::select(exists(
+                    schema::shopping_list_items::table
+                        .filter(schema::shopping_list_items::shopping_list_id.eq(list_id))
+                        .filter(schema::shopping_list_items::shopping_list_label_id.eq(label_id)),
+                ))
+                .get_result(conn)
+                .await?;
+
+                if is_label_in_list {
+                    return Err(Error::DuplicateEntity);
+                }
 
                 diesel::insert_into(schema::users_shopping_list_labels::table)
                     .values((
@@ -1672,7 +1699,7 @@ mod tests {
                         id: 2,
                         ingredient: "vegetable broth".into(),
                         quantity: None,
-                        notes: None,
+                        notes: Some("Buy from the most popular brand".into()),
                         label_id: 1,
                         label: "No label".into(),
                         position: 2,
@@ -1685,7 +1712,7 @@ mod tests {
                         id: 3,
                         ingredient: "paprika".into(),
                         quantity: Some("5g".into()),
-                        notes: Some("other notes".into()),
+                        notes: None,
                         label_id: 1,
                         label: "No label".into(),
                         position: 3,
@@ -1800,7 +1827,7 @@ mod tests {
 
                 pretty_assertions::assert_eq!(
                     String::from_utf8(text)?,
-                    "Main Shopping List\n------------------\n\n- chicken (500g)\n- vegetable broth | Grandma's slow-cooker chicken\n- paprika (5g) | Grandma's slow-cooker chicken\n"
+                    "Main Shopping List\n------------------\n\n- chicken (500g)\n\t*new notes\n- vegetable broth | Grandma's slow-cooker chicken\n\t*Buy from the most popular brand\n- paprika (5g) | Grandma's slow-cooker chicken\n"
                 );
                 Ok(())
             }
@@ -1814,7 +1841,7 @@ mod tests {
 
                 pretty_assertions::assert_eq!(
                     String::from_utf8(text)?,
-                    "Main Shopping List\n------------------\n\n- Sugar (1 bag)\n- Blueberries | Blueberry pie\n\n[Spices]\n- paprika (5g)\n- ground chili pepper (15g)\n\n[Meat]\n- Pork necks (1kg) | Grandma's slow-cooker chicken\n"
+                    "Main Shopping List\n------------------\n\n- Sugar (1 bag)\n\t*big notes\n- Blueberries | Blueberry pie\n\n[Spices]\n- paprika (5g)\n\t*yay notes\n- ground chili pepper (15g)\n\t*some notes\n\n[Meat]\n- Pork necks (1kg) | Grandma's slow-cooker chicken\n"
                 );
                 Ok(())
             }
@@ -1842,7 +1869,7 @@ mod tests {
 
                 pretty_assertions::assert_eq!(
                     String::from_utf8(text)?,
-                    "## Main Shopping List\n\n- [ ] chicken (500g)\n- [ ] vegetable broth | **Grandma's slow-cooker chicken**\n- [ ] paprika (5g) | **Grandma's slow-cooker chicken**\n"
+                    "## Main Shopping List\n\n- [ ] chicken (500g)\n\t* new notes\n- [ ] vegetable broth | **Grandma's slow-cooker chicken**\n\t* Buy from the most popular brand\n- [ ] paprika (5g) | **Grandma's slow-cooker chicken**\n"
                 );
                 Ok(())
             }
@@ -1856,7 +1883,7 @@ mod tests {
 
                 pretty_assertions::assert_eq!(
                     String::from_utf8(text)?,
-                    "## Main Shopping List\n\n- [ ] Sugar (1 bag)\n- [ ] Blueberries | **Blueberry pie**\n\n### Spices\n\n- [ ] paprika (5g)\n- [ ] ground chili pepper (15g)\n\n### Meat\n\n- [ ] Pork necks (1kg) | **Grandma's slow-cooker chicken**\n"
+                    "## Main Shopping List\n\n- [ ] Sugar (1 bag)\n\t* big notes\n- [ ] Blueberries | **Blueberry pie**\n\n### Spices\n\n- [ ] paprika (5g)\n\t* yay notes\n- [ ] ground chili pepper (15g)\n\t* some notes\n\n### Meat\n\n- [ ] Pork necks (1kg) | **Grandma's slow-cooker chicken**\n"
                 );
                 Ok(())
             }

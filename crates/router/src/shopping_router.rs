@@ -890,7 +890,7 @@ mod tests {
             assert_html(
                 &res,
                 &[&format!(
-                    r#"<form hx-post="/shopping/lists/{list_id}/labels" hx-target="closest div.divider" hx-swap="outerHTML"><input autofocus type="text" name="name" class="input input-sm gap-1" list="labels" autocomplete="off"><button type="submit" class="btn btn-sm btn-ghost"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></svg></button></form>"#
+                    r#"<form hx-post="/shopping/lists/{list_id}/labels" hx-target="closest div.divider" hx-swap="outerHTML"><input type="text" autofocus required name="name" class="input input-sm gap-1" list="labels" autocomplete="off"><button type="submit" class="btn btn-sm btn-ghost"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></svg></button></form>"#
                 )],
             );
             Ok(())
@@ -930,7 +930,7 @@ mod tests {
         #[tokio::test]
         async fn test_create_new_label_duplicate_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
@@ -941,21 +941,8 @@ mod tests {
                 .form(&ListPayload::new(a_meat_item().label.unwrap()))
                 .await;
 
-            res.assert_status_ok();
-            assert_html(
-                &res,
-                &[
-                    &format!(
-                        r#"<details open><summary id="label-1" class="text-left cursor-default"><span>Meat<button class="btn join-item btn-square btn-sm ml-2 mb-1" _="on click add .hidden to closest &lt;span/&gt; then remove .hidden from next &lt;span/&gt; from closest &lt;span/&gt; then add .inline-flex to next &lt;span/&gt; from closest &lt;span/&gt; then call (next &lt;input/&gt; from closest &lt;span/&gt;).select()"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button></span><span class="hidden text-left cursor-default "><form class="flex" hx-target="closest summary" hx-swap="outerHTML" hx-put="/shopping/lists/{list_id}/labels/1"><input autofocus type="text" required name="name" class="input input-sm" value="Meat" list="labels" autocomplete="off" _="on load wait 50ms then call me.select()"><span><button class="btn join-item btn-square btn-sm ml-2 mb-1"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></svg></button></span></form></span></summary>"#
-                    ),
-                    &format!(
-                        r#"<ol id="shopping-list-items-container-Meat" class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]"><form class="contents" hx-post="/shopping/lists/{list_id}/items" hx-target="closest li" hx-swap="beforebegin" hx-on--after-request="if(event.detail.successful) {{ this.reset(); this.querySelector('input').focus(); }}"><div class="grid gap-1 min-w-0"><label class="input input-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" height="20" width="22.5" fill="currentColor"><path d="M453.1 27.3L440.9 39.4C409.7 70.6 409.7 121.3 440.9 152.5C456.5 168.1 472.1 183.7 487.8 199.4C519 230.6 569.7 230.6 600.9 199.4L613 187.3C619.2 181.1 619.2 170.9 613 164.7L600.9 152.6C569.7 121.4 519 121.4 487.8 152.6C519 121.4 519 70.7 487.8 39.5L475.7 27.3C469.5 21.1 459.3 21.1 453.1 27.3zM331.6 160C286.4 160 244.5 180.4 216.6 214.3L273.3 271C282.7 280.4 282.7 295.6 273.3 304.9C263.9 314.2 248.7 314.3 239.4 304.9L191.6 257.2L67.2 530.8C61.7 542.9 64.3 557.2 73.7 566.7C83.1 576.2 97.4 578.7 109.6 573.2L251.2 508.8L207.4 465C198 455.6 198 440.4 207.4 431.1C216.8 421.8 232 421.7 241.3 431.1L297.8 487.6L393.1 444.3C446.2 420.2 480.3 367.2 480.3 308.8C480.3 226.6 413.7 160 331.5 160z"></svg><input required autofocus type="text" placeholder="Surloin steak" name="item" value=""></label><label class="input input-sm"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z"></svg><input type="text" placeholder="500g (optional)" name="quantity" value=""></label><label class="input input-sm"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"></svg><input type="text" placeholder="Notes (optional)" name="notes" value="" autocomplete="off"></label><input type="hidden" name="label" value="Meat"></div><div class="grid grid-flow-col gap-1 place-self-end"><div class="grid grid-col gap-2 w-12"><button class="btn join-item btn-sm"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></svg></button></div></div></form></li></ol></details>"#
-                    ),
-                    &format!(
-                        r#"<div class="divider"><div class="grid grid-flow-col gap-2 w-full"><btn class="btn btn-sm btn-outline" hx-get="/shopping/lists/{list_id}/labels/new" hx-swap="outerHTML">Add label</btn></div></div>"#
-                    ),
-                ],
-            );
+            res.assert_status_conflict();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Label already exists in the shopping list.","status":"alert-warning","title":"Attention"}}"# ).await;
             Ok(())
         }
 

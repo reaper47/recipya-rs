@@ -259,6 +259,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
                                 (new_shopping_list_item(list_id, None))
                             }
                         }
+                        (add_label(list_id))
                     }
                 }
             }
@@ -707,8 +708,9 @@ fn add_label(list_id: Uuid) -> Markup {
 pub fn render_label_new(list_id: Uuid) -> Markup {
     html! {
         form hx-post=(format!("/shopping/lists/{list_id}/labels")) hx-target="closest div.divider" hx-swap="outerHTML" {
-            input autofocus
-                type="text"
+            input type="text"
+                autofocus
+                required
                 name="name"
                 class="input input-sm gap-1"
                 list="labels"

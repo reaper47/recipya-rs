@@ -317,10 +317,25 @@ pub async fn shopping_list_labels_post_handler(
         return Error::InvalidPayload.into_response();
     }
 
-    if let Err(err) = ShoppingList::new_label(&state.mm, &form.name, user.id).await {
-        broadcast_error(&state, user.id, "Error creating shopping list label.").await;
-        error!("Failed to create shopping list label: {err}");
-        return Error::Database.into_response();
+    match ShoppingList::new_label(&state.mm, &form.name, list_id, user.id).await {
+        Err(models::Error::DuplicateEntity) => {
+            broadcast_warning(
+                &state,
+                user.id,
+                "Label already exists in the shopping list.",
+            )
+            .await;
+            return Error::EntityExists {
+                entity: "shopping_list_label",
+            }
+            .into_response();
+        }
+        Err(err) => {
+            broadcast_error(&state, user.id, "Error creating shopping list label.").await;
+            error!("Failed to create shopping list label: {err}");
+            return Error::Database.into_response();
+        }
+        _ => {}
     }
 
     templates::shopping::render_shopping_list_items(form.name, list_id, &[], true).into_response()

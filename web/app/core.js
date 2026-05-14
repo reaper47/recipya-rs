@@ -5,6 +5,12 @@ document.addEventListener("DOMContentLoaded", function () {
   window.currentTime = () => new Date().getTime();
 });
 
+document.addEventListener("htmx:afterSettle", () => {
+  requestAnimationFrame(() => {
+    Array.from(document.querySelectorAll("[autofocus]")).at(-1)?.focus();
+  });
+});
+
 document.body.addEventListener("htmx:afterSwap", (event) => {
   if (event.target.id === "content") {
     syncLayout();
