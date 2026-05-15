@@ -9,6 +9,7 @@ use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
 use chrono::NaiveDateTime;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
+use models::view::ViewMode;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
@@ -17,7 +18,7 @@ use tracing::error;
 use app::state::AppState;
 use models::data::{Data, ShoppingData};
 use models::download::{Download, DownloadForCreate};
-use models::params::ShoppingListExportParams;
+use models::params::{ShoppingListExportParams, ViewParams};
 use models::shopping::{
     ShareShoppingList, ShoppingList, ShoppingListDetails, ShoppingListItemForCreate,
     ShoppingListItemForUpdate,
@@ -100,7 +101,7 @@ pub async fn shopping_list_handler(
     Path(list_id): Path<Uuid>,
 ) -> impl IntoResponse {
     match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
-        Ok(list) => templates::shopping::render_shopping_list(&list).into_response(),
+        Ok(list) => templates::shopping::render_shopping_list_view_edit(&list).into_response(),
         Err(err) => {
             error!("Failed to get shopping list: {err}");
             Error::Database.into_response()
@@ -266,6 +267,34 @@ pub async fn shopping_list_print_handler(
     let content = templates::shopping::render_shopping_list_print_mode(&list);
 
     templates::general::render_print_view(&content).into_response()
+}
+
+/// Handles GET requests to view a shopping list.
+pub async fn shopping_list_view_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Path(list_id): Path<Uuid>,
+    Query(params): Query<ViewParams>,
+) -> impl IntoResponse {
+    let list = match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
+        Ok(list) => list,
+        Err(err) => {
+            error!(
+                "Failed to get shopping list '{list_id}' for user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    match params.mode {
+        ViewMode::Edit => templates::shopping::render_shopping_list_view_edit(&list),
+        ViewMode::Print | ViewMode::View => {
+            templates::shopping::render_shopping_list_view_view(&list)
+        }
+    }
+    .into_response()
 }
 
 /// Handles POST requests to share a shopping list.

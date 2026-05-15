@@ -5,6 +5,7 @@ use models::{
     data::{Data, PaginationData, ShoppingData},
     settings::UserSettingDetails,
     shopping::{ShoppingListDetails, ShoppingListItemDetails},
+    view::ViewMode,
 };
 
 use crate::templates::{
@@ -16,12 +17,6 @@ use crate::templates::{
     layouts,
     pagination::pagination,
 };
-
-enum ViewMode {
-    Edit,
-    Print,
-    View,
-}
 
 /// Renders the searchbar.
 pub fn lists_index(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Markup {
@@ -192,8 +187,8 @@ pub fn render_shopping_list_items<T: AsRef<str>>(
     }
 }
 
-/// Renders the shopping list.
-pub fn render_shopping_list(list: &ShoppingListDetails) -> Markup {
+/// Renders the shopping list in edit mode.
+pub fn render_shopping_list_view_edit(list: &ShoppingListDetails) -> Markup {
     html! {
         div {
             (shopping_list_title(list.id, &list.name))
@@ -284,11 +279,35 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
         div id=[if is_oob_swap { Some("navbar-actions") } else { None }]
             hx-swap-oob=[if is_oob_swap { Some("true") } else { None }]
             class="join border border-gray-700 mb-2 w-fit" {
-            button class="btn join-item" {
-                "Toggle Recipes"
-            }
-            button class="btn join-item" {
-                "View (default)"
+            div .dropdown {
+                div tabindex="0" role="button" class="btn join-item" {
+                    "View Mode"
+                    span class="mb-1" { "⌄" }
+                }
+                form tabindex="0"
+                    class="menu dropdown-content bg-base-200 w-32 text-lg pr-2"
+                    hx-get=(format!("/shopping/lists/{list_id}/view"))
+                    hx-target="#shopping-list-view-pane"
+                    hx-trigger="change"
+                    hx-swap="innerHTML transition:true"
+                    onchange="document.activeElement.blur()" {
+                    fieldset class="fieldset flex" {
+                        label class="label cursor-pointer text-inherit w-full p-2" for="view-edit" {
+                            input #view-edit type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="edit" checked;
+                            span class="ml-1" {
+                                "Edit"
+                            }
+                        }
+                    }
+                    fieldset class="fieldset flex" {
+                        label class="label cursor-pointer text-inherit w-full p-2" for="view-view" {
+                            input #view-view type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="view";
+                            span class="ml-1" {
+                                "View"
+                            }
+                        }
+                    }
+                }
             }
             button class="btn join-item" {
                 "Upload to app"
@@ -325,10 +344,8 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
             }
         }
 
-        div #shopping-list-copy-popover
-            class="dropdown rounded-box bg-base-100 shadow-sm"
-            popover style="anchor-name:--anchor-copy-list" {
-            ul class="list bg-base-100 rounded-box shadow-md" {
+        div #shopping-list-copy-popover class="dropdown rounded-box bg-base-100 shadow-sm" popover style="anchor-name:--anchor-copy-list" {
+            ul class="list bg-base-200 rounded-box shadow-md" {
                 li .list-row {
                     p .place-content-center {
                         "Text"
@@ -640,7 +657,7 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
             shopping
                 .selected_shopping_list
                 .as_ref()
-                .map(shopping_list_view_mode)
+                .map(render_shopping_list_view_view)
                 .unwrap_or_default()
         },
     );
@@ -658,7 +675,8 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
     }
 }
 
-fn shopping_list_view_mode(list: &ShoppingListDetails) -> Markup {
+/// Renders the shopping list view in view mode.
+pub fn render_shopping_list_view_view(list: &ShoppingListDetails) -> Markup {
     html! {
         div .p-2 {
             h1 class="text-center text-2xl font-bold underline p-2" {
