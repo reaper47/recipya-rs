@@ -20,6 +20,13 @@ DROP FUNCTION IF EXISTS update_shopping_list_items_position ();
 
 DROP FUNCTION IF EXISTS update_shopping_list_num_items ();
 
+ALTER TABLE user_settings
+DROP COLUMN IF EXISTS paper_size_id;
+
+DROP TABLE IF EXISTS paper_sizes;
+
+DROP TABLE IF EXISTS paper_categories;
+
 DROP TABLE IF EXISTS shares_shopping_lists;
 
 DROP TABLE IF EXISTS shopping_list_recipes;

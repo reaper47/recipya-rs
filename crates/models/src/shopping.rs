@@ -4,6 +4,7 @@ use chrono::NaiveDateTime;
 use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
+use printpdf::{Mm, Op, PdfDocument, PdfPage, PdfSaveOptions};
 use tempfile::{NamedTempFile, env::temp_dir};
 use uuid::Uuid;
 
@@ -157,6 +158,39 @@ impl ShoppingListDetails {
         map
     }
 
+    /// Exports the shopping list to a file using the given writer.
+    pub fn export(&self, format: &ExportType) -> Result<PathBuf> {
+        if self.items.is_empty() {
+            return Err(Error::EmptyInput);
+        }
+
+        let file = NamedTempFile::new()?;
+
+        let mut writer = std::io::BufWriter::new(file);
+        match format {
+            ExportType::Markdown => self.write_markdown(&mut writer)?,
+            ExportType::Text => self.write_text(&mut writer)?,
+            ExportType::Pdf => self.write_pdf(&mut writer)?,
+            ExportType::Json => unimplemented!(),
+        }
+        {}
+
+        writer.flush()?;
+
+        let named = temp_dir().join(format!("{}.{}", self.name, format.extension()));
+
+        let temp_path = writer
+            .into_inner()
+            .map_err(|err| Error::File(err.to_string()))?
+            .into_temp_path();
+
+        temp_path
+            .persist(&named)
+            .map_err(|err| Error::File(err.to_string()))?;
+
+        Ok(named)
+    }
+
     /// Writes the shopping list in text format to the given writer.
     pub fn write_text(&self, writer: &mut impl Write) -> Result<()> {
         if self.items.is_empty() {
@@ -229,37 +263,17 @@ impl ShoppingListDetails {
         Ok(())
     }
 
-    /// Exports the shopping list to a file using the given writer.
-    pub fn export(&self, format: &ExportType) -> Result<PathBuf> {
-        if self.items.is_empty() {
-            return Err(Error::EmptyInput);
-        }
-
-        let file = NamedTempFile::new()?;
-
-        let mut writer = std::io::BufWriter::new(file);
-        match format {
-            ExportType::Markdown => self.write_markdown(&mut writer)?,
-            ExportType::Text => self.write_text(&mut writer)?,
-            ExportType::Pdf => unimplemented!(),
-            ExportType::Json => unimplemented!(),
-        }
-        {}
-
-        writer.flush()?;
-
-        let named = temp_dir().join(format!("{}.{}", self.name, format.extension()));
-
-        let temp_path = writer
-            .into_inner()
-            .map_err(|err| Error::File(err.to_string()))?
-            .into_temp_path();
-
-        temp_path
-            .persist(&named)
-            .map_err(|err| Error::File(err.to_string()))?;
-
-        Ok(named)
+    pub fn write_pdf(&self, writer: &mut impl Write) -> Result<()> {
+        let mut doc = PdfDocument::new(&self.name);
+        let page1_contents = vec![Op::Marker {
+            id: "debugging-marker".into(),
+        }];
+        let page1 = PdfPage::new(Mm(216.0), Mm(279.0), page1_contents);
+        let bytes: Vec<u8> = doc
+            .with_pages(vec![page1])
+            .save(&PdfSaveOptions::default(), &mut vec![]);
+        writer.write_all(&bytes)?;
+        Ok(())
     }
 }
 

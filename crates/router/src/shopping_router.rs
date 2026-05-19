@@ -82,12 +82,12 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
-    use app::state::AppState;
     use axum_test::TestServer;
-    use config::Config;
     use reqwest::Method;
     use uuid::Uuid;
 
+    use app::state::AppState;
+    use config::Config;
     use models::{
         shopping::{ShoppingList, ShoppingListItemForCreate},
         user::User,
@@ -234,10 +234,7 @@ mod tests {
         async fn test_user_has_lists_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
-            let user_id = User::all(&state.mm).await?[0].id;
-            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-            let _ = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
+            let list_id = insert_list_with_item(config).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -1174,10 +1171,7 @@ mod tests {
         async fn test_copy_list_with_items_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
-            let user_id = User::all(&state.mm).await?[0].id;
-            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-            let _ = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
+            let list_id = insert_list_with_item(config).await?;
 
             let res = server.get(&base_uri(list_id, Some("text"))).await;
 

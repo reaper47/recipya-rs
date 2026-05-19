@@ -90,11 +90,9 @@ pub struct UserForAuth {
 impl User {
     /// Retrieves all of the users in the database.
     pub async fn all(mm: &ModelManager) -> Result<Vec<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let all_users = schema::users::table
             .select(Self::as_select())
-            .load::<Self>(&mut conn)
+            .load::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(all_users)
@@ -121,12 +119,10 @@ impl User {
 
     /// Deletes a user from the database.
     pub async fn delete(mm: &ModelManager, user_id: Uuid) -> Result<()> {
-        use repository::schema::users::dsl::{id, users};
-
-        let mut conn = mm.pool.get().await?;
+        use schema::users::dsl::{id, users};
 
         let num_deleted = diesel::delete(users.filter(id.eq(user_id)))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         match num_deleted {
@@ -143,14 +139,12 @@ impl User {
         mm: &ModelManager,
         user_email: impl Into<String>,
     ) -> Result<Option<Self>> {
-        use repository::schema::users::dsl::{email, users};
-
-        let mut conn = mm.pool.get().await?;
+        use schema::users::dsl::{email, users};
 
         let user = users
             .filter(email.eq(user_email.into()))
             .select(Self::as_select())
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await
             .optional()?;
 
@@ -159,14 +153,12 @@ impl User {
 
     /// Finds a user by their user ID.
     pub async fn get_user_by_id(mm: &ModelManager, user_id: Uuid) -> Result<Option<Self>> {
-        use repository::schema::users::dsl::{id, users};
-
-        let mut conn = mm.pool.get().await?;
+        use schema::users::dsl::{id, users};
 
         let user = users
             .filter(id.eq(user_id))
             .select(Self::as_select())
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await
             .optional()?;
 
@@ -195,13 +187,11 @@ impl User {
 
     /// Finds the first user authentication data by email.
     pub async fn get_first_admin(mm: &ModelManager) -> Result<Option<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let user = schema::users::table
             .filter(schema::users::is_admin.eq(true))
             .select(Self::as_select())
             .order(schema::users::id.asc())
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await
             .optional()?;
 
@@ -210,13 +200,11 @@ impl User {
 
     /// Fetches all of the user's favourite recipes.
     pub async fn favourite_recipes(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Recipe>> {
-        let mut conn = mm.pool.get().await?;
-
         let recipes = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .filter(schema::recipes::is_favourite.eq(true))
             .select(Recipe::as_select())
-            .load::<Recipe>(&mut conn)
+            .load::<Recipe>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(recipes)
@@ -243,7 +231,7 @@ impl User {
 
     /// Creates a new user from the provided user creation data.
     pub async fn new(mm: &ModelManager, user_c: UserForCreate) -> Result<Self> {
-        use repository::schema::users::dsl::users;
+        use schema::users::dsl::users;
 
         let new_password_salt = Uuid::new_v4();
         let new_password = hash_pwd(ContentToHash {
@@ -252,19 +240,15 @@ impl User {
         })
         .await?;
 
-        let all_users = Self::all(mm).await?;
-
-        let mut conn = mm.pool.get().await?;
-
         let user = diesel::insert_into(users)
             .values(&UserForInsert {
                 email: user_c.email.clone(),
                 password_hash: new_password,
                 password_salt: new_password_salt,
-                is_admin: all_users.is_empty(),
+                is_admin: Self::all(mm).await?.is_empty(),
             })
             .returning(Self::as_returning())
-            .get_result(&mut conn)
+            .get_result(&mut mm.pool.get().await?)
             .await?;
 
         Ok(user)
@@ -272,19 +256,29 @@ impl User {
 
     /// Fetches the number of users in the database.
     pub async fn num_users(mm: &ModelManager) -> Result<i64> {
-        let mut conn = mm.pool.get().await?;
-
         let count = schema::users::table
             .select(count_star())
-            .first::<i64>(&mut conn)
+            .first::<i64>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(count)
     }
 
+    /// Updates the user's paper size.
+    pub async fn update_paper_size(&self, mm: &ModelManager, new_paper_size_id: i16) -> Result<()> {
+        use schema::user_settings::dsl::*;
+
+        diesel::update(user_settings.filter(user_id.eq(self.id)))
+            .set(paper_size_id.eq(new_paper_size_id))
+            .execute(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(())
+    }
+
     /// Updates the user's password.
     pub async fn update_password(&self, mm: &ModelManager, password_clear: &str) -> Result<()> {
-        use repository::schema::users::dsl::{id, password_hash, users};
+        use schema::users::dsl::{id, password_hash, users};
 
         let hashed_password = hash_pwd(ContentToHash {
             content: password_clear.into(),
@@ -292,11 +286,9 @@ impl User {
         })
         .await?;
 
-        let mut conn = mm.pool.get().await?;
-
         diesel::update(users.find(id))
             .set(password_hash.eq(hashed_password))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -323,13 +315,11 @@ impl User {
         user_id: Uuid,
         new_value: bool,
     ) -> Result<()> {
-        use repository::schema::users::dsl::{is_remember_me, users};
-
-        let mut conn = mm.pool.get().await?;
+        use schema::users::dsl::{is_remember_me, users};
 
         diesel::update(users.find(user_id))
             .set(is_remember_me.eq(new_value))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -338,7 +328,9 @@ impl User {
 
 #[cfg(test)]
 mod tests {
-    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
+    use crate::{
+        recipe::structs::test_utils::a_complete_recipe_for_create, settings::UserSettingDetails,
+    };
 
     use super::*;
 
@@ -375,7 +367,7 @@ mod tests {
 
         use diesel_async::RunQueryDsl;
 
-        use repository::schema;
+        use schema;
         use test_utils::{build_server_logged_in, create_app_state};
 
         #[derive(Insertable)]
@@ -487,11 +479,9 @@ mod tests {
     }
 
     mod test_keywords {
-        use super::*;
-
         use diesel_async::RunQueryDsl;
 
-        use repository::schema;
+        use super::*;
         use test_utils::{build_server_logged_in, create_app_state};
 
         #[derive(Insertable)]
@@ -645,6 +635,19 @@ mod tests {
             .expect("User should have been present");
 
         pretty_assertions::assert_eq!(user.email, got_user.email);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_update_paper_size_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let user = insert_user(config.clone()).await?;
+
+        user.update_paper_size(&state.mm, 2).await?;
+
+        let got = UserSettingDetails::get(&state.mm, user.id).await?;
+        assert_eq!(got.paper_size_id, 2);
         Ok(())
     }
 

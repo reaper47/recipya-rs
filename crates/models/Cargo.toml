@@ -35,6 +35,7 @@ itertools.workspace = true
 lru.workspace = true
 math.workspace = true
 paste = "1.0.15"
+printpdf = { version = "0.9.1", default-features = false }
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true

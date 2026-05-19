@@ -309,9 +309,10 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                     }
                 }
             }
-            button class="btn join-item" {
-                "Upload to app"
-            }
+            // TODO: Implement upload to apps (todoist)
+            // button class="btn join-item" {
+            //     "Upload to app"
+            // }
             button class="btn join-item" style="anchor-name:--anchor-copy-list" popovertarget="shopping-list-copy-popover" {
                 "Export"
                 span class="mb-1" { "⌄" }
@@ -382,6 +383,21 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                         }
                         form title="Download"
                             hx-get=(format!("/shopping/lists/{list_id}/export?format=markdown"))
+                            hx-swap="none"
+                            hx-on:download-ready="document.getElementById('shopping-list-copy-popover').hidePopover(); window.location.href = event.detail.url;" {
+                                button title="Download" class="btn btn-square btn-ghost" {
+                                    (icon_arrow_down_tray())
+                                }
+                            }
+                    }
+                }
+                li . list-row {
+                    p .place-content-center {
+                        "PDF"
+                    }
+                    div class="place-self-end grid grid-flow-col" {
+                        form title="Download"
+                            hx-get=(format!("/shopping/lists/{list_id}/export?format=pdf"))
                             hx-swap="none"
                             hx-on:download-ready="document.getElementById('shopping-list-copy-popover').hidePopover(); window.location.href = event.detail.url;" {
                                 button title="Download" class="btn btn-square btn-ghost" {

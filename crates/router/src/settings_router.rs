@@ -5,7 +5,8 @@ use app::state::AppState;
 
 use crate::handlers::settings::{
     export_data_handler, export_data_post_handler, set_default_theme_handler,
-    set_nutrition_source_handler, set_selected_theme_handler, settings_handler,
+    set_nutrition_source_handler, set_paper_size_handler, set_selected_theme_handler,
+    settings_handler,
 };
 use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
@@ -18,6 +19,7 @@ pub fn settings_routes(state: &AppState) -> Router<AppState> {
             get(export_data_handler).post(export_data_post_handler),
         )
         .route("/nutrition/source", post(set_nutrition_source_handler))
+        .route("/paper-size", post(set_paper_size_handler))
         .route(
             "/theme-default",
             post(set_default_theme_handler)
@@ -34,6 +36,8 @@ pub fn settings_routes(state: &AppState) -> Router<AppState> {
 mod tests {
     use axum::http::{Method, StatusCode};
 
+    use models::{settings::UserSettingDetails, user::User};
+    use test_db::TestDb;
     use test_fixtures::{assert_html, assert_not_in_html, assert_ws_message};
     use test_utils::{
         assert_must_be_logged_in, build_server_logged_in, build_server_ws,
@@ -43,8 +47,6 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_settings {
-        use test_db::TestDb;
-
         use super::*;
 
         const BASE_URI: &str = "/settings";
@@ -136,15 +138,17 @@ mod tests {
                 &[
                     r#"<div class="flex flex-col menu-sm sm:flex-row sm:menu-md">"#,
                     r#"<ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical" _="on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target">"#,
-                    r#"<a class="setting-tab menu-active" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-recipes">"#,
-                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections">"#,
-                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-data">"#,
-                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"#,
-                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"#,
-                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-account">"#,
-                    r#"<a class="setting-tab" _="on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-about">"#,
+                    r#"<a class="setting-tab menu-active" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-recipes">"#,
+                    r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-general">"#,
+                    r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections">"#,
+                    r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-data">"#,
+                    r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-server">"#,
+                    r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin">"#,
+                    r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-account">"#,
+                    r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-about">"#,
                     r#"<div id="settings-blocks" class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem">"#,
                     r#"<div id="settings-recipes" class="p-3 md:h-[50vh] overflow-y-auto">"#,
+                    r#"<div id="settings-general" class="p-3 overflow-y-auto max-h-96 hidden">"#,
                     r#"<div id="settings-connections" class="p-3 overflow-y-auto max-h-96 hidden">"#,
                     r#"<div id="settings-server" class="hidden p-3 md:max-h-96">"#,
                     r#"<div id="settings-data" class="hidden p-3">"#,
@@ -158,7 +162,7 @@ mod tests {
     }
 
     mod tests_export {
-        use models::{Recipe, user::User};
+        use models::Recipe;
 
         use super::*;
 
@@ -172,7 +176,6 @@ mod tests {
         }
 
         mod tests_get {
-            use test_db::TestDb;
             use test_models::a_complete_recipe_for_create;
 
             use super::*;
@@ -210,7 +213,7 @@ mod tests {
                     &[
                         r##"<form class="card bg-base-100 shadow-sm min-w-[50vw]" hx-post="/settings/export-data" hx-indicator="#export-data-spinner" hx-on:download-ready="document.querySelector('#export-data-dialog').close(); window.location.href = event.detail.url;">"##,
                         r#"<div class="card-body"><h3 class="mb-1 grid grid-flow-col"><label class="input input-sm"><svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg><input type="search" placeholder="Search a recipe" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label><select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end"><option value="json" selected>JSON</option><option value="pdf">PDF</option></select></h3>"#,
-                        r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" class="checkbox" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked then call checkExportDataSubmit()"></label></th><th class="py-1 text-left">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-results">"#,
+                        r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" class="checkbox" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked then call checkExportDataSubmit()"></label></th><th class="py-1">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-results">"#,
                         r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="1" _="on change call checkExportDataSubmit()"></label></td><td class="py-1">Best Chinese Kale</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/1" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
                         r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="2" _="on change call checkExportDataSubmit()"></label></td><td class="py-1">Taco Tuesday</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/2" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
                         r#"</tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="export-data-submit-button" type="submit" class="btn btn-sm" disabled><img id="export-data-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading..."><svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></div></form>"#,
@@ -223,7 +226,6 @@ mod tests {
         mod tests_post {
             use axum_htmx::HX_TRIGGER;
             use models::download::Download;
-            use test_db::TestDb;
             use test_models::a_complete_recipe_for_create;
 
             use super::*;
@@ -358,8 +360,7 @@ mod tests {
     }
 
     mod tests_nutrition {
-        use models::{nutrition::NutritionDataSource, settings::UserSettingDetails, user::User};
-        use test_db::TestDb;
+        use models::nutrition::NutritionDataSource;
 
         use crate::schemas::settings::NutritionSourcePayload;
 
@@ -396,12 +397,39 @@ mod tests {
         }
     }
 
+    mod tests_paper_size {
+        use crate::schemas::settings::PaperSizeForm;
+
+        use super::*;
+
+        const BASE_URI: &str = "/settings/paper-size";
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_update_paper_size_for_user_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&PaperSizeForm { paper_size: 3 })
+                .await;
+
+            res.assert_status_ok();
+            let got = UserSettingDetails::get(&state.mm, user_id).await?;
+            assert_eq!(got.paper_size_id, 3);
+            Ok(())
+        }
+    }
+
     mod tests_themes {
-        use models::{
-            settings::{Theme, UserSettingDetails},
-            user::User,
-        };
-        use test_db::TestDb;
+        use models::settings::Theme;
 
         use crate::schemas::settings::ThemePayload;
 

@@ -357,6 +357,31 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    paper_categories (id) {
+        id -> Int2,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    paper_sizes (id) {
+        id -> Int2,
+        paper_category_id -> Int2,
+        name -> Text,
+        height_mm -> Float8,
+        width_mm -> Float8,
+        height_in -> Float8,
+        width_in -> Float8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     password_reset_tokens (id) {
         id -> Uuid,
         user_id -> Uuid,
@@ -662,6 +687,7 @@ diesel::table! {
         cookbooks_view -> Int4,
         default_theme -> Int4,
         selected_theme -> Int4,
+        paper_size_id -> Int2,
     }
 }
 
@@ -768,6 +794,7 @@ diesel::joinable!(nutrition_per_100g -> nutrition (nutrition_id));
 diesel::joinable!(nutrition_per_100g -> recipes (recipe_id));
 diesel::joinable!(nutrition_per_serving -> nutrition (nutrition_id));
 diesel::joinable!(nutrition_per_serving -> recipes (recipe_id));
+diesel::joinable!(paper_sizes -> paper_categories (paper_category_id));
 diesel::joinable!(password_reset_tokens -> users (user_id));
 diesel::joinable!(recipe_timelines -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> users (user_id));
@@ -839,6 +866,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     nutrition_per_100g,
     nutrition_per_serving,
     nutrition_sources,
+    paper_categories,
+    paper_sizes,
     password_reset_tokens,
     recipe_timelines,
     recipes,

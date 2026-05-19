@@ -9,6 +9,7 @@ use uuid::Uuid;
 
 use crate::nutrition::NutritionDataSource;
 use crate::nutrition::tables::NutritionSource;
+use crate::paper::{PaperSize, PaperSizes};
 use crate::{Error, Result};
 
 #[derive(Debug, Default, Eq, PartialEq, Display, EnumString, EnumIter)]
@@ -125,6 +126,7 @@ impl ThemeModel {
 #[derive(Clone, Debug, Queryable, Identifiable, Selectable)]
 #[diesel(table_name = schema::user_settings)]
 #[diesel(belongs_to(MeasurementSystem))]
+#[diesel(belongs_to(PaperSize))]
 #[diesel(belongs_to(User))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 struct UserSetting {
@@ -136,6 +138,7 @@ struct UserSetting {
     cookbooks_view: i32,
     default_theme: i32,
     selected_theme: i32,
+    paper_size_id: i16,
 }
 
 #[derive(Debug, Default, Eq, PartialEq)]
@@ -148,6 +151,8 @@ pub struct UserSettingDetails {
     pub cookbooks_view: i32,
     pub default_theme: Theme,
     pub selected_theme: Theme,
+    pub paper_size_id: i16,
+    pub paper_sizes: PaperSizes,
 }
 
 impl UserSettingDetails {
@@ -187,6 +192,8 @@ impl UserSettingDetails {
             cookbooks_view: settings.cookbooks_view,
             default_theme: default_theme_name,
             selected_theme: selected_theme_name,
+            paper_size_id: settings.paper_size_id,
+            paper_sizes: PaperSize::get_all(mm).await?,
         })
     }
 }
@@ -210,19 +217,22 @@ mod tests {
 
         let got = UserSettingDetails::get(&state.mm, user.id).await?;
 
-        pretty_assertions::assert_eq!(
-            got,
-            UserSettingDetails {
-                user_id: user.id,
-                measurement_system: MeasurementSystem::ImperialUK,
-                nutrition_source: NutritionDataSource::USDAFoodDataCentral,
-                nutrition_sources: NutritionSource::all(&state.mm).await?,
-                is_convert_automatically: false,
-                cookbooks_view: 0,
-                default_theme: Theme::default(),
-                selected_theme: Theme::Default,
-            }
+        assert_eq!(got.user_id, user.id);
+        assert_eq!(got.measurement_system, MeasurementSystem::ImperialUK);
+        assert_eq!(
+            got.nutrition_source,
+            NutritionDataSource::USDAFoodDataCentral
         );
+        assert_eq!(
+            got.nutrition_sources,
+            NutritionSource::all(&state.mm).await?
+        );
+        assert!(!got.is_convert_automatically);
+        assert_eq!(got.cookbooks_view, 0);
+        assert_eq!(got.default_theme, Theme::default());
+        assert_eq!(got.selected_theme, Theme::Default);
+        assert_eq!(got.paper_size_id, 1);
+        assert_eq!(got.paper_sizes.len(), 8);
         Ok(())
     }
 

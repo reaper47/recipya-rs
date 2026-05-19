@@ -26,7 +26,9 @@ use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
-use crate::schemas::settings::{ExportDataPayload, NutritionSourcePayload, ThemePayload};
+use crate::schemas::settings::{
+    ExportDataPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload,
+};
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
@@ -262,6 +264,21 @@ pub async fn set_nutrition_source_handler(
     }
 
     (StatusCode::NO_CONTENT, "").into_response()
+}
+
+/// Handles setting the paper size for the target user.
+pub async fn set_paper_size_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Form(form): Form<PaperSizeForm>,
+) -> impl IntoResponse {
+    if let Err(err) = user.update_paper_size(&state.mm, form.paper_size).await {
+        error!("Error updating paper size for user {}: {err}", user.id);
+        broadcast_error(&state, user.id, "Error updating paper size.").await;
+        return Error::Database.into_response();
+    }
+
+    ().into_response()
 }
 
 /// Handles setting the default theme for the target user.

@@ -9,7 +9,7 @@ use axum::extract::{Multipart, Query, State, WebSocketUpgrade};
 use axum::http::{Response, StatusCode};
 use axum::response::{Html, IntoResponse, Redirect};
 use futures_util::StreamExt;
-use models::download::Download;
+use models::paper::PaperSize;
 use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use serde_json::{Value, json};
 use tokio::fs;
@@ -22,6 +22,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::Recipe;
+use models::download::Download;
 use models::params::{DownloadParams, FetchParams, SearchParams};
 use models::user::User;
 
@@ -229,6 +230,30 @@ fn is_forbidden_v6(ip: Ipv6Addr) -> bool {
     // IPv4-mapped ::ffff:0:0/96
     ip.to_ipv4_mapped()
         .is_some_and(is_forbidden_v4)
+}
+
+pub async fn paper_sizes_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let papers = match PaperSize::get_all(&state.mm).await {
+        Ok(papers) => papers,
+        Err(err) => {
+            error!("Failed to get paper sizes: {err}");
+            broadcast_error(&state, user.id, "Failed to fetch paper sizes").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::general::render_paper_sizes_table(
+        papers
+            .iter()
+            .flat_map(|(cat, sizes)| sizes.iter().map(|p| (cat.as_str(), p)))
+            .enumerate()
+            .map(|(idx, (cat, p))| (idx + 1, cat, p))
+            .collect(),
+    )
+    .into_response()
 }
 
 /// Handles searching for suggestions.
