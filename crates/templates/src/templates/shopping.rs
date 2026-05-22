@@ -274,6 +274,7 @@ pub fn render_shopping_list_item_count(list_id: Uuid, num_items: i64, is_swap_oo
 }
 
 /// Render shopping list actions.
+#[allow(clippy::too_many_lines)]
 pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> Markup {
     html! {
         div id=[if is_oob_swap { Some("navbar-actions") } else { None }]

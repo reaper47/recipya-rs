@@ -1060,7 +1060,7 @@ mod tests {
 
         use super::*;
 
-        fn base_uri(list_id: Uuid, view: ViewMode) -> String {
+        fn base_uri(list_id: Uuid, view: &ViewMode) -> String {
             format!("/shopping/lists/{list_id}/view?mode={view:?}").to_lowercase()
         }
 
@@ -1073,12 +1073,12 @@ mod tests {
                         r#"<ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]" data-item-id="1" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/{list_id}/items/1/toggle"><div class="text-left [input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all"><p>Spaghetti</p></div></label></div></div></li></ol></details></div></div></div>"#,
                     ),
                 ],
-            )
+            );
         }
 
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
-            assert_must_be_logged_in(Method::GET, &base_uri(Uuid::new_v4(), ViewMode::View)).await
+            assert_must_be_logged_in(Method::GET, &base_uri(Uuid::new_v4(), &ViewMode::View)).await
         }
 
         #[tokio::test]
@@ -1087,7 +1087,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let list_id = insert_list_with_item(config).await?;
 
-            let res = server.get(&base_uri(list_id, ViewMode::Edit)).await;
+            let res = server.get(&base_uri(list_id, &ViewMode::Edit)).await;
 
             res.assert_status_ok();
             assert_html(
@@ -1113,7 +1113,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let list_id = insert_list_with_item(config).await?;
 
-            let res = server.get(&base_uri(list_id, ViewMode::Print)).await;
+            let res = server.get(&base_uri(list_id, &ViewMode::Print)).await;
 
             res.assert_status_ok();
             assert_html_view(&res, list_id);
@@ -1126,7 +1126,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let list_id = insert_list_with_item(config).await?;
 
-            let res = server.get(&base_uri(list_id, ViewMode::View)).await;
+            let res = server.get(&base_uri(list_id, &ViewMode::View)).await;
 
             res.assert_status_ok();
             assert_html_view(&res, list_id);

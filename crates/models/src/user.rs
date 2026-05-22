@@ -266,7 +266,7 @@ impl User {
 
     /// Updates the user's paper size.
     pub async fn update_paper_size(&self, mm: &ModelManager, new_paper_size_id: i16) -> Result<()> {
-        use schema::user_settings::dsl::*;
+        use schema::user_settings::dsl::{paper_size_id, user_id, user_settings};
 
         diesel::update(user_settings.filter(user_id.eq(self.id)))
             .set(paper_size_id.eq(new_paper_size_id))

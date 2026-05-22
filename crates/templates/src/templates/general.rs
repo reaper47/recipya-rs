@@ -6,7 +6,7 @@ use crate::settings::SEARCH_INPUT_JS;
 use super::layouts;
 
 /// Renders the paper sizes table.
-pub fn render_paper_sizes_table(data: Vec<(usize, &str, &PaperSize)>) -> Markup {
+pub fn render_paper_sizes_table(data: &[(usize, &str, &PaperSize)]) -> Markup {
     html! {
         div class="card bg-base-100 shadow-sm p-2 min-w-[50vw]" {
             div class="card-body" {
@@ -33,7 +33,7 @@ pub fn render_paper_sizes_table(data: Vec<(usize, &str, &PaperSize)>) -> Markup 
                             }
                         }
                         tbody #search-results {
-                            @for (idx, category, paper) in &data {
+                            @for (idx, category, paper) in data {
                                 tr {
                                     td class="py-1" { (idx) }
                                     td class="py-1" { (paper.name) }

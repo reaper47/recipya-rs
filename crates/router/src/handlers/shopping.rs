@@ -9,6 +9,9 @@ use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
 use chrono::NaiveDateTime;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
+use models::export::{ExportOptions, ExportType};
+use models::paper::PaperSize;
+use models::settings::UserSettingDetails;
 use models::view::ViewMode;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
@@ -207,7 +210,13 @@ pub async fn shopping_list_export_handler(
 ) -> Result<impl IntoResponse> {
     let list = ShoppingListDetails::get(&state.mm, list_id, user.id).await?;
 
-    let path = match list.export(&params.format) {
+    let options = if params.format == ExportType::Pdf {
+        pdf_export_options(&state, user.id).await?
+    } else {
+        None
+    };
+
+    let path = match list.export(&params.format, options) {
         Ok(f) => f,
         Err(models::Error::EmptyInput) => {
             broadcast_warning(&state, user.id, "Shopping list is empty.").await;
@@ -248,6 +257,35 @@ pub async fn shopping_list_export_handler(
             Err(Error::Fs)
         }
     }
+}
+
+#[allow(clippy::cast_possible_truncation)]
+async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<ExportOptions>> {
+    let settings = UserSettingDetails::get(&state.mm, user_id)
+        .await
+        .inspect_err(|err| error!("Failed to get user settings: {err}"))
+        .map_err(|_| {
+            let state = state.clone();
+            tokio::spawn(async move {
+                broadcast_error(&state, user_id, "Failed to get user settings.").await;
+            });
+            Error::Database
+        })?;
+
+    let paper_size = PaperSize::get(&state.mm, settings.paper_size_id)
+        .await
+        .inspect_err(|err| error!("Failed to get paper size for user '{}': {err}", user_id))
+        .map_err(|_| {
+            let state = state.clone();
+            tokio::spawn(async move {
+                broadcast_error(&state, user_id, "Failed to get paper size.").await;
+            });
+            Error::Database
+        })?;
+
+    Ok(Some(ExportOptions {
+        paper_size: (paper_size.width_mm as f32, paper_size.height_mm as f32),
+    }))
 }
 
 /// Handles GET requests to print a shopping list.

@@ -251,7 +251,8 @@ pub async fn paper_sizes_handler(
             .flat_map(|(cat, sizes)| sizes.iter().map(|p| (cat.as_str(), p)))
             .enumerate()
             .map(|(idx, (cat, p))| (idx + 1, cat, p))
-            .collect(),
+            .collect::<Vec<_>>()
+            .as_slice(),
     )
     .into_response()
 }

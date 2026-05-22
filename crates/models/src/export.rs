@@ -13,7 +13,7 @@ use zip::{CompressionMethod, ZipWriter, write::FileOptions};
 use crate::{Error, RecipeDetails, Result};
 
 /// Represents the type of export to perform.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ExportType {
     Json,
@@ -32,6 +32,11 @@ impl ExportType {
             Self::Text => "txt",
         }
     }
+}
+
+/// Represents export options.
+pub struct ExportOptions {
+    pub paper_size: (f32, f32),
 }
 
 #[derive(Serialize)]

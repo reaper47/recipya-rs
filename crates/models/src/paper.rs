@@ -31,8 +31,8 @@ impl PaperSize {
     pub async fn get(mm: &ModelManager, id: i16) -> Result<Self> {
         let paper_size = schema::paper_sizes::table
             .filter(schema::paper_sizes::id.eq(id))
-            .select(PaperSize::as_select())
-            .first::<PaperSize>(&mut mm.pool.get().await?)
+            .select(Self::as_select())
+            .first::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(paper_size)
@@ -45,8 +45,8 @@ impl PaperSize {
                 schema::paper_categories::table
                     .on(schema::paper_categories::id.eq(schema::paper_sizes::paper_category_id)),
             )
-            .select((schema::paper_categories::name, PaperSize::as_select()))
-            .get_results::<(String, PaperSize)>(&mut mm.pool.get().await?)
+            .select((schema::paper_categories::name, Self::as_select()))
+            .get_results::<(String, Self)>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(values

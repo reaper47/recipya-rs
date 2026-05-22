@@ -4,13 +4,31 @@ use chrono::NaiveDateTime;
 use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
-use printpdf::{Mm, Op, PdfDocument, PdfPage, PdfSaveOptions};
+use pdf::{
+    components::ComponentOptions,
+    fonts::{ROBOTO_LIGHT_FONT_BYTES, ROBOTO_REGULAR_FONT_BYTES, ROBOTO_SEMIBOLD_FONT_BYTES},
+    math::measure_text_height_mm,
+};
+use printpdf::{
+    Color, Mm, Op, ParsedFont, PdfDocument, PdfFontHandle, PdfPage, PdfSaveOptions, Point, Pt, Rgb,
+    TextItem,
+};
 use tempfile::{NamedTempFile, env::temp_dir};
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
 
-use crate::{Error, Result, export::ExportType, user::User};
+use crate::{
+    Error, Result,
+    export::{ExportOptions, ExportType},
+    user::User,
+};
+
+const MARGIN_MM: f32 = 25.4;
+const FONT_SIZE_BODY_PT: f32 = 11.0;
+const FONT_SIZE_TITLE_PT: f32 = 14.0;
+const LINE_HEIGHT_FACTOR: f32 = 1.4;
+const ROW_STEP_MM: f32 = 7.5;
 
 /// Represents a shopping list.
 #[derive(Clone, Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
@@ -159,7 +177,7 @@ impl ShoppingListDetails {
     }
 
     /// Exports the shopping list to a file using the given writer.
-    pub fn export(&self, format: &ExportType) -> Result<PathBuf> {
+    pub fn export(&self, format: &ExportType, options: Option<ExportOptions>) -> Result<PathBuf> {
         if self.items.is_empty() {
             return Err(Error::EmptyInput);
         }
@@ -170,7 +188,7 @@ impl ShoppingListDetails {
         match format {
             ExportType::Markdown => self.write_markdown(&mut writer)?,
             ExportType::Text => self.write_text(&mut writer)?,
-            ExportType::Pdf => self.write_pdf(&mut writer)?,
+            ExportType::Pdf => self.write_pdf(&mut writer, options)?,
             ExportType::Json => unimplemented!(),
         }
         {}
@@ -263,15 +281,203 @@ impl ShoppingListDetails {
         Ok(())
     }
 
-    pub fn write_pdf(&self, writer: &mut impl Write) -> Result<()> {
-        let mut doc = PdfDocument::new(&self.name);
-        let page1_contents = vec![Op::Marker {
-            id: "debugging-marker".into(),
-        }];
-        let page1 = PdfPage::new(Mm(216.0), Mm(279.0), page1_contents);
+    /// Writes the shopping list as a PDF file.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the fonts are not available.
+    ///
+    #[allow(clippy::too_many_lines)]
+    pub fn write_pdf(&self, writer: &mut impl Write, options: Option<ExportOptions>) -> Result<()> {
+        if self.items.is_empty() {
+            return Err(Error::EmptyInput);
+        }
+
+        let mut doc = PdfDocument::new(&format!("Shopping List - {}", &self.name));
+        let (width_mm, height_mm) = options.map_or((216.0, 356.0), |o| o.paper_size);
+
+        let mut warnings = Vec::new();
+        let mut load = |bytes| ParsedFont::from_bytes(bytes, 0, &mut warnings).unwrap();
+        let font_light = load(ROBOTO_LIGHT_FONT_BYTES);
+        let font_regular = load(ROBOTO_REGULAR_FONT_BYTES);
+        let font_semibold = load(ROBOTO_SEMIBOLD_FONT_BYTES);
+        let font_light_id = doc.add_font(&font_light);
+        let font_regular_id = doc.add_font(&font_regular);
+        let font_semibold_id = doc.add_font(&font_semibold);
+
+        let base_opts = ComponentOptions {
+            font: font_regular.clone(),
+            font_id: font_regular_id.clone(),
+            font_size: FONT_SIZE_BODY_PT,
+            font_height: FONT_SIZE_BODY_PT * LINE_HEIGHT_FACTOR,
+            page_width_mm: width_mm,
+            page_height_mm: height_mm,
+            margin_mm: MARGIN_MM,
+        };
+
+        let header_ops = |ops: &mut Vec<Op>| {
+            ops.extend([
+                Op::SetFont {
+                    font: PdfFontHandle::External(font_regular_id.clone()),
+                    size: Pt(FONT_SIZE_BODY_PT),
+                },
+                Op::SetLineHeight {
+                    lh: Pt(FONT_SIZE_BODY_PT * LINE_HEIGHT_FACTOR),
+                },
+                Op::SetFillColor {
+                    col: Color::Rgb(Rgb::new(0.0, 0.0, 0.0, None)),
+                },
+            ]);
+
+            ops.extend(pdf::components::header(
+                Some("Recipya shopping list"),
+                Some(&self.updated_at.format("%Y-%m-%d").to_string()),
+                &ComponentOptions {
+                    font_size: FONT_SIZE_TITLE_PT / 2.0,
+                    ..base_opts.clone()
+                },
+            ));
+        };
+
+        let footer_ops = |page_num: usize, num_pages: usize, ops: &mut Vec<Op>| {
+            ops.extend([
+                Op::SaveGraphicsState,
+                Op::SetFont {
+                    font: PdfFontHandle::External(font_regular_id.clone()),
+                    size: Pt(FONT_SIZE_BODY_PT - 3.0),
+                },
+                Op::StartTextSection,
+                Op::SetTextCursor {
+                    pos: Point::new(Mm(width_mm / 2.0), Mm(7.5)),
+                },
+                Op::ShowText {
+                    items: vec![TextItem::Text(format!("Page {page_num} of {num_pages}"))],
+                },
+                Op::EndTextSection,
+                Op::SetFont {
+                    font: PdfFontHandle::External(font_regular_id.clone()),
+                    size: Pt(FONT_SIZE_BODY_PT),
+                },
+                Op::RestoreGraphicsState,
+            ]);
+        };
+
+        let mut pages: Vec<PdfPage> = Vec::new();
+        let mut ops: Vec<Op> = Vec::new();
+        let mut current_y = height_mm - MARGIN_MM;
+
+        let new_page = |pages: &mut Vec<PdfPage>, ops: &mut Vec<Op>, current_y: &mut f32| {
+            let page_ops = std::mem::take(ops);
+            pages.push(PdfPage::new(Mm(width_mm), Mm(height_mm), page_ops));
+            header_ops(ops);
+            *current_y = height_mm - MARGIN_MM;
+        };
+
+        let ensure_enough_space_page =
+            |rows_needed: f32, pages: &mut Vec<PdfPage>, ops: &mut Vec<Op>, current_y: &mut f32| {
+                if ROW_STEP_MM.mul_add(-rows_needed, *current_y) <= MARGIN_MM {
+                    new_page(pages, ops, current_y);
+                }
+            };
+
+        header_ops(&mut ops);
+        ops.extend(pdf::components::title(
+            &self.name,
+            current_y,
+            ComponentOptions {
+                font_size: FONT_SIZE_TITLE_PT,
+                ..base_opts.clone()
+            },
+        ));
+        current_y -= 5.0;
+
+        for (section, items) in self.items_per_label() {
+            ensure_enough_space_page(2.0, &mut pages, &mut ops, &mut current_y);
+            current_y -= ROW_STEP_MM;
+
+            if section != "No label" {
+                ops.extend([
+                    Op::SaveGraphicsState,
+                    Op::SetFont {
+                        font: PdfFontHandle::External(font_semibold_id.clone()),
+                        size: Pt(FONT_SIZE_BODY_PT),
+                    },
+                    Op::StartTextSection,
+                    Op::SetTextCursor {
+                        pos: Point::new(Mm(MARGIN_MM - 5.0), Mm(current_y)),
+                    },
+                    Op::ShowText {
+                        items: vec![TextItem::Text(section.into())],
+                    },
+                    Op::EndTextSection,
+                    Op::RestoreGraphicsState,
+                    Op::SetFont {
+                        font: PdfFontHandle::External(font_regular_id.clone()),
+                        size: Pt(FONT_SIZE_BODY_PT),
+                    },
+                ]);
+            }
+
+            for item in items {
+                let num_rows = if item.notes.is_some() { 2.0 } else { 1.0 };
+                ensure_enough_space_page(num_rows, &mut pages, &mut ops, &mut current_y);
+                current_y -= ROW_STEP_MM;
+
+                let label = item.quantity.as_ref().map_or_else(
+                    || item.ingredient.clone(),
+                    |q| format!("{} ({q})", item.ingredient),
+                );
+
+                ops.extend([
+                    Op::SaveGraphicsState,
+                    Op::SetOutlineColor {
+                        col: Color::Rgb(Rgb::new(0.0, 0.0, 0.0, None)),
+                    },
+                    Op::SetOutlineThickness { pt: Pt(0.5) },
+                    pdf::components::checkbox(MARGIN_MM, current_y),
+                    Op::RestoreGraphicsState,
+                    Op::StartTextSection,
+                    Op::SetTextCursor {
+                        pos: Point::new(Mm(MARGIN_MM), Mm(current_y)),
+                    },
+                    Op::ShowText {
+                        items: vec![TextItem::Text(label)],
+                    },
+                ]);
+
+                if let Some(notes) = &item.notes {
+                    let notes_font_size = FONT_SIZE_BODY_PT - 2.0;
+                    ops.extend([
+                        Op::SaveGraphicsState,
+                        Op::SetFont {
+                            font: PdfFontHandle::External(font_light_id.clone()),
+                            size: Pt(notes_font_size),
+                        },
+                        Op::AddLineBreak,
+                        Op::ShowText {
+                            items: vec!["    *".into(), TextItem::Text(notes.into())],
+                        },
+                        Op::EndTextSection,
+                        Op::RestoreGraphicsState,
+                    ]);
+                    current_y -= measure_text_height_mm(notes_font_size, LINE_HEIGHT_FACTOR, 1);
+                } else {
+                    ops.push(Op::EndTextSection);
+                }
+            }
+        }
+
+        pages.push(PdfPage::new(Mm(width_mm), Mm(height_mm), ops));
+
+        let num_pages = pages.len();
+        for (idx, page) in &mut pages.iter_mut().enumerate() {
+            footer_ops(idx + 1, num_pages, &mut page.ops);
+        }
+
         let bytes: Vec<u8> = doc
-            .with_pages(vec![page1])
+            .with_pages(pages)
             .save(&PdfSaveOptions::default(), &mut vec![]);
+
         writer.write_all(&bytes)?;
         Ok(())
     }
