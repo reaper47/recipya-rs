@@ -15,9 +15,9 @@
     "@tailwindcss/cli": "^4.3.0",
     "@tailwindcss/typography": "^0.5.19",
     "copyfiles": "^2.4.1",
-    "daisyui": "^5.5.19",
+    "daisyui": "^5.5.20",
     "esbuild": "^0.28.0",
-    "mjml": "^5.2.0",
+    "mjml": "^5.2.2",
     "tailwindcss": "^4.3.0",
     "uglify-js": "^3.19.3"
   }
