@@ -5,6 +5,12 @@ document.addEventListener("DOMContentLoaded", function () {
   window.currentTime = () => new Date().getTime();
 });
 
+document.addEventListener("htmx:afterSettle", () => {
+  requestAnimationFrame(() => {
+    Array.from(document.querySelectorAll("[autofocus]")).at(-1)?.focus();
+  });
+});
+
 document.body.addEventListener("htmx:afterSwap", (event) => {
   if (event.target.id === "content") {
     syncLayout();
@@ -83,35 +89,66 @@ function initNotes(elementId, initialValue) {
 function initRecipeFormJS() {
   HtmlDurationPicker.init();
 
-  const inputs = [
-    { name: "tool", type: "input" },
-    { name: "ingredient", type: "input" },
-    { name: "instruction", type: "textarea" },
-  ];
-  inputs.forEach(({ name, type }) => {
-    const list = document.querySelector(`#${name}s-list`);
-    if (list) {
-      const existing = Sortable.get(list);
-      if (existing) {
-        existing.destroy();
-      }
+  const inputs = ["tool", "ingredient", "instruction"];
+  inputs.forEach((name) => {
+    const el = document.querySelector(`#${name}s-list`);
+    initDrag(el, (_) => {
+      document.body.classList.remove("dragging");
+      renumberSections(el, el.id.replace("s-list", ""));
+    });
+  });
+}
 
-      new Sortable.create(list, {
-        handle: ".handle",
-        animation: 150,
-        forceFallback: true,
-        chosenClass: "is-chosen",
-        dragClass: "is-dragging",
-        ghostClass: "is-ghost",
-        onStart(_event) {
-          document.body.classList.add("dragging");
-        },
-        onEnd(event) {
-          document.body.classList.remove("dragging");
-          renumberSections(event.target, event.target.id.replace("s-list", ""));
-        },
-      });
+function initRecipeViewJS() {
+  ["tools", "ingredients"].forEach((name) => {
+    const el = document.querySelector(`[id^='${name}-list-container']`);
+    if (!el || el.dataset.swipeInit) {
+      return;
     }
+
+    el.dataset.swipeInit = "true";
+
+    initSwipe(el, {
+      onComplete: (containerEl) => {
+        const checkbox = containerEl?.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        ea;
+      },
+      onDelete: () => {},
+    });
+  });
+}
+
+function initShoppingListJS() {
+  document
+    .querySelectorAll("[id^='shopping-list-items-container']")
+    .forEach((el) => {
+      initDrag(el, (_) => {
+        document.body.classList.remove("dragging");
+        updateShoppingListItemPositions();
+      });
+    });
+}
+
+function updateShoppingListItemPositions() {
+  const data = new URLSearchParams();
+
+  for (const section of document.getElementsByTagName("details")) {
+    for (const [idx, item] of section
+      .querySelectorAll("input[type='checkbox']")
+      .entries()) {
+      data.append(item.closest("li").getAttribute("data-item-id"), idx);
+    }
+  }
+
+  const list_id = document.getElementById("selected-shopping-list-id").value;
+
+  fetch(`${window.location.origin}/shopping/lists/${list_id}/items/positions`, {
+    method: "PUT",
+    body: data,
   });
 }
 
@@ -126,7 +163,7 @@ function addKeyword(event) {
   div.classList.remove("hidden");
   div.querySelector("input").value = keyword;
   div.querySelector("span").textContent = keyword;
-  _hyperscript.processNode(div);
+  _hyperscript.process(div);
   htmx.process(div);
 
   const container = document.querySelector("#empty-keyword");
@@ -194,7 +231,7 @@ function pasteText(inputEl, values) {
         input.value = value;
       }
 
-      _hyperscript.processNode(clone);
+      _hyperscript.process(clone);
       htmx.process(clone);
 
       ol.appendChild(clone);
@@ -237,11 +274,13 @@ function addItem(event, isPastedText = false) {
   }
 
   const component = event.target.closest("ol").id.replace("s-list", "");
-  const sectionClone = document
-    .getElementById(`section-base-${component}`)
-    .cloneNode(true);
-  sectionClone.id = "";
-  sectionClone.classList.remove("hidden");
+
+  const section = document.getElementById(`section-base-${component}`);
+  const sectionClone = section?.cloneNode(true);
+  if (sectionClone) {
+    sectionClone.id = "";
+    sectionClone.classList.remove("hidden");
+  }
 
   const clone = event.target.closest("li").cloneNode(true);
   let el = "input";
@@ -253,12 +292,17 @@ function addItem(event, isPastedText = false) {
     clone.querySelector(el).value = "";
   }
 
-  _hyperscript.processNode(sectionClone);
-  _hyperscript.processNode(clone);
-  htmx.process(sectionClone);
-  htmx.process(clone);
-  ol.appendChild(sectionClone);
-  ol.appendChild(clone);
+  if (sectionClone) {
+    [sectionClone, clone].forEach((node) => {
+      _hyperscript.process(node);
+      htmx.process(node);
+      ol.appendChild(node);
+    });
+  } else {
+    _hyperscript.process(clone);
+    htmx.process(clone);
+    ol.appendChild(clone);
+  }
 
   clone.querySelector(el).focus();
 }
@@ -443,11 +487,19 @@ function updateAddCookbookUrl(selectedPage) {
 
 function copyToClipboard(text) {
   if (window.navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {});
-    const el = document.querySelector("#copy-button");
-    el.textContent = "Copied!";
-    el.setAttribute("disabled", "true");
-    el.classList.toggle(".btn-disabled");
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        showToast("", "Copied to clipboard.", "alert-success");
+        const copyButton = document.querySelector("#copy-button");
+        if (copyButton) {
+          copyButton.closest("dialog").close();
+        }
+      })
+      .catch((err) => {
+        showToast("", `Failed to copy: ${err.message}`, "alert-error");
+        showToast();
+      });
   } else {
     alert(
       "Your browser does not support the clipboard feature. Please copy the link manually.",
@@ -560,17 +612,23 @@ function initGlobalKeyboardShortcuts() {
             }
             break;
           case "s":
-            event.preventDefault();
-            event.stopPropagation();
-
             if (
               window.location.pathname === "/recipes/add/manual" ||
               window.location.pathname.match(/^\/recipes\/(\d+)\/edit$/)
             ) {
+              event.preventDefault();
+              event.stopPropagation();
+
               const form = document.querySelector("form.card-body");
               if (form) {
                 form.requestSubmit();
               }
+            }
+            break;
+          case "p":
+            if (window.location.pathname === "/shopping/lists") {
+              event.preventDefault();
+              document.getElementById("print-shopping-list-button").click();
             }
             break;
           case "x":
@@ -628,9 +686,32 @@ function syncLayout() {
     ?.classList.toggle("hidden", !isAside || isMobile);
   document.getElementById("mobile-nav")?.classList.toggle("hidden", !isAside);
 
-  ["add-recipe", "pagination-recipes"].forEach((id) => {
+  ["navbar-actions", "pagination-recipes"].forEach((id) => {
     document.getElementById(id)?.classList.toggle("hidden", !isAside);
   });
+
+  highlightActiveSidebarItem();
+}
+
+function highlightActiveSidebarItem() {
+  document.querySelectorAll(".sidebar-item").forEach((item) => {
+    item.classList.remove("bg-secondary");
+  });
+
+  const currentPath = window.location.pathname;
+  if (currentPath.startsWith("/recipes")) {
+    document
+      .getElementById("recipes-sidebar-recipes")
+      .classList.add("bg-secondary");
+  } else if (currentPath.startsWith("/cookbooks")) {
+    document
+      .getElementById("recipes-sidebar-cookbooks")
+      .classList.add("bg-secondary");
+  } else if (currentPath.startsWith("/shopping")) {
+    document
+      .getElementById("recipes-sidebar-shopping")
+      .classList.add("bg-secondary");
+  }
 }
 
 async function loadURLToInputField(url, containerId) {
@@ -678,4 +759,10 @@ function checkExportDataSubmit() {
 
   button.disabled = isDisabled;
   button.parentElement.classList.toggle("cursor-not-allowed", isDisabled);
+}
+
+function copyHtmxResponseToClipboard(event) {
+  if (event.detail.successful) {
+    copyToClipboard(event.detail.xhr.responseText);
+  }
 }

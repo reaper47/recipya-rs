@@ -24,6 +24,12 @@ mod tests {
         format!("/recipes/{recipe_id}/share")
     }
 
+    impl ShareRecipeForm {
+        pub fn new(datetime: Option<String>) -> Self {
+            Self { datetime }
+        }
+    }
+
     #[tokio::test]
     async fn test_must_be_logged_in_ok() -> Result<()> {
         assert_must_be_logged_in(Method::POST, &base_uri(1)).await
@@ -34,27 +40,26 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
         let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
 
         let res = server
             .post(&base_uri(1))
-            .form(&ShareRecipeForm { datetime: None })
+            .form(&ShareRecipeForm::new(None))
             .await;
 
         let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         assert_html(
             &res,
-            vec![
+            &[
                 &format!(
                     r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
                     share.link
                 ),
                 &format!(
-                    r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/shared/r/{})">Copy</button>"#,
+                    r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard('http://localhost:8078/shared/r/{}')">Copy</button>"#,
                     share.link
                 ),
             ],
@@ -67,30 +72,27 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
         let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
 
         let res = server
             .post(&base_uri(1))
-            .form(&ShareRecipeForm {
-                datetime: Some(expires_at.to_string()),
-            })
+            .form(&ShareRecipeForm::new(Some(expires_at.to_string())))
             .await;
 
         let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         assert_html(
             &res,
-            vec![
+            &[
                 &format!(
                     r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
                     share.link
                 ),
                 &format!(
-                    r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard(http://localhost:8078/shared/r/{})">Copy</button>"#,
+                    r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard('http://localhost:8078/shared/r/{}')">Copy</button>"#,
                     share.link
                 ),
             ],
@@ -103,22 +105,45 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
         let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
         let now = chrono::Utc::now().naive_utc();
 
         let res = server
             .post(&base_uri(1))
-            .form(&ShareRecipeForm {
-                datetime: Some("hello".into()),
-            })
+            .form(&ShareRecipeForm::new(Some("hello".into())))
             .await;
 
         let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
         pretty_assertions::assert_eq!(share.expires_at.signed_duration_since(now).num_days(), 7);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    async fn test_share_twice_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let server = build_server_logged_in(config.clone()).await?;
+        let state = create_app_state(config).await;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
+        let _ = server
+            .post(&base_uri(1))
+            .form(&ShareRecipeForm::new(Some(expires_at.to_string())))
+            .await;
+
+        let res = server
+            .post(&base_uri(1))
+            .form(&ShareRecipeForm::new(Some(expires_at.to_string())))
+            .await;
+
+        res.assert_status_ok();
+        let share = get_first_shared_recipe(state, user_id).await;
+        assert_eq!(share.recipe_id, 1);
         Ok(())
     }
 

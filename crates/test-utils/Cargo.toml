@@ -23,6 +23,6 @@ recipya-scraper.workspace = true
 repository.workspace = true
 router.workspace = true
 support.workspace = true
+test-db.workspace = true
 tower-cookies.workspace = true
 tracing.workspace = true
-test-db = { path = "../test-db" }

@@ -50,7 +50,10 @@ pub async fn server() -> Result<()> {
     )
     .await?;
 
-    NutritionDataSource::update_all(&state.mm).await;
+    let mm = state.mm.clone();
+    tokio::spawn(async move {
+        NutritionDataSource::update_all(&mm).await;
+    });
 
     let router = router(state.clone())?
         .layer(CookieManagerLayer::new())

@@ -371,7 +371,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
             Ok(())
         })
         .await
-        .inspect_err(|err| error!("Failed to push data into database: {err:?}"))?;
+        .inspect_err(|err| error!("Failed to push data into database: {err}"))?;
 
         Ok(())
     }

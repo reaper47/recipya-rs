@@ -109,7 +109,7 @@ mod tests {
                     got, expected,
                     "got {got:?} instead of {expected:?} for text '{text}'"
                 ),
-                Err(err) => panic!("{err:?} for text '{text}'"),
+                Err(err) => panic!("{err} for text '{text}'"),
             }
         }
 

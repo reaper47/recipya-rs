@@ -14,17 +14,19 @@ use crate::recipes::render_favourite_button;
 use crate::templates::helpers::cut_string;
 use crate::templates::icons::{
     icon_arrow_uturn_left, icon_arrow_uturn_right, icon_arrows_right_left, icon_arrows_up_down,
-    icon_bars_3, icon_check, icon_crop, icon_magnifying_glass_minus, icon_magnifying_glass_plus,
-    icon_move_thin, icon_pencil, icon_trash, icon_x_circle, icon_x_mark,
+    icon_check, icon_crop, icon_magnifying_glass_minus, icon_magnifying_glass_plus, icon_move_thin,
+    icon_pencil, icon_plus, icon_trash, icon_x_circle, icon_x_mark,
 };
 
 pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
     html! {
-        li class="pb-2" {
+        li class="pb-2" data-drag-row {
             div class="grid grid-flow-col items-center" {
                 label class="flex gap-1" {
-                    div class="inline-block h-4 cursor-move handle mt-1" {
-                        (icon_bars_3())
+                    div class="inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl" {
+                        data-drageable draggable="true" data-drag-handle {
+                            "⠿"
+                        }
                     }
                     input type="text" name="tool" placeholder="1 frying pan" class="input input-bordered input-sm w-full"
                         value=(
@@ -35,8 +37,9 @@ pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
                         _="on keydown if event.key is 'Enter' halt the event then call addItem(event)";
                 }
                 div class="ml-2 flex gap-2" {
-                    button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)" {
-                        "+"
+                    button type="button" class="btn btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)" {
+                        (icon_plus())
+                        "Add"
                     }
                     button type="button"
                         class="delete-button btn btn-square btn-sm btn-outline btn-error"
@@ -46,7 +49,7 @@ pub(super) fn add_tool(tool: Option<&ToolRecipe>) -> Markup {
                             else
                                 set input to (closest <li/>).querySelector('input') then
                                 set input.value to '' then
-                                input.focus()")) { "-" }
+                                input.focus()")) { (icon_trash()) }
                 }
             }
         }
@@ -65,11 +68,12 @@ pub(super) fn add_ingredient_without_section(name: &str, section: Option<&str>) 
         section.map_or_else(|| "ingredient".to_string(), |s| format!("ingredient<>{s}"));
 
     html! {
-        li .pb-2 {
+        li .pb-2 data-drag-row {
             div class="grid grid-flow-col items-center" {
                 label class="flex gap-1" {
-                    div class="inline-block h-4 cursor-move handle mt-1" {
-                        (icon_bars_3())
+                    div class="inline-flex size-6 cursor-grab handle mt-1 items-center justify-center text-2xl"
+                        data-drageable draggable="true" data-drag-handle {
+                        "⠿"
                     }
                     input required type="text" name=(input_name) value=(name)
                             placeholder="1 cup of chopped onions"
@@ -77,20 +81,23 @@ pub(super) fn add_ingredient_without_section(name: &str, section: Option<&str>) 
                             _="on keydown if event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))";
                 }
                 div class="ml-2 flex gap-2" {
-                    button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)" {
-                        "+"
+                    button type="button" class="btn btn-sm btn-outline btn-success" title="Shortcut: Enter" onclick="addItem(event)" {
+                        (icon_plus())
+                        "Add"
                     }
                     button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
-                        onclick="deleteItem(this, 'ingredient')" { "-" }
+                        onclick="deleteItem(this, 'ingredient')" {
+                            (icon_trash())
+                        }
                 }
             }
         }
     }
 }
 
-pub(super) fn add_instruction(name: &str) -> Markup {
+pub(super) fn add_instruction(name: &str, section_base_class: Option<&str>) -> Markup {
     html! {
-        (add_section("instruction", None, None))
+        (add_section("instruction", None, section_base_class))
         (add_instruction_without_section(name, None))
     }
 }
@@ -102,8 +109,8 @@ pub(super) fn add_instruction_without_section(name: &str, section: Option<&str>)
     );
 
     html! {
-        li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium" {
-            div .flex.w-full {
+        li class="flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium" data-drag-row  {
+            div class="w-full bg-base-300" data-drageable draggable="true" {
                 label class="w-11/12" {
                     textarea required name=(textarea_name) rows="4" class="textarea textarea-bordered rounded-none w-full"
                         placeholder="Mix all ingredients together"
@@ -111,14 +118,19 @@ pub(super) fn add_instruction_without_section(name: &str, section: Option<&str>)
                         (name)
                     }
                 }
-                div class="grid gap-2 ml-2" {
-                    button type="button" class="btn btn-square btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)" {
-                        "+"
+                div class="grid gap-2 p-2 grid-flow-col" {
+                    div class="inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl" data-drag-handle {
+                        "⠿"
                     }
-                    button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
-                        onclick="deleteItem(this, 'instruction')" { "-" }
-                    div class="h-4 cursor-move handle grid place-content-center" {
-                        (icon_bars_3())
+                    div class="flex gap-2 justify-end" {
+                        button type="button" class="btn btn-sm btn-outline btn-success" title="Shortcut: CTRL + Enter" onclick="addItem(event)" {
+                            (icon_plus())
+                            "Add"
+                        }
+                        button type="button" class="delete-button btn btn-square btn-sm btn-outline btn-error"
+                            onclick="deleteItem(this, 'instruction')" {
+                                (icon_trash())
+                            }
                     }
                 }
             }
@@ -128,33 +140,45 @@ pub(super) fn add_instruction_without_section(name: &str, section: Option<&str>)
 
 pub(super) fn add_section(section: &str, id: Option<&str>, base_class: Option<&str>) -> Markup {
     html! {
-        li id=[id] class=[base_class] {
-            div .divider {
-                div class="grid grid-flow-col gap-2 w-full" {
-                    btn class="btn btn-xs btn-outline"
-                        _=(format!("on click
-                            make an <input/> called newInput
-                            set newInput.type to 'text'
-                            set newInput.name to 'section-{section}'
-                            set newInput.placeholder to 'Section name'
-                            set newInput.className to 'input input-sm'
-                            set list to closest <ol/>
-                            set sectionName to '{section}'
-                            put newInput before me
-                            remove me
-                            js(newInput, list, sectionName)
-                                newInput.addEventListener('focusout', function() {{ renumberSections(list, sectionName) }})
-                            end
-                            newInput.focus()")) {
-                        "Add section"
-                    }
-                    btn class="btn btn-xs btn-square"
-                        _=(format!("on click
-                            set list to closest <ol/>
-                            set sectionName to '{section}'
-                            remove closest <li/>
-                            call renumberSections(list, sectionName)")) {
-                        (icon_x_circle())
+        li id=[id] class=[base_class] data-drag-row {
+            div class="flex items-center" data-drageable draggable="true" {
+                div class="inline-flex size-6 cursor-grab items-center justify-center text-2xl" data-drag-handle {
+                    "⠿"
+                }
+                div class="divider flex-1" {
+                    div class="flex gap-2" {
+                        btn class="btn btn-xs btn-outline"
+                            _=(format!("on click
+                                make an <input/> called newInput
+                                set newInput.type to 'text'
+                                set newInput.name to 'section-{section}'
+                                set newInput.placeholder to 'Section name'
+                                set newInput.className to 'input input-sm w-fit'
+                                set list to closest <ol/>
+                                set sectionName to '{section}'
+                                put newInput before me
+                                remove me
+                                js(newInput, list, sectionName)
+                                    newInput.addEventListener('keydown', function(event) {{
+                                        if (event.key === 'Enter') {{
+                                            event.preventDefault();
+                                            newInput.blur();
+                                        }}
+                                    }});
+
+                                    newInput.addEventListener('focusout', function() {{ renumberSections(list, sectionName) }});
+                                end
+                                newInput.focus()")) {
+                            "Add section"
+                        }
+                        btn class="btn btn-xs btn-square"
+                            _=(format!("on click
+                                set list to closest <ol/>
+                                set sectionName to '{section}'
+                                remove closest <li/>
+                                call renumberSections(list, sectionName)")) {
+                            (icon_x_circle())
+                        }
                     }
                 }
             }
@@ -185,7 +209,7 @@ pub fn list_recipes(
                         (category_badge(&details.category, false))
                     }
                     figure class="relative cursor-pointer" hx-get=(format!("/recipes/{}", recipe.id)) hx-target="#content" hx-push-url="true" hx-trigger="mousedown" hx-swap="innerHTML show:window:top transition:true" {
-                        img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full sm:w-full"
+                        img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full w-full"
                             src=(match details.all_images().first() {
                                 Some(&first_image) => {
                                     if !details.all_images().is_empty() && fs_support.is_file_exists(first_image, &data_dir.images.root, ".webp") {

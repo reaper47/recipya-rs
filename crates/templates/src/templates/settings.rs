@@ -11,12 +11,12 @@ use models::user::User;
 
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
-    icon_chevron_right, icon_circle_stack, icon_cloud, icon_cube_transparent,
+    icon_chevron_right, icon_circle_stack, icon_cloud, icon_cpu, icon_cube_transparent,
     icon_information_circle, icon_pencil, icon_plus_circle, icon_server, icon_trash,
     icon_user_circle, icon_x_circle,
 };
 
-const SEARCH_INPUT_JS: &str = "on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()";
+pub(super) const SEARCH_INPUT_JS: &str = "on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()";
 
 /// Stores all the settings required for rendering the settings page.
 pub struct SettingsForView {
@@ -72,52 +72,65 @@ pub fn settings(
     categories: &[Category],
     config: &SettingsForView,
 ) -> Markup {
+    let onclick = |settings_block_id: &str| -> Markup {
+        PreEscaped(format!(
+            "on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-{settings_block_id}"
+        ))
+    };
+
     html! {
         div class="flex flex-col menu-sm sm:flex-row sm:menu-md" {
             ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical"
                _=(PreEscaped("on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target")) {
+
                 li {
-                    a class="setting-tab menu-active" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-recipes")) {
+                    a class="setting-tab menu-active" _=(onclick("recipes")) {
                         (icon_cube_transparent())
                         "Recipes"
                     }
                 }
+                li {
+                    a class="setting-tab" _=(onclick("general")) {
+                        (icon_cpu())
+                        "General"
+                    }
+                }
                 @if data.is_admin {
                     li {
-                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-connections")) {
+                        a class="setting-tab" _=(onclick("connections")) {
                             (icon_cloud())
                             "Connections"
                         }
                     }
                 }
                 li {
-                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-data")) {
+                    a class="setting-tab" _=(onclick("data")) {
                         (icon_circle_stack())
                         "Data"
                     }
                 }
                 @if data.is_admin {
                     li {
-                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-server")) {
+                        a class="setting-tab" _=(onclick("server")) {
                             (icon_server())
                             "Server"
                         }
                     }
                     li {
-                        a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-admin")) {
+                        a class="setting-tab" _=(onclick("admin")) {
                             (icon_building_library())
                             "Admin"
                         }
                     }
                 }
                 li {
-                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-account")) {
+                    a class="setting-tab" _=(onclick("account")) {
                         (icon_user_circle())
                         "Account"
                     }
                 }
                 li {
-                    a class="setting-tab" _=(PreEscaped("on click add .hidden to the children of #settings-blocks then remove .hidden from #settings-about")) {
+                    a class="setting-tab" _=(onclick("about")) {
                         (icon_information_circle(false))
                         "About"
                     }
@@ -125,6 +138,7 @@ pub fn settings(
             }
             div #settings-blocks class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem" {
                 (settings_recipes(categories, user_setting))
+                (settings_general(user_setting))
                 @if data.is_admin {
                     (settings_connections(config))
                     (settings_server(data, config))
@@ -136,6 +150,7 @@ pub fn settings(
             }
         }
         (export_data_dialog())
+        (paper_sizes_dialog())
         (supported_nutrition_sources_dialog(user_setting))
     }
 }
@@ -213,7 +228,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                     p class="text-xs" {
                         "Choose the nutrition database used to calculate nutrition facts."
                     }
-                    button class="btn btn-xs mt-2" onclick="document.querySelector('#supported-nutrition-sources-dialog').showModal()"  {
+                    button class="btn btn-xs mt-2" _="on click open #supported-nutrition-sources-dialog" {
                         "View sources"
                     }
                 }
@@ -330,6 +345,48 @@ fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
               }
             }
         }
+    }
+}
+
+fn settings_general(user_settings: &UserSettingDetails) -> Markup {
+    html! {
+        div #settings-general class="p-3 overflow-y-auto max-h-96 hidden" {
+            div class="flex justify-between items-center text-sm" {
+                div {
+                    p class="font-semibold" {
+                        "Paper size"
+                    }
+                    p class="text-xs" {
+                        "Choose your preferred paper size for documents."
+                    }
+                    button class="btn btn-xs mt-2"
+                        hx-get="/paper-sizes"
+                        hx-trigger="mousedown"
+                        hx-target="#paper-sizes-dialog"
+                        _="on click open #paper-sizes-dialog" {
+                        "View sizes"
+                    }
+                }
+                select #settings-general-paper-size name="paper-size" class="block w-fit select select-bordered select-sm" hx-post="/settings/paper-size" hx-swap="none" {
+                    @for (category, papers) in &user_settings.paper_sizes {
+                        optgroup label=(category) {
+                            @for paper in papers {
+                                option value=(paper.id) selected[paper.id == user_settings.paper_size_id] {
+                                    (paper.name)
+                                }
+                            }
+                        }
+                    }
+                }
+                div class="divider m-0" {}
+            }
+        }
+    }
+}
+
+fn paper_sizes_dialog() -> Markup {
+    html! {
+        dialog #paper-sizes-dialog class="justify-self-center self-center" {}
     }
 }
 
@@ -738,7 +795,7 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                                         input type="checkbox" class="checkbox" _="on change set <input.checkbox-recipe-id/>'s checked to my checked then call checkExportDataSubmit()";
                                     }
                                 }
-                                th class="py-1 text-left" { "Name" }
+                                th class="py-1" { "Name" }
                                 th class="py-1" { "Favourite" }
                                 th class="py-1" { "Rating" }
                                 th class="py-1" { "Page" }

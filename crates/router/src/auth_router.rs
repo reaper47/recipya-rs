@@ -199,7 +199,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<title hx-swap-oob="true">Success | Recipya</title>"#,
                     r"Your account has been verified.",
                 ],
@@ -301,7 +301,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<title hx-swap-oob="true">Forgot Password | Recipya</title>"#,
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email"></fieldset>"#,
                     r#"<button class="btn btn-primary btn-block btn-sm">Reset password</button>"#,
@@ -354,7 +354,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<h2 class="card-title underline self-center">Password Reset Requested</h2>"#,
                     r"An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
                     r#"<a href="/" class="btn btn-primary btn-block btn-sm">Back Home</a>"#,
@@ -371,7 +371,7 @@ mod tests {
             let res = server.get(URI_RESET).await;
 
             res.assert_status_bad_request();
-            assert_html(&res, vec![]);
+            assert_html(&res, &[]);
             Ok(())
         }
 
@@ -392,7 +392,7 @@ mod tests {
             res.assert_status_bad_request();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<title hx-swap-oob="true">Token Expired | Recipya</title>"#,
                     "The token associated with the URL expired.",
                 ],
@@ -417,7 +417,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
                     &format!(
                         r#"<input type="hidden" name="token" value="{}">"#,
@@ -527,7 +527,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login">"#,
                     r#"<div class="card-body"><div class="chat chat-end"><div class="chat-image avatar"><div class="w-10 rounded-full"><img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png"></div></div><div class="chat-bubble">The stove is hot. Shall we cook?</div></div>"#,
                     r#"<h2 class="card-title self-center underline">Log in to Recipya</h2>"#,
@@ -554,7 +554,7 @@ mod tests {
             res.assert_status_ok();
             assert_html(
                 &res,
-                vec![
+                &[
                     r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value="demo@demo.com"></fieldset>"#,
                     r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demodemo"></fieldset>"#,
                     r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
@@ -577,7 +577,7 @@ mod tests {
             res.assert_status_ok();
             assert_not_in_html(
                 &res,
-                vec![
+                &[
                     r#"<a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a>"#,
                 ],
             )?;

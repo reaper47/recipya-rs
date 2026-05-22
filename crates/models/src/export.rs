@@ -13,11 +13,30 @@ use zip::{CompressionMethod, ZipWriter, write::FileOptions};
 use crate::{Error, RecipeDetails, Result};
 
 /// Represents the type of export to perform.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ExportType {
     Json,
+    Markdown,
     Pdf,
+    Text,
+}
+
+impl ExportType {
+    /// Returns the file extension for the export type.
+    pub const fn extension(&self) -> &str {
+        match self {
+            Self::Json => "json",
+            Self::Markdown => "md",
+            Self::Pdf => "pdf",
+            Self::Text => "txt",
+        }
+    }
+}
+
+/// Represents export options.
+pub struct ExportOptions {
+    pub paper_size: (f32, f32),
 }
 
 #[derive(Serialize)]
@@ -116,17 +135,49 @@ impl ExportData {
                 ExportType::Pdf => {
                     todo!()
                 }
+                ExportType::Text => {
+                    todo!()
+                }
+                ExportType::Markdown => {
+                    todo!()
+                }
             }
 
             zip.finish()?;
             file.seek(SeekFrom::Start(0))?;
-            let (_, path) = file.keep()?;
-            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(path)
+
+            let named = std::env::temp_dir().join("recipya-data-export.zip");
+            file.persist(&named)
+                .map_err(|err| Error::File(err.to_string()))?;
+
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(named)
         })
         .await
         .map_err(|err| Error::File(err.to_string()))?
         .map_err(|err| Error::File(err.to_string()))?;
 
         Ok(std_file)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod tests_export {
+        use super::*;
+
+        #[test]
+        fn test_export() {
+            for (export, expected) in [
+                (ExportType::Json, "json"),
+                (ExportType::Text, "txt"),
+                (ExportType::Markdown, "md"),
+                (ExportType::Pdf, "pdf"),
+            ] {
+                let got = export.extension();
+                pretty_assertions::assert_eq!(got, expected);
+            }
+        }
     }
 }

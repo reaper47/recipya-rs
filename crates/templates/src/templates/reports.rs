@@ -170,7 +170,14 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                                     (log.entity_name)
                                 }
                             }
-                            td { (log.level.name) }
+                            td {
+                                span class=(format!("badge badge-xs w-14 {}", match log.level.name.as_ref() {
+                                    "success" => "badge-success",
+                                    "warning" => "badge-warning",
+                                    "error"   => "badge-error",
+                                    _         => "badge-info",
+                                })) { (log.level.name) }
+                            }
                             td { (log.error_code.clone().unwrap_or_else(|| "-".into())) }
                             td { (log.error_reason.clone().unwrap_or_else(|| "-".into())) }
                             td { (log.format_duration()) }

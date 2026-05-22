@@ -6,7 +6,9 @@ use models::settings::UserSettingDetails;
 use super::core::{head, toast, toast_ws};
 use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
+    icon_shopping_cart,
 };
+use crate::shopping::render_shopping_list_actions;
 use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
 
@@ -56,38 +58,38 @@ pub fn main(
                 header class="navbar bg-base-200 shadow-sm print:hidden shrink-0" {
                     div class="navbar-start" {
                         a class="btn btn-ghost text-lg" style="padding-left: 0"
-                          hx-get=@if data.is_authenticated { "/" }
-                          hx-push-url=@if data.is_authenticated { "true" }
-                          hx-target=@if data.is_authenticated { "#content" }
-                          href=@if !data.is_authenticated { "/" } {
+                          hx-get=[if data.is_authenticated { Some("/") } else { None }]
+                          hx-push-url=[if data.is_authenticated { Some("true") } else { None }]
+                          hx-target=[if data.is_authenticated { Some("#content") } else { None }]
+                          href=[if data.is_authenticated { None } else { Some("/") }]
+                          hx-swap="innerHTML transition:true" {
                             img src="/data/images/Icon/android-chrome-192x192.png" alt="Logo" style="width: 2rem";
                             "Recipya"
                         }
                     }
                     div class="navbar-center" {
                         @if data.is_authenticated {
-                            // TODO: Check where to use this.
-                            //div #content-title class="font-semibold hidden md:block md:text-xl" {
-                            //    (title)
-                            //}
-
                             @if path != "/admin" || path != "/cookbooks" || path != "/recipes/add" || path != "/recipes/add/manual" {
-                                @if path == "/" || path == "/recipes" {
-                                    (render_recipe_button())
-                                } @else {
-                                    (render_recipe_button())
-                                }
-
-                                @if path == "/cookbooks" {
-                                    button
-                                        #addcookbook
-                                        class="btn btn-primary btn-sm hover:btn-accent"
-                                        hx-post="/cookbooks"
-                                        hx-prompt="Enter the name of your cookbook"
-                                        hx-target="#cookbooks-display"
-                                        hx-trigger="mousedown"
-                                        hx-swap="beforeend" {
-                                        "Add cookbook"
+                                div #navbar-actions {
+                                    @if path == "/" || path == "/recipes" {
+                                        (render_recipe_button(false))
+                                    } @else if path.starts_with("/shopping") && !data.shopping.as_ref().is_none_or(|s| s.shopping_lists.is_empty()) {
+                                        (render_shopping_list_actions(false, data
+                                            .shopping
+                                            .as_ref()
+                                            .and_then(|s| s.selected_shopping_list.as_ref().map(|l| l.id))
+                                            .unwrap_or_default()))
+                                    } @else if path == "/cookbooks" {
+                                        button
+                                            #addcookbook
+                                            class="btn btn-primary btn-sm hover:btn-accent"
+                                            hx-post="/cookbooks"
+                                            hx-prompt="Enter the name of your cookbook"
+                                            hx-target="#cookbooks-display"
+                                            hx-trigger="mousedown"
+                                            hx-swap="beforeend" {
+                                            "Add cookbook"
+                                        }
                                     }
                                 }
                             }
@@ -139,7 +141,7 @@ pub fn main(
                                             "Guide"
                                         }
                                     }
-                                    li class="cursor-pointer" onclick="document.querySelector('#settings-dialog').showModal()" {
+                                    li class="cursor-pointer" _="on click open #settings-dialog" {
                                         a hx-get="/settings" hx-target="#settings-dialog-content" {
                                             (icon_cog_6_tooth())
                                             "Settings"
@@ -211,15 +213,17 @@ pub fn main(
 }
 
 /// Renders the button to go the add recipe page.
-pub(super) fn render_recipe_button() -> Markup {
+pub(super) fn render_recipe_button(is_oob_swap: bool) -> Markup {
     html! {
         button
-            #add-recipe
-            class="btn btn-primary btn-sm sm:btn-sm hover:btn-accent"
+            id=(if is_oob_swap { "navbar-actions" } else { "add-recipe" })
+            class="btn btn-outline btn-sm sm:btn-sm hover:btn-accent"
+            hx-swap-oob=[if is_oob_swap { Some("true") } else { None }]
             hx-get="/recipes/add"
             hx-target="#content"
             hx-trigger="mousedown"
-            hx-push-url="true" {
+            hx-push-url="true"
+            hx-swap="innerHTML transition:true" {
             "Add recipe"
         }
     }
@@ -231,10 +235,7 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
         aside #desktop-nav class="hidden" data-layout=(menu_data_layout) {
             ul class="menu w-full menu-sm bg-base-300 rounded-box h-full gap-1" style="border-radius: 0" {
                 li #recipes-sidebar-recipes
-                    class={
-                        "rounded-lg"
-                        @if path == "/recipes" || path == "/" { " bg-secondary" }
-                    }
+                    class="sidebar-item rounded-lg"
                     hx-get="/recipes"
                     hx-target="#content"
                     hx-trigger="mousedown"
@@ -246,15 +247,31 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
                     }
                 }
                 li #recipes-sidebar-cookbooks
+                   class="sidebar-item rounded-lg"
                    hx-get="/cookbooks"
                    hx-target="#content"
                    hx-trigger="mousedown"
                    hx-push-url="true"
                    hx-swap="innerHTML transition:true"
-                  _="on click call alert('Not implemented yet')" {
+                  _="on mousedown call alert('Not implemented yet')" {
                      a {
                         (icon_book_open())
                         "Cookbooks"
+                    }
+                }
+                li #recipes-sidebar-shopping
+                    class={
+                        "sidebar-item rounded-lg"
+                        @if path.starts_with("/shopping") { " bg-secondary" }
+                    }
+                   hx-get="/shopping/lists"
+                   hx-target="#content"
+                   hx-trigger="mousedown"
+                   hx-push-url="true"
+                   hx-swap="innerHTML transition:true" {
+                     a {
+                        (icon_shopping_cart())
+                        "Shopping"
                     }
                 }
             }
@@ -266,6 +283,9 @@ pub(super) fn render_nav(path: &str, menu_data_layout: &str) -> Markup {
             }
             button hx-get="/cookbooks" hx-target="#content" hx-push-url="true" hx-swap="innerHTML transition:true" {
                 "Cookbooks"
+            }
+            button hx-get="/shopping/lists" hx-target="#content" hx-push-url="true" hx-swap="innerHTML transition:true" {
+                "Shopping"
             }
         }
     }

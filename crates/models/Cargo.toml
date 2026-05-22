@@ -18,7 +18,7 @@ rust-version.workspace = true
 async-trait.workspace = true
 auth.workspace = true
 axum.workspace = true
-bitflags = "2.11.0"
+bitflags = "2.11.1"
 chrono.workspace = true
 config.workspace = true
 derive_more.workspace = true
@@ -35,6 +35,8 @@ itertools.workspace = true
 lru.workspace = true
 math.workspace = true
 paste = "1.0.15"
+pdf = { path = "../pdf" }
+printpdf.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
@@ -60,5 +62,5 @@ zip.workspace = true
 app.workspace = true
 pretty_assertions.workspace = true
 test-utils.workspace = true
-test-db = { path = "../test-db" }
-test-fixtures = { path = "../test-fixtures" }
+test-db.workspace = true
+test-fixtures.workspace = true

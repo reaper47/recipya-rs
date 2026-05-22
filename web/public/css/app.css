@@ -240,3 +240,25 @@ body.dragging #ingredients-list {
     );
     border-radius: var(--rounded-btn, 0.5rem);
 }
+
+.swipeable-item {
+    position: relative;
+    overflow: hidden;
+    contain: content;
+}
+
+[data-swipeable] {
+    display: flex;
+    width: 100%;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    user-select: none;
+    -webkit-user-drag: none;
+    touch-action: pan-y;
+}
+
+.swipeable-item span {
+    transition:
+        opacity 0.2s ease,
+        text-decoration 0.2s ease;
+}

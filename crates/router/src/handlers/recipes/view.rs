@@ -82,8 +82,6 @@ pub async fn recipes_handler(
             is_authenticated: true,
             is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&headers),
-            // TODO: Populate AboutData with good values.
-            is_preview: false,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
@@ -91,9 +89,8 @@ pub async fn recipes_handler(
                 is_hx_request(&headers),
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
-            share: None,
             recipes,
-            reports: None,
+            ..Default::default()
         },
         &state.data_dir,
         &settings,
@@ -142,7 +139,6 @@ pub async fn view_recipe_handler(
             is_authenticated: true,
             is_autologin,
             is_hx_request: is_hx_request(&header_map),
-            is_preview: false,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::hidden()),
             searchbar: Some(SearchbarData {
@@ -155,7 +151,7 @@ pub async fn view_recipe_handler(
                 is_shared: false,
             }),
             recipes: vec![view_recipe],
-            reports: None,
+            ..Default::default()
         },
         &user_settings,
     ) {

@@ -373,7 +373,7 @@ fn render_right_controls(
                                                 set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
                                                 call navigator.share(data)
                                             else
-                                                call #share-dialog.showModal()
+                                                open #share-dialog
                                         end" {
                                 (icon_share())
                                 "Share"
@@ -432,7 +432,7 @@ fn render_right_controls(
                         hx-get=(format!("/recipes/{recipe_id}/timeline"))
                         hx-target="#timeline-dialog-result"
                         hx-push-url="false"
-                        _="on htmx:afterRequest from me call #timeline-dialog.showModal()" {
+                        _="on htmx:afterRequest from me open #timeline-dialog" {
                     (icon_timeline())
                 }
             }
@@ -453,7 +453,7 @@ fn render_right_controls(
                             }
                         }
                         li _="on click document.activeElement.blur()" {
-                            button _="on click call #timeline-new-event-dialog.showModal()" {
+                            button _="on click open #timeline-new-event-dialog" {
                                 (icon_fire())
                                 "Recipe made"
                             }
@@ -464,7 +464,7 @@ fn render_right_controls(
                                 hx-get=(format!("/recipes/{recipe_id}/timeline"))
                                 hx-target="#timeline-dialog-result"
                                 hx-push-url="false"
-                                _="on htmx:afterRequest from me call #timeline-dialog.showModal()" {
+                                _="on htmx:afterRequest from me open #timeline-dialog" {
                                 (icon_timeline())
                                 "Timeline"
                             }
@@ -491,17 +491,17 @@ fn render_right_controls(
                                             set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
                                             call navigator.share(data)
                                         else
-                                            call #share-dialog.showModal()
+                                            open #share-dialog
                                     end" {
                                 (icon_share())
                                 "Share"
                             }
                         }
-                    }
-                    li  _="on click document.activeElement.blur()" {
-                        button #duplicate-recipe hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
-                            (icon_document_duplicate())
-                            "Duplicate"
+                        li  _="on click document.activeElement.blur()" {
+                            button #duplicate-recipe hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
+                                (icon_document_duplicate())
+                                "Duplicate"
+                            }
                         }
                     }
                     li {
@@ -868,13 +868,17 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
         div #ingredients-instructions-container class="grid text-sm md:grid-cols-6 md:col-span-6" {
             div class="col-span-6 border-gray-700 border-y px-4 py-2 md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
-                    h2 class="font-semibold text-center underline pb-1" { "Tools" }
-                    ul class="list grid gap-1" {
+                    h2 class="font-semibold text-center underline pb-1" {
+                        "Tools"
+                    }
+                    ul id="tools-list-container" class="list grid gap-1" {
                         @for tool in recipe.tools.iter() {
-                            li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
-                                label class="flex items-center w-full" {
+                            li class="swipeable-item list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
+                                label class="flex items-center w-full" data-swipeable {
                                     input type="checkbox" class="checkbox";
-                                    span class="px-2" { (tool.quantity.to_string()) " " (tool.name) }
+                                    span class="px-2 [input:checked~&]:opacity-50" {
+                                        (tool.quantity.to_string()) " " (tool.name)
+                                    }
                                 }
                             }
                         }
@@ -917,13 +921,15 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
 
 fn render_ingredients_list(ingredients: &[Item]) -> Markup {
     html! {
-        ul class="list grid gap-1" {
+        ul id="ingredients-list-container" class="list grid gap-1" {
             @for ingredient in ingredients {
-                 li class="list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
-                    label class="flex items-center w-full" {
-                        input type="checkbox" class="checkbox";
-                        span class="px-2" { (ingredient.text) }
-                    }
+                 li class="swipeable-item list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" data-drag-row {
+                     label class="flex items-center" data-swipeable {
+                         input type="checkbox" class="checkbox peer";
+                         span class="px-2 [input:checked~&]:opacity-50" {
+                             (ingredient.text)
+                         }
+                     }
                 }
             }
         }
@@ -934,14 +940,15 @@ fn render_instructions_list(instructions: &[Item]) -> Markup {
     html! {
         ol class="grid list-decimal" {
             @for (idx, instruction) in instructions.iter().enumerate() {
-                li class="min-w-full py-2 select-none hover:bg-base-300" {
+                li class="min-w-full py-2 select-none hover:bg-base-300"
+                    _="on mousedown toggle .line-through toggle .opacity-40 then if I match .line-through then add .invisible to .timer in me else remove .invisible from .timer in me" {
                     div class="flex" {
-                        div class="whitespace-pre-line w-full" _="on mousedown toggle .line-through" {
+                        div class="whitespace-pre-line w-full transition-all" {
                             (instruction.text)
                         }
                          @if let Some(d) = instruction.duration_seconds {
-                            div id=(format!("timer-container-{idx}")) class="timer-container" {
-                                button class="timer btn btn-sm btn-circle btn-ghost" title=(format_timer_label(d))
+                            div id=(format!("timer-container-{idx}")) class="timer-container" _="on mousedown halt the event"{
+                                button class="timer btn btn-sm btn-wide btn-ghost" title=(format_timer_label(d))
                                        _="on click add .hidden to me
                                           remove .hidden from the next <div/>
                                           call initTimer(event)" {

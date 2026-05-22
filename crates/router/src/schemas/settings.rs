@@ -2,6 +2,12 @@ use serde::{Deserialize, Serialize};
 
 use models::export::ExportType;
 
+#[derive(Deserialize, Serialize)]
+pub struct PaperSizeForm {
+    #[serde(rename = "paper-size")]
+    pub paper_size: i16,
+}
+
 /// Represents the payload for setting themes.
 #[derive(Deserialize, Serialize)]
 pub struct ThemePayload {

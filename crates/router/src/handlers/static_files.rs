@@ -25,12 +25,31 @@ where
 
         match Asset::get(path.as_str()) {
             Some(content) => {
-                let mime = mime_guess::from_path(path).first_or_octet_stream();
+                let mime = mime_guess::from_path(&path).first_or_octet_stream();
+                let cache = cache_control_for(&path);
 
-                ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
+                (
+                    [
+                        (header::CONTENT_TYPE, mime.as_ref()),
+                        (header::CACHE_CONTROL, cache),
+                    ],
+                    content.data,
+                )
+                    .into_response()
             }
             None => (StatusCode::NOT_FOUND, "404 Not Found").into_response(),
         }
+    }
+}
+
+fn cache_control_for(path: &str) -> &str {
+    match path.rsplit_once('.').map(|(_, ext)| ext) {
+        Some("js" | "css") => "public, max-age=31536000, immutable",
+        Some("webp" | "png" | "jpg" | "jpeg" | "svg" | "ico" | "woff" | "woff2") => {
+            "public, max-age=604800"
+        }
+        Some("xml" | "webmanifest") => "public, max-age=3600",
+        _ => "no-store",
     }
 }
 

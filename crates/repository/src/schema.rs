@@ -357,6 +357,31 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    paper_categories (id) {
+        id -> Int2,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    paper_sizes (id) {
+        id -> Int2,
+        paper_category_id -> Int2,
+        name -> Text,
+        height_mm -> Float8,
+        width_mm -> Float8,
+        height_in -> Float8,
+        width_in -> Float8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     password_reset_tokens (id) {
         id -> Uuid,
         user_id -> Uuid,
@@ -539,6 +564,74 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    shares_shopping_lists (id) {
+        id -> Int8,
+        link -> Uuid,
+        user_id -> Uuid,
+        list_id -> Uuid,
+        created_at -> Timestamptz,
+        expires_at -> Timestamp,
+        last_accessed -> Timestamptz,
+        click_count -> Int4,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    shopping_list_items (id) {
+        id -> Int8,
+        shopping_list_id -> Uuid,
+        ingredient -> Text,
+        quantity -> Nullable<Text>,
+        notes -> Nullable<Text>,
+        shopping_list_label_id -> Int8,
+        position -> Int4,
+        is_checked -> Bool,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    shopping_list_labels (id) {
+        id -> Int8,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    shopping_list_recipes (shopping_list_item_id, recipe_id) {
+        shopping_list_item_id -> Int8,
+        recipe_id -> Int8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    shopping_lists (id) {
+        id -> Uuid,
+        name -> Text,
+        num_items -> Int8,
+        user_id -> Uuid,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     themes (id) {
         id -> Int4,
         name -> Text,
@@ -594,6 +687,7 @@ diesel::table! {
         cookbooks_view -> Int4,
         default_theme -> Int4,
         selected_theme -> Int4,
+        paper_size_id -> Int2,
     }
 }
 
@@ -651,6 +745,16 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    users_shopping_list_labels (user_id, label_id) {
+        user_id -> Uuid,
+        label_id -> Int8,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     videos_recipes (id) {
         id -> Int8,
         video -> Uuid,
@@ -690,6 +794,7 @@ diesel::joinable!(nutrition_per_100g -> nutrition (nutrition_id));
 diesel::joinable!(nutrition_per_100g -> recipes (recipe_id));
 diesel::joinable!(nutrition_per_serving -> nutrition (nutrition_id));
 diesel::joinable!(nutrition_per_serving -> recipes (recipe_id));
+diesel::joinable!(paper_sizes -> paper_categories (paper_category_id));
 diesel::joinable!(password_reset_tokens -> users (user_id));
 diesel::joinable!(recipe_timelines -> recipes (recipe_id));
 diesel::joinable!(recipe_timelines -> users (user_id));
@@ -707,6 +812,13 @@ diesel::joinable!(shares_cookbooks -> cookbooks (cookbook_id));
 diesel::joinable!(shares_cookbooks -> users (user_id));
 diesel::joinable!(shares_recipes -> recipes (recipe_id));
 diesel::joinable!(shares_recipes -> users (user_id));
+diesel::joinable!(shares_shopping_lists -> shopping_lists (list_id));
+diesel::joinable!(shares_shopping_lists -> users (user_id));
+diesel::joinable!(shopping_list_items -> shopping_list_labels (shopping_list_label_id));
+diesel::joinable!(shopping_list_items -> shopping_lists (shopping_list_id));
+diesel::joinable!(shopping_list_recipes -> recipes (recipe_id));
+diesel::joinable!(shopping_list_recipes -> shopping_list_items (shopping_list_item_id));
+diesel::joinable!(shopping_lists -> users (user_id));
 diesel::joinable!(times -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> tools (tool_id));
@@ -720,6 +832,8 @@ diesel::joinable!(users_keywords -> keywords (keyword_id));
 diesel::joinable!(users_keywords -> users (user_id));
 diesel::joinable!(users_recipes -> recipes (recipe_id));
 diesel::joinable!(users_recipes -> users (user_id));
+diesel::joinable!(users_shopping_list_labels -> shopping_list_labels (label_id));
+diesel::joinable!(users_shopping_list_labels -> users (user_id));
 diesel::joinable!(videos_recipes -> recipes (recipe_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
@@ -752,6 +866,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     nutrition_per_100g,
     nutrition_per_serving,
     nutrition_sources,
+    paper_categories,
+    paper_sizes,
     password_reset_tokens,
     recipe_timelines,
     recipes,
@@ -764,6 +880,11 @@ diesel::allow_tables_to_appear_in_same_query!(
     sections,
     shares_cookbooks,
     shares_recipes,
+    shares_shopping_lists,
+    shopping_list_items,
+    shopping_list_labels,
+    shopping_list_recipes,
+    shopping_lists,
     themes,
     times,
     tools,
@@ -773,5 +894,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     users_categories,
     users_keywords,
     users_recipes,
+    users_shopping_list_labels,
     videos_recipes,
 );

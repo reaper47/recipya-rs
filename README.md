@@ -68,22 +68,20 @@ The user interface is better than the the original.
 
 ## Getting Started
 
-### Installation
+### Installation (todo later)
 
 The installation instructions are written in
 the [installation section](https://recipes.musicavis.ca/guide/docs/installation/) of the documentation.
 
 ### Building the Project
 
-#### Current state
-
-Dependencies:
+#### Prerequisites
 
 1. Rust: https://www.rust-lang.org/
 2. Nodejs: https://nodejs.org/en/download/package-manager
 3. PostgreSQL: https://www.postgresql.org/download/ and the [pg_cron extension](https://github.com/citusdata/pg_cron)
-4. Diesel: `cargo install diesel_cli --no-default-features --features postgres`
-5. [Metask](https://crates.io/crates/cargo-metask): `cargo install cargo-metask`
+4. [Diesel](https://diesel.rs/): `cargo install diesel_cli --no-default-features --features postgres`
+5. [cargo-metask](https://crates.io/crates/cargo-metask): `cargo install cargo-metask`
 
 PostgreSQL extensions:
 
@@ -92,31 +90,31 @@ Add the following to `/var/lib/pgsql/data/postgresql.conf` once `pg_cron` is ins
 - `shared_preload_libraries = 'pg_cron'` <- Uncomment this line
 - `cron.database_name = 'recipya'` <- New line
 
-To build:
+#### Build
 
-1. Set the environment variables in `.cargo/config.toml`
-2. Run recipya: `cargo run -p recipya`
+1. Set the environment variables in the `.env` file. The [template](https://github.com/reaper47/recipya-rs/blob/main/deploy/.env.example) is found in /deploy.
+2. Run recipya: `cargo run server`
 
 #### Development Container
 
 You may use the devcontainer to help develop Recipya. The `DATABASE_URL` environment variable in your
-`.cargo/config.toml` file would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432"`.
+`.env` file would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432"`.
 
-#### Once recipya-rs becomes the defacto Recipya:
+## Development
 
-Follow these steps to build the project yourself:
+### Database
 
-1. Clone the project.
-   ```bash
-   git clone https://github.com/reaper47/recipya-rs.git
-   ```
-2. Install the required [dependencies](https://recipes.musicavis.ca/guide/docs/development/intro/#dependencies).
-3. [Build](https://recipes.musicavis.ca/guide/docs/development/build/) the project.
+Run `diesel migration run` to run all pending migrations.
 
-Alternatively, you may use
-the [development container](https://recipes.musicavis.ca/guide/docs/development/devcontainer/).
-Recipya's Docker [container](https://github.com/reaper47/recipya-rs/tree/main/.devcontainer) includes all the necessary
-tools and dependencies you need to start writing code quickly.
+Run `diesel migration generate {migration_name}` to create a new SQL migration under [crates/repository/src/migrations](https://github.com/reaper47/recipya-rs/tree/main/crates/repository/src/migrations) when changes to the database need to be done.
+
+Run `diesel migration redo` to rerun the latest migration.
+
+### Frontend
+
+Run `cargo task web-install-deps` to install the npm dependencies.
+
+Run `cargo task web-build` to build the frontend.
 
 ## Contributing
 
@@ -145,9 +143,11 @@ This project is supported by these kind people:
 
 This project was mainly coded to blasting the following albums:
 
+- [1914 - Viribus Unitis](https://www.youtube.com/watch?v=IET5AyShGYc)
 - [4am](https://www.youtube.com/watch?v=tBcPji_jRDc)
 - [Abysmal Dawn - Phylogenesis](https://www.youtube.com/watch?v=xJMybqRMedk&pp=ygUMYWJ5c21hbCBkYXdu)
 - [Archspire - Bleed the Future](https://www.youtube.com/watch?v=o8H9ahswldM)
+- [Archspire - Too Fast to Die](https://www.youtube.com/watch?v=bKlxhjKfnMQ)
 - [Astralborne - Eternity's End](https://www.youtube.com/watch?v=MilBEj5W9io)
 - [Atavistia - Cosmic Warfare](https://www.youtube.com/watch?v=VjJ_zb4RF2E)
 - [Beast In Black - Dark Connection](https://www.youtube.com/watch?v=7NyON-NzBr4)

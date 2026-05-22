@@ -45,6 +45,7 @@ lru = "0.16.3"
 math = { path = "./crates/math" }
 models = { path = "./crates/models" }
 pretty_assertions = "1.4.1"
+printpdf = { version = "0.9.1", default-features = false, features = ["text_layout"] }
 rand = "0.10.1"
 recipya-scraper = { path = "crates/recipya-scraper" }
 regex = "1.12.3"
@@ -60,6 +61,8 @@ strum = { version = "0.28.0", features = ["derive"] }
 strum_macros = "0.28.0"
 support = { path = "./crates/support" }
 templates = { path = "./crates/templates" }
+test-db = { path = "./crates/test-db" }
+test-fixtures = { path = "./crates/test-fixtures" }
 test-utils = { path = "./crates/test-utils" }
 time = { version = "0.3.47", features = ["serde"] }
 tracing-test = "0.2.6"

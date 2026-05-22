@@ -10,6 +10,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     DuplicateEntity,
     DuplicateEntityWithID(i64),
+    EmptyInput,
     EntityNotFound {
         entity: &'static str,
         id: String,

@@ -7,9 +7,10 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::Error::EntityNotFound;
-use models::data::{AboutData, Data, ShareData, ViewRecipe};
+use models::data::{AboutData, Data, ShareData, ShoppingData, ViewRecipe};
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
+use models::shopping::ShareShoppingList;
 use models::time::FormattedTimes;
 
 use crate::Error;
@@ -59,11 +60,7 @@ pub async fn share_recipe_handler(
                     is_authenticated: true,
                     is_autologin: state.config.read().await.is_autologin,
                     is_hx_request: is_hx_request(&header_map),
-                    // TODO: Populate AboutData with good values.
-                    is_preview: false,
                     about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
-                    pagination: None,
-                    searchbar: None,
                     share: Some(ShareData {
                         is_shared: true,
                         is_from_host: user.id == share.user_id,
@@ -72,7 +69,7 @@ pub async fn share_recipe_handler(
                         recipe_details: recipe,
                         formatted_times,
                     }],
-                    reports: None,
+                    ..Default::default()
                 },
                 &settings,
             )
@@ -82,20 +79,15 @@ pub async fn share_recipe_handler(
             uri.path(),
             &state.data_dir,
             &Data {
-                is_admin: false,
                 is_authenticated: true,
                 is_autologin: state.config.read().await.is_autologin,
                 is_hx_request: is_hx_request(&header_map),
-                // TODO: Populate AboutData with good values.
-                is_preview: false,
                 about: AboutData {
                     is_update_available: false,
                     is_check_update: false,
                     last_checked_update_at: DateTime::default(),
                     last_updated_at: DateTime::default(),
                 },
-                pagination: None,
-                searchbar: None,
                 share: Some(ShareData {
                     is_shared: true,
                     is_from_host: false,
@@ -104,7 +96,7 @@ pub async fn share_recipe_handler(
                     recipe_details: recipe,
                     formatted_times,
                 }],
-                reports: None,
+                ..Default::default()
             },
             &UserSettingDetails::default(),
         ),
@@ -117,4 +109,53 @@ pub async fn share_recipe_handler(
             Error::Templates.into_response()
         }
     }
+}
+
+/// Renders the shared shopping list.
+pub async fn share_shopping_list_handler(
+    header_map: HeaderMap,
+    OriginalUri(uri): OriginalUri,
+    State(state): State<AppState>,
+    OptionalAuth(user): OptionalAuth,
+    Path(link): Path<Uuid>,
+) -> impl IntoResponse {
+    let (share, list) = match ShareShoppingList::get_by_link(&state.mm, link).await {
+        Ok(v) => v,
+        Err(err) => {
+            error!("Error fetching shared recipe '{link}': {err}");
+            return Error::Model(EntityNotFound {
+                id: "-1".into(),
+                entity: "shared recipe",
+            })
+            .into_response();
+        }
+    };
+
+    let user_settings = match user {
+        Some(ref user) => UserSettingDetails::get(&state.mm, user.id).await.ok(),
+        None => None,
+    };
+
+    templates::shopping::render_view_shopping_list_details(
+        uri.path(),
+        &Data {
+            is_admin: user.as_ref().is_some_and(|u| u.is_admin),
+            is_authenticated: user.is_some(),
+            is_autologin: state.config.read().await.is_autologin,
+            is_hx_request: is_hx_request(&header_map),
+            about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
+            share: Some(ShareData {
+                is_shared: true,
+                is_from_host: user.as_ref().is_some_and(|u| u.id == share.user_id),
+            }),
+            shopping: Some(ShoppingData {
+                labels: None,
+                shopping_lists: vec![],
+                selected_shopping_list: Some(list),
+            }),
+            ..Default::default()
+        },
+        &user_settings.unwrap_or_default(),
+    )
+    .into_response()
 }

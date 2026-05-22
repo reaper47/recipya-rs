@@ -15,5 +15,5 @@ rust-version.workspace = true
 [dependencies]
 chrono.workspace = true
 models.workspace = true
-test-fixtures = { path = "../test-fixtures" }
+test-fixtures.workspace = true
 uuid.workspace = true

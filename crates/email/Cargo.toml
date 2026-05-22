@@ -16,8 +16,8 @@ rust-version.workspace = true
 
 [dependencies]
 derive_more.workspace = true
-lettre = { version = "0.11.20", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
-mrml = "5.1.0"
+lettre = { version = "0.11.21", default-features = false, features = ["smtp-transport", "pool", "rustls-tls", "hostname", "builder"] }
+mrml = "6.0.0"
 support.workspace = true
 tracing.workspace = true
 

@@ -1,5 +1,7 @@
 use maud::{Markup, html};
 
+const BUILD_HASH: &str = env!("BUILD_HASH");
+
 /// Renders the <head> section of the HTML.
 pub(super) fn head(title: &str) -> Markup {
     html! {
@@ -28,25 +30,25 @@ pub(super) fn head(title: &str) -> Markup {
 
             link rel="manifest" href="/public/site.webmanifest";
 
-            link rel="stylesheet" href="/public/css/tailwind.css";
-            link rel="stylesheet" href="/public/css/app.css";
-            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css";
+            link rel="stylesheet" href=(format!("/public/css/tailwind.css?v={BUILD_HASH}"));
+            link rel="stylesheet" href=(format!("/public/css/app.css?v={BUILD_HASH}"));
+            link rel="stylesheet" href=(format!("/public/css/vendor/easymde.min.css?v={BUILD_HASH}"));
 
-            script src="https://unpkg.com/htmx.org@2.0.7"{}
-            script src="https://unpkg.com/hyperscript.org@0.9.14" {}
-            script src="https://unpkg.com/htmx-ext-ws@2.0.2/ws.js" {}
-            script src="https://cdn.jsdelivr.net/npm/theme-change@2.0.2/index.js" {}
-            script src="https://cdn.jsdelivr.net/npm/html-duration-picker@latest/dist/html-duration-picker.min.js" {}
-            script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" {}
-            script src="https://unpkg.com/cropperjs@2.0.1/dist/cropper.min.js" {}
-            script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js" {}
-            script type="module" src="https://unpkg.com/cally" {}
-            script defer src="/public/js/core.min.js" {}
-            script defer src="/public/js/json-highlighter.min.js" {}
-            script defer src="/public/js/toast.min.js" {}
-            script defer src="/public/js/media.min.js" {}
-            script defer src="/public/js/timer.min.js" {}
-            script defer src="/public/js/wakelock.min.js" {}
+            script src=(format!("/public/js/vendor/htmx-2.0.9.min.js?v={BUILD_HASH}")) {}
+            script src="https://cdn.jsdelivr.net/npm/hyperscript.org@0.9.91/dist/_hyperscript.min.js" integrity="sha384-OT9bNmUa5rM34SmxFpRftn2F6GbgM/4xnTmn0z106OE5uvsigkdtUMOpdPKOigyO" crossorigin="anonymous" {}
+            script src=(format!("/public/js/vendor/ws-2.0.4.min.js?v={BUILD_HASH}")) {}
+            script src=(format!("/public/js/vendor/theme-change-2.0.2.min.js?v={BUILD_HASH}")) {}
+            script src=(format!("/public/js/vendor/html-duration-picker.min.js?v={BUILD_HASH}")) {}
+            script src=(format!("/public/js/vendor/cropper-2.1.1.min.js?v={BUILD_HASH}")) {}
+            script src=(format!("/public/js/vendor/easymde.min.js?v={BUILD_HASH}")) {}
+            script type="module" src=(format!("/public/js/vendor/cally.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/core.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/gestures.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/json-highlighter.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/toast.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/media.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/timer.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/wakelock.min.js?v={BUILD_HASH}")) {}
         }
     }
 }
@@ -67,7 +69,6 @@ pub(super) fn toast() -> Markup {
                 }
             }
         }
-        script defer src="/public/js/toast.min.js" {}
     }
 }
 

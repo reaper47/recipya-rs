@@ -1,10 +1,11 @@
 DO $$
 BEGIN
-    IF current_database() = 'recipya' THEN
-        PERFORM
-            cron.unschedule ('delete_expired_links');
+    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+        IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'delete_expired_links') THEN
+            PERFORM cron.unschedule('delete_expired_links');
+        END IF;
     END IF;
-END
+END;
 $$;
 
 DROP TRIGGER IF EXISTS insert_user_init_data ON users;
@@ -106,4 +107,3 @@ DROP TABLE IF EXISTS recipes;
 DROP TABLE IF EXISTS measurement_systems;
 
 DROP FUNCTION IF EXISTS get_tsv_config (char(3)) CASCADE;
-
