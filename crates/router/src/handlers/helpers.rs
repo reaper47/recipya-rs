@@ -1,10 +1,9 @@
 use axum::http::HeaderMap;
+use axum_htmx::HX_REQUEST;
 
 /// Checks whether the request was sent by htmx.
 pub fn is_hx_request(header_map: &HeaderMap) -> bool {
-    header_map
-        .get(axum_htmx::HX_REQUEST)
-        .is_some_and(|v| v == "true")
+    header_map.get(HX_REQUEST).is_some_and(|v| v == "true")
 }
 
 #[cfg(test)]

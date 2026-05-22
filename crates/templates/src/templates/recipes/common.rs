@@ -159,7 +159,14 @@ pub(super) fn add_section(section: &str, id: Option<&str>, base_class: Option<&s
                                 put newInput before me
                                 remove me
                                 js(newInput, list, sectionName)
-                                    newInput.addEventListener('focusout', function() {{ renumberSections(list, sectionName) }})
+                                    newInput.addEventListener('keydown', function(event) {{
+                                        if (event.key === 'Enter') {{
+                                            event.preventDefault();
+                                            newInput.blur();
+                                        }}
+                                    }});
+
+                                    newInput.addEventListener('focusout', function() {{ renumberSections(list, sectionName) }});
                                 end
                                 newInput.focus()")) {
                             "Add section"

@@ -49,7 +49,7 @@ fn cache_control_for(path: &str) -> &str {
             "public, max-age=604800"
         }
         Some("xml" | "webmanifest") => "public, max-age=3600",
-        _ => "no-cache",
+        _ => "no-store",
     }
 }
 

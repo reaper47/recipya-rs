@@ -119,7 +119,8 @@ fn render_shopping_lists_list(shopping: &ShoppingData) -> Markup {
             p class="text-center font-semibold text-lg underline" {
                 "Shopping Lists"
             }
-            button class="btn btn-xs btn-square btn-ghost"
+            button type="button"
+                class="btn btn-xs btn-square btn-ghost"
                 hx-post="/shopping/lists"
                 hx-prompt="Name of the new shopping list:"
                 hx-target="#shopping-lists"
@@ -174,7 +175,10 @@ pub fn render_shopping_list_items<T: AsRef<str>>(
     html! {
         details open {
             (render_label(label, list_id, items.first().map_or(1, |i| i.label_id)))
-            ol id=(format!("shopping-list-items-container-{label_no_spaces}")) class="list bg-base-100 rounded-box shadow-md" {
+            ol id=(format!("shopping-list-items-container-{label_no_spaces}"))
+                class="list bg-base-100 rounded-box shadow-md"
+                data-drag-list
+                data-list-id=(list_id) {
                 @for item in items {
                     (render_shopping_list_item(list_id, item, false))
                 }
@@ -314,7 +318,7 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
             // button class="btn join-item" {
             //     "Upload to app"
             // }
-            button class="btn join-item" style="anchor-name:--anchor-copy-list" popovertarget="shopping-list-copy-popover" {
+            button type="button" class="btn join-item" style="anchor-name:--anchor-copy-list" popovertarget="shopping-list-copy-popover" {
                 "Export"
                 span class="mb-1" { "⌄" }
             }
@@ -325,7 +329,7 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                 target="_blank" {
                 (icon_printer())
             }
-            button title="Share list"
+            button type="button" title="Share list"
                 class="btn join-item"
                 hx-post=(format!("/shopping/lists/{list_id}/share"))
                 hx-target="#share-dialog-result"
@@ -341,7 +345,7 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                     end" {
                 (icon_share())
             }
-            button title="Delete list" class="btn join-item" hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
+            button type="button" title="Delete list" class="btn join-item" hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
                 (icon_trash())
             }
         }
@@ -537,7 +541,7 @@ fn shopping_list_title<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
             h1 class="text-2xl font-bold underline p-2" {
                 (title.as_ref())
                 span class="ml-2" {
-                    button class="btn join-item btn-square btn-sm"
+                    button type="button" class="btn join-item btn-square btn-sm"
                         _="on click add .hidden to closest <h1/> then remove .hidden from next <form/> from closest <h1/> then call (next <input/> from closest <h1/>).select()" {
                         (icon_pencil(false))
                     }
@@ -546,7 +550,6 @@ fn shopping_list_title<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
             form class="hidden" hx-put=(format!("/shopping/lists/{list_id}")) hx-swap="outerHTML" {
                 h1 class="text-2xl font-bold underline p-2" {
                     input type="text" required
-                        autofocus
                         name="name"
                         class="input input-lg text-center mr-1"
                         value=(title.as_ref())
@@ -630,7 +633,12 @@ pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Ma
             span {
                 (label.as_ref())
                 button class="btn join-item btn-square btn-sm ml-2 mb-1"
-                    _="on click add .hidden to closest <span/> then remove .hidden from next <span/> from closest <span/> then add .inline-flex to next <span/> from closest <span/> then call (next <input/> from closest <span/>).select()" {
+                    _="on click
+                        add .hidden to closest <span/>
+                        remove .hidden from next <span/> from closest <span/>
+                        add .inline-flex to next <span/> from closest <span/>
+                        call (next <input/> from closest <span/>).select()
+                        call (next <input/> from closest <span/>).focus()" {
                     (icon_pencil(false))
                 }
             }
@@ -638,15 +646,13 @@ pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Ma
             // Edit mode
             span class="hidden text-left cursor-default " {
                 form .flex hx-target="closest summary" hx-swap="outerHTML" hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
-                    input autofocus
-                        type="text"
+                    input type="text"
                         required
                         name="name"
                         class="input input-sm"
                         value=(label.as_ref())
                         list="labels"
-                        autocomplete="off"
-                        _="on load wait 50ms then call me.select()";
+                        autocomplete="off";
 
                     span {
                         button class="btn join-item btn-square btn-sm ml-2 mb-1" {
@@ -732,7 +738,7 @@ fn add_label(list_id: Uuid) -> Markup {
     html! {
         div .divider {
             div class="grid grid-flow-col gap-2 w-full" {
-                btn class="btn btn-sm btn-outline" hx-get=(format!("/shopping/lists/{list_id}/labels/new")) hx-swap="outerHTML" {
+                button class="btn btn-sm btn-outline" hx-get=(format!("/shopping/lists/{list_id}/labels/new")) hx-swap="outerHTML" {
                     "Add label"
                 }
             }

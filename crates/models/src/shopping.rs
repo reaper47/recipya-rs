@@ -4,11 +4,6 @@ use chrono::NaiveDateTime;
 use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
-use pdf::{
-    components::ComponentOptions,
-    fonts::{ROBOTO_LIGHT_FONT_BYTES, ROBOTO_REGULAR_FONT_BYTES, ROBOTO_SEMIBOLD_FONT_BYTES},
-    math::measure_text_height_mm,
-};
 use printpdf::{
     Color, Mm, Op, ParsedFont, PdfDocument, PdfFontHandle, PdfPage, PdfSaveOptions, Point, Pt, Rgb,
     TextItem,
@@ -16,6 +11,11 @@ use printpdf::{
 use tempfile::{NamedTempFile, env::temp_dir};
 use uuid::Uuid;
 
+use pdf::{
+    components::ComponentOptions,
+    fonts::{ROBOTO_LIGHT_FONT_BYTES, ROBOTO_REGULAR_FONT_BYTES, ROBOTO_SEMIBOLD_FONT_BYTES},
+    math::measure_text_height_mm,
+};
 use repository::{ModelManager, schema};
 
 use crate::{
@@ -1065,7 +1065,10 @@ impl ShoppingListDetails {
             .filter(schema::shopping_list_items::shopping_list_id.eq(list_id))
             .inner_join(schema::shopping_list_labels::table)
             .left_join(schema::shopping_list_recipes::table.left_join(schema::recipes::table))
-            .order(schema::shopping_list_items::position.asc())
+            .order((
+                schema::shopping_list_items::shopping_list_label_id.asc(),
+                schema::shopping_list_items::position.asc(),
+            ))
             .select((
                 ShoppingListItem::as_select(),
                 schema::shopping_list_labels::name,
