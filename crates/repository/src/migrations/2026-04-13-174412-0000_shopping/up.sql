@@ -67,9 +67,6 @@ CREATE TABLE paper_sizes (
   width_in float NOT NULL
 );
 
-ALTER TABLE user_settings
-ADD COLUMN paper_size_id int2 NOT NULL DEFAULT 1;
-
 ---
 --- Indexes
 ---
@@ -149,6 +146,13 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_default_paper_size_id () RETURNS int2 AS $$
+  SELECT id
+    FROM paper_sizes
+    WHERE name = 'US Letter'
+    LIMIT 1;
+$$ LANGUAGE sql STABLE;
 
 ---
 --- Triggers
@@ -444,3 +448,9 @@ FROM
       )
   ) AS v (category_name, name, width_mm, height_mm)
   JOIN cats c ON c.name = v.category_name;
+
+---
+--- Alters
+---
+ALTER TABLE user_settings
+ADD COLUMN paper_size_id int2 NOT NULL DEFAULT get_default_paper_size_id ();

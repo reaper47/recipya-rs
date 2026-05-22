@@ -38,3 +38,5 @@ DROP TABLE IF EXISTS users_shopping_list_labels;
 DROP TABLE IF EXISTS shopping_list_labels;
 
 DROP TABLE IF EXISTS shopping_lists;
+
+DROP FUNCTION IF EXISTS get_default_paper_size_id ();
