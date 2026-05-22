@@ -231,7 +231,7 @@ mod tests {
         assert_eq!(got.cookbooks_view, 0);
         assert_eq!(got.default_theme, Theme::default());
         assert_eq!(got.selected_theme, Theme::Default);
-        assert_eq!(got.paper_size_id, 1);
+        assert_eq!(got.paper_size_id, 8);
         assert_eq!(got.paper_sizes.len(), 8);
         Ok(())
     }
