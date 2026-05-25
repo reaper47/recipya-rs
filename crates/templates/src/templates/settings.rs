@@ -783,7 +783,9 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                     }
                     select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end" {
                         option value="json" selected { "JSON" }
+                        option value="markdown" { "Markdown" }
                         option value="pdf" { "PDF" }
+                        option value="text" { "Text" }
                     }
                 }
                 div class="overflow-auto h-[50vh]" {

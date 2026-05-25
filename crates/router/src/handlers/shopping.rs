@@ -9,24 +9,24 @@ use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
 use chrono::NaiveDateTime;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
-use models::export::{ExportOptions, ExportType};
-use models::paper::PaperSize;
-use models::settings::UserSettingDetails;
-use models::view::ViewMode;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
 use tracing::error;
+use uuid::Uuid;
 
 use app::state::AppState;
 use models::data::{Data, ShoppingData};
 use models::download::{Download, DownloadForCreate};
+use models::export::{ExportOptions, ExportType};
+use models::paper::PaperSize;
 use models::params::{ShoppingListExportParams, ViewParams};
+use models::settings::UserSettingDetails;
 use models::shopping::{
     ShareShoppingList, ShoppingList, ShoppingListDetails, ShoppingListItemForCreate,
     ShoppingListItemForUpdate,
 };
-use uuid::Uuid;
+use models::view::ViewMode;
 
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
