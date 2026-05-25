@@ -197,6 +197,7 @@ async fn start_cron_jobs(
     Ok(())
 }
 
+#[allow(clippy::ignored_unit_patterns)]
 async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
@@ -217,6 +218,6 @@ async fn shutdown_signal() {
 
     tokio::select! {
         () = ctrl_c => {},
-        () = terminate => {}
+        _ = terminate => {}
     }
 }
