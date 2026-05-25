@@ -7,7 +7,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tempfile::NamedTempFile;
 use tokio::task::spawn_blocking;
-use tracing::error;
+use tracing::{error, warn};
 use zip::{CompressionMethod, ZipWriter, write::FileOptions};
 
 use crate::{Error, RecipeDetails, Result};
@@ -107,40 +107,51 @@ impl ExportData {
             zip.start_file("manifest.json", options)?;
             serde_json::to_writer_pretty(&mut zip, &manifest)?;
 
-            match self.r#type {
-                ExportType::Json => {
-                    for (idx, recipe) in self.recipes.into_iter().enumerate() {
-                        let recipe_id = recipe.recipe.id;
+            let base_url = std::env::var("RECIPYA_BASE_URL").unwrap_or_default();
 
-                        for img in recipe.all_images() {
-                            let fname = format!("{img}.webp");
-                            let path = self.images_dir.join(&fname);
-                            if path.exists() {
-                                let file = std::fs::File::open(&path)?;
-                                let mut buff = std::io::BufReader::new(file);
-                                zip.start_file(format!("{}/{fname}", idx + 1), options)?;
-                                std::io::copy(&mut buff, &mut zip)?;
-                            }
+            let Self {
+                recipes,
+                images_dir,
+                r#type,
+                ..
+            } = self;
+
+            for (idx, recipe) in recipes.into_iter().enumerate() {
+                let recipe_id = recipe.recipe.id;
+
+                if let Err(err) = Self::add_images(&mut zip, &recipe, idx, options, &images_dir) {
+                    error!("Failed to add images for recipe '{recipe_id}': {err}");
+                }
+
+                let serialized: Vec<u8> = match r#type {
+                    ExportType::Json => serde_json::to_vec_pretty(&schema_org::Recipe::from(
+                        recipe,
+                    ))
+                    .inspect_err(|err| {
+                        error!("Failed to serialize recipe '{recipe_id}': {err}");
+                    })?,
+                    ExportType::Markdown => match recipe.to_markdown(&base_url) {
+                        Ok(serialized) => serialized.into_bytes(),
+                        Err(err) => {
+                            warn!("Failed to write recipe '{recipe_id}' as markdown: {err}");
+                            continue;
                         }
+                    },
+                    ExportType::Pdf => todo!(),
+                    ExportType::Text => match recipe.to_text(&base_url) {
+                        Ok(serialized) => serialized.into_bytes(),
+                        Err(err) => {
+                            warn!("Failed to write recipe '{recipe_id}' as markdown: {err}");
+                            continue;
+                        }
+                    },
+                };
 
-                        let serialized =
-                            serde_json::to_vec_pretty(&schema_org::Recipe::from(recipe))
-                                .inspect_err(|err| {
-                                    error!("Failed to serialize recipe '{recipe_id}': {err}");
-                                })?;
-                        zip.start_file(format!("{}/recipe.json", idx + 1), options)?;
-                        zip.write_all(&serialized)?;
-                    }
-                }
-                ExportType::Pdf => {
-                    todo!()
-                }
-                ExportType::Text => {
-                    todo!()
-                }
-                ExportType::Markdown => {
-                    todo!()
-                }
+                zip.start_file(
+                    format!("{}/recipe.{}", idx + 1, r#type.extension()),
+                    options,
+                )?;
+                zip.write_all(serialized.as_slice())?;
             }
 
             zip.finish()?;
@@ -157,6 +168,26 @@ impl ExportData {
         .map_err(|err| Error::File(err.to_string()))?;
 
         Ok(std_file)
+    }
+
+    fn add_images(
+        zip: &mut zip::ZipWriter<&mut NamedTempFile>,
+        recipe: &RecipeDetails,
+        idx: usize,
+        options: FileOptions<'_, ()>,
+        images_dir: &Path,
+    ) -> Result<()> {
+        for img in recipe.all_images() {
+            let fname = format!("{img}.webp");
+            let path = images_dir.join(&fname);
+            if path.exists() {
+                let file = std::fs::File::open(&path)?;
+                let mut buf = std::io::BufReader::new(file);
+                zip.start_file(format!("{}/{fname}", idx + 1), options)?;
+                std::io::copy(&mut buf, zip)?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -176,6 +207,7 @@ mod tests {
                 (ExportType::Pdf, "pdf"),
             ] {
                 let got = export.extension();
+
                 pretty_assertions::assert_eq!(got, expected);
             }
         }
