@@ -119,9 +119,7 @@ impl ExportData {
             for (idx, recipe) in recipes.into_iter().enumerate() {
                 let recipe_id = recipe.recipe.id;
 
-                if let Err(err) =
-                    ExportData::add_images(&mut zip, &recipe, idx, options, &images_dir)
-                {
+                if let Err(err) = Self::add_images(&mut zip, &recipe, idx, options, &images_dir) {
                     error!("Failed to add images for recipe '{recipe_id}': {err}");
                 }
 
@@ -150,7 +148,7 @@ impl ExportData {
                 };
 
                 zip.start_file(format!("{}/recipe.md", idx + 1), options)?;
-                zip.write_all(&serialized.as_slice())?;
+                zip.write_all(serialized.as_slice())?;
             }
 
             zip.finish()?;
