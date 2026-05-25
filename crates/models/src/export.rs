@@ -147,7 +147,10 @@ impl ExportData {
                     },
                 };
 
-                zip.start_file(format!("{}/recipe.md", idx + 1), options)?;
+                zip.start_file(
+                    format!("{}/recipe.{}", idx + 1, r#type.extension()),
+                    options,
+                )?;
                 zip.write_all(serialized.as_slice())?;
             }
 
