@@ -29,10 +29,9 @@ pub fn add_recipe_manual(
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe Manually | Recipya" }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (render_add_recipe_manual(view, categories, keywords))
         } @else {
-            (&layouts::main("Add Recipe Manually", path, data, &render_add_recipe_manual(view, categories, keywords), user_setting, true))
+            (&layouts::main("Add Recipe Manually", path, data, &render_add_recipe_manual(view, categories, keywords), user_setting))
         }
         (init_recipe_form_js())
     }
@@ -44,8 +43,6 @@ fn render_add_recipe_manual(
     keywords: Vec<Keyword>,
 ) -> Markup {
     html! {
-        span #data-layout data-layout="no-aside" {}
-
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {

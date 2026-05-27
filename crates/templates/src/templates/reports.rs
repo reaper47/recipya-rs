@@ -16,10 +16,9 @@ pub fn index(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Mark
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Reports | Recipya" }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (content)
         } @else {
-            (layouts::main("Reports", path, data, &content, user_setting, true))
+            (layouts::main("Reports", path, data, &content, user_setting))
         }
     }
 }
@@ -34,10 +33,11 @@ fn render_index(data: &ReportsData) -> Markup {
                 hx-include="#selected-report-id" {
                 input #selected-report-id type="hidden" name="selected" value=(data.selected.as_ref().map(|r| r.id).unwrap_or_default());
                 div #report-list-container {
+                    div class="md:hidden divider m-0" {}
                     (render_reports_list(data))
                 }
             }
-            div class="order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
+            div class="hidden order-1 divider my-0 md:block md:order-2 md:divider-horizontal md:mx-0" {}
             div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3 max-h-[94vh]" {
                 div #report-view-pane {
                     @if data.reports.is_empty() {
@@ -245,7 +245,10 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                     }
                     div class="flex justify-between items-center gap-2" {
                         div class="flex flex-col gap-1 text-xs text-base-content/60" {
-                            span { "Reason: " (log.error_reason.clone().unwrap_or_else(|| "-".into())) }
+                            @let reason = log.error_reason.clone().unwrap_or_else(|| "-".into());
+                            span hidden=[if reason == "-".to_string() { Some("") } else { None }] {
+                                "Reason: " (reason)
+                            }
                             span {
                                 "Duration: " (log.format_duration())
                                 @if log.error_code.is_some() {

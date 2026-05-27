@@ -46,7 +46,6 @@ pub fn view_recipe(
             title hx-swap-oob="true" {
                  (view.recipe_details.recipe.name) " | Recipya"
             }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (view_recipe_helper(fs_support, data_dir, data)?)
         } @else {
             (layouts::main(
@@ -55,7 +54,6 @@ pub fn view_recipe(
                 data,
                 &view_recipe_helper(fs_support, data_dir, data)?,
                 user_setting,
-                true,
             ))
         }
         (pagination(&PaginationData::hidden()))
@@ -96,7 +94,7 @@ pub fn view_recipe_helper(
 
         section class={
             @if !data.is_preview { "p-2" }
-        } data-layout="no-aside" {
+        } {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none"
                     dir=(if recipe_details.is_rtl() { "rtl" } else { "ltr" }) {

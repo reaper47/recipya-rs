@@ -1,4 +1,5 @@
 name: Rust
+
 permissions:
   contents: read
 
@@ -9,11 +10,8 @@ on:
     branches: ["main"]
 
 env:
-  CARGO_INCREMENTAL: 0
   CARGO_PROFILE_TEST_DEBUG: 0
   CARGO_TERM_COLOR: always
-  CARGO_PROFILE_RELEASE_LTO: true
-  CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
 
 jobs:
   build:
@@ -26,7 +24,7 @@ jobs:
           toolchain: 1.95.0
           components: clippy
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: mozilla-actions/sccache-action@v0.0.10
       - uses: taiki-e/install-action@nextest
 
       - uses: ikalnytskyi/action-setup-postgres@v7
@@ -43,10 +41,8 @@ jobs:
         id: diesel_check
         run: |
           if command -v diesel >/dev/null 2>&1; then
-            echo "Diesel already installed."
             echo "exists=true" >> $GITHUB_OUTPUT
           else
-            echo "Diesel not installed."
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
@@ -64,13 +60,21 @@ jobs:
 
       - name: Clippy production code
         run: cargo clippy
+        env:
+          RUSTC_WRAPPER: sccache
+          SCCACHE_GHA_ENABLED: "true"
 
       - name: Clippy tests
         run: cargo clippy --tests
+        env:
+          RUSTC_WRAPPER: sccache
+          SCCACHE_GHA_ENABLED: "true"
 
       - name: Test
         run: cargo nextest run
         env:
+          RUSTC_WRAPPER: sccache
+          SCCACHE_GHA_ENABLED: "true"
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
           RECIPYA_IS_AUTOLOGIN: "false"
@@ -80,3 +84,7 @@ jobs:
           SMTP_HOST: "smtp.gmail.com"
           SMTP_USERNAME: "example@gmail.com"
           SMTP_PASSWORD: "abcd abcd bcd abcd"
+
+      - name: Run sccache stat for check
+        shell: bash
+        run: ${SCCACHE_PATH} --show-stats

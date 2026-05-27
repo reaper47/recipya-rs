@@ -205,16 +205,13 @@ async fn shutdown_signal() {
             .expect("Failed to install Ctrl+C handler");
     };
 
-    #[cfg(unix)]
-    let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
+    let terminate = cfg_select! {
+        windows => std::future::pending::<()>(),
+        _ => signal::unix::signal(signal::unix::SignalKind::terminate())
             .expect("Failed to install signal handler.")
             .recv()
-            .await
+            .await,
     };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
 
     tokio::select! {
         () = ctrl_c => {},

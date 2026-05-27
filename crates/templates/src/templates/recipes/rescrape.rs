@@ -54,10 +54,9 @@ pub fn rescrape_recipe_diff(
             title hx-swap-oob="true" {
                 (page_title) " | Recipya"
             }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (content)
         } @else {
-            (layouts::main(&page_title, &format!("/{recipe_id}/rescrape"), data, &content, user_setting, true))
+            (layouts::main(&page_title, &format!("/{recipe_id}/rescrape"), data, &content, user_setting))
         }
     }
 }

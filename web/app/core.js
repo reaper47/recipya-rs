@@ -672,45 +672,41 @@ function initTheme(themeDefault, themeSelected, save = true) {
 }
 
 function syncLayout() {
-  const layoutElement = document.querySelector("#data-layout");
-  if (!layoutElement) {
-    return;
-  }
-
-  const isAside =
-    layoutElement.attributes.getNamedItem("data-layout").value === "with-aside";
-  const isMobile = window.innerWidth < 768;
-
-  document
-    .getElementById("desktop-nav")
-    ?.classList.toggle("hidden", !isAside || isMobile);
-  document.getElementById("mobile-nav")?.classList.toggle("hidden", !isAside);
-
-  ["navbar-actions", "pagination-recipes"].forEach((id) => {
-    document.getElementById(id)?.classList.toggle("hidden", !isAside);
-  });
-
+  toggleNavbarCenter();
   highlightActiveSidebarItem();
+}
+
+function toggleNavbarCenter() {
+  const navbarCentre = document.getElementById("navbar-center");
+  const footer = document.getElementById("pagination-anchor");
+
+  if (window.location.pathname == "/recipes") {
+    navbarCentre.classList.remove("hidden");
+    footer.classList.remove("hidden");
+  } else {
+    navbarCentre.classList.add("hidden");
+    footer.classList.add("hidden");
+  }
 }
 
 function highlightActiveSidebarItem() {
   document.querySelectorAll(".sidebar-item").forEach((item) => {
-    item.classList.remove("bg-secondary");
+    item.classList.remove("bg-secondary-content");
   });
 
   const currentPath = window.location.pathname;
   if (currentPath.startsWith("/recipes")) {
     document
       .getElementById("recipes-sidebar-recipes")
-      .classList.add("bg-secondary");
+      .classList.add("bg-secondary-content");
   } else if (currentPath.startsWith("/cookbooks")) {
     document
       .getElementById("recipes-sidebar-cookbooks")
-      .classList.add("bg-secondary");
+      .classList.add("bg-secondary-content");
   } else if (currentPath.startsWith("/shopping")) {
     document
       .getElementById("recipes-sidebar-shopping")
-      .classList.add("bg-secondary");
+      .classList.add("bg-secondary-content");
   }
 }
 

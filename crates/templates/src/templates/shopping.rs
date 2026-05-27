@@ -25,11 +25,10 @@ pub fn lists_index(path: &str, data: &Data, user_setting: &UserSettingDetails) -
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Shopping Lists | Recipya" }
-            span #data-layout data-layout="with-aside" hx-swap-oob="true" {}
             (content)
             (pagination(&PaginationData::hidden()))
         } @else {
-            (layouts::main("Shopping Lists", path, data, &content, user_setting, false))
+            (layouts::main("Shopping Lists", path, data, &content, user_setting))
             (pagination(&PaginationData::hidden()))
         }
     }
@@ -688,11 +687,10 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Shopping Lists | Recipya" }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (content)
             (pagination(&PaginationData::hidden()))
         } @else {
-            (layouts::main("Shopping Lists", path.as_ref(), data, &content, user_settings, true))
+            (layouts::main("Shopping Lists", path.as_ref(), data, &content, user_settings))
             (pagination(&PaginationData::hidden()))
         }
     }

@@ -1248,7 +1248,10 @@ mod tests {
             let token = token_str.parse::<uuid::Uuid>()?;
             let dl = Download::find_by_token(&state.mm, token).await?.unwrap();
             assert_eq!(dl.user_id, user_id);
-            assert_eq!(dl.file_path, "/tmp/Test.txt");
+            cfg_select! {
+                windows => assert!(dl.file_path.contains(r#"\AppData\Local\Temp\Test.txt"#)),
+                _ => assert_eq!(dl.file_path, "/tmp/Test.txt")
+            }
             Ok(())
         }
     }
