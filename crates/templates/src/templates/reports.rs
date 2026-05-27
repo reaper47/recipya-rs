@@ -246,7 +246,7 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                     div class="flex justify-between items-center gap-2" {
                         div class="flex flex-col gap-1 text-xs text-base-content/60" {
                             @let reason = log.error_reason.clone().unwrap_or_else(|| "-".into());
-                            span hidden=[if reason == "-".to_string() { Some("") } else { None }] {
+                            span hidden=[if reason == "-" { Some("") } else { None }] {
                                 "Reason: " (reason)
                             }
                             span {
