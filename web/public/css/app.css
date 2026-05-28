@@ -262,3 +262,15 @@ body.dragging #ingredients-list {
         opacity 0.2s ease,
         text-decoration 0.2s ease;
 }
+
+#shopping-list-copy-popover {
+    top: anchor(top);
+    left: anchor(right);
+}
+
+@media (min-width: 768px) {
+    #shopping-list-copy-popover {
+        top: anchor(bottom);
+        left: anchor(left);
+    }
+}

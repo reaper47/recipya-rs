@@ -8,7 +8,7 @@ use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
     icon_shopping_cart,
 };
-use crate::shopping::render_shopping_list_actions;
+use crate::shopping::{render_shopping_list_actions, render_shopping_list_nav};
 use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
 
@@ -212,8 +212,13 @@ pub fn main(
                     @if data.is_authenticated {
                         div class="drawer-side z-40 is-drawer-close:overflow-visible" {
                             label for="side-drawer-nav" class="drawer-overlay" aria-label="Close sidebar" {}
-                                div class="flex min-h-full flex-col items-start bg-base-200" {
+                                div class="flex flex-col items-start bg-base-200 flex-1 min-h-0 h-full" {
                                     (render_nav(path))
+                                    @if let Some(shopping) = &data.shopping {
+                                        (render_shopping_list_nav(shopping))
+                                    } @else {
+                                       (render_empty_nav_extra_content())
+                                    }
                                 }
                         }
                     }
@@ -247,7 +252,7 @@ pub(super) fn render_recipe_button(is_oob_swap: bool) -> Markup {
 /// Renders the desktop navigation sidebar.
 pub(super) fn render_nav(path: &str) -> Markup {
     html! {
-        ul class="menu w-full grow" {
+        ul class="menu w-full" {
             li #recipes-sidebar-recipes
                 class="sidebar-item lg:is-drawer-close:tooltip lg:is-drawer-close:tooltip-right"
                 data-tip="Recipes"
@@ -298,5 +303,11 @@ pub(super) fn render_nav(path: &str) -> Markup {
                 }
             }
         }
+    }
+}
+
+pub(super) fn render_empty_nav_extra_content() -> Markup {
+    html! {
+         div #navbar-extra-content .hidden hx-swap-oob="true" {}
     }
 }

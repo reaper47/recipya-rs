@@ -61,11 +61,11 @@ fn render_lists_index(data: &Data) -> Markup {
             aside class="relative max-h-full text-center pt-1 pl-2" {
                 input #selected-shopping-list-id type="hidden" name="selected"
                       value=(shopping.selected_shopping_list.as_ref().map(|r| r.id).unwrap_or_default());
-                div #shopping-list-container {
+                div #shopping-list-container .hidden.md:block {
                     (render_shopping_lists_list(shopping))
                 }
             }
-            div class="order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
+            div class="hidden md:flex order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
             div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3 max-h-[94vh]" {
                 div #shopping-list-view-pane class="p-4 text-center grid" {
                     div class="grid" {
@@ -75,6 +75,7 @@ fn render_lists_index(data: &Data) -> Markup {
                             }
                             div id=[if data.is_hx_request { Some("navbar-actions") } else { None }]
                                 hx-swap-oob=[if data.is_hx_request { Some("true") } else { None }]
+                                hidden=[if data.is_hx_request { None } else { Some("") }]
                                 class="join border border-gray-700 mb-2 w-fit" {}
                         } @else {
                             @match shopping.selected_shopping_list {
@@ -106,6 +107,29 @@ fn render_lists_index(data: &Data) -> Markup {
             }
         }
 
+        @if data.is_hx_request {
+            (render_shopping_list_nav(&shopping))
+        }
+    }
+}
+
+pub(super) fn render_shopping_list_nav(shopping: &ShoppingData) -> Markup {
+    html! {
+        div #navbar-extra-content class="lg:hidden w-full p-2 bg-base-100 flex-1 min-h-0" hx-swap-oob="true" {
+            div .divider.my-0 {}
+            (render_shopping_lists_list(&shopping))
+            div .divider.my-0 {}
+            @if let Some(list) = &shopping.selected_shopping_list {
+                @let list_id = list.id;
+                div .grid.gap-1 {
+                    (action_view_button(list_id))
+                    (action_export_button())
+                    (action_print_button(list_id))
+                    (action_share_button(list_id))
+                    (action_delete_button(list_id))
+                }
+            }
+        }
     }
 }
 
@@ -130,7 +154,7 @@ fn render_shopping_lists_list(shopping: &ShoppingData) -> Markup {
         }
         ul #shopping-lists class={
             "menu block bg-base-100 w-full overflow-y-auto max-h-[40vh] md:max-h-[89vh] pb-16 md:pb-0"
-            @if shopping_lists.len() < 10 { " h-full" }
+            @if shopping_lists.len() < 10 { " md:h-full" }
         } {
             @for (idx, list) in shopping_lists.iter().enumerate() {
                 li id=(format!("shopping-list-sidebar-{}", list.id))
@@ -204,7 +228,7 @@ pub fn render_shopping_list_view_edit(list: &ShoppingListDetails) -> Markup {
 
 fn item_sections(list: &ShoppingListDetails) -> Markup {
     html! {
-        div class="min-w-[33rem] place-self-center" {
+        div class="w-full max-w-[33rem] place-self-center" {
             @if list.items.is_empty() {
                 details open {
                     (render_label("No label", list.id, 1))
@@ -250,7 +274,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
             div {
                 (shopping_list_title(list_id, title))
                 div class="grid" {
-                    div class="min-w-[33rem] place-self-center" {
+                    div class="w-full max-w-[33rem] place-self-center" {
                         details open {
                             (render_label("No label", list_id, 1))
                             ol class="list bg-base-100 rounded-box shadow-md" {
@@ -281,77 +305,25 @@ pub fn render_shopping_list_item_count(list_id: Uuid, num_items: i64, is_swap_oo
 pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> Markup {
     html! {
         div id=[if is_oob_swap { Some("navbar-actions") } else { None }]
-            hx-swap-oob=[if is_oob_swap { Some("true") } else { None }]
-            class="join border border-gray-700 mb-2 w-fit" {
-            div .dropdown {
-                div tabindex="0" role="button" class="btn join-item" {
-                    "View Mode"
-                    span class="mb-1" { "⌄" }
-                }
-                form tabindex="0"
-                    class="menu dropdown-content bg-base-200 w-32 text-lg pr-2"
-                    hx-get=(format!("/shopping/lists/{list_id}/view"))
-                    hx-target="#shopping-list-view-pane"
-                    hx-trigger="change"
-                    hx-swap="innerHTML transition:true"
-                    onchange="document.activeElement.blur()" {
-                    fieldset class="fieldset flex" {
-                        label class="label cursor-pointer text-inherit w-full p-2" for="view-edit" {
-                            input #view-edit type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="edit" checked;
-                            span class="ml-1" {
-                                "Edit"
-                            }
-                        }
-                    }
-                    fieldset class="fieldset flex" {
-                        label class="label cursor-pointer text-inherit w-full p-2" for="view-view" {
-                            input #view-view type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="view";
-                            span class="ml-1" {
-                                "View"
-                            }
-                        }
-                    }
-                }
-            }
-            // TODO: Implement upload to apps (todoist)
-            // button class="btn join-item" {
-            //     "Upload to app"
-            // }
-            button type="button" class="btn join-item" style="anchor-name:--anchor-copy-list" popovertarget="shopping-list-copy-popover" {
-                "Export"
-                span class="mb-1" { "⌄" }
-            }
-            a #print-shopping-list-button
-                title="Print list"
-                class="btn join-item"
-                href=(format!("/shopping/lists/{list_id}/print"))
-                target="_blank" {
-                (icon_printer())
-            }
-            button type="button" title="Share list"
-                class="btn join-item"
-                hx-post=(format!("/shopping/lists/{list_id}/share"))
-                hx-target="#share-dialog-result"
-                hx-push-url="false"
-                _="on htmx:afterRequest from me
-                    if event.detail.successful
-                        if navigator.canShare
-                            set name to document.querySelector('[itemprop=name]').textContent then
-                            set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
-                            call navigator.share(data)
-                        else
-                            open #share-dialog
-                    end" {
-                (icon_share())
-            }
-            button type="button" title="Delete list" class="btn join-item" hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
-                (icon_trash())
+            hx-swap-oob=[if is_oob_swap { Some("true") } else { None }] {
+            div class="hidden md:block join border border-gray-700 mb-2 w-fit" {
+                (action_view_button(list_id))
+                // TODO: Implement upload to apps (todoist)
+                // button class="btn join-item" {
+                //     "Upload to app"
+                // }
+                (action_export_button())
+                (action_print_button(list_id))
+                (action_share_button(list_id))
+                (action_delete_button(list_id))
             }
         }
 
-        div #shopping-list-copy-popover class="dropdown rounded-box bg-base-100 shadow-sm" popover style="anchor-name:--anchor-copy-list" {
+        div #shopping-list-copy-popover
+            class="dropdown dropdown-right w-full md:w-auto rounded-box bg-base-100 shadow-sm"
+            popover  {
             ul class="list bg-base-200 rounded-box shadow-md" {
-                li .list-row {
+                li class="list-row p-0 pl-4" {
                     p .place-content-center {
                         "Text"
                     }
@@ -373,7 +345,7 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                             }
                     }
                 }
-                li . list-row {
+                li class="list-row p-0 pl-4" {
                     p .place-content-center {
                         "Markdown"
                     }
@@ -395,7 +367,7 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                             }
                     }
                 }
-                li . list-row {
+                li class="list-row p-0 pl-4" {
                     p .place-content-center {
                         "PDF"
                     }
@@ -410,6 +382,110 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
                             }
                     }
                 }
+            }
+        }
+    }
+}
+
+fn action_view_button(list_id: Uuid) -> Markup {
+    html! {
+        div class="dropdown w-full md:w-auto" {
+            div tabindex="0" role="button" class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto" {
+                "View Mode"
+                span class="hidden md:inline mb-1" { "⌄" }
+                span class="inline md:hidden" { "→" }
+            }
+            form tabindex="0"
+                class="menu dropdown-content bg-base-200 w-32 text-lg pr-2 left-full top-0 md:left-0 md:top-full"
+                hx-get=(format!("/shopping/lists/{list_id}/view"))
+                hx-target="#shopping-list-view-pane"
+                hx-trigger="change"
+                hx-swap="innerHTML transition:true"
+                onchange="setTimeout(() => document.activeElement.blur(), 25)" {
+                fieldset class="fieldset flex" {
+                    label class="label cursor-pointer text-inherit w-full p-2" {
+                        input type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="edit" checked;
+                        span class="ml-1" {
+                            "Edit"
+                        }
+                    }
+                }
+                fieldset class="fieldset flex" {
+                    label class="label cursor-pointer text-inherit w-full p-2" {
+                        input type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="view";
+                        span class="ml-1" {
+                            "View"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn action_export_button() -> Markup {
+    html! {
+        button type="button" class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
+            style="anchor-name:--anchor-copy-list"
+            popovertarget="shopping-list-copy-popover" {
+            "Export"
+            span class="hidden md:inline mb-1" { "⌄" }
+            span class="inline md:hidden" { "→" }
+        }
+    }
+}
+
+fn action_print_button(list_id: Uuid) -> Markup {
+    html! {
+        a #print-shopping-list-button
+            title="Print list"
+            class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
+            href=(format!("/shopping/lists/{list_id}/print"))
+            target="_blank" {
+            span .hidden.md:block {
+                (icon_printer())
+            }
+            span .md:hidden { "Print" }
+        }
+    }
+}
+
+fn action_share_button(list_id: Uuid) -> Markup {
+    html! {
+        button type="button" title="Share list"
+            class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
+            hx-post=(format!("/shopping/lists/{list_id}/share"))
+            hx-target="#share-dialog-result"
+            hx-push-url="false"
+            _="on htmx:afterRequest from me
+                if event.detail.successful
+                    if navigator.canShare
+                        set name to document.querySelector('[itemprop=name]').textContent then
+                        set data to {title: name, text: name, url: document.querySelector('#share-dialog-result input').value} then
+                        call navigator.share(data)
+                    else
+                        open #share-dialog
+                end" {
+            span .hidden.md:block {
+                (icon_share())
+            }
+            span .md:hidden {
+                "Share"
+            }
+        }
+    }
+}
+
+fn action_delete_button(list_id: Uuid) -> Markup {
+    html! {
+        button type="button" title="Delete list"
+            class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
+            hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
+            span .hidden.md:block {
+                (icon_trash())
+            }
+            span .md:hidden {
+                "Delete"
             }
         }
     }

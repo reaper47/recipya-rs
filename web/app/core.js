@@ -683,6 +683,9 @@ function toggleNavbarCenter() {
   if (window.location.pathname == "/recipes") {
     navbarCentre.classList.remove("hidden");
     footer.classList.remove("hidden");
+  } else if (window.location.pathname == "/shopping/lists") {
+    navbarCentre.classList.remove("hidden");
+    footer.classList.add("hidden");
   } else {
     navbarCentre.classList.add("hidden");
     footer.classList.add("hidden");
