@@ -78,6 +78,11 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
             integrations::App::RecipeMD => ReportTypeFull::app(TertiaryReportType::recipe_md()),
             integrations::App::RecipeSage => ReportTypeFull::app(TertiaryReportType::recipe_sage()),
+            integrations::App::Recipya => ReportTypeFull {
+                primary: PrimaryReportType::<Import>::new(),
+                secondary: None,
+                tertiary: None,
+            },
             integrations::App::Rezkonv => ReportTypeFull::app(TertiaryReportType::rezkonv()),
             integrations::App::Saffron => ReportTypeFull::app(TertiaryReportType::saffron()),
             integrations::App::Unknown => ReportTypeFull {

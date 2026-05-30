@@ -14,6 +14,7 @@ pub enum FileFormat {
     Rezkonv,
     Txt,
     Xml,
+    Zip,
     #[default]
     Unknown,
 }
@@ -46,6 +47,7 @@ impl FileFormat {
             "rzk" | "rk" => Self::Rezkonv,
             "txt" => Self::Txt,
             "xml" => Self::Xml,
+            "zip" => Self::Zip,
             _ => {
                 warn!("File '{filename}' has an unknown file format: {ext}");
                 Self::Unknown
@@ -73,6 +75,7 @@ impl FileFormat {
             ".rzk",
             ".txt",
             ".xml",
+            ".zip",
         ]
     }
 }
@@ -342,6 +345,14 @@ mod tests {
             pretty_assertions::assert_eq!(FileFormat::from_filename("レシピ.xml"), FileFormat::Xml);
             pretty_assertions::assert_eq!(FileFormat::from_filename("рецепт.txt"), FileFormat::Txt);
             pretty_assertions::assert_eq!(FileFormat::from_filename("食谱.mcb"), FileFormat::MCB);
+        }
+
+        #[test]
+        fn test_zip_filenames() {
+            pretty_assertions::assert_eq!(
+                FileFormat::from_filename("recipya.zip"),
+                FileFormat::Zip
+            );
         }
     }
 }

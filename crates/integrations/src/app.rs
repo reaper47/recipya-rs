@@ -18,6 +18,7 @@ pub enum App {
     Paprika,
     RecipeMD,
     RecipeSage,
+    Recipya,
     Rezkonv,
     Saffron,
     #[default]
