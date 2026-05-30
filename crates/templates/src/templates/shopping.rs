@@ -108,7 +108,7 @@ fn render_lists_index(data: &Data) -> Markup {
         }
 
         @if data.is_hx_request {
-            (render_shopping_list_nav(&shopping))
+            (render_shopping_list_nav(shopping))
         }
     }
 }
@@ -117,7 +117,7 @@ pub(super) fn render_shopping_list_nav(shopping: &ShoppingData) -> Markup {
     html! {
         div #navbar-extra-content class="lg:hidden w-full p-2 bg-base-100 flex-1 min-h-0" hx-swap-oob="true" {
             div .divider.my-0 {}
-            (render_shopping_lists_list(&shopping))
+            (render_shopping_lists_list(shopping))
             div .divider.my-0 {}
             @if let Some(list) = &shopping.selected_shopping_list {
                 @let list_id = list.id;

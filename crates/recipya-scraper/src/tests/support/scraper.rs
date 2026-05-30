@@ -124,10 +124,13 @@ fn get_html_file_path(website: Website, number: usize) -> PathBuf {
         path = path.join(part);
     }
 
-    let path1_from = PathBuf::from("/crates/recipya-scraper/crates/recipya-scraper");
-    let path1_to = PathBuf::from("/crates/recipya-scraper");
-    let path2_from = PathBuf::from("/crates/router/crates/recipya-scraper");
-    let path2_to = PathBuf::from("/crates/recipya-scraper");
+    let path1_from: PathBuf = ["crates", "recipya-scraper", "crates", "recipya-scraper"]
+        .iter()
+        .collect();
+    let path1_to: PathBuf = ["crates", "recipya-scraper"].iter().collect();
+    let path2_from: PathBuf = ["crates", "router", "crates", "recipya-scraper"]
+        .iter()
+        .collect();
 
     path.to_string_lossy()
         .replace(
@@ -136,7 +139,7 @@ fn get_html_file_path(website: Website, number: usize) -> PathBuf {
         )
         .replace(
             path2_from.to_string_lossy().as_ref(),
-            path2_to.to_string_lossy().as_ref(),
+            path1_to.to_string_lossy().as_ref(),
         )
         .into()
 }
@@ -170,6 +173,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         let client = reqwest::Client::new();
         match client.get(url).send().await {
             Ok(res) => {
+                dbg!(&path);
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes().await?)
