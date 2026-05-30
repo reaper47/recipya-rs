@@ -1,9 +1,10 @@
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use axum::extract::ws::Message;
 use futures_util::{StreamExt, future::join_all, stream};
 use support::fs::FsSupport;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -114,7 +115,7 @@ async fn extract_images(
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<Uuid> {
-    let urls = schema
+    let image_refs = schema
         .image
         .iter()
         .filter_map(|img| match img {
@@ -123,20 +124,40 @@ async fn extract_images(
             }
             schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
         })
+        .flat_map(|url| {
+            url.split(';')
+                .map(str::trim)
+                .filter(|part| !part.is_empty())
+                .map(ToOwned::to_owned)
+                .collect::<Vec<_>>()
+        })
         .collect::<Vec<_>>();
 
-    let futures = urls
-        .iter()
-        .map(|url| state.scraper.fetch_and_upload_to_temp(url.as_str()));
-
-    let results = join_all(futures).await;
-
-    stream::iter(urls.into_iter().zip(results))
-        .filter_map(|(_, res)| {
+    stream::iter(image_refs)
+        .filter_map(|image_ref| {
             let fs_support = fs_support.clone();
 
             async move {
-                let path = res.ok()?;
+                let path = if image_ref.starts_with("http://") || image_ref.starts_with("https://") {
+                    state
+                        .scraper
+                        .fetch_and_upload_to_temp(image_ref.as_str())
+                        .await
+                        .ok()?
+                } else {
+                    let normalized = image_ref
+                        .strip_prefix("file://")
+                        .unwrap_or(image_ref.as_str());
+                    let local_path = PathBuf::from(normalized);
+
+                    if !local_path.exists() {
+                        warn!("Skipping missing local image path: {local_path:?}");
+                        return None;
+                    }
+
+                    local_path
+                };
+
                 let file_name = Uuid::new_v4();
 
                 fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
