@@ -242,13 +242,16 @@ mod tests {
         #[test]
         fn test_backup_ok() -> Result<()> {
             let buf = files::backup();
+            let tmp_dir = std::env::temp_dir();
 
             let mut got = parse_backup(buf)?;
 
             let want = results::xml_recipes();
             assert!(match got[4].image[0].clone() {
                 schema_org::field::FieldEnum22::ImageObject(_) => false,
-                schema_org::field::FieldEnum22::URL(u) => u.starts_with("/tmp"),
+                schema_org::field::FieldEnum22::URL(u) => {
+                    std::path::Path::new(&u).starts_with(&tmp_dir)
+                }
             });
             got[4].image = want[4].image.clone();
             pretty_assertions::assert_eq!(got[..5], want);
