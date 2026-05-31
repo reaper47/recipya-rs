@@ -193,12 +193,14 @@ fn migrate_tool_object(mut tool: Map<String, Value>) -> Value {
 mod tests {
     use super::*;
 
-    use tracing_test::traced_test;
     use schema_org::field::{
-        RecipeImageFieldEnum, RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
-        RecipeToolFieldEnum, RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum, ClipDescriptionFieldEnum
+        ClipDescriptionFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
+        RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
+        RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum, RecipeToolFieldEnum,
+        RecipeVideoFieldEnum,
     };
-    use schema_org::{AtType, DurationOrText, Energy, Mass, NutritionInformation, Recipe, Clip};
+    use schema_org::{AtType, Clip, DurationOrText, Energy, Mass, NutritionInformation, Recipe};
+    use tracing_test::traced_test;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -219,7 +221,11 @@ mod tests {
             let expected_name = &want[0].name;
 
             // identify the recipe to compare with the reference recipe
-            let got_recipe: Recipe = got.iter().find(|r| &r.name == expected_name).cloned().unwrap();
+            let got_recipe: Recipe = got
+                .iter()
+                .find(|r| &r.name == expected_name)
+                .cloned()
+                .unwrap();
             let want_recipe = &want[0];
 
             pretty_assertions::assert_eq!(got_recipe.name, want_recipe.name);
@@ -227,7 +233,10 @@ mod tests {
             pretty_assertions::assert_eq!(got_recipe.keywords, want_recipe.keywords);
             pretty_assertions::assert_eq!(got_recipe.image.len(), want_recipe.image.len());
             pretty_assertions::assert_eq!(got_recipe.tool, want_recipe.tool);
-            pretty_assertions::assert_eq!(got_recipe.recipe_ingredient, want_recipe.recipe_ingredient);
+            pretty_assertions::assert_eq!(
+                got_recipe.recipe_ingredient,
+                want_recipe.recipe_ingredient
+            );
             pretty_assertions::assert_eq!(got_recipe.nutrition, want_recipe.nutrition);
             pretty_assertions::assert_eq!(got_recipe.prep_time, want_recipe.prep_time);
             pretty_assertions::assert_eq!(got_recipe.thumbnail_url, want_recipe.thumbnail_url);
@@ -255,7 +264,7 @@ mod tests {
                     description: vec![RecipeDescriptionFieldEnum::Text("A hummus bowl makes the best easy lunch or dinner: no cooking required! Layer a dollop with crunchy veggie toppings.öäü".into())],
                     recipe_category: vec!["main dish".into()],
                     tool: vec![
-                        RecipeToolFieldEnum::new_tool("pan", 1.0), 
+                        RecipeToolFieldEnum::new_tool("pan", 1.0),
                         RecipeToolFieldEnum::new_tool("pan2", 1.0)
                     ],
                     recipe_ingredient: vec![
@@ -321,11 +330,10 @@ mod tests {
                     }.into(),
                 ),
                     ],
-                    
+
                     ..Default::default()
                 },
             ]
         }
-
     }
 }

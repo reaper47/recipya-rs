@@ -48,6 +48,7 @@ enum TertiaryInner {
     Paprika,
     RecipeMD,
     RecipeSage,
+    Recipya,
     Rezkonv,
     Saffron,
 }
@@ -265,6 +266,11 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::RecipeSage)
     }
 
+    /// Creates a new tertiary report type for the `Recipya` software.
+    pub const fn recipya() -> Self {
+        Self::new(TertiaryInner::Recipya)
+    }
+
     /// Creates a new tertiary report type for the `Rezkonv` software.
     pub const fn rezkonv() -> Self {
         Self::new(TertiaryInner::Rezkonv)
@@ -295,8 +301,9 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::Paprika => 14,
             TertiaryInner::RecipeMD => 15,
             TertiaryInner::RecipeSage => 16,
-            TertiaryInner::Rezkonv => 17,
-            TertiaryInner::Saffron => 18,
+            TertiaryInner::Recipya => 17,
+            TertiaryInner::Rezkonv => 18,
+            TertiaryInner::Saffron => 19,
         }
     }
 }
