@@ -20,7 +20,7 @@ use schema_org::Recipe;
 use crate::apps::cooklang::CookLang;
 use crate::apps::{
     accuchef, bigoven, cheftap, cookmate, cookml, crouton, kalorio, mastercook, mealmaster,
-    paprika, recipemd, recipesage, rezkonv, saffron,
+    paprika, recipemd, recipesage, recipya, rezkonv, saffron,
 };
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
@@ -65,6 +65,10 @@ where
             FileFormat::Json => recipesage::parse_json(r),
             FileFormat::Txt => recipesage::parse_txt(r),
             FileFormat::Xml => recipesage::parse_xml(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
+        App::Recipya => match file_format {
+            FileFormat::Zip => recipya::parse_zip(r),
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::Rezkonv => rezkonv::parse(r),

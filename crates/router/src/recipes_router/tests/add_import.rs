@@ -181,7 +181,7 @@ mod tests {
         async fn test_post_payload_too_large() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config).await?;
-            let large_payload = "x".repeat(51 * 1024 * 1024);
+            let large_payload = "x".repeat(101 * 1024 * 1024);
 
             let res = server
                 .post(BASE_URI)

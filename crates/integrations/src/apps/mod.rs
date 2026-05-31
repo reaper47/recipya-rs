@@ -13,5 +13,6 @@ pub mod mealmaster;
 pub mod paprika;
 pub mod recipemd;
 pub mod recipesage;
+pub mod recipya;
 pub mod rezkonv;
 pub mod saffron;
