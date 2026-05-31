@@ -694,22 +694,22 @@ function toggleNavbarCenter() {
 
 function highlightActiveSidebarItem() {
   document.querySelectorAll(".sidebar-item").forEach((item) => {
-    item.classList.remove("bg-secondary-content");
+    item.classList.remove("bg-secondary-content", "dark:bg-secondary");
   });
 
   const currentPath = window.location.pathname;
   if (currentPath.startsWith("/recipes")) {
     document
       .getElementById("recipes-sidebar-recipes")
-      .classList.add("bg-secondary-content");
+      .classList.add("bg-secondary-content", "dark:bg-secondary");
   } else if (currentPath.startsWith("/cookbooks")) {
     document
       .getElementById("recipes-sidebar-cookbooks")
-      .classList.add("bg-secondary-content");
+      .classList.add("bg-secondary-content", "dark:bg-secondary");
   } else if (currentPath.startsWith("/shopping")) {
     document
       .getElementById("recipes-sidebar-shopping")
-      .classList.add("bg-secondary-content");
+      .classList.add("bg-secondary-content", "dark:bg-secondary");
   }
 }
 

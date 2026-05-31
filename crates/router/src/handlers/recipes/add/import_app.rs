@@ -1,7 +1,15 @@
+use std::sync::Arc;
+use std::sync::atomic::AtomicI64;
+
 use axum::extract::State;
 use axum::response::IntoResponse;
+use futures::StreamExt;
+use models::recipe::structs::recipe::RecipeForCreate;
+use models::settings::UserSettingDetails;
 use reqwest::StatusCode;
 use tokio::fs;
+use tokio::sync::Semaphore;
+use tokio::task::JoinSet;
 use tokio::time::Instant;
 use tracing::{error, warn};
 use uuid::Uuid;
@@ -20,6 +28,11 @@ use crate::handlers::recipes::common::{broadcast_import_done_toast, schema_to_re
 use crate::recipes_router::params::ImportFromAppForm;
 use crate::{Error, Result, middleware::mw_auth::RequireAuth};
 
+struct RecipeResult {
+    recipe_id: Option<i64>,
+    log: ReportLogForCreate,
+}
+
 /// Handles the importing recipes from an application endpoint.
 pub async fn add_recipe_import_app_handler(
     RequireAuth(user): RequireAuth,
@@ -35,7 +48,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
     tokio::spawn(async move {
         let app = form.app.to_string();
         let state = state.clone();
-        let start_time = Instant::now();
+        let start_time = Arc::new(Instant::now());
 
         let recipes = match parse_recipes(&state, form.clone(), user_id).await {
             Ok(r) => r,
@@ -62,8 +75,14 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
             .unwrap_or(i64::MAX);
 
-        let (recipe_ids, report_logs) =
-            push_recipes_to_db(&state, recipes, &start_time, user_id).await;
+        let state = Arc::new(state);
+        let (recipe_ids, report_logs) = push_recipes_to_db(
+            Arc::clone(&state),
+            recipes,
+            Arc::clone(&start_time),
+            user_id,
+        )
+        .await;
 
         let report_type = match form.app {
             integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
@@ -135,66 +154,147 @@ async fn parse_recipes(
 }
 
 async fn push_recipes_to_db(
-    state: &AppState,
+    state: Arc<AppState>,
     recipes: Vec<schema_org::Recipe>,
-    start_time: &Instant,
+    start_time: Arc<Instant>,
     user_id: Uuid,
 ) -> (Vec<i64>, Vec<ReportLogForCreate>) {
-    let mut curr = 0;
-    let mut recipe_ids = Vec::new();
-    let mut report_logs = Vec::new();
-
-    let num_recipes = recipes
-        .len()
+    let num_recipes_usize = recipes.len();
+    let num_recipes = num_recipes_usize
         .try_into()
         .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
         .unwrap_or(i64::MAX);
+    let user_settings = Arc::new(
+        UserSettingDetails::get(&state.mm, user_id)
+            .await
+            .unwrap_or_default(),
+    );
+    let semaphore = Arc::new(Semaphore::new(16));
 
-    for (idx, schema) in recipes.into_iter().enumerate() {
-        let seq_num = i32::try_from(idx + 1).unwrap_or(1);
+    state
+        .broadcast_progress("Saving media", 1, num_recipes, true, user_id)
+        .await;
 
-        curr += 1;
-        state
-            .broadcast_progress("Saving recipes", curr, num_recipes, true, user_id)
-            .await;
+    let curr = Arc::new(AtomicI64::new(0));
+    let mut set = JoinSet::new();
+    for recipe in recipes.into_iter() {
+        let curr = Arc::clone(&curr);
+        let state = Arc::clone(&state);
 
-        let recipe = schema_to_recipe_for_create(state, schema).await;
-        let res_create = Recipe::create(&state.mm, user_id, &recipe).await;
-        let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
+        set.spawn(async move {
+            let recipe_c = schema_to_recipe_for_create(state.as_ref(), recipe).await;
 
-        match res_create {
-            Ok(recipe_id) => {
-                report_logs.push(ReportLogForCreate::success(
-                    seq_num,
-                    &recipe.name,
-                    Some(recipe_id),
-                    exec_time_ms,
-                ));
-                recipe_ids.push(recipe_id);
+            let num_completed = curr.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+            if num_completed % 12 == 0 || num_completed == num_recipes {
+                state
+                    .broadcast_progress("Saving media", num_completed, num_recipes, true, user_id)
+                    .await;
             }
-            Err(DuplicateEntityWithID(id)) => {
-                warn!("Recipe exists: {}", recipe.name);
-                report_logs.push(ReportLogForCreate::warning(
-                    seq_num,
-                    &recipe.name,
-                    Some(id),
-                    "Recipe exists",
-                    exec_time_ms,
-                ));
+            recipe_c
+        });
+    }
+    let recipes_for_create: Vec<RecipeForCreate> = set.join_all().await;
+
+    let curr = Arc::new(AtomicI64::new(0));
+    let results: Vec<_> = futures::stream::iter(recipes_for_create.into_iter().enumerate())
+        .map(|(idx, schema)| {
+            let state = Arc::clone(&state);
+            let curr = Arc::clone(&curr);
+            let start_time = Arc::clone(&start_time);
+            let semaphore = Arc::clone(&semaphore);
+            let user_settings = Arc::clone(&user_settings);
+
+            async move {
+                let _permit = semaphore.acquire().await.unwrap();
+                push_recipe(
+                    idx,
+                    curr,
+                    state,
+                    schema,
+                    num_recipes,
+                    start_time,
+                    user_id,
+                    &user_settings,
+                )
+                .await
             }
-            Err(err) => {
-                error!("Error saving recipe '{}': {err}", recipe.name);
-                report_logs.push(ReportLogForCreate::error(
-                    seq_num,
-                    &recipe.name,
-                    None,
-                    "ImportFail",
-                    &err.to_string(),
-                    exec_time_ms,
-                ));
+        })
+        .buffer_unordered(12)
+        .collect()
+        .await;
+
+    let mut recipe_ids = Vec::with_capacity(num_recipes_usize);
+    let mut report_logs = Vec::with_capacity(num_recipes_usize);
+
+    for res in results {
+        match res {
+            Ok(result) => {
+                if let Some(id) = result.recipe_id {
+                    recipe_ids.push(id);
+                }
+                report_logs.push(result.log);
             }
+            Err(err) => error!("push_recipe failed: {err}"),
         }
     }
 
     (recipe_ids, report_logs)
+}
+
+async fn push_recipe(
+    idx: usize,
+    curr: Arc<AtomicI64>,
+    state: Arc<AppState>,
+    recipe_c: RecipeForCreate,
+    num_recipes: i64,
+    start_time: Arc<Instant>,
+    user_id: Uuid,
+    user_settings: &UserSettingDetails,
+) -> Result<RecipeResult> {
+    let seq_num = i32::try_from(idx + 1).unwrap_or(1);
+    let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
+
+    let (recipe_id, log) = match Recipe::create(&state.mm, user_id, &recipe_c, user_settings).await
+    {
+        Ok(recipe_id) => (
+            Some(recipe_id),
+            ReportLogForCreate::success(seq_num, &recipe_c.name, Some(recipe_id), exec_time_ms),
+        ),
+        Err(DuplicateEntityWithID(id)) => {
+            warn!("Recipe exists: {}", recipe_c.name);
+            (
+                None,
+                ReportLogForCreate::warning(
+                    seq_num,
+                    &recipe_c.name,
+                    Some(id),
+                    "Recipe exists",
+                    exec_time_ms,
+                ),
+            )
+        }
+        Err(err) => {
+            error!("Error saving recipe '{}': {err}", recipe_c.name);
+            (
+                None,
+                ReportLogForCreate::error(
+                    seq_num,
+                    &recipe_c.name,
+                    None,
+                    "ImportFail",
+                    &err.to_string(),
+                    exec_time_ms,
+                ),
+            )
+        }
+    };
+
+    let num_completed = curr.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+    if num_completed % 12 == 0 || num_completed == num_recipes {
+        state
+            .broadcast_progress("Saving recipes", num_completed, num_recipes, true, user_id)
+            .await;
+    }
+
+    Ok(RecipeResult { recipe_id, log })
 }

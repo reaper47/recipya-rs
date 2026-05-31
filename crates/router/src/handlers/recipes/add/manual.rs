@@ -16,6 +16,7 @@ use models::{
         RecipeForm,
         structs::{media::VideoForCreate, recipe::RecipeForCreate, types::Source},
     },
+    settings::UserSettingDetails,
 };
 
 use crate::{
@@ -132,6 +133,9 @@ pub async fn add_manual_recipe_post_handler(
             times: form.times,
             tools: form.tools,
         },
+        &UserSettingDetails::get(&state.mm, user.id)
+            .await
+            .unwrap_or_default(),
     )
     .await
     {

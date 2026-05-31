@@ -377,7 +377,7 @@ pub async fn insert_nutrition(
     recipe_id: i64,
     nutrition: &NutritionDetailsForCreate,
     ingredients: &[&str],
-    nutrition_source: NutritionDataSource,
+    nutrition_source: &NutritionDataSource,
     num_servings: i16,
 ) -> Result<()> {
     let per_100g = &nutrition.per_100g;

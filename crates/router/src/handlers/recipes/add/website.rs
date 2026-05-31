@@ -28,6 +28,7 @@ use models::{
         report_log::ReportLogForCreate,
         report_types::ReportTypeFull,
     },
+    settings::UserSettingDetails,
 };
 
 use crate::{
@@ -242,8 +243,12 @@ async fn process_recipe_url(
 
     match state.scrape(url.clone()).await {
         Ok(schema) => {
+            let user_settings = UserSettingDetails::get(&state.mm, user_id)
+                .await
+                .unwrap_or_default();
             let recipe_c = schema_to_recipe_for_create(state, schema).await;
-            let created_result = Recipe::create(&state.mm, user_id, &recipe_c).await;
+            let created_result =
+                Recipe::create(&state.mm, user_id, &recipe_c, &user_settings).await;
             let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
 
             match created_result {

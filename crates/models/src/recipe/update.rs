@@ -180,7 +180,7 @@ impl Recipe {
                         recipe_id,
                         &new_recipe.nutrition,
                         new_ingredients_slice,
-                        user_settings.nutrition_source,
+                        &user_settings.nutrition_source,
                         new_recipe.r#yield.unwrap_or(1),
                     )
                     .await?;
@@ -193,7 +193,7 @@ impl Recipe {
                             recipe_id,
                             &new_recipe.nutrition,
                             all_new_ingredients.as_slice(),
-                            user_settings.nutrition_source,
+                            &user_settings.nutrition_source,
                             new_recipe.r#yield.unwrap_or(1),
                         )
                         .await?;
@@ -293,8 +293,9 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let user = insert_user(config.clone()).await?;
+            let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let id = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
             if Recipe::toggle_favourite(&state.mm, Uuid::new_v4(), id)
                 .await
@@ -310,9 +311,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
             let user = insert_user(config.clone()).await?;
+            let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
             let initial_state = recipe.is_favourite;
-            let id = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
             let current_state = Recipe::toggle_favourite(&state.mm, user.id, id).await?;
 

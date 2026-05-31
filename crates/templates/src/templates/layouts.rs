@@ -254,7 +254,10 @@ pub(super) fn render_nav(path: &str) -> Markup {
     html! {
         ul class="menu w-full" {
             li #recipes-sidebar-recipes
-                class="sidebar-item lg:is-drawer-close:tooltip lg:is-drawer-close:tooltip-right"
+                class={
+                    "sidebar-item lg:is-drawer-close:tooltip lg:is-drawer-close:tooltip-right"
+                    @if path.starts_with("/recipes") { " bg-secondary-content dark:bg-secondary" }
+                }
                 data-tip="Recipes"
                 hx-get="/recipes"
                 hx-target="#content"
@@ -287,7 +290,7 @@ pub(super) fn render_nav(path: &str) -> Markup {
             li #recipes-sidebar-shopping
                 class={
                     "sidebar-item lg:is-drawer-close:tooltip lg:is-drawer-close:tooltip-right"
-                    @if path.starts_with("/shopping") { " bg-secondary-content" }
+                    @if path.starts_with("/shopping") { " bg-secondary-content dark:bg-secondary" }
                 }
                 data-tip="Shopping"
                 hx-get="/shopping/lists"

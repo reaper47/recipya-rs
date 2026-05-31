@@ -1,5 +1,6 @@
 use axum::{Form, extract::State, response::IntoResponse};
 use futures_util::{StreamExt, pin_mut};
+use models::settings::UserSettingDetails;
 use reqwest::StatusCode;
 use tokio::time::Instant;
 use tracing::{error, warn};
@@ -194,9 +195,12 @@ async fn push_recipe_in_db(
     recipe: schema_org::Recipe,
     user_id: Uuid,
 ) -> std::result::Result<i64, (String, Error)> {
+    let user_settings = UserSettingDetails::get(&state.mm, user_id)
+        .await
+        .unwrap_or_default();
     let recipe = schema_to_recipe_for_create(state, recipe).await;
 
-    match Recipe::create(&state.mm, user_id, &recipe).await {
+    match Recipe::create(&state.mm, user_id, &recipe, &user_settings).await {
         Ok(recipe_id) => Ok(recipe_id),
         Err(DuplicateEntityWithID(id)) => {
             warn!("Recipe exists: '{}' with id '{id}'", recipe.name);

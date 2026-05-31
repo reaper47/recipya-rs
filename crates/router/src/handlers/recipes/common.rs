@@ -138,7 +138,8 @@ async fn extract_images(
             let fs_support = fs_support.clone();
 
             async move {
-                let path = if image_ref.starts_with("http://") || image_ref.starts_with("https://") {
+                let path = if image_ref.starts_with("http://") || image_ref.starts_with("https://")
+                {
                     state
                         .scraper
                         .fetch_and_upload_to_temp(image_ref.as_str())
