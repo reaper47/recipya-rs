@@ -301,9 +301,9 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::Paprika => 14,
             TertiaryInner::RecipeMD => 15,
             TertiaryInner::RecipeSage => 16,
-            TertiaryInner::Recipya => 17,
-            TertiaryInner::Rezkonv => 18,
-            TertiaryInner::Saffron => 19,
+            TertiaryInner::Rezkonv => 17,
+            TertiaryInner::Saffron => 18,
+            TertiaryInner::Recipya => 19,
         }
     }
 }
