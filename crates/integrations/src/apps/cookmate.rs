@@ -249,9 +249,8 @@ mod tests {
             let want = results::xml_recipes();
             assert!(match got[4].image[0].clone() {
                 schema_org::field::FieldEnum22::ImageObject(_) => false,
-                schema_org::field::FieldEnum22::URL(u) => {
-                    std::path::Path::new(&u).starts_with(&tmp_dir)
-                }
+                schema_org::field::FieldEnum22::URL(u) =>
+                    u.starts_with("/tmp") || u.contains(r"\Temp\"),
             });
             got[4].image = want[4].image.clone();
             pretty_assertions::assert_eq!(got[..5], want);

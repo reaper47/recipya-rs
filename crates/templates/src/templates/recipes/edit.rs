@@ -44,10 +44,9 @@ pub fn edit_recipe(
             title hx-swap-oob="true" {
                 (page_title) " | Recipya"
             }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (render_edit_recipe(fs_support, &view, data_dir, categories, keywords))
         } @else {
-            (layouts::main(&page_title, &path, &data, &render_edit_recipe(fs_support, &view, data_dir, categories, keywords), user_setting, true))
+            (layouts::main(&page_title, &path, &data, &render_edit_recipe(fs_support, &view, data_dir, categories, keywords), user_setting))
         }
         (init_recipe_form_js())
     })

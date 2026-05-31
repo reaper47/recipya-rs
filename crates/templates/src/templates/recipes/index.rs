@@ -8,7 +8,7 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::list_recipes;
 use crate::recipes::search_bar;
-use crate::templates::layouts::{self, render_recipe_button};
+use crate::templates::layouts::{self, render_empty_nav_extra_content, render_recipe_button};
 use crate::templates::pagination::pagination;
 
 /// Renders the index page of recipes.
@@ -22,6 +22,7 @@ pub fn index(
     if data.is_hx_request {
         html! {
             (render_index(fs_support, path, data, data_dir))
+            (render_empty_nav_extra_content())
             (render_recipe_button(true))
         }
     } else {
@@ -31,7 +32,6 @@ pub fn index(
             data,
             &render_index(fs_support, path, data, data_dir),
             user_setting,
-            false,
         )
     }
 }
@@ -44,8 +44,6 @@ fn render_index(
 ) -> Markup {
     if data.recipes.is_empty() {
         html! {
-            span #data-layout data-layout="with-aside" hx-swap-oob="true" {}
-
             div class="grid place-content-center text-sm h-full text-center md:text-base" {
                 div class="p-4 md:p-0" {
                     p class="pb-2" {
@@ -61,8 +59,6 @@ fn render_index(
         }
     } else {
         html! {
-            span #data-layout data-layout="with-aside" hx-swap-oob="true" {}
-
             (search_bar(data))
             div #list-recipes class="min-h-0" {
                 (list_recipes(fs_support, path, data, data_dir))

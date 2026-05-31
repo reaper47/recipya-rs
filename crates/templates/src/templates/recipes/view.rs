@@ -46,7 +46,6 @@ pub fn view_recipe(
             title hx-swap-oob="true" {
                  (view.recipe_details.recipe.name) " | Recipya"
             }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (view_recipe_helper(fs_support, data_dir, data)?)
         } @else {
             (layouts::main(
@@ -55,7 +54,6 @@ pub fn view_recipe(
                 data,
                 &view_recipe_helper(fs_support, data_dir, data)?,
                 user_setting,
-                true,
             ))
         }
         (pagination(&PaginationData::hidden()))
@@ -96,7 +94,7 @@ pub fn view_recipe_helper(
 
         section class={
             @if !data.is_preview { "p-2" }
-        } data-layout="no-aside" {
+        } {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none"
                     dir=(if recipe_details.is_rtl() { "rtl" } else { "ltr" }) {
@@ -173,7 +171,7 @@ pub fn view_recipe_helper(
                                     }
                                 }
                                 div class={
-                                        "grid grid-flow-col border-gray-700 col-span-6 py-1 md:border-b md:row-span-1 print:border-none"
+                                        "grid grid-flow-col border-y border-gray-700 col-span-6 py-1 md:border-b md:border-t-0 md:row-span-1 print:border-none print:hidden md:grid-cols-4 print:border-none"
                                         @if recipe_details.nutrition.per_100g.is_none() { " print:hidden" }
                                         @if data.is_preview { " md:grid-cols-3" } @else { " md:grid-cols-4" }
                                     } {
@@ -200,7 +198,6 @@ pub fn view_recipe_helper(
                                 div class={
                                     "grid-flow-col border-gray-700 col-span-6 print:border-none"
                                     @if data.is_preview { " flex flex-col" } @else { " grid" }
-                                    @if recipe_details.nutrition.per_100g.is_none() { " print:hidden" }
                                 } {
                                     div class={
                                         "col-span-3 md:h-full md:border-r dark:md:border-gray-700 md:row-span-1 print:hidden"
@@ -214,7 +211,10 @@ pub fn view_recipe_helper(
                                             }
                                         }
                                     }
-                                    div class="col-span-3" {
+                                    div class={
+                                        "col-span-3"
+                                        @if recipe_details.nutrition.per_100g.is_none() { " hidden md:block" }
+                                    } {
                                         (render_nutrition(recipe_details))
                                     }
                                 }

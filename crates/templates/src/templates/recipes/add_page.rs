@@ -13,7 +13,6 @@ pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> M
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
-            span #data-layout data-layout="no-aside" hx-swap-oob="true" {}
             (render_add_page())
         } @else {
             (layouts::main(
@@ -22,7 +21,6 @@ pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> M
                 data,
                 &render_add_page(),
                 user_setting,
-                true
             ))
         }
         (pagination(&PaginationData::hidden()))

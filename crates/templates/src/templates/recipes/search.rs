@@ -36,7 +36,7 @@ pub fn search_results(
             (list_recipes(fs_support, path, data, data_dir))
         };
 
-        layouts::main("Recipes", path, data, &content, user_setting, false)
+        layouts::main("Recipes", path, data, &content, user_setting)
     }
 }
 

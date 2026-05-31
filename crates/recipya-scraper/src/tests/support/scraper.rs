@@ -21,8 +21,6 @@ use crate::{Result, Scraper};
 /// A mock HTTP client for use in tests to avoid sending real HTTP requests.
 pub struct MockHttpClient;
 
-const BASE_HTML_DIR: &str = "crates/recipya-scraper/src/tests/data/html";
-
 #[async_trait::async_trait]
 impl HttpClient for MockHttpClient {
     async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String> {
@@ -108,23 +106,42 @@ async fn fetch_html(url: &str) -> Result<Bytes> {
 }
 
 fn get_html_file_path(website: Website, number: usize) -> PathBuf {
-    let path = std::env::current_dir().unwrap().join(format!(
-        "{BASE_HTML_DIR}/{}_{number}.html",
+    let mut path = std::env::current_dir().unwrap();
+    let fname = &format!(
+        "{}_{number}.html",
         website.to_string().trim_end_matches('/')
-    ));
+    );
 
-    let path_str = path
-        .to_string_lossy()
+    for part in &[
+        "crates",
+        "recipya-scraper",
+        "src",
+        "tests",
+        "data",
+        "html",
+        fname,
+    ] {
+        path = path.join(part);
+    }
+
+    let path1_from: PathBuf = ["crates", "recipya-scraper", "crates", "recipya-scraper"]
+        .iter()
+        .collect();
+    let path1_to: PathBuf = ["crates", "recipya-scraper"].iter().collect();
+    let path2_from: PathBuf = ["crates", "router", "crates", "recipya-scraper"]
+        .iter()
+        .collect();
+
+    path.to_string_lossy()
         .replace(
-            "/crates/recipya-scraper/crates/recipya-scraper",
-            "/crates/recipya-scraper",
+            path1_from.to_string_lossy().as_ref(),
+            path1_to.to_string_lossy().as_ref(),
         )
         .replace(
-            "/crates/router/crates/recipya-scraper",
-            "/crates/recipya-scraper",
-        );
-
-    PathBuf::from(path_str)
+            path2_from.to_string_lossy().as_ref(),
+            path1_to.to_string_lossy().as_ref(),
+        )
+        .into()
 }
 
 /// Scrapes some test websites for use in tests outside the scraper.
@@ -156,6 +173,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         let client = reqwest::Client::new();
         match client.get(url).send().await {
             Ok(res) => {
+                dbg!(&path);
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes().await?)

@@ -197,9 +197,7 @@ pub fn list_recipes(
         && path.starts_with("/recipes/search");
 
     html! {
-        article #list-recipes
-                class="grid gap-4 p-4 text-sm place-items-center grid-cols-1 sm:grid-cols-2 md:m-auto md:max-w-7xl md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:text-base"
-                data-layout="with-aside" {
+        article #list-recipes class="grid gap-4 p-4 text-sm place-items-center grid-cols-1 sm:grid-cols-2 md:m-auto md:max-w-7xl md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:text-base" {
             @for view in data.recipes.iter() {
                 @let recipe = &view.recipe_details.recipe;
                 @let details = &view.recipe_details;
