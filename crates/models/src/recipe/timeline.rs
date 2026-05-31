@@ -163,6 +163,7 @@ mod tests {
 
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
+    use crate::settings::UserSettingDetails;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -176,10 +177,22 @@ mod tests {
             let _ = build_server_anonymous(config.clone()).await?;
             let user1 = User::all(&state.mm).await?[0].clone();
             let user2 = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
-            let recipe_id1 =
-                Recipe::create(&state.mm, user1.id, &a_complete_recipe_for_create().0).await?;
-            let recipe_id2 =
-                Recipe::create(&state.mm, user2.id, &a_complete_recipe_for_create().0).await?;
+            let settings1 = UserSettingDetails::get(&state.mm, user1.id).await?;
+            let settings2 = UserSettingDetails::get(&state.mm, user2.id).await?;
+            let recipe_id1 = Recipe::create(
+                &state.mm,
+                user1.id,
+                &a_complete_recipe_for_create().0,
+                &settings1,
+            )
+            .await?;
+            let recipe_id2 = Recipe::create(
+                &state.mm,
+                user2.id,
+                &a_complete_recipe_for_create().0,
+                &settings2,
+            )
+            .await?;
             RecipeTimeline::create(&state.mm, 1, user1.id, &RecipeTimelineForCreate::default())
                 .await?;
             let image = Uuid::new_v4();
@@ -223,8 +236,9 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let user = User::all(&state.mm).await?[0].clone();
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
             let timeline_c = RecipeTimelineForCreate {
                 title: "A title".into(),
                 comment: Some("hello".into()),
@@ -277,8 +291,9 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let user = User::all(&state.mm).await?[0].clone();
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
             let timeline_c = RecipeTimelineForCreate {
                 title: "A title".into(),
                 comment: Some("hello".into()),

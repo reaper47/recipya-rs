@@ -202,8 +202,9 @@ mod tests {
                 recipe2.category = Some("Meat".to_string());
                 let state = create_app_state(config).await;
                 let user_id = User::all(&state.mm).await?[0].id;
-                let _ = Recipe::create(&state.mm, user_id, &recipe1).await?;
-                let _ = Recipe::create(&state.mm, user_id, &recipe2).await?;
+                let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+                let _ = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
+                let _ = Recipe::create(&state.mm, user_id, &recipe2, &settings).await?;
 
                 let res = server.get(BASE_URI).await;
 
@@ -276,8 +277,9 @@ mod tests {
                 let state = create_app_state(config.clone()).await;
                 let server = build_server_logged_in(config).await?;
                 let user_id = User::all(&state.mm).await?[0].id;
+                let settings = UserSettingDetails::get(&state.mm, user_id).await?;
                 let (recipe, _) = a_complete_recipe_for_create();
-                let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+                let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
                 let res = server
                     .post(BASE_URI)
@@ -314,11 +316,12 @@ mod tests {
                 let state = create_app_state(config.clone()).await;
                 let server = build_server_logged_in(config).await?;
                 let user_id = User::all(&state.mm).await?[0].id;
+                let settings = UserSettingDetails::get(&state.mm, user_id).await?;
                 let (recipe, _) = a_complete_recipe_for_create();
-                let id1 = Recipe::create(&state.mm, user_id, &recipe).await?;
+                let id1 = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name = "Recipe 2".to_string();
-                let id2 = Recipe::create(&state.mm, user_id, &recipe).await?;
+                let id2 = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
                 let res = server
                     .post(BASE_URI)

@@ -6,6 +6,7 @@ mod tests {
     use config::Config;
     use models::Recipe;
     use models::params::SearchParams;
+    use models::settings::UserSettingDetails;
     use models::user::User;
     use repository::ModelManager;
     use test_db::TestDb;
@@ -32,6 +33,7 @@ mod tests {
     }
 
     async fn insert_recipes(mm: &ModelManager, user_id: Uuid) -> Result<Vec<RecipeImages>> {
+        let settings = UserSettingDetails::get(mm, user_id).await?;
         let (mut recipe1, images1) = a_complete_recipe_for_create();
         recipe1.name = "Chinese Firmware".to_string();
         let (mut recipe2, images2) = a_complete_recipe_for_create();
@@ -42,7 +44,7 @@ mod tests {
         recipe4.name = "Magic Potion".to_string();
         recipe4.is_favourite = true;
         for recipe in [recipe1, recipe2, recipe3, recipe4] {
-            let _ = Recipe::create(mm, user_id, &recipe).await?;
+            let _ = Recipe::create(mm, user_id, &recipe, &settings).await?;
         }
         Ok(vec![images1, images2, images3, images4])
     }

@@ -20,6 +20,7 @@ mod tests {
             tool::{ToolForCreate, ToolRecipe},
             types::Source,
         },
+        settings::UserSettingDetails,
         user::User,
     };
     use test_db::TestDb;
@@ -63,10 +64,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -80,10 +81,10 @@ mod tests {
             let mut server = build_server_logged_in(config.clone()).await?;
             server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -93,6 +94,8 @@ mod tests {
     }
 
     mod tests_put {
+        use models::settings::UserSettingDetails;
+
         use super::*;
 
         #[tokio::test]
@@ -157,10 +160,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.images = Vec::new();
             recipe.videos = Vec::new();
 
@@ -185,10 +188,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe).await?;
+            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.name = "Maple Syrup Korean Chicken".into();
             recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
             recipe.instructions = SectionComponents::Flat(vec![Item::new("Drink juice")]);
@@ -216,10 +219,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe).await?;
+            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.category = Some("breakfast,dinner".into());
 
             let res = server
@@ -239,15 +242,15 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let mut recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
                 instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
                 ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
                 ..Default::default()
             };
-            Recipe::create(&state.mm, user_id, &recipe).await?;
+            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.category = Some("drinks:vodka".into());
 
             let res = server
@@ -267,10 +270,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe).await?;
+            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
                 description: Some("Trust me. They're delicious.".into()),
@@ -364,10 +367,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe).await?;
+            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
                 measurement_system_id: 2,
@@ -438,10 +441,10 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe).await?;
+            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.instructions = SectionComponents::Flat(vec![
                 Item::new("Mix the apples"),
                 Item::new("Eat"),

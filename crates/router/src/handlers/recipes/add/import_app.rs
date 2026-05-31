@@ -4,8 +4,6 @@ use std::sync::atomic::AtomicI64;
 use axum::extract::State;
 use axum::response::IntoResponse;
 use futures::StreamExt;
-use models::recipe::structs::recipe::RecipeForCreate;
-use models::settings::UserSettingDetails;
 use reqwest::StatusCode;
 use tokio::fs;
 use tokio::sync::Semaphore;
@@ -17,11 +15,13 @@ use uuid::Uuid;
 use app::state::AppState;
 use models::Error::DuplicateEntityWithID;
 use models::Recipe;
+use models::recipe::structs::recipe::RecipeForCreate;
 use models::reports::report::{Items, ReportForCreate};
 use models::reports::report_log::ReportLogForCreate;
 use models::reports::report_types::{
     Import, PrimaryReportType, ReportTypeFull, TertiaryReportType,
 };
+use models::settings::UserSettingDetails;
 
 use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::{broadcast_import_done_toast, schema_to_recipe_for_create};
@@ -177,7 +177,7 @@ async fn push_recipes_to_db(
 
     let curr = Arc::new(AtomicI64::new(0));
     let mut set = JoinSet::new();
-    for recipe in recipes.into_iter() {
+    for recipe in recipes {
         let curr = Arc::clone(&curr);
         let state = Arc::clone(&state);
 
@@ -241,6 +241,7 @@ async fn push_recipes_to_db(
     (recipe_ids, report_logs)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn push_recipe(
     idx: usize,
     curr: Arc<AtomicI64>,

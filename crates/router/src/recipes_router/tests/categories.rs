@@ -3,7 +3,7 @@ mod tests {
     use axum::http::Method;
     use axum_test::http::StatusCode;
 
-    use models::{Recipe, user::User};
+    use models::{Recipe, settings::UserSettingDetails, user::User};
     use test_db::TestDb;
     use test_fixtures::assert_ws_message;
     use test_models::a_complete_recipe_for_create;
@@ -106,10 +106,10 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let category = String::from("midnight dinner");
         let state = create_app_state(config.clone()).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         Recipe::add_category(&state.mm, &category, user_id).await?;
 
         let res = server

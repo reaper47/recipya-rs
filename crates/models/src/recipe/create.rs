@@ -400,7 +400,7 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let user_settings = UserSettingDetails::get(mm, user_id).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
@@ -416,7 +416,7 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
-        let user_settings = UserSettingDetails::get(mm, user_id).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let _ = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
         recipe.name = "Duplicate".into();
 
@@ -434,7 +434,7 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let user_settings = UserSettingDetails::get(mm, user_id).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let _ = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let got = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await;
@@ -451,7 +451,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let user_settings = UserSettingDetails::get(mm, user_id).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let recipe = a_bare_minimum_recipe();
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
@@ -467,7 +467,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let user_settings = UserSettingDetails::get(mm, user_id).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let mut recipe = a_bare_minimum_recipe();
         recipe.keywords = vec!["CHICKEN".into(), "MEAT".into()];
         recipe.category = Some("KVELDSMAT".into());
@@ -515,7 +515,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
-        let user_settings = UserSettingDetails::get(mm, user_id).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let mut recipe = a_bare_minimum_recipe();
         recipe.instructions = SectionComponents::Flat(vec![
             Item::new("Heat oil on medium heat in a large"),

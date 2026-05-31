@@ -530,11 +530,13 @@ mod tests {
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
     use crate::recipe::structs::types::Source;
+    use crate::settings::UserSettingDetails;
     use crate::user::User;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_all {
+
         use super::*;
 
         #[tokio::test]
@@ -545,6 +547,8 @@ mod tests {
             let all_users = User::all(&state.mm).await?;
             let user1_id = all_users[0].id;
             let user2_id = all_users[1].id;
+            let settings1 = UserSettingDetails::get(&state.mm, user1_id).await?;
+            let settings2 = UserSettingDetails::get(&state.mm, user2_id).await?;
             for i in 0..5 {
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
@@ -552,6 +556,7 @@ mod tests {
                     &state.mm,
                     if i % 2 == 0 { user1_id } else { user2_id },
                     &recipe,
+                    if i % 2 == 0 { &settings1 } else { &settings2 },
                 )
                 .await?;
             }
@@ -573,15 +578,17 @@ mod tests {
             let all_users = User::all(&state.mm).await?;
             let user = all_users[0].clone();
             let user2 = all_users[1].clone();
+            let settings1 = UserSettingDetails::get(&state.mm, user.id).await?;
+            let settings2 = UserSettingDetails::get(&state.mm, user2.id).await?;
             for i in 0..5 {
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
-                let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+                let _ = Recipe::create(&state.mm, user.id, &recipe, &settings1).await?;
             }
             for i in 0..10 {
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name.push_str((i + 1002).to_string().as_str());
-                let _ = Recipe::create(&state.mm, user2.id, &recipe).await?;
+                let _ = Recipe::create(&state.mm, user2.id, &recipe, &settings2).await?;
             }
 
             let count_user1 = Recipe::count(&state.mm, user.id).await?;
@@ -621,11 +628,12 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let _ = build_server_anonymous(config.clone()).await?;
             let user = User::all(&state.mm).await?[0].clone();
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let mut expected = Vec::with_capacity(15);
             for i in 0..15 {
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
-                let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+                let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
                 expected.push(recipe.name);
             }
 
@@ -655,11 +663,12 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe1, images1) = a_complete_recipe_for_create();
         let (mut recipe2, images2) = a_complete_recipe_for_create();
         recipe2.name = "Hello".to_string();
-        let id1 = Recipe::create(&state.mm, user_id, &recipe1).await?;
-        let id2 = Recipe::create(&state.mm, user_id, &recipe2).await?;
+        let id1 = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
+        let id2 = Recipe::create(&state.mm, user_id, &recipe2, &settings).await?;
 
         let got = Recipe::get_many(&state.mm, user_id, &[id1, id2]).await?;
 
@@ -886,15 +895,16 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user = User::all(&state.mm).await?[0].clone();
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let category1 = String::from("late snack");
         let category2 = String::from("dinner");
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.category = Some(category1.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.name = "Hello".to_string();
         recipe.category = Some(category2.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
         let categories = Recipe::fetch_categories(&state.mm, user.id).await?;
 
@@ -908,15 +918,16 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user = User::all(&state.mm).await?[0].clone();
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let cuisine1 = String::from("italian");
         let cuisine2 = String::from("mexican");
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.cuisine = Some(cuisine1.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.name = "Hello".to_string();
         recipe.cuisine = Some(cuisine2.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
         let got = Recipe::fetch_cuisines(&state.mm, user.id).await?;
 
@@ -930,8 +941,9 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user = User::all(&state.mm).await?[0].clone();
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
         let ingredients = Recipe::fetch_ingredients(&state.mm, user.id).await?;
 
@@ -953,8 +965,9 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user = User::all(&state.mm).await?[0].clone();
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
         let keywords = Recipe::fetch_keywords(&state.mm, user.id).await?;
 
@@ -971,8 +984,9 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user = User::all(&state.mm).await?[0].clone();
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
         let tools = Recipe::fetch_tools(&state.mm, user.id).await?;
 
@@ -986,8 +1000,9 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user = User::all(&state.mm).await?[0].clone();
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
         let sources = Recipe::fetch_sources(&state.mm, user.id).await?;
 

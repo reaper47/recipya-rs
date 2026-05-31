@@ -299,7 +299,7 @@ mod tests {
 
     mod tests_search_suggestions {
         use config::Config;
-        use models::{Recipe, user::User};
+        use models::{Recipe, settings::UserSettingDetails, user::User};
         use test_models::a_complete_recipe_for_create;
 
         use super::*;
@@ -337,7 +337,8 @@ mod tests {
             recipe.name = "Test Recipe".into();
             recipe.cuisine = Some("Italian".into());
             let user = User::all(&state.mm).await?[0].clone();
-            let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+            let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
             let res = server.get(&url("cui:")).await;
 
@@ -444,8 +445,9 @@ mod tests {
         async fn insert_basic_recipe(config: Config) -> Result<()> {
             let state = create_app_state(config.clone()).await;
             let user = User::all(&state.mm).await?[0].clone();
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
             Ok(())
         }
     }

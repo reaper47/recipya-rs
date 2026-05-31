@@ -438,12 +438,15 @@ mod tests {
     mod tests_search {
         use chrono::NaiveDateTime;
 
-        use crate::recipe::structs::{
-            media::Video,
-            nutrition::NutritionDetails,
-            recipe::RecipeForCreate,
-            section::{Item, SectionComponents},
-            tool::{ToolForCreate, ToolRecipe},
+        use crate::{
+            recipe::structs::{
+                media::Video,
+                nutrition::NutritionDetails,
+                recipe::RecipeForCreate,
+                section::{Item, SectionComponents},
+                tool::{ToolForCreate, ToolRecipe},
+            },
+            settings::UserSettingDetails,
         };
 
         use super::*;
@@ -544,12 +547,13 @@ mod tests {
         #[tokio::test]
         async fn test_search_by_name() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let user = insert_user(config.clone()).await?;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (mut a_recipe, _) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user.id, &a_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &a_recipe, &settings).await?;
             a_recipe.name = "Taco Tuesday".to_string();
-            let _ = Recipe::create(&state.mm, user.id, &a_recipe).await?;
+            let _ = Recipe::create(&state.mm, user.id, &a_recipe, &settings).await?;
 
             let recipe_search = RecipeSearch::new("chinese", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -569,6 +573,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -576,7 +581,13 @@ mod tests {
             let (mut recipe3, _) = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
             recipe3.description = Some("The most authentic tacos recipe ever".to_string());
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("chinese", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -596,6 +607,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -603,7 +615,13 @@ mod tests {
             let (mut recipe3, _) = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
             recipe3.category = Some("breakfast".to_string());
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("cat:Breakfast", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -621,8 +639,9 @@ mod tests {
         #[tokio::test]
         async fn test_search_by_category_and_unclassified() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let user = insert_user(config.clone()).await?;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -630,7 +649,13 @@ mod tests {
             let (mut recipe3, _) = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
             recipe3.category = Some("breakfast".to_string());
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("tacos cat:Breakfast", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -650,6 +675,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -657,7 +683,13 @@ mod tests {
             let (mut recipe3, _) = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
             recipe3.cuisine = Some("Chinese".to_string());
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("cui:THAI", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -677,6 +709,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -690,7 +723,13 @@ mod tests {
                 Item::new("1 tbsp of hot cayenne pepper"),
                 Item::new("3 lbs of chicken breasts"),
             ]);
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("ing:cayenne pepper,chicken", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -710,6 +749,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -723,7 +763,13 @@ mod tests {
                 Item::new("Boil pasta: Bring a large pot of salted water to a boil. Add spaghetti and cook until al dente according to package directions. Reserve 1 cup of pasta water before draining."),
                 Item::new("Sauté garlic: While pasta cooks, heat olive oil in a large skillet over medium heat. Add sliced garlic and red pepper flakes. Cook until garlic is golden (1–2 minutes), stirring constantly to prevent burning.").with_duration(120),
             ]);
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search =
                 RecipeSearch::new("ins:melt butter medium heat", 1, false, user.id)?;
@@ -744,6 +790,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -751,7 +798,13 @@ mod tests {
             let (mut recipe3, _) = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
             recipe3.keywords = vec!["very fat".to_string(), "air fryer".to_string()];
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("kw:very fat,air fryer", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -771,6 +824,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -778,7 +832,13 @@ mod tests {
             let (mut recipe3, _) = a_complete_recipe_for_create();
             recipe3.name = "Chicken Jersey".to_string();
             recipe3.rating = None;
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("stars:1", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -798,6 +858,7 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
             recipe2.name = "Taco Tuesday".to_string();
@@ -811,7 +872,13 @@ mod tests {
                 name: "frying pan".to_string(),
                 quantity: 1,
             }];
-            insert_recipes(&state.mm, user.id, vec![&recipe1, &recipe2, &recipe3]).await?;
+            insert_recipes(
+                &state.mm,
+                user.id,
+                &settings,
+                vec![&recipe1, &recipe2, &recipe3],
+            )
+            .await?;
 
             let recipe_search = RecipeSearch::new("tool:wok", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
@@ -829,10 +896,11 @@ mod tests {
         async fn insert_recipes(
             mm: &ModelManager,
             user_id: Uuid,
+            settings: &UserSettingDetails,
             recipes: Vec<&RecipeForCreate>,
         ) -> Result<()> {
             for recipe in recipes {
-                let _ = Recipe::create(mm, user_id, recipe).await?;
+                let _ = Recipe::create(mm, user_id, recipe, settings).await?;
             }
             Ok(())
         }

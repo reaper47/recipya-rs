@@ -1,15 +1,15 @@
 #[cfg(test)]
 mod tests {
     use axum::http::Method;
-
     use axum_test::{TestServer, TestWebSocket};
+    use reqwest::StatusCode;
+
     use models::{
         Recipe,
         recipe::structs::{recipe::RecipeForCreate, types::Source},
         user::User,
     };
     use recipya_scraper::tests::support::scraper::scrape_test_websites;
-    use reqwest::StatusCode;
     use test_fixtures::{assert_html, assert_ws_message};
     use test_utils::{assert_must_be_logged_in, build_server_ws, create_app_state};
 
@@ -35,6 +35,7 @@ mod tests {
                 time::Times,
             },
             reports::ViewReport,
+            settings::UserSettingDetails,
         };
         use test_db::TestDb;
         use test_models::a_complete_recipe_for_create;
@@ -59,10 +60,11 @@ mod tests {
             let (server, mut ws_server) = build_server_ws(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.name = "Not a valid URL".into();
             recipe.source = Source::new("a magazine");
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
