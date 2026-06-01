@@ -10,6 +10,7 @@ mod tests {
     use models::recipe::structs::section::Item;
     use models::recipe::structs::section::SectionComponents;
     use models::recipe::structs::section::SectionItem;
+    use models::settings::UserSettingDetails;
     use models::user::User;
     use test_db::TestDb;
     use test_fixtures::{assert_html, assert_ws_message};
@@ -25,10 +26,10 @@ mod tests {
     async fn setup(config: Config) -> Result<(TestServer, TestWebSocket)> {
         let (server, ws_server) = build_server_ws(config.clone()).await?;
         let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         Ok((server, ws_server))
     }
 
@@ -90,8 +91,8 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, _ws_server) = setup(config.clone()).await?;
         let state = create_app_state(config).await;
-        let users = User::all(&state.mm).await?;
-        let user_id = users[0].id;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let recipe_id = Recipe::create(
             &state.mm,
             user_id,
@@ -138,6 +139,7 @@ mod tests {
                 )]),
                 ..Default::default()
             },
+            &settings,
         )
         .await?;
 

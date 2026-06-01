@@ -92,7 +92,9 @@ mod tests {
     use test_utils::build_server_logged_in;
 
     use super::*;
-    use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
+    use crate::{
+        recipe::structs::test_utils::a_complete_recipe_for_create, settings::UserSettingDetails,
+    };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -255,7 +257,8 @@ mod tests {
     async fn insert_recipe(config: &Config, state: &AppState, user_id: Uuid) -> Result<()> {
         let _ = build_server_logged_in(config.clone()).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         Ok(())
     }
 }

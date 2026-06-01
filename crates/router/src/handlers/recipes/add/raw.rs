@@ -13,6 +13,7 @@ use models::{
         report_log::ReportLogForCreate,
         report_types::{ReportTypeFull, TertiaryReportType},
     },
+    settings::UserSettingDetails,
 };
 
 use crate::{
@@ -31,8 +32,11 @@ pub async fn add_recipe_import_raw_handler(
 
     let (res, report_log) = match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
         Ok(schema) => {
+            let user_settings = UserSettingDetails::get(&state.mm, user.id)
+                .await
+                .unwrap_or_default();
             let recipe_c = RecipeForCreate::from(&schema);
-            let create_res = Recipe::create(&state.mm, user.id, &recipe_c).await;
+            let create_res = Recipe::create(&state.mm, user.id, &recipe_c, &user_settings).await;
             let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default();
 
             match create_res {

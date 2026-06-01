@@ -31,6 +31,8 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_recipe {
+        use models::settings::UserSettingDetails;
+
         use super::*;
 
         fn base_uri(link: Uuid) -> String {
@@ -53,10 +55,11 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe1, images) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, users[0].id, &recipe1).await?;
-            let share = ShareRecipe::new(&state.mm, recipe_id, users[0].id, None).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
+            let share = ShareRecipe::new(&state.mm, recipe_id, user_id, None).await?;
 
             let res = server.get(&base_uri(share.link)).await;
 
@@ -88,8 +91,9 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let user = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
             let state = create_app_state(config).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
             let share = ShareRecipe::new(&state.mm, recipe_id, user.id, None).await?;
 
             let res = server.get(&base_uri(share.link)).await;
@@ -110,10 +114,11 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let server = build_server_anonymous(config.clone()).await?;
             let state = create_app_state(config).await;
-            let users = User::all(&state.mm).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, users[0].id, &recipe).await?;
-            let share = ShareRecipe::new(&state.mm, recipe_id, users[0].id, None).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let share = ShareRecipe::new(&state.mm, recipe_id, user_id, None).await?;
 
             let res = server.get(&base_uri(share.link)).await;
 

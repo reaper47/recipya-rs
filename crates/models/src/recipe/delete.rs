@@ -97,6 +97,7 @@ mod tests {
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
 
+    use crate::settings::UserSettingDetails;
     use test_db::TestDb;
     use test_utils::{create_app_state, insert_user};
 
@@ -111,8 +112,9 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
 
             Recipe::delete(&state.mm, recipe_id, user.id).await?;
 
@@ -258,10 +260,10 @@ mod tests {
     }
 
     mod tests_delete_recipe_category {
+        use diesel_async::RunQueryDsl;
+
         use super::*;
         use crate::user::UserCategory;
-
-        use diesel_async::RunQueryDsl;
 
         const A_CATEGORY: &str = "midnight crunchies";
 
@@ -289,10 +291,11 @@ mod tests {
             let (_test_db, config) = TestDb::new(None).await?;
             let user = insert_user(config.clone()).await?;
             let state = create_app_state(config.clone()).await;
+            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             Recipe::add_category(&state.mm, A_CATEGORY, user.id).await?;
             let (mut a_recipe, _) = a_complete_recipe_for_create();
             a_recipe.category = Some(A_CATEGORY.to_string());
-            let recipe_id = Recipe::create(&state.mm, user.id, &a_recipe).await?;
+            let recipe_id = Recipe::create(&state.mm, user.id, &a_recipe, &settings).await?;
 
             Recipe::delete_recipe_category(&state.mm, A_CATEGORY, user.id).await?;
 

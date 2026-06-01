@@ -586,6 +586,7 @@ mod tests {
         let _ = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config.clone()).await;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe1, _) = a_complete_recipe_for_create();
         let (mut recipe2, _) = a_complete_recipe_for_create();
         recipe2.name = "recipe 2".into();
@@ -593,9 +594,9 @@ mod tests {
         let (mut recipe3, _) = a_complete_recipe_for_create();
         recipe3.name = "recipe 3".into();
         recipe3.is_favourite = true;
-        let _ = Recipe::create(&state.mm, user_id, &recipe1).await?;
-        let _ = Recipe::create(&state.mm, user_id, &recipe2).await?;
-        let _ = Recipe::create(&state.mm, user_id, &recipe3).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe2, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe3, &settings).await?;
 
         let got = User::favourite_recipes(&state.mm, user_id).await?;
 

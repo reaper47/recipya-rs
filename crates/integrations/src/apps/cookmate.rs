@@ -242,7 +242,6 @@ mod tests {
         #[test]
         fn test_backup_ok() -> Result<()> {
             let buf = files::backup();
-            let tmp_dir = std::env::temp_dir();
 
             let mut got = parse_backup(buf)?;
 

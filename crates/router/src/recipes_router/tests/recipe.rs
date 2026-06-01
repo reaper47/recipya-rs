@@ -3,7 +3,6 @@ mod tests {
     use axum::http::Method;
     use axum::http::{HeaderValue, StatusCode};
     use axum_test::TestResponse;
-    use models::user::User;
     use uuid::Uuid;
 
     use config::Config;
@@ -11,6 +10,8 @@ mod tests {
     use models::recipe::structs::media::VideoForCreate;
     use models::recipe::structs::recipe::RecipeForCreate;
     use models::recipe::structs::types::Source;
+    use models::settings::UserSettingDetails;
+    use models::user::User;
     use test_db::TestDb;
     use test_fixtures::{RecipeImages, assert_html, assert_not_in_html, assert_ws_message};
     use test_models::a_complete_recipe_for_create;
@@ -41,8 +42,9 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -58,12 +60,13 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.ingredients =
                 SectionComponents::Flat(vec![Item::new("ing1"), Item::new("ing2")]);
             recipe.instructions =
                 SectionComponents::Flat(vec![Item::new("ins1"), Item::new("ins2")]);
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -86,8 +89,9 @@ mod tests {
             server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -123,10 +127,11 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = vec![];
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -147,11 +152,12 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos.clear();
             let img1 = Uuid::new_v4();
             recipe.images = vec![img1];
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -172,10 +178,11 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, images) = a_complete_recipe_for_create();
             recipe.videos.clear();
             recipe.images = vec![images.main, images.additional];
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -203,6 +210,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos = vec![VideoForCreate {
                 video: Uuid::new_v4(),
@@ -211,7 +219,7 @@ mod tests {
                 embed_url: None,
             }];
             recipe.images = vec![];
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -232,6 +240,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
@@ -248,7 +257,7 @@ mod tests {
                 },
             ];
             recipe.images = vec![];
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -270,6 +279,7 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, images) = a_complete_recipe_for_create();
             recipe.videos = vec![
                 VideoForCreate {
@@ -285,7 +295,7 @@ mod tests {
                     embed_url: Some("https://example.com/embed/yg8FG4".into()),
                 },
             ];
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -318,9 +328,10 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.source = Source::new("My mom's recipe cookbook");
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -364,8 +375,9 @@ mod tests {
             let server = build_server_logged_in(config.clone()).await?;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.delete(&base_uri(1)).await;
 

@@ -1171,7 +1171,10 @@ mod tests {
     use test_db::TestDb;
     use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
 
-    use crate::{Recipe, recipe::structs::test_utils::a_complete_recipe_for_create};
+    use crate::{
+        Recipe, recipe::structs::test_utils::a_complete_recipe_for_create,
+        settings::UserSettingDetails,
+    };
 
     use super::*;
 
@@ -1390,12 +1393,13 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let _ = build_server_anonymous(config.clone()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let recipe1 = a_complete_recipe_for_create().0;
-        let recipe_id = Recipe::create(&state.mm, user_id, &recipe1).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
         let mut recipe2 = a_complete_recipe_for_create().0;
         recipe2.name = "Blueberry Pie".into();
-        let recipe_id2 = Recipe::create(&state.mm, user_id, &recipe2).await?;
+        let recipe_id2 = Recipe::create(&state.mm, user_id, &recipe2, &settings).await?;
         let item1 = an_item_with_recipe(recipe_id);
         let item2 = other_item_with_recipe(recipe_id2);
 
@@ -1718,7 +1722,8 @@ mod tests {
         async fn insert_recipe(config: &Config, state: &AppState, user_id: Uuid) -> Result<()> {
             let _ = build_server_logged_in(config.clone()).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             Ok(())
         }
 

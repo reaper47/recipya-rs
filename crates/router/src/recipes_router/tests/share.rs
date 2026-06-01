@@ -6,9 +6,9 @@ mod tests {
     use diesel_async::RunQueryDsl;
 
     use app::state::AppState;
-    use models::Recipe;
     use models::share::ShareRecipe;
     use models::user::User;
+    use models::{Recipe, settings::UserSettingDetails};
     use repository::schema;
     use test_db::TestDb;
     use test_fixtures::assert_html;
@@ -41,8 +41,9 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
         let res = server
             .post(&base_uri(1))
@@ -73,8 +74,9 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
 
         let res = server
@@ -106,8 +108,9 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let now = chrono::Utc::now().naive_utc();
 
         let res = server
@@ -128,8 +131,9 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
         let _ = server
             .post(&base_uri(1))

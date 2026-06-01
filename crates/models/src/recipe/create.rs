@@ -57,13 +57,12 @@ impl Recipe {
         mm: &ModelManager,
         user_id: Uuid,
         recipe_c: &RecipeForCreate,
+        user_settings: &UserSettingDetails,
     ) -> Result<i64> {
         let mut conn = mm.pool.get().await?;
 
         let recipe_id = conn
             .transaction::<i64, Error, _>(async move |mut conn| {
-                let user_settings = UserSettingDetails::get(mm, user_id).await?;
-
                 // Images
                 let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
@@ -155,7 +154,7 @@ impl Recipe {
                     recipe_id,
                     &recipe_c.nutrition,
                     recipe_c.ingredients.items_as_text().as_slice(),
-                    user_settings.nutrition_source,
+                    &user_settings.nutrition_source,
                     recipe_c.r#yield.unwrap_or(1),
                 )
                 .await?;
@@ -401,8 +400,9 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let (recipe, _) = a_complete_recipe_for_create();
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
 
-        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
         let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
@@ -416,10 +416,11 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
         recipe.name = "Duplicate".into();
 
-        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
         let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
@@ -433,9 +434,10 @@ mod tests {
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let _ = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
-        let got = Recipe::create(&state.mm, user.id, &recipe).await;
+        let got = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await;
 
         match got {
             Ok(_) => Err("Should have returned an error".into()),
@@ -449,9 +451,10 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let recipe = a_bare_minimum_recipe();
 
-        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
         let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
@@ -464,6 +467,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let mut recipe = a_bare_minimum_recipe();
         recipe.keywords = vec!["CHICKEN".into(), "MEAT".into()];
         recipe.category = Some("KVELDSMAT".into());
@@ -479,7 +483,7 @@ mod tests {
             },
         ];
 
-        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
         pretty_assertions::assert_eq!(
@@ -511,6 +515,7 @@ mod tests {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
         let user = insert_user(config.clone()).await?;
+        let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let mut recipe = a_bare_minimum_recipe();
         recipe.instructions = SectionComponents::Flat(vec![
             Item::new("Heat oil on medium heat in a large"),
@@ -522,7 +527,7 @@ mod tests {
             ),
         ]);
 
-        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe).await?;
+        let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
         pretty_assertions::assert_eq!(

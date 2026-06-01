@@ -2,7 +2,7 @@
 mod tests {
     use axum::http::Method;
 
-    use models::{Recipe, user::User};
+    use models::{Recipe, settings::UserSettingDetails, user::User};
     use test_db::TestDb;
     use test_fixtures::{assert_html, assert_not_in_html};
     use test_models::a_complete_recipe_for_create;
@@ -40,12 +40,13 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let mut all_images = Vec::with_capacity(3);
         for i in 0..3 {
             let (mut recipe, images) = a_complete_recipe_for_create();
             all_images.push(images);
             recipe.name.push_str(i.to_string().as_str());
-            let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         }
 
         let res = server.get(BASE_URI).await;
@@ -82,9 +83,10 @@ mod tests {
         let server = build_server_logged_in(config.clone()).await?;
         let state = create_app_state(config).await;
         let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.rating = None;
-        let _ = Recipe::create(&state.mm, user_id, &recipe).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
         let res = server.get(BASE_URI).await;
 
