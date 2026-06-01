@@ -38,6 +38,7 @@ mod tests {
             settings::UserSettingDetails,
         };
         use test_db::TestDb;
+        use test_fixtures::assert_ws_messages_any_order;
         use test_models::a_complete_recipe_for_create;
 
         use super::*;
@@ -82,9 +83,14 @@ mod tests {
             let res = server.get(&base_uri(1)).await;
 
             res.assert_status_ok();
-            let want = r#"{"headers": {"HX-Trigger": "refreshReports"}}"#;
-            assert_ws_message(&mut ws_server, want).await;
-            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Recipe has not changed.","status":"alert-warning","title":"Attention"}}"# ).await;
+            assert_ws_messages_any_order(
+                    &mut ws_server,
+                    &[
+                        r#"{"headers": {"HX-Trigger": "refreshReports"}}"#,
+                        r#"{"showMessageHtmx":{"type":"toast","message":"Recipe has not changed.","status":"alert-warning","title":"Attention"}}"#,
+                    ],
+                )
+                .await;
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let reports = ViewReport::fetch_all(&state.mm, 1, user_id).await?;
