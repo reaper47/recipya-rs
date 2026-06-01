@@ -15,9 +15,9 @@ pub enum ViewMode {
 impl fmt::Display for ViewMode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ViewMode::Edit => write!(f, "edit"),
-            ViewMode::Print => write!(f, "print"),
-            ViewMode::View => write!(f, "view"),
+            Self::Edit => write!(f, "edit"),
+            Self::Print => write!(f, "print"),
+            Self::View => write!(f, "view"),
         }
     }
 }

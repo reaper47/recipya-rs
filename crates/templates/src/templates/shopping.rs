@@ -81,8 +81,8 @@ fn render_lists_index(data: &Data) -> Markup {
                             @match shopping.selected_shopping_list {
                                 Some(ref list) => {
                                     (match shopping.selected_view_mode {
-                                        ViewMode::Edit | ViewMode::Print => render_shopping_list_view_edit(&list),
-                                        ViewMode::View => render_shopping_list_view_view(&list),
+                                        ViewMode::Edit | ViewMode::Print => render_shopping_list_view_edit(list),
+                                        ViewMode::View => render_shopping_list_view_view(list),
                                     })
 
                                     @if data.is_hx_request {

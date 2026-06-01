@@ -289,7 +289,7 @@ mod tests {
             }
         }
 
-        fn view_mode_cookie<'a>(mode: ViewMode) -> Cookie<'a> {
+        fn view_mode_cookie<'a>(mode: &ViewMode) -> Cookie<'a> {
             let mut cookie = Cookie::new(SHOPPING_VIEW_COOKIE_NAME, mode.to_string());
             cookie.set_http_only(true);
             cookie.set_path("/");
@@ -313,7 +313,7 @@ mod tests {
 
             let res = server
                 .get(&base_uri(list_id))
-                .add_cookie(view_mode_cookie(ViewMode::Edit))
+                .add_cookie(view_mode_cookie(&ViewMode::Edit))
                 .await;
 
             res.assert_status_ok();
@@ -336,7 +336,7 @@ mod tests {
 
             let res = server
                 .get(&base_uri(list_id))
-                .add_cookie(view_mode_cookie(ViewMode::View))
+                .add_cookie(view_mode_cookie(&ViewMode::View))
                 .await;
 
             res.assert_status_ok();

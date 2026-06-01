@@ -80,7 +80,7 @@ pub fn main(
                                                 (render_recipe_button(false))
                                             } @else if path.starts_with("/shopping") && !data.shopping.as_ref().is_none_or(|s| s.shopping_lists.is_empty()) {
                                                 @let list = data.shopping.as_ref().and_then(|s| s.selected_shopping_list.as_ref().map(|l| l.id)).unwrap_or_default();
-                                                @let mode = data.shopping.as_ref().and_then(|s| Some(&s.selected_view_mode)).unwrap_or(&ViewMode::Edit);
+                                                @let mode = data.shopping.as_ref().map_or(&ViewMode::Edit, |s| &s.selected_view_mode);
 
 
                                                 (render_shopping_list_actions(false, mode, list))

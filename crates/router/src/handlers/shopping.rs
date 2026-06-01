@@ -96,7 +96,7 @@ pub async fn shopping_lists_handler(
                 labels,
                 shopping_lists,
                 selected_shopping_list,
-                selected_view_mode: get_view_mode_from_cookie(cookies),
+                selected_view_mode: get_view_mode_from_cookie(&cookies),
             }),
             ..Default::default()
         },
@@ -120,7 +120,7 @@ pub async fn shopping_list_handler(
         }
     };
 
-    match get_view_mode_from_cookie(cookies) {
+    match get_view_mode_from_cookie(&cookies) {
         ViewMode::Edit | ViewMode::Print => {
             templates::shopping::render_shopping_list_view_edit(&list).into_response()
         }
@@ -509,14 +509,14 @@ pub async fn shopping_lists_post_handler(
     };
 
     templates::shopping::render_new_shopping_list(
-        &get_view_mode_from_cookie(cookies),
+        &get_view_mode_from_cookie(&cookies),
         list_id,
         title,
     )
     .into_response()
 }
 
-fn get_view_mode_from_cookie(cookies: Cookies) -> ViewMode {
+fn get_view_mode_from_cookie(cookies: &Cookies) -> ViewMode {
     cookies
         .get(SHOPPING_VIEW_COOKIE_NAME)
         .map(|s| ViewMode::from_str(s.value()).unwrap_or_default())
