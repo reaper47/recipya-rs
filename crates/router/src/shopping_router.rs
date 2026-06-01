@@ -253,7 +253,7 @@ mod tests {
                     ),
                     r#"<div class="hidden md:flex order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0"></div><div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3 max-h-[94vh]"><div id="shopping-list-view-pane" class="p-4 text-center grid">"#,
                     &format!(
-                        r#"<div class="grid"><div><h1 class="text-2xl font-bold underline p-2">Test<span class="ml-2"><button type="button" class="btn join-item btn-square btn-sm" _="on click add .hidden to closest &lt;h1/&gt; then remove .hidden from next &lt;form/&gt; from closest &lt;h1/&gt; then call (next &lt;input/&gt; from closest &lt;h1/&gt;).select()"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button></span></h1><form class="hidden" hx-put="/shopping/lists/{list_id}" hx-swap="outerHTML"><h1 class="text-2xl font-bold underline p-2"><input type="text" required name="name" class="input input-lg text-center mr-1" value="Test" list="labels" autocomplete="off"><span class="ml-2"><button class="btn join-item btn-square btn-lg"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></svg></button></span></h1></form></div>"#
+                        r#"<div class="grid"><div><div><h1 class="text-2xl font-bold underline p-2">Test<span class="ml-2"><button type="button" class="btn join-item btn-square btn-sm" _="on click add .hidden to closest &lt;h1/&gt; then remove .hidden from next &lt;form/&gt; from closest &lt;h1/&gt; then call (next &lt;input/&gt; from closest &lt;h1/&gt;).select()"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button></span></h1><form class="hidden" hx-put="/shopping/lists/{list_id}" hx-swap="outerHTML"><h1 class="text-2xl font-bold underline p-2"><input type="text" required name="name" class="input input-lg text-center mr-1" value="Test" list="labels" autocomplete="off"><span class="ml-2"><button class="btn join-item btn-square btn-lg"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></svg></button></span></h1></form></div>"#
                     ),
                     r#"<div class="w-full max-w-[33rem] place-self-center"><details open><summary id="label-1" class="text-left cursor-default"><span>No label<button class="btn join-item btn-square btn-sm ml-2 mb-1" _="on click"#,
                     &format!(
@@ -267,8 +267,12 @@ mod tests {
 
     mod tests_list {
         use axum_htmx::HX_REDIRECT;
+        use models::view::ViewMode;
+        use tower_cookies::Cookie;
 
-        use crate::schemas::shopping::ListPayload;
+        use crate::{
+            handlers::shopping::SHOPPING_VIEW_COOKIE_NAME, schemas::shopping::ListPayload,
+        };
 
         use super::*;
 
@@ -285,11 +289,64 @@ mod tests {
             }
         }
 
+        fn view_mode_cookie<'a>(mode: ViewMode) -> Cookie<'a> {
+            let mut cookie = Cookie::new(SHOPPING_VIEW_COOKIE_NAME, mode.to_string());
+            cookie.set_http_only(true);
+            cookie.set_path("/");
+            cookie
+        }
+
         #[tokio::test]
         async fn test_must_be_logged_in_ok() -> Result<()> {
             assert_must_be_logged_in(Method::GET, &base_uri(Uuid::new_v4())).await?;
             assert_must_be_logged_in(Method::PUT, &base_uri(Uuid::new_v4())).await?;
             assert_must_be_logged_in(Method::DELETE, &base_uri(Uuid::new_v4())).await
+        }
+
+        #[tokio::test]
+        async fn test_get_list_selected_mode_edit_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+
+            let res = server
+                .get(&base_uri(list_id))
+                .add_cookie(view_mode_cookie(ViewMode::Edit))
+                .await;
+
+            res.assert_status_ok();
+            assert_html(
+                &res,
+                &[&format!(
+                    r#"<div><div><h1 class="text-2xl font-bold underline p-2">Test<span class="ml-2"><button type="button" class="btn join-item btn-square btn-sm" _="on click add .hidden to closest &lt;h1/&gt; then remove .hidden from next &lt;form/&gt; from closest &lt;h1/&gt; then call (next &lt;input/&gt; from closest &lt;h1/&gt;).select()"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button></span></h1><form class="hidden" hx-put="/shopping/lists/{list_id}" hx-swap="outerHTML"><h1 class="text-2xl font-bold underline p-2"><input type="text" required name="name" class="input input-lg text-center mr-1" value="Test" list="labels" autocomplete="off"><span class="ml-2"><button class="btn join-item btn-square btn-lg"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"></svg></button></span></h1></form></div><div class="grid"><div class="w-full max-w-[33rem] place-self-center"><details open><summary id="label-1" class="text-left cursor-default"><span>No label<button class="btn join-item btn-square btn-sm ml-2 mb-1" _="on click"#
+                )],
+            );
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_get_list_selected_mode_view_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+
+            let res = server
+                .get(&base_uri(list_id))
+                .add_cookie(view_mode_cookie(ViewMode::View))
+                .await;
+
+            res.assert_status_ok();
+            assert_html(
+                &res,
+                &[
+                    r#"<div class="p-2"><h1 class="text-center text-2xl font-bold underline p-2">Test</h1><div class="grid"><div class="place-self-center"><p class="text-center">Shopping list has no items.</p></div></div></div>"#,
+                ],
+            );
+            Ok(())
         }
 
         #[tokio::test]
@@ -1066,9 +1123,11 @@ mod tests {
 
     mod tests_shopping_list_view {
         use axum_test::TestResponse;
+
         use models::view::ViewMode;
 
         use super::*;
+        use crate::handlers::shopping::SHOPPING_VIEW_COOKIE_NAME;
 
         fn base_uri(list_id: Uuid, view: &ViewMode) -> String {
             format!("/shopping/lists/{list_id}/view?mode={view:?}").to_lowercase()
@@ -1100,6 +1159,10 @@ mod tests {
             let res = server.get(&base_uri(list_id, &ViewMode::Edit)).await;
 
             res.assert_status_ok();
+            assert_eq!(
+                res.cookie(SHOPPING_VIEW_COOKIE_NAME).value(),
+                ViewMode::Edit.to_string()
+            );
             assert_html(
                 &res,
                 &[
@@ -1127,6 +1190,10 @@ mod tests {
             let res = server.get(&base_uri(list_id, &ViewMode::Print)).await;
 
             res.assert_status_ok();
+            assert_eq!(
+                res.cookie(SHOPPING_VIEW_COOKIE_NAME).value(),
+                ViewMode::Print.to_string()
+            );
             assert_html_view(&res, list_id);
             Ok(())
         }
@@ -1140,6 +1207,10 @@ mod tests {
             let res = server.get(&base_uri(list_id, &ViewMode::View)).await;
 
             res.assert_status_ok();
+            assert_eq!(
+                res.cookie(SHOPPING_VIEW_COOKIE_NAME).value(),
+                ViewMode::View.to_string()
+            );
             assert_html_view(&res, list_id);
             Ok(())
         }
