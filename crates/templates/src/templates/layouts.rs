@@ -2,6 +2,7 @@ use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use models::data::Data;
 use models::settings::UserSettingDetails;
+use models::view::ViewMode;
 
 use super::core::{head, toast, toast_ws};
 use super::icons::{
@@ -78,11 +79,11 @@ pub fn main(
                                             @if path == "/" || path == "/recipes" {
                                                 (render_recipe_button(false))
                                             } @else if path.starts_with("/shopping") && !data.shopping.as_ref().is_none_or(|s| s.shopping_lists.is_empty()) {
-                                                (render_shopping_list_actions(false, data
-                                                    .shopping
-                                                    .as_ref()
-                                                    .and_then(|s| s.selected_shopping_list.as_ref().map(|l| l.id))
-                                                    .unwrap_or_default()))
+                                                @let list = data.shopping.as_ref().and_then(|s| s.selected_shopping_list.as_ref().map(|l| l.id)).unwrap_or_default();
+                                                @let mode = data.shopping.as_ref().map_or(&ViewMode::Edit, |s| &s.selected_view_mode);
+
+
+                                                (render_shopping_list_actions(false, mode, list))
                                             } @else if path == "/cookbooks" {
                                                 button
                                                     #addcookbook

@@ -80,11 +80,13 @@ fn render_lists_index(data: &Data) -> Markup {
                         } @else {
                             @match shopping.selected_shopping_list {
                                 Some(ref list) => {
-                                    (shopping_list_title(list.id, &list.name))
-                                    (item_sections(list))
+                                    (match shopping.selected_view_mode {
+                                        ViewMode::Edit | ViewMode::Print => render_shopping_list_view_edit(list),
+                                        ViewMode::View => render_shopping_list_view_view(list),
+                                    })
 
                                     @if data.is_hx_request {
-                                        (render_shopping_list_actions(data.is_hx_request, list.id))
+                                        (render_shopping_list_actions(data.is_hx_request, &shopping.selected_view_mode, list.id))
                                     }
                                 }
                                 None => {
@@ -122,7 +124,7 @@ pub(super) fn render_shopping_list_nav(shopping: &ShoppingData) -> Markup {
             @if let Some(list) = &shopping.selected_shopping_list {
                 @let list_id = list.id;
                 div .grid.gap-1 {
-                    (action_view_button(list_id))
+                    (action_view_button(&shopping.selected_view_mode, list_id))
                     (action_export_button())
                     (action_print_button(list_id))
                     (action_share_button(list_id))
@@ -248,7 +250,11 @@ fn item_sections(list: &ShoppingListDetails) -> Markup {
 }
 
 /// Renders the new shopping list.
-pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
+pub fn render_new_shopping_list<T: AsRef<str>>(
+    selected_mode: &ViewMode,
+    list_id: Uuid,
+    title: T,
+) -> Markup {
     html! {
         li id=(format!("shopping-list-sidebar-{list_id}"))
             class="bg-base-300"
@@ -286,7 +292,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(list_id: Uuid, title: T) -> Marku
                 }
             }
         }
-        (render_shopping_list_actions(true, list_id))
+        (render_shopping_list_actions(true, selected_mode, list_id))
     }
 }
 
@@ -302,12 +308,16 @@ pub fn render_shopping_list_item_count(list_id: Uuid, num_items: i64, is_swap_oo
 
 /// Render shopping list actions.
 #[allow(clippy::too_many_lines)]
-pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> Markup {
+pub(super) fn render_shopping_list_actions(
+    is_oob_swap: bool,
+    selected_view_mode: &ViewMode,
+    list_id: Uuid,
+) -> Markup {
     html! {
         div id=[if is_oob_swap { Some("navbar-actions") } else { None }]
             hx-swap-oob=[if is_oob_swap { Some("true") } else { None }] {
             div class="hidden md:block join border border-gray-700 mb-2 w-fit" {
-                (action_view_button(list_id))
+                (action_view_button(selected_view_mode, list_id))
                 // TODO: Implement upload to apps (todoist)
                 // button class="btn join-item" {
                 //     "Upload to app"
@@ -387,7 +397,7 @@ pub(super) fn render_shopping_list_actions(is_oob_swap: bool, list_id: Uuid) -> 
     }
 }
 
-fn action_view_button(list_id: Uuid) -> Markup {
+fn action_view_button(selected_mode: &ViewMode, list_id: Uuid) -> Markup {
     html! {
         div class="dropdown w-full md:w-auto" {
             div tabindex="0" role="button" class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto" {
@@ -404,7 +414,13 @@ fn action_view_button(list_id: Uuid) -> Markup {
                 onchange="setTimeout(() => document.activeElement.blur(), 25)" {
                 fieldset class="fieldset flex" {
                     label class="label cursor-pointer text-inherit w-full p-2" {
-                        input type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="edit" checked;
+                        input type="radio"
+                            name="mode"
+                            autocomplete="off"
+                            class="radio radio-sm view-option"
+                            value="edit"
+                            checked=[if selected_mode == &ViewMode::Edit { Some("") } else { None }];
+
                         span class="ml-1" {
                             "Edit"
                         }
@@ -412,7 +428,13 @@ fn action_view_button(list_id: Uuid) -> Markup {
                 }
                 fieldset class="fieldset flex" {
                     label class="label cursor-pointer text-inherit w-full p-2" {
-                        input type="radio" name="mode" autocomplete="off" class="radio radio-sm view-option" value="view";
+                        input type="radio"
+                            name="mode"
+                            autocomplete="off"
+                            class="radio radio-sm view-option"
+                            value="view"
+                            checked=[if selected_mode == &ViewMode::View { Some("") } else { None }];
+
                         span class="ml-1" {
                             "View"
                         }

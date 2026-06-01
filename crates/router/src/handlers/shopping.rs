@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use axum::Form;
 use axum::body::Body;
@@ -12,6 +13,8 @@ use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
+use tower_cookies::cookie::SameSite;
+use tower_cookies::{Cookie, Cookies};
 use tracing::error;
 use uuid::Uuid;
 
@@ -36,12 +39,16 @@ use crate::recipes_router::params::ShareRecipeForm;
 use crate::schemas::shopping::{ListItemPayload, ListPayload};
 use crate::{Error, Result};
 
+/// Name of the cookie that stores the selected view mode.
+pub const SHOPPING_VIEW_COOKIE_NAME: &str = "view:shopping-list";
+
 /// Handles fetching the user's shopping lists.
 pub async fn shopping_lists_handler(
     header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
+    cookies: Cookies,
 ) -> Result<impl IntoResponse> {
     let settings = get_settings(&state, user.id).await?;
 
@@ -89,6 +96,7 @@ pub async fn shopping_lists_handler(
                 labels,
                 shopping_lists,
                 selected_shopping_list,
+                selected_view_mode: get_view_mode_from_cookie(&cookies),
             }),
             ..Default::default()
         },
@@ -101,13 +109,23 @@ pub async fn shopping_lists_handler(
 pub async fn shopping_list_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
+    cookies: Cookies,
     Path(list_id): Path<Uuid>,
 ) -> impl IntoResponse {
-    match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
-        Ok(list) => templates::shopping::render_shopping_list_view_edit(&list).into_response(),
+    let list = match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
+        Ok(list) => list,
         Err(err) => {
             error!("Failed to get shopping list: {err}");
-            Error::Database.into_response()
+            return Error::Database.into_response();
+        }
+    };
+
+    match get_view_mode_from_cookie(&cookies) {
+        ViewMode::Edit | ViewMode::Print => {
+            templates::shopping::render_shopping_list_view_edit(&list).into_response()
+        }
+        ViewMode::View => {
+            templates::shopping::render_shopping_list_view_view(&list).into_response()
         }
     }
 }
@@ -311,6 +329,7 @@ pub async fn shopping_list_print_handler(
 pub async fn shopping_list_view_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
+    cookies: Cookies,
     Path(list_id): Path<Uuid>,
     Query(params): Query<ViewParams>,
 ) -> impl IntoResponse {
@@ -326,6 +345,12 @@ pub async fn shopping_list_view_handler(
         }
     };
 
+    set_shopping_view_cookie(
+        &cookies,
+        params.mode.to_string(),
+        state.config.read().await.is_production,
+    );
+
     match params.mode {
         ViewMode::Edit => templates::shopping::render_shopping_list_view_edit(&list),
         ViewMode::Print | ViewMode::View => {
@@ -333,6 +358,20 @@ pub async fn shopping_list_view_handler(
         }
     }
     .into_response()
+}
+
+fn set_shopping_view_cookie(cookies: &Cookies, token_value: String, is_production: bool) {
+    let mut cookie = Cookie::new(SHOPPING_VIEW_COOKIE_NAME, token_value);
+    cookie.set_http_only(true);
+    cookie.set_same_site(SameSite::Strict);
+    cookie.set_path("/");
+    // cookie.set_max_age(cookie::time::Duration::hours(7 * 24));
+
+    if is_production {
+        cookie.set_secure(true);
+    }
+
+    cookies.add(cookie);
 }
 
 /// Handles POST requests to share a shopping list.
@@ -449,6 +488,7 @@ pub async fn shopping_lists_post_handler(
     header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
+    cookies: Cookies,
 ) -> impl IntoResponse {
     let Some(title) = header_map
         .get(HX_PROMPT)
@@ -468,7 +508,19 @@ pub async fn shopping_lists_post_handler(
         }
     };
 
-    templates::shopping::render_new_shopping_list(list_id, title).into_response()
+    templates::shopping::render_new_shopping_list(
+        &get_view_mode_from_cookie(&cookies),
+        list_id,
+        title,
+    )
+    .into_response()
+}
+
+fn get_view_mode_from_cookie(cookies: &Cookies) -> ViewMode {
+    cookies
+        .get(SHOPPING_VIEW_COOKIE_NAME)
+        .map(|s| ViewMode::from_str(s.value()).unwrap_or_default())
+        .unwrap_or_default()
 }
 
 /// Handles POST requests to add an item to a shopping list.

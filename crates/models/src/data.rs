@@ -5,6 +5,7 @@ use crate::params::SearchParams;
 use crate::reports::ViewReport;
 use crate::shopping::{ShoppingList, ShoppingListDetails};
 use crate::time::FormattedTimes;
+use crate::view::ViewMode;
 
 /// Data holds data to pass on to the templates.
 #[derive(Default)]
@@ -250,6 +251,7 @@ pub struct ShoppingData {
     pub labels: Option<Vec<String>>,
     pub shopping_lists: Vec<ShoppingList>,
     pub selected_shopping_list: Option<ShoppingListDetails>,
+    pub selected_view_mode: ViewMode,
 }
 
 /// Holds template data related to viewing a recipe.

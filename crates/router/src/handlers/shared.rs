@@ -152,6 +152,7 @@ pub async fn share_shopping_list_handler(
                 labels: None,
                 shopping_lists: vec![],
                 selected_shopping_list: Some(list),
+                selected_view_mode: models::view::ViewMode::View,
             }),
             ..Default::default()
         },
