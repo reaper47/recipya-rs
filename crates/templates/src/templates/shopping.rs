@@ -62,7 +62,7 @@ fn render_lists_index(data: &Data) -> Markup {
                 input #selected-shopping-list-id type="hidden" name="selected"
                       value=(shopping.selected_shopping_list.as_ref().map(|r| r.id).unwrap_or_default());
                 div #shopping-list-container .hidden.md:block {
-                    (render_shopping_lists_list(shopping))
+                    (render_shopping_lists_list(shopping, "shopping-lists"))
                 }
             }
             div class="hidden md:flex order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
@@ -117,7 +117,7 @@ pub(super) fn render_shopping_list_nav(shopping: &ShoppingData) -> Markup {
     html! {
         div #navbar-extra-content class="lg:hidden w-full p-2 bg-base-100 flex-1 min-h-0" hx-swap-oob="true" {
             div .divider.my-0 {}
-            (render_shopping_lists_list(shopping))
+            (render_shopping_lists_list(shopping, "shopping-lists-nav"))
             div .divider.my-0 {}
             @if let Some(list) = &shopping.selected_shopping_list {
                 @let list_id = list.id;
@@ -133,7 +133,7 @@ pub(super) fn render_shopping_list_nav(shopping: &ShoppingData) -> Markup {
     }
 }
 
-fn render_shopping_lists_list(shopping: &ShoppingData) -> Markup {
+fn render_shopping_lists_list(shopping: &ShoppingData, container_id: &str) -> Markup {
     let shopping_lists = shopping.shopping_lists.as_slice();
     let selected = shopping.selected_shopping_list.as_ref();
 
@@ -146,13 +146,13 @@ fn render_shopping_lists_list(shopping: &ShoppingData) -> Markup {
                 class="btn btn-xs btn-square btn-ghost"
                 hx-post="/shopping/lists"
                 hx-prompt="Name of the new shopping list:"
-                hx-target="#shopping-lists"
+                hx-target=(format!("#{container_id}"))
                 hx-swap="afterbegin"
                 hx-on:htmx:after-request="Array.from(document.getElementById('shopping-lists').children).forEach((item) => item.classList.remove('bg-base-300')); document.getElementById('shopping-lists').firstElementChild.classList.add('bg-base-300')" {
                 (icon_plus_circle())
             }
         }
-        ul #shopping-lists class={
+        ul id=(container_id) class={
             "menu block bg-base-100 w-full overflow-y-auto max-h-[40vh] md:max-h-[89vh] pb-16 md:pb-0"
             @if shopping_lists.len() < 10 { " md:h-full" }
         } {

@@ -56,6 +56,7 @@ pub async fn assert_ws_message(server: &mut TestWebSocket, want: &str) {
     server.assert_receive_text_contains(want).await;
 }
 
+/// Collects a specified number of messages from the websocket server.
 pub async fn collect_ws_messages(server: &mut TestWebSocket, count: usize) -> Vec<String> {
     let mut messages = Vec::with_capacity(count);
     for _ in 0..count {
@@ -63,6 +64,26 @@ pub async fn collect_ws_messages(server: &mut TestWebSocket, count: usize) -> Ve
         messages.push(server.receive_text().await);
     }
     messages
+}
+
+/// Asserts that the websocket server sent all wanted messages, in any order.
+pub async fn assert_ws_messages_any_order(server: &mut TestWebSocket, wants: &[&str]) {
+    let count = wants.len();
+    let mut received: Vec<String> = Vec::with_capacity(count);
+
+    for _ in 0..count {
+        let _ = server.receive_message().await;
+        received.push(server.receive_text().await);
+    }
+
+    for want in wants {
+        assert!(
+            received.iter().any(|msg| msg.contains(want)),
+            "Failed to find '{}' in received messages:\n{}",
+            want,
+            received.join("\n")
+        );
+    }
 }
 
 /// Opens a data test file and returns its contents as a `Cursor`.
