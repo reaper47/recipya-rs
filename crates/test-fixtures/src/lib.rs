@@ -67,6 +67,10 @@ pub async fn collect_ws_messages(server: &mut TestWebSocket, count: usize) -> Ve
 }
 
 /// Asserts that the websocket server sent all wanted messages, in any order.
+///
+/// # Panics
+///
+/// Panics if any of the wanted messages are not received.
 pub async fn assert_ws_messages_any_order(server: &mut TestWebSocket, wants: &[&str]) {
     let count = wants.len();
     let mut received: Vec<String> = Vec::with_capacity(count);

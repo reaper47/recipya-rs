@@ -1,21 +1,20 @@
 name: Rust
-
 permissions:
   contents: read
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
 env:
   CARGO_PROFILE_TEST_DEBUG: 0
   CARGO_TERM_COLOR: always
+  RUSTC_WRAPPER: sccache
+  SCCACHE_GHA_ENABLED: "true"
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -25,6 +24,18 @@ jobs:
           components: clippy
 
       - uses: mozilla-actions/sccache-action@v0.0.10
+
+      - name: Cache cargo registry & bins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cargo/bin/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
       - uses: taiki-e/install-action@nextest
 
       - uses: ikalnytskyi/action-setup-postgres@v7
@@ -37,18 +48,10 @@ jobs:
           ssl: "false"
         id: postgres
 
-      - name: Check for diesel CLI
-        id: diesel_check
-        run: |
-          if command -v diesel >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Install diesel_cli
-        if: steps.diesel_check.outputs.exists == 'false'
-        run: cargo install diesel_cli --no-default-features --features postgres
+        run: |
+          command -v diesel || \
+          cargo install diesel_cli --no-default-features --features postgres
 
       - run: diesel migration run
         env:
@@ -58,23 +61,17 @@ jobs:
         with:
           node-version: latest
 
-      - name: Clippy production code
-        run: cargo clippy
-        env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_GHA_ENABLED: "true"
+      - name: Clippy (all targets)
+        run: cargo clippy --all-targets -- -D warnings
 
-      - name: Clippy tests
-        run: cargo clippy --tests
+      - name: Build tests
+        run: cargo nextest run --no-run
         env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_GHA_ENABLED: "true"
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
 
       - name: Test
         run: cargo nextest run
         env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_GHA_ENABLED: "true"
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
           RECIPYA_IS_AUTOLOGIN: "false"
@@ -85,6 +82,5 @@ jobs:
           SMTP_USERNAME: "example@gmail.com"
           SMTP_PASSWORD: "abcd abcd bcd abcd"
 
-      - name: Run sccache stat for check
-        shell: bash
+      - name: sccache stats
         run: ${SCCACHE_PATH} --show-stats
