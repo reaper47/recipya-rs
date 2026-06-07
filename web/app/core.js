@@ -751,10 +751,10 @@ function filterNutritionRows(el, type) {
     );
 }
 
-function checkExportDataSubmit() {
+function checkDataSubmit(elementClass, buttonId) {
   const isDisabled =
-    document.querySelectorAll(".checkbox-recipe-id:checked").length === 0;
-  const button = document.getElementById("export-data-submit-button");
+    document.querySelectorAll(`.${elementClass}:checked`).length === 0;
+  const button = document.getElementById(buttonId);
 
   button.disabled = isDisabled;
   button.parentElement.classList.toggle("cursor-not-allowed", isDisabled);

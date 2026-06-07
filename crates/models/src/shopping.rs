@@ -644,6 +644,49 @@ impl ShoppingList {
         })
     }
 
+    /// Batch insert items into a shopping list.
+    pub async fn add_items_for_recipe(
+        &self,
+        mm: &ModelManager,
+        items_c: &[ShoppingListItemForCreate],
+        recipe_id: i64,
+        user_id: Uuid,
+    ) -> Result<()> {
+        let mut conn = mm.pool.get().await?;
+
+        Self::verify_ownership(&mut conn, self.id, user_id).await?;
+
+        let values = items_c
+            .iter()
+            .map(|item| ShoppingListItemForInsert {
+                shopping_list_id: self.id,
+                ingredient: item.ingredient.clone(),
+                quantity: item.quantity.clone(),
+                notes: item.notes.clone(),
+                shopping_list_label_id: None,
+            })
+            .collect::<Vec<_>>();
+
+        let values = diesel::insert_into(schema::shopping_list_items::table)
+            .values(&values)
+            .on_conflict_do_nothing()
+            .get_results::<ShoppingListItem>(&mut conn)
+            .await?
+            .into_iter()
+            .map(|item| ShoppingListRecipeForInsert {
+                shopping_list_item_id: item.id,
+                recipe_id,
+            })
+            .collect::<Vec<_>>();
+
+        diesel::insert_into(schema::shopping_list_recipes::table)
+            .values(&values)
+            .execute(&mut conn)
+            .await?;
+
+        Ok(())
+    }
+
     /// Deletes a shopping list.
     pub async fn delete(mm: &ModelManager, list_id: Uuid, user_id: Uuid) -> Result<()> {
         diesel::delete(schema::shopping_lists::table)
@@ -1440,6 +1483,71 @@ mod tests {
                         recipe: Some(ShoppingListRecipeDetails {
                             id: 2,
                             name: recipe2.name,
+                        }),
+                        is_checked: false,
+                        created_at: got.items[1].created_at,
+                        updated_at: got.items[1].updated_at
+                    },
+                ],
+                created_at: got.created_at,
+                updated_at: got.updated_at,
+            },
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_add_items_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list = ShoppingList::get(&state.mm, list_id, user_id).await?;
+        let recipe1 = a_complete_recipe_for_create().0;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
+        let item1 = an_item_with_recipe(recipe_id);
+        let mut item2 = an_item_with_recipe(recipe_id);
+        item2.ingredient = "Muffins".into();
+
+        list.add_items_for_recipe(&state.mm, &[item1, item2], recipe_id, user_id)
+            .await?;
+
+        let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+        pretty_assertions::assert_eq!(
+            got,
+            ShoppingListDetails {
+                id: list_id,
+                name: "Costco".into(),
+                items: vec![
+                    ShoppingListItemDetails {
+                        id: 1,
+                        ingredient: "chicken".into(),
+                        quantity: Some("1 cup".into()),
+                        notes: Some("new notes".into()),
+                        label_id: 1,
+                        label: "No label".into(),
+                        position: 1,
+                        recipe: Some(ShoppingListRecipeDetails {
+                            id: 1,
+                            name: recipe1.name.clone(),
+                        }),
+                        is_checked: false,
+                        created_at: got.items[0].created_at,
+                        updated_at: got.items[0].updated_at
+                    },
+                    ShoppingListItemDetails {
+                        id: 2,
+                        ingredient: "Muffins".into(),
+                        quantity: Some("1 cup".into()),
+                        notes: Some("new notes".into()),
+                        label_id: 1,
+                        label: "No label".into(),
+                        position: 2,
+                        recipe: Some(ShoppingListRecipeDetails {
+                            id: 1,
+                            name: recipe1.name,
                         }),
                         is_checked: false,
                         created_at: got.items[1].created_at,

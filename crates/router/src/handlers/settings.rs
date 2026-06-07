@@ -1,6 +1,6 @@
 use axum::Form;
 use axum::body::Body;
-use axum::extract::{RawForm, State};
+use axum::extract::State;
 use axum::http::{HeaderMap, Response, StatusCode};
 use axum::response::IntoResponse;
 use axum_htmx::{HX_CURRENT_URL, HX_TRIGGER};
@@ -154,22 +154,8 @@ pub async fn export_data_handler(
 pub async fn export_data_post_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
-    RawForm(bytes): RawForm,
+    axum_extra::extract::Form(payload): axum_extra::extract::Form<ExportDataPayload>,
 ) -> impl IntoResponse {
-    let payload: ExportDataPayload = match serde_qs::from_bytes(&bytes)
-        .map_err(|err| (StatusCode::BAD_REQUEST, err.to_string()))
-    {
-        Ok(payload) => payload,
-        Err(err) => {
-            error!(
-                "Failed to parse export form '{bytes:?}' user {}: {err:?}",
-                user.id
-            );
-            broadcast_error(&state, user.id, "Failed to parse export form.").await;
-            return Error::Database.into_response();
-        }
-    };
-
     if payload.recipe_ids.is_empty() {
         broadcast_warning(&state, user.id, "No recipes selected for export.").await;
         return StatusCode::BAD_REQUEST.into_response();

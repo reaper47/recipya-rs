@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize, de::IntoDeserializer};
+use uuid::Uuid;
 
 /// The payload of a list.
 #[derive(Default, Deserialize, Serialize)]
@@ -29,4 +30,15 @@ where
         None | Some("") => Ok(None),
         Some(s) => T::deserialize(s.into_deserializer()).map(Some),
     }
+}
+
+/// The payload of a recipe's ingredients to add to a shopping list.
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct RecipeIngredientsPayload {
+    pub list: Uuid,
+    pub ingredients: Vec<String>,
+    pub quantities: Vec<String>,
+    pub notes: Vec<String>,
+    #[serde(rename = "with-quantity", default)]
+    pub with_quantities: Vec<String>,
 }

@@ -17,8 +17,9 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::{format_nutrition, render_rating};
 use crate::recipes::timeline::render_dialog;
+use crate::shopping::render_recipe_add_shopping_dialog;
 use crate::templates::icons::{
-    icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_clock, icon_cooking_pot,
+    icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_cart_plus, icon_clock, icon_cooking_pot,
     icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_globe_alt,
     icon_heart, icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share,
     icon_stop, icon_timeline, icon_trash,
@@ -56,6 +57,7 @@ pub fn view_recipe(
                 user_setting,
             ))
         }
+        (render_recipe_add_shopping_dialog())
         (pagination(&PaginationData::hidden()))
     })
 }
@@ -385,7 +387,7 @@ fn render_right_controls(
                                 hx-get=(format!("/recipes/{recipe_id}/duplicate"))
                                 hx-target="#content" {
                                 (icon_document_duplicate())
-                                "Duplicate"
+                                "Duplicate fuck"
                             }
                         }
                     }
@@ -400,7 +402,6 @@ fn render_right_controls(
                             a title="Mark or unmark as favourite" {
                                 "Favourite"
                             }
-
                         }
                         li {
                             a title="Delete recipe"
@@ -478,6 +479,16 @@ fn render_right_controls(
                                     (icon_globe_alt())
                                     "Rescrape"
                                 }
+                            }
+                        }
+                        li _="on click document.activeElement.blur()" {
+                            a aria-label="Add to shopping list"
+                                hx-get=(format!("/shopping/recipes/{recipe_id}/ingredients"))
+                                hx-target="#add-to-shopping-list-dialog"
+                                hx-push-url="false"
+                                _="on htmx:afterRequest from me open #add-to-shopping-list-dialog" {
+                                (icon_cart_plus())
+                                "Shopping"
                             }
                         }
                         li _="on click document.activeElement.blur()" {

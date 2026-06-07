@@ -1,14 +1,15 @@
-use maud::{Markup, html};
+use maud::{Markup, PreEscaped, html};
 use uuid::Uuid;
 
 use models::{
     data::{Data, PaginationData, ShoppingData},
     settings::UserSettingDetails,
-    shopping::{ShoppingListDetails, ShoppingListItemDetails},
+    shopping::{ShoppingList, ShoppingListDetails, ShoppingListItemDetails},
     view::ViewMode,
 };
 
 use crate::templates::{
+    common::cancel_submit_form_actions,
     icons::{
         icon_arrow_down_tray, icon_carrot, icon_check, icon_check_circle, icon_clipboard_document,
         icon_paper_clip, icon_pencil, icon_plus, icon_plus_circle, icon_printer, icon_scale,
@@ -225,6 +226,7 @@ pub fn render_shopping_list_view_edit(list: &ShoppingListDetails) -> Markup {
                 (item_sections(list))
             }
         }
+        (render_shopping_list_actions(true, &ViewMode::Edit, list.id))
     }
 }
 
@@ -300,7 +302,7 @@ pub fn render_shopping_list_item_count(list_id: Uuid, num_items: i64, is_swap_oo
     html! {
         div id=(format!("shopping-list-item-count-{list_id}"))
             class="badge badge-xs badge-primary"
-            hx-swap-oob=[if is_swap_oob { Some("true") } else { None }] {
+            hx-swap-oob=[is_swap_oob.then_some("true")] {
             (num_items)
         }
     }
@@ -314,8 +316,8 @@ pub(super) fn render_shopping_list_actions(
     list_id: Uuid,
 ) -> Markup {
     html! {
-        div id=[if is_oob_swap { Some("navbar-actions") } else { None }]
-            hx-swap-oob=[if is_oob_swap { Some("true") } else { None }] {
+        div id=[is_oob_swap.then_some("navbar-actions")]
+            hx-swap-oob=[is_oob_swap.then_some("true")] {
             div class="hidden md:block join border border-gray-700 mb-2 w-fit" {
                 (action_view_button(selected_view_mode, list_id))
                 // TODO: Implement upload to apps (todoist)
@@ -827,6 +829,7 @@ pub fn render_shopping_list_view_view(list: &ShoppingListDetails) -> Markup {
                 }
             }
         }
+
     }
 }
 
@@ -942,6 +945,117 @@ fn render_list_item_details(item: &ShoppingListItemDetails, view: &ViewMode) -> 
             }
             @if let Some(notes) = item.notes.as_deref() {
                 p class=[notes_class] style=[notes_style] { (notes) }
+            }
+        }
+    }
+}
+
+/// Stores the components of an ingredient row.
+pub struct AddShoppingIngredient {
+    pub name: String,
+    pub quantity: Option<String>,
+    pub notes: Option<String>,
+}
+
+/// Renders the ingredient selector to shopping list dialog.
+pub fn render_recipe_add_shopping_dialog() -> Markup {
+    html! {
+        dialog #add-to-shopping-list-dialog .modal {}
+        script type="text/hyperscript" {
+            (PreEscaped(r#"
+                behavior OnMasterToggled
+                    on masterToggled
+                        js(me) return me.closest('tr').querySelector('input.checkbox-ingredient').checked end
+                        if it
+                            remove @disabled from me
+                        else
+                            add @disabled to me
+                        end
+                    end
+                    on change
+                        if I match .with-quantity
+                            if my.checked
+                                set my previousElementSibling's value to 'true'
+                            else
+                                set my previousElementSibling's value to 'false'
+                            end
+
+                            js(me) return me.closest('tr').querySelector('input[name="quantities"]') end
+                            if my.checked
+                                remove .opacity-50 from it
+                            else
+                                add .opacity-50 to it
+                            end
+                        end
+                    end
+                end
+            "#))
+        }
+    }
+}
+
+/// Renders the ingredient selection content for the add to shopping list dialog.
+pub fn render_recipe_add_shopping_dialog_content(
+    recipe_id: i64,
+    shopping_lists: Vec<ShoppingList>,
+    ingredients: Vec<AddShoppingIngredient>,
+) -> Markup {
+    html! {
+        form class="card bg-base-100 shadow-sm"
+            hx-post=(format!("/shopping/recipes/{recipe_id}/ingredients"))
+            hx-indicator="#add-ingredients-submit-button-spinner"
+            hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()" {
+            div class="card-body" {
+                h3 class="mb-1 grid grid-flow-col" {
+                    p .text-lg { "Add ingredients to shopping list" }
+                    select #add-to-shopping-list-select class="select" name="list" required {
+                      option disabled { "Pick a shopping list" }
+                      @for list in shopping_lists {
+                          option value=(list.id) { (&list.name) }
+                      }
+                    }
+                }
+                div class="overflow-auto h-[50vh]" {
+                    table class="table table-zebra table-sm" {
+                        thead {
+                            tr .text-center {
+                                th class="py-1 text-left" {
+                                    input type="checkbox" checked class="checkbox"
+                                        _="on change set <input.checkbox-ingredient/>'s checked to my checked then send masterToggled to <input.ingredient-element/> then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')";
+                                }
+                                th .py-1 { "Ingredient" }
+                                th .py-1 { "Quantity" }
+                                th .py-1 { "Notes" }
+                                th .py-1 { "Include" br; "Quantity" }
+                            }
+                        }
+                        tbody {
+                            @for ing in ingredients {
+                                tr {
+                                    td .py-1 {
+                                        input type="checkbox" checked class="checkbox checkbox-ingredient"
+                                            _="on change or change from <input.master-checkbox/> for el in <input.ingredient-element/> in closest <tr/> toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')";
+                                    }
+                                    td class="max-w-[30ch] py-1" {
+                                        input type="hidden" name="ingredients" value=(ing.name) .ingredient-element _="install OnMasterToggled";
+                                        (ing.name)
+                                    }
+                                    td .py-1.text-center {
+                                        input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value=(ing.quantity.unwrap_or("-".into())) _="install OnMasterToggled";
+                                    }
+                                    td .py-1.text-center {
+                                        input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value=(ing.notes.unwrap_or("-".into())) _="install OnMasterToggled";
+                                    }
+                                    td class="py-1 text-center select-none" {
+                                        input type="hidden" .ingredient-element name="with-quantity" value="true" _="install OnMasterToggled";
+                                        input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                (cancel_submit_form_actions(html! { "Submit" }, "add-ingredients-submit-button", false))
             }
         }
     }

@@ -30,6 +30,7 @@ impl From<RecipeTimeline> for Event {
     }
 }
 
+/// Renders the timeline dialog for a recipe.
 pub fn render_dialog(recipe_id: i64, events: &[Event]) -> Markup {
     html! {
         dialog #timeline-dialog .modal {

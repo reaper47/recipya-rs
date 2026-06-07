@@ -3,6 +3,7 @@ use std::collections::BTreeSet;
 use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use ingredient::{Ingredient, IngredientParser};
 use itertools::Itertools;
 use repository::{ModelManager, PgPooledConn, schema};
 use tracing::error;
@@ -36,12 +37,10 @@ impl Recipe {
 
     /// Retrieves the total number of recipes that belong to a given user.
     pub async fn count(mm: &ModelManager, user_id: Uuid) -> Result<i64> {
-        let mut conn = mm.pool.get().await?;
-
         let count = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .select(diesel::dsl::count(schema::recipes::id))
-            .first(&mut conn)
+            .first(&mut mm.pool.get().await?)
             .await?;
 
         Ok(count)
@@ -131,13 +130,11 @@ impl Recipe {
 
     /// Gets the recipe only.
     pub async fn get_recipe_only(mm: &ModelManager, user_id: Uuid, recipe_id: i64) -> Result<Self> {
-        let mut conn = mm.pool.get().await?;
-
         let recipe = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .filter(schema::recipes::id.eq(recipe_id))
             .select(Self::as_select())
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(recipe)
@@ -161,8 +158,6 @@ impl Recipe {
 
     /// Fetches all category names belonging to a user.
     pub async fn fetch_categories(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
-        let mut conn = mm.pool.get().await?;
-
         let categories = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .inner_join(
@@ -176,7 +171,7 @@ impl Recipe {
             .select(schema::categories::name)
             .order(schema::categories::name.asc())
             .distinct()
-            .load::<String>(&mut conn)
+            .load::<String>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(categories)
@@ -184,8 +179,6 @@ impl Recipe {
 
     /// Fetches all cuisine names belonging to a user.
     pub async fn fetch_cuisines(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
-        let mut conn = mm.pool.get().await?;
-
         let cuisines = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .inner_join(
@@ -199,7 +192,7 @@ impl Recipe {
             .select(schema::cuisines::name)
             .order(schema::cuisines::name.asc())
             .distinct()
-            .load::<String>(&mut conn)
+            .load::<String>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(cuisines)
@@ -207,8 +200,6 @@ impl Recipe {
 
     /// Fetches all ingredient names belonging to a user.
     pub async fn fetch_ingredients(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
-        let mut conn = mm.pool.get().await?;
-
         let ingredients = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .inner_join(
@@ -221,7 +212,7 @@ impl Recipe {
             )
             .select(schema::ingredients::name)
             .distinct()
-            .load::<String>(&mut conn)
+            .load::<String>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(ingredients
@@ -241,8 +232,6 @@ impl Recipe {
 
     /// Fetches all keywords belonging to a user.
     pub async fn fetch_keywords(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
-        let mut conn = mm.pool.get().await?;
-
         let keywords = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .inner_join(
@@ -256,7 +245,7 @@ impl Recipe {
             .select(schema::keywords::name)
             .order(schema::keywords::name.asc())
             .distinct()
-            .load::<String>(&mut conn)
+            .load::<String>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(keywords)
@@ -264,8 +253,6 @@ impl Recipe {
 
     /// Fetches all the tools belonging to a user.
     pub async fn fetch_tools(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
-        let mut conn = mm.pool.get().await?;
-
         let tools = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .inner_join(
@@ -278,7 +265,7 @@ impl Recipe {
             .select(schema::tools::name)
             .order(schema::tools::name.asc())
             .distinct()
-            .load::<String>(&mut conn)
+            .load::<String>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(tools)
@@ -286,14 +273,12 @@ impl Recipe {
 
     /// Fetches all the sources belonging to a user.
     pub async fn fetch_sources(mm: &ModelManager, user_id: Uuid) -> Result<Vec<String>> {
-        let mut conn = mm.pool.get().await?;
-
         let sources = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .select(schema::recipes::source)
             .order(schema::recipes::source.asc())
             .distinct()
-            .load::<String>(&mut conn)
+            .load::<String>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(sources
@@ -302,6 +287,22 @@ impl Recipe {
                 Ok(url) => url.host_str().map_or_else(|| s, ToString::to_string),
                 Err(_) => s,
             })
+            .collect())
+    }
+
+    /// Fetches the ingredients of a recipe.
+    pub async fn ingredients(mm: &ModelManager, recipe_id: i64) -> Result<Vec<Ingredient>> {
+        Ok(schema::ingredients_recipes::table
+            .inner_join(
+                schema::ingredients::table
+                    .on(schema::ingredients::id.eq(schema::ingredients_recipes::ingredient_id)),
+            )
+            .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
+            .select(schema::ingredients::name)
+            .load::<String>(&mut mm.pool.get().await?)
+            .await?
+            .into_iter()
+            .map(|s| IngredientParser::new(false).from_str(&s))
             .collect())
     }
 }
@@ -1007,6 +1008,30 @@ mod tests {
         let sources = Recipe::fetch_sources(&state.mm, user.id).await?;
 
         pretty_assertions::assert_eq!(sources, vec!["www.allrecipes.com".to_string(),]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_ingredients_ok() -> Result<()> {
+        let (_test_db, config) = TestDb::new(None).await?;
+        let state = create_app_state(config.clone()).await;
+        let _ = build_server_anonymous(config.clone()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let (recipe, _) = a_complete_recipe_for_create();
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+
+        let got = Recipe::ingredients(&state.mm, recipe_id).await?;
+
+        pretty_assertions::assert_eq!(
+            got,
+            vec![
+                IngredientParser::new(false).from_str("1 cup blue spinach"),
+                IngredientParser::new(false).from_str("1/2 tbsp cinnamon"),
+                IngredientParser::new(false).from_str("4 pounds top quality chicken filet"),
+                IngredientParser::new(false).from_str("1/8 cup lemon juice"),
+            ]
+        );
         Ok(())
     }
 }

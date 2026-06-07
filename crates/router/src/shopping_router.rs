@@ -15,7 +15,8 @@ use crate::{
         shopping_list_label_put_handler, shopping_list_labels_new_handler,
         shopping_list_labels_post_handler, shopping_list_print_handler, shopping_list_put_handler,
         shopping_list_share_post_handler, shopping_list_view_handler, shopping_lists_handler,
-        shopping_lists_post_handler,
+        shopping_lists_post_handler, shopping_recipe_ingredients_handler,
+        shopping_recipe_ingredients_post_handler,
     },
     middleware::mw_auth::mw_refresh_token,
 };
@@ -76,6 +77,10 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
         .route(
             "/lists/{:list_id}/items/{:item_id}/toggle",
             post(shopping_list_item_toggle_handler),
+        )
+        .route(
+            "/recipes/{:recipe_id}/ingredients",
+            get(shopping_recipe_ingredients_handler).post(shopping_recipe_ingredients_post_handler),
         )
         .layer(from_fn_with_state(state.clone(), mw_refresh_token))
 }
@@ -840,6 +845,63 @@ mod tests {
                 ],
             );
             Ok(())
+        }
+    }
+
+    mod tests_recipes_ingredients {
+        use super::*;
+
+        #[tokio::test]
+        async fn test_must_be_logged_in_ok() -> Result<()> {
+            todo!()
+        }
+
+        mod tests_get {
+            use super::*;
+
+            #[tokio::test]
+            async fn test_no_shopping_lists_ok() -> Result<()> {
+                todo!()
+            }
+
+            #[tokio::test]
+            async fn test_has_shopping_lists_ok() -> Result<()> {
+                todo!()
+            }
+
+            #[tokio::test]
+            async fn test_no_ingredients_ok() -> Result<()> {
+                todo!()
+            }
+
+            #[tokio::test]
+            async fn test_plenty_of_ingredients_ok() -> Result<()> {
+                todo!()
+            }
+        }
+
+        mod tests_post {
+            use super::*;
+
+            #[tokio::test]
+            async fn test_no_ingredient_selected_ok() -> Result<()> {
+                todo!()
+            }
+
+            #[tokio::test]
+            async fn test_some_ingredients_selected_ok() -> Result<()> {
+                todo!()
+            }
+
+            #[tokio::test]
+            async fn test_all_ingredients_selected_ok() -> Result<()> {
+                todo!()
+            }
+
+            #[tokio::test]
+            async fn test_some_ingredients_selected_without_quantity_ok() -> Result<()> {
+                todo!()
+            }
         }
     }
 
