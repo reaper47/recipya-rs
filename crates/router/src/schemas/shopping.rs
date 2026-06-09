@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize, de::IntoDeserializer};
-use uuid::Uuid;
 
 /// The payload of a list.
 #[derive(Default, Deserialize, Serialize)]
@@ -35,10 +34,33 @@ where
 /// The payload of a recipe's ingredients to add to a shopping list.
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct RecipeIngredientsPayload {
-    pub list: Uuid,
+    pub list: String,
     pub ingredients: Vec<String>,
     pub quantities: Vec<String>,
     pub notes: Vec<String>,
     #[serde(rename = "with-quantity", default)]
     pub with_quantities: Vec<String>,
+}
+
+impl RecipeIngredientsPayload {
+    /// Removes noise from the fields.
+    pub fn clean(&mut self) {
+        let trim = |v: &mut Vec<String>| {
+            v.iter_mut().for_each(|s| *s = s.trim().to_string());
+            v.retain(|s| !s.is_empty());
+        };
+
+        trim(&mut self.ingredients);
+        trim(&mut self.quantities);
+        trim(&mut self.notes);
+        trim(&mut self.with_quantities);
+    }
+
+    /// Checks whether the payload has values.
+    pub fn is_empty(&self) -> bool {
+        self.ingredients.is_empty()
+            || self.quantities.is_empty()
+            || self.with_quantities.is_empty()
+            || self.notes.is_empty()
+    }
 }

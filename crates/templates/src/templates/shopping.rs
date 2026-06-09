@@ -82,8 +82,8 @@ fn render_lists_index(data: &Data) -> Markup {
                             @match shopping.selected_shopping_list {
                                 Some(ref list) => {
                                     (match shopping.selected_view_mode {
-                                        ViewMode::Edit | ViewMode::Print => render_shopping_list_view_edit(list),
-                                        ViewMode::View => render_shopping_list_view_view(list),
+                                        ViewMode::Edit | ViewMode::Print => render_shopping_list_view_edit(list, data.is_hx_request),
+                                        ViewMode::View => render_shopping_list_view_view(list, data.is_hx_request),
                                     })
 
                                     @if data.is_hx_request {
@@ -218,7 +218,7 @@ pub fn render_shopping_list_items<T: AsRef<str>>(
 }
 
 /// Renders the shopping list in edit mode.
-pub fn render_shopping_list_view_edit(list: &ShoppingListDetails) -> Markup {
+pub fn render_shopping_list_view_edit(list: &ShoppingListDetails, is_hx_request: bool) -> Markup {
     html! {
         div {
             (shopping_list_title(list.id, &list.name))
@@ -226,7 +226,9 @@ pub fn render_shopping_list_view_edit(list: &ShoppingListDetails) -> Markup {
                 (item_sections(list))
             }
         }
-        (render_shopping_list_actions(true, &ViewMode::Edit, list.id))
+        @if is_hx_request {
+            (render_shopping_list_actions(true, &ViewMode::Edit, list.id))
+        }
     }
 }
 
@@ -779,7 +781,7 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
             shopping
                 .selected_shopping_list
                 .as_ref()
-                .map(render_shopping_list_view_view)
+                .map(|l| render_shopping_list_view_view(l, data.is_hx_request))
                 .unwrap_or_default()
         },
     );
@@ -797,7 +799,7 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
 }
 
 /// Renders the shopping list view in view mode.
-pub fn render_shopping_list_view_view(list: &ShoppingListDetails) -> Markup {
+pub fn render_shopping_list_view_view(list: &ShoppingListDetails, is_hx_request: bool) -> Markup {
     html! {
         div .p-2 {
             h1 class="text-center text-2xl font-bold underline p-2" {
@@ -829,7 +831,9 @@ pub fn render_shopping_list_view_view(list: &ShoppingListDetails) -> Markup {
                 }
             }
         }
-
+        @if is_hx_request {
+            (render_shopping_list_actions(true, &ViewMode::View, list.id))
+        }
     }
 }
 
@@ -921,15 +925,15 @@ fn render_list_item_details(item: &ShoppingListItemDetails, view: &ViewMode) -> 
     };
 
     let notes_class = match view {
-        ViewMode::Edit | ViewMode::View => Some("text-xs font-light"),
+        ViewMode::Edit | ViewMode::View => Some("text-xs font-light mt-1"),
         ViewMode::Print => None,
     };
 
     let notes_style = match view {
         ViewMode::Edit | ViewMode::View => None,
-        ViewMode::Print => {
-            Some("font-size: 0.75rem; line-height: 1.2; font-weight: 300; margin: 0;")
-        }
+        ViewMode::Print => Some(
+            "font-size: 0.75rem; line-height: 1.2; font-weight: 300; margin: 0; margin-top: 0.25rem",
+        ),
     };
 
     html! {
@@ -945,6 +949,12 @@ fn render_list_item_details(item: &ShoppingListItemDetails, view: &ViewMode) -> 
             }
             @if let Some(notes) = item.notes.as_deref() {
                 p class=[notes_class] style=[notes_style] { (notes) }
+            }
+            @if let Some(recipe) = &item.recipe {
+                p class=[notes_class] style=[notes_style] {
+                    "For "
+                    a href=(format!("/recipes/{}", recipe.id)) target="_blank" class="link" { (recipe.name) }
+                }
             }
         }
     }
@@ -1008,11 +1018,15 @@ pub fn render_recipe_add_shopping_dialog_content(
             div class="card-body" {
                 h3 class="mb-1 grid grid-flow-col" {
                     p .text-lg { "Add ingredients to shopping list" }
-                    select #add-to-shopping-list-select class="select" name="list" required {
-                      option disabled { "Pick a shopping list" }
-                      @for list in shopping_lists {
-                          option value=(list.id) { (&list.name) }
-                      }
+                    @if shopping_lists.is_empty() {
+                        input type="text" required class="input input-sm max-w-sm" placeholder="New shopping list name" name="list" value="";
+                    } @else {
+                        select #add-to-shopping-list-select class="select" name="list" required {
+                          option disabled { "Pick a shopping list" }
+                          @for list in shopping_lists {
+                              option value=(list.id) { (&list.name) }
+                          }
+                        }
                     }
                 }
                 div class="overflow-auto h-[50vh]" {

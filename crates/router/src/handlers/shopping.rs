@@ -110,6 +110,7 @@ pub async fn shopping_lists_handler(
 
 /// Handles GET requests to retrieve a shopping list.
 pub async fn shopping_list_handler(
+    header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
@@ -123,13 +124,15 @@ pub async fn shopping_list_handler(
         }
     };
 
+    let is_hx_request = is_hx_request(&header_map);
+
     match get_view_mode_from_cookie(&cookies) {
         ViewMode::Edit | ViewMode::Print => {
-            templates::shopping::render_shopping_list_view_edit(&list).into_response()
+            templates::shopping::render_shopping_list_view_edit(&list, is_hx_request)
+                .into_response()
         }
-        ViewMode::View => {
-            templates::shopping::render_shopping_list_view_view(&list).into_response()
-        }
+        ViewMode::View => templates::shopping::render_shopping_list_view_view(&list, is_hx_request)
+            .into_response(),
     }
 }
 
@@ -333,6 +336,7 @@ pub async fn shopping_list_print_handler(
 
 /// Handles GET requests to view a shopping list.
 pub async fn shopping_list_view_handler(
+    header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
@@ -357,10 +361,12 @@ pub async fn shopping_list_view_handler(
         state.config.read().await.is_production,
     );
 
+    let is_hx_request = is_hx_request(&header_map);
+
     match params.mode {
-        ViewMode::Edit => templates::shopping::render_shopping_list_view_edit(&list),
+        ViewMode::Edit => templates::shopping::render_shopping_list_view_edit(&list, is_hx_request),
         ViewMode::Print | ViewMode::View => {
-            templates::shopping::render_shopping_list_view_view(&list)
+            templates::shopping::render_shopping_list_view_view(&list, is_hx_request)
         }
     }
     .into_response()
@@ -758,12 +764,30 @@ pub async fn shopping_recipe_ingredients_post_handler(
     RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
-    axum_extra::extract::Form(payload): axum_extra::extract::Form<RecipeIngredientsPayload>,
+    axum_extra::extract::Form(mut payload): axum_extra::extract::Form<RecipeIngredientsPayload>,
 ) -> impl IntoResponse {
-    let list = match ShoppingList::get(&state.mm, payload.list, user.id).await {
+    payload.clean();
+    if payload.is_empty() {
+        broadcast_warning(&state, user.id, "Payload is invalid.").await;
+        return Error::InvalidPayload.into_response();
+    }
+
+    let list_id = match Uuid::parse_str(&payload.list) {
+        Ok(id) => id,
+        Err(_) => match ShoppingList::create(&state.mm, payload.list, user.id).await {
+            Ok(list) => list,
+            Err(err) => {
+                error!("Failed to create new shopping list: {err}",);
+                broadcast_error(&state, user.id, "Failed to create new shopping list.").await;
+                return Error::Database.into_response();
+            }
+        },
+    };
+
+    let list = match ShoppingList::get(&state.mm, list_id, user.id).await {
         Ok(list) => list,
         Err(err) => {
-            error!("Failed to fetch shopping list '{}': {err}", payload.list);
+            error!("Failed to fetch shopping list '{list_id}': {err}");
             broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
             return Error::Database.into_response();
         }
