@@ -46,7 +46,9 @@ impl RecipeIngredientsPayload {
     /// Removes noise from the fields.
     pub fn clean(&mut self) {
         let trim = |v: &mut Vec<String>| {
-            v.iter_mut().for_each(|s| *s = s.trim().to_string());
+            for s in v.iter_mut() {
+                *s = s.trim().to_string();
+            }
             v.retain(|s| !s.is_empty());
         };
 
@@ -57,7 +59,7 @@ impl RecipeIngredientsPayload {
     }
 
     /// Checks whether the payload has values.
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.ingredients.is_empty()
             || self.quantities.is_empty()
             || self.with_quantities.is_empty()
