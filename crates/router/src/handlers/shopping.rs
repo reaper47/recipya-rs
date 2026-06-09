@@ -37,7 +37,7 @@ use templates::shopping::AddShoppingIngredient;
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{broadcast_error, broadcast_success, broadcast_warning};
-use crate::middleware::mw_auth::RequireAuth;
+use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::recipes_router::params::ShareRecipeForm;
 use crate::schemas::shopping::{ListItemPayload, ListPayload, RecipeIngredientsPayload};
 use crate::{Error, Result};
@@ -694,13 +694,15 @@ pub async fn shopping_list_item_edit_handler(
 
 /// Handles PUT requests to update a shopping list item.
 pub async fn shopping_list_item_toggle_handler(
-    RequireAuth(user): RequireAuth,
+    OptionalAuth(user): OptionalAuth,
     State(state): State<AppState>,
-    Path((list_id, item_id)): Path<(Uuid, i64)>,
+    Path(item_id): Path<i64>,
 ) -> impl IntoResponse {
-    if let Err(err) = ShoppingList::toggle_item_check(&state.mm, list_id, item_id, user.id).await {
+    if let Err(err) = ShoppingList::toggle_item_check(&state.mm, item_id).await {
         error!("Failed to toggle item check: {err}");
-        broadcast_error(&state, user.id, "Failed to toggle item check.").await;
+        if let Some(user) = user {
+            broadcast_error(&state, user.id, "Failed to toggle item check.").await;
+        }
         return Error::Database.into_response();
     }
 

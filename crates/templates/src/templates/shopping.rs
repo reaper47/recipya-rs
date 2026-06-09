@@ -694,7 +694,7 @@ pub fn render_shopping_list_item(
                     label class="label text-base-content" {
                         input type="checkbox"
                             class="checkbox peer"
-                            hx-post=(format!("/shopping/lists/{list_id}/items/{}/toggle", item.id))
+                            hx-post=(format!("/shopping/lists/items/{}/toggle", item.id))
                             checked[item.is_checked];
 
                         (render_list_item_details(item, &ViewMode::Edit))
