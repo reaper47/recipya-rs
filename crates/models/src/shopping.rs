@@ -947,23 +947,14 @@ impl ShoppingList {
     }
 
     /// Toggles the checked state of an item in a shopping list.
-    pub async fn toggle_item_check(
-        mm: &ModelManager,
-        list_id: Uuid,
-        item_id: i64,
-        user_id: Uuid,
-    ) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
-        Self::verify_ownership(&mut conn, list_id, user_id).await?;
-
+    pub async fn toggle_item_check(mm: &ModelManager, item_id: i64) -> Result<()> {
         diesel::update(schema::shopping_list_items::table)
             .filter(schema::shopping_list_items::id.eq(item_id))
             .set(
                 schema::shopping_list_items::is_checked
                     .eq(diesel::dsl::not(schema::shopping_list_items::is_checked)),
             )
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -1835,7 +1826,7 @@ mod tests {
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
-        ShoppingList::toggle_item_check(&state.mm, list_id, item.id, user_id).await?;
+        ShoppingList::toggle_item_check(&state.mm, item.id).await?;
 
         let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
         assert!(got.items[0].is_checked);
@@ -1851,8 +1842,8 @@ mod tests {
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
-        ShoppingList::toggle_item_check(&state.mm, list_id, item.id, user_id).await?;
-        ShoppingList::toggle_item_check(&state.mm, list_id, item.id, user_id).await?;
+        ShoppingList::toggle_item_check(&state.mm, item.id).await?;
+        ShoppingList::toggle_item_check(&state.mm, item.id).await?;
 
         let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
         assert!(!got.items[0].is_checked);
