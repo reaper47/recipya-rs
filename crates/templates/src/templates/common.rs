@@ -1,7 +1,7 @@
 use maud::{Markup, html};
 
 pub fn cancel_submit_form_actions(
-    submit_content: Markup,
+    submit_content: &Markup,
     button_id: &str,
     is_submit_disabled: bool,
 ) -> Markup {

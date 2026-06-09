@@ -32,11 +32,11 @@ infer.workspace = true
 ingredient = "0.3.0"
 iso8601.workspace = true
 itertools.workspace = true
+krilla.workspace = true
 lru.workspace = true
 math.workspace = true
 paste = "1.0.15"
 pdf = { path = "../pdf" }
-printpdf.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true

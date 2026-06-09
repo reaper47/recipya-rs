@@ -1,20 +1,23 @@
-use std::{collections::HashMap, io::Write, path::PathBuf};
+use std::{collections::HashMap, io::Write, mem::take, path::PathBuf};
 
 use chrono::NaiveDateTime;
 use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
-use printpdf::{
-    Color, Mm, Op, ParsedFont, PdfDocument, PdfFontHandle, PdfPage, PdfSaveOptions, Point, Pt, Rgb,
-    TextItem,
+use krilla::{
+    geom::{PathBuilder, Rect},
+    metadata::{DateTime, Metadata, PageLayout},
+    page::PageSettings,
+    text::{Font, TextDirection},
 };
 use tempfile::{NamedTempFile, env::temp_dir};
+use tracing::error;
 use uuid::Uuid;
 
 use pdf::{
-    components::ComponentOptions,
+    components::{add_header, add_page_title},
     fonts::{ROBOTO_LIGHT_FONT_BYTES, ROBOTO_REGULAR_FONT_BYTES, ROBOTO_SEMIBOLD_FONT_BYTES},
-    math::measure_text_height_mm,
+    math::{measure_text_height, measure_text_width_pt},
 };
 use repository::{ModelManager, schema};
 
@@ -24,11 +27,9 @@ use crate::{
     user::User,
 };
 
-const MARGIN_MM: f32 = 25.4;
 const FONT_SIZE_BODY_PT: f32 = 11.0;
 const FONT_SIZE_TITLE_PT: f32 = 14.0;
-const LINE_HEIGHT_FACTOR: f32 = 1.4;
-const ROW_STEP_MM: f32 = 7.5;
+const ROW_STEP: f32 = 7.5 * 2.834_645_7;
 
 /// Represents a shopping list.
 #[derive(Clone, Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
@@ -162,6 +163,15 @@ pub struct ShoppingListDetails {
     pub updated_at: NaiveDateTime,
 }
 
+enum DrawCommand {
+    Header,
+    Title { text: String, y: f32 },
+    SectionLabel { text: String, y: f32 },
+    Checkbox { y: f32 },
+    ItemText { text: String, y: f32 },
+    NotesText { text: String, y: f32 },
+}
+
 impl ShoppingListDetails {
     /// Returns a map of items grouped by their label.
     pub fn items_per_label(&self) -> IndexMap<&str, Vec<&ShoppingListItemDetails>> {
@@ -293,190 +303,219 @@ impl ShoppingListDetails {
             return Err(Error::EmptyInput);
         }
 
-        let mut doc = PdfDocument::new(&format!("Shopping List - {}", &self.name));
-        let (width_mm, height_mm) = options.map_or((216.0, 356.0), |o| o.paper_size);
+        let (width, height) = options.map_or((612.0, 792.0), |o| o.paper_size);
+        let font_light = Font::new(ROBOTO_LIGHT_FONT_BYTES.into(), 0).unwrap();
+        let font_regular = Font::new(ROBOTO_REGULAR_FONT_BYTES.into(), 0).unwrap();
+        let font_semibold = Font::new(ROBOTO_SEMIBOLD_FONT_BYTES.into(), 0).unwrap();
 
-        let mut warnings = Vec::new();
-        let mut load = |bytes| ParsedFont::from_bytes(bytes, 0, &mut warnings).unwrap();
-        let font_light = load(ROBOTO_LIGHT_FONT_BYTES);
-        let font_regular = load(ROBOTO_REGULAR_FONT_BYTES);
-        let font_semibold = load(ROBOTO_SEMIBOLD_FONT_BYTES);
-        let font_light_id = doc.add_font(&font_light);
-        let font_regular_id = doc.add_font(&font_regular);
-        let font_semibold_id = doc.add_font(&font_semibold);
+        let y_title = measure_text_height(FONT_SIZE_TITLE_PT, 1.25, 1) + 5.0;
+        let y_body_1_25 = measure_text_height(FONT_SIZE_BODY_PT, 1.25, 1);
+        let y_body_1_00 = measure_text_height(FONT_SIZE_BODY_PT, 1.0, 1);
+        let y_small_1_00 = measure_text_height(FONT_SIZE_BODY_PT - 2.0, 1.0, 1);
+        let y_small_0_50 = measure_text_height(FONT_SIZE_BODY_PT - 2.0, 0.50, 1);
 
-        let base_opts = ComponentOptions {
-            font: font_regular.clone(),
-            font_id: font_regular_id.clone(),
-            font_size: FONT_SIZE_BODY_PT,
-            font_height: FONT_SIZE_BODY_PT * LINE_HEIGHT_FACTOR,
-            page_width_mm: width_mm,
-            page_height_mm: height_mm,
-            margin_mm: MARGIN_MM,
+        // Prepare the pages.
+        let mut pages: Vec<Vec<DrawCommand>> = Vec::new();
+        let mut current_page: Vec<DrawCommand> = Vec::new();
+        let mut curr_y = 72.0;
+
+        let start_new_page = |current_page: &mut Vec<DrawCommand>,
+                              pages: &mut Vec<Vec<DrawCommand>>,
+                              curr_y: &mut f32| {
+            let finished = take(current_page);
+            pages.push(finished);
+            current_page.push(DrawCommand::Header);
+            *curr_y = 72.0;
         };
 
-        let header_ops = |ops: &mut Vec<Op>| {
-            ops.extend([
-                Op::SetFont {
-                    font: PdfFontHandle::External(font_regular_id.clone()),
-                    size: Pt(FONT_SIZE_BODY_PT),
-                },
-                Op::SetLineHeight {
-                    lh: Pt(FONT_SIZE_BODY_PT * LINE_HEIGHT_FACTOR),
-                },
-                Op::SetFillColor {
-                    col: Color::Rgb(Rgb::new(0.0, 0.0, 0.0, None)),
-                },
-            ]);
+        current_page.push(DrawCommand::Header);
+        current_page.push(DrawCommand::Title {
+            text: self.name.clone(),
+            y: curr_y,
+        });
+        curr_y += y_title;
 
-            ops.extend(pdf::components::header(
-                Some("Recipya shopping list"),
-                Some(&self.updated_at.format("%Y-%m-%d").to_string()),
-                &ComponentOptions {
-                    font_size: FONT_SIZE_TITLE_PT / 2.0,
-                    ..base_opts.clone()
-                },
-            ));
-        };
-
-        let footer_ops = |page_num: usize, num_pages: usize, ops: &mut Vec<Op>| {
-            ops.extend([
-                Op::SaveGraphicsState,
-                Op::SetFont {
-                    font: PdfFontHandle::External(font_regular_id.clone()),
-                    size: Pt(FONT_SIZE_BODY_PT - 3.0),
-                },
-                Op::StartTextSection,
-                Op::SetTextCursor {
-                    pos: Point::new(Mm(width_mm / 2.0), Mm(7.5)),
-                },
-                Op::ShowText {
-                    items: vec![TextItem::Text(format!("Page {page_num} of {num_pages}"))],
-                },
-                Op::EndTextSection,
-                Op::SetFont {
-                    font: PdfFontHandle::External(font_regular_id.clone()),
-                    size: Pt(FONT_SIZE_BODY_PT),
-                },
-                Op::RestoreGraphicsState,
-            ]);
-        };
-
-        let mut pages: Vec<PdfPage> = Vec::new();
-        let mut ops: Vec<Op> = Vec::new();
-        let mut current_y = height_mm - MARGIN_MM;
-
-        let new_page = |pages: &mut Vec<PdfPage>, ops: &mut Vec<Op>, current_y: &mut f32| {
-            let page_ops = std::mem::take(ops);
-            pages.push(PdfPage::new(Mm(width_mm), Mm(height_mm), page_ops));
-            header_ops(ops);
-            *current_y = height_mm - MARGIN_MM;
-        };
-
-        let ensure_enough_space_page =
-            |rows_needed: f32, pages: &mut Vec<PdfPage>, ops: &mut Vec<Op>, current_y: &mut f32| {
-                if ROW_STEP_MM.mul_add(-rows_needed, *current_y) <= MARGIN_MM {
-                    new_page(pages, ops, current_y);
-                }
-            };
-
-        header_ops(&mut ops);
-        ops.extend(pdf::components::title(
-            &self.name,
-            current_y,
-            ComponentOptions {
-                font_size: FONT_SIZE_TITLE_PT,
-                ..base_opts.clone()
-            },
-        ));
-        current_y -= 5.0;
-
-        for (section, items) in self.items_per_label() {
-            ensure_enough_space_page(2.0, &mut pages, &mut ops, &mut current_y);
-            current_y -= ROW_STEP_MM;
+        for (idx, (&section, items)) in self.items_per_label().iter().enumerate() {
+            if ROW_STEP.mul_add(3.0, curr_y) >= (height - 72.0) {
+                start_new_page(&mut current_page, &mut pages, &mut curr_y);
+            }
 
             if section != "No label" {
-                ops.extend([
-                    Op::SaveGraphicsState,
-                    Op::SetFont {
-                        font: PdfFontHandle::External(font_semibold_id.clone()),
-                        size: Pt(FONT_SIZE_BODY_PT),
-                    },
-                    Op::StartTextSection,
-                    Op::SetTextCursor {
-                        pos: Point::new(Mm(MARGIN_MM - 5.0), Mm(current_y)),
-                    },
-                    Op::ShowText {
-                        items: vec![TextItem::Text(section.into())],
-                    },
-                    Op::EndTextSection,
-                    Op::RestoreGraphicsState,
-                    Op::SetFont {
-                        font: PdfFontHandle::External(font_regular_id.clone()),
-                        size: Pt(FONT_SIZE_BODY_PT),
-                    },
-                ]);
+                if idx > 0 {
+                    curr_y += 20.0;
+                }
+
+                current_page.push(DrawCommand::SectionLabel {
+                    text: section.into(),
+                    y: curr_y,
+                });
+
+                curr_y += y_body_1_25;
             }
 
             for item in items {
-                let num_rows = if item.notes.is_some() { 2.0 } else { 1.0 };
-                ensure_enough_space_page(num_rows, &mut pages, &mut ops, &mut current_y);
-                current_y -= ROW_STEP_MM;
+                let num_rows = if item.notes.is_some() && item.recipe.is_some() {
+                    3.0
+                } else if item.notes.is_some() || item.recipe.is_some() {
+                    2.0
+                } else {
+                    1.0
+                };
 
-                let label = item.quantity.as_ref().map_or_else(
-                    || item.ingredient.clone(),
-                    |q| format!("{} ({q})", item.ingredient),
-                );
+                if ROW_STEP.mul_add(num_rows, curr_y) >= (height - 72.0) {
+                    start_new_page(&mut current_page, &mut pages, &mut curr_y);
+                } else {
+                    curr_y += y_body_1_00;
+                }
 
-                ops.extend([
-                    Op::SaveGraphicsState,
-                    Op::SetOutlineColor {
-                        col: Color::Rgb(Rgb::new(0.0, 0.0, 0.0, None)),
-                    },
-                    Op::SetOutlineThickness { pt: Pt(0.5) },
-                    pdf::components::checkbox(MARGIN_MM, current_y),
-                    Op::RestoreGraphicsState,
-                    Op::StartTextSection,
-                    Op::SetTextCursor {
-                        pos: Point::new(Mm(MARGIN_MM), Mm(current_y)),
-                    },
-                    Op::ShowText {
-                        items: vec![TextItem::Text(label)],
-                    },
-                ]);
+                current_page.push(DrawCommand::Checkbox { y: curr_y });
+                current_page.push(DrawCommand::ItemText {
+                    text: item.quantity.as_ref().map_or_else(
+                        || item.ingredient.clone(),
+                        |q| format!("{} ({q})", item.ingredient),
+                    ),
+                    y: curr_y,
+                });
+                curr_y += y_body_1_00;
 
                 if let Some(notes) = &item.notes {
-                    let notes_font_size = FONT_SIZE_BODY_PT - 2.0;
-                    ops.extend([
-                        Op::SaveGraphicsState,
-                        Op::SetFont {
-                            font: PdfFontHandle::External(font_light_id.clone()),
-                            size: Pt(notes_font_size),
-                        },
-                        Op::AddLineBreak,
-                        Op::ShowText {
-                            items: vec!["    *".into(), TextItem::Text(notes.into())],
-                        },
-                        Op::EndTextSection,
-                        Op::RestoreGraphicsState,
-                    ]);
-                    current_y -= measure_text_height_mm(notes_font_size, LINE_HEIGHT_FACTOR, 1);
-                } else {
-                    ops.push(Op::EndTextSection);
+                    current_page.push(DrawCommand::NotesText {
+                        text: notes.clone(),
+                        y: curr_y + 2.5,
+                    });
+                    curr_y += y_small_1_00;
+                }
+
+                if let Some(recipe) = &item.recipe {
+                    if item.notes.is_some() {
+                        curr_y += y_small_0_50;
+                    }
+
+                    current_page.push(DrawCommand::NotesText {
+                        text: format!("For recipe: {}", recipe.name),
+                        y: curr_y + 2.5,
+                    });
+                    curr_y += y_small_1_00;
                 }
             }
         }
 
-        pages.push(PdfPage::new(Mm(width_mm), Mm(height_mm), ops));
-
+        pages.push(current_page);
         let num_pages = pages.len();
-        for (idx, page) in &mut pages.iter_mut().enumerate() {
-            footer_ops(idx + 1, num_pages, &mut page.ops);
+
+        // Render the pages
+        let mut doc = krilla::Document::new();
+
+        doc.set_metadata(
+            Metadata::new()
+                .title(format!("Shopping List - {}", &self.name))
+                .creation_date({
+                    let now = time::UtcDateTime::now();
+                    DateTime::new(u16::try_from(now.year()).unwrap_or_default())
+                        .day(now.day())
+                        .month(now.month() as u8)
+                        .hour(now.hour())
+                        .minute(now.minute())
+                        .second(now.second())
+                })
+                .creator("Recipya".into())
+                .description(format!("PDF export of the '{}' shopping list", &self.name))
+                .page_layout(PageLayout::SinglePage)
+                .language("en".into()),
+        );
+
+        for (idx, commands) in pages.into_iter().enumerate() {
+            let page_num = idx + 1;
+            let mut page =
+                doc.start_page_with(PageSettings::from_wh(width, height).unwrap_or_default());
+            let mut surface = page.surface();
+
+            for cmd in commands {
+                match cmd {
+                    DrawCommand::Header => add_header(
+                        Some("Recipya shopping list"),
+                        Some(&self.updated_at.format("%Y-%m-%d").to_string()),
+                        &mut surface,
+                        (
+                            &font_regular,
+                            ROBOTO_REGULAR_FONT_BYTES,
+                            FONT_SIZE_TITLE_PT / 2.0,
+                        ),
+                        72.0,
+                        width,
+                    ),
+                    DrawCommand::Title { text, y } => add_page_title(
+                        &text,
+                        (&font_regular, ROBOTO_REGULAR_FONT_BYTES, FONT_SIZE_TITLE_PT),
+                        &mut surface,
+                        y,
+                        width,
+                    ),
+                    DrawCommand::SectionLabel { text, y } => surface.draw_text(
+                        krilla::geom::Point::from_xy(72.0, y),
+                        font_semibold.clone(),
+                        FONT_SIZE_BODY_PT,
+                        &text,
+                        false,
+                        TextDirection::Auto,
+                    ),
+                    DrawCommand::Checkbox { y } => {
+                        surface.set_stroke(Some(krilla::paint::Stroke {
+                            paint: krilla::color::rgb::Color::new(0, 0, 0).into(),
+                            width: FONT_SIZE_BODY_PT * 0.06,
+                            ..Default::default()
+                        }));
+                        let mut path = PathBuilder::new();
+                        path.push_rect(
+                            Rect::from_ltrb(72.0, y - 8.0, 72.0 + 7.5, y - 0.5).unwrap(),
+                        );
+                        surface.draw_path(&path.finish().unwrap());
+                        surface.set_stroke(None);
+                    }
+                    DrawCommand::ItemText { text, y } => surface.draw_text(
+                        krilla::geom::Point::from_xy(72.0 + 12.5, y),
+                        font_regular.clone(),
+                        FONT_SIZE_BODY_PT,
+                        &text,
+                        false,
+                        TextDirection::Auto,
+                    ),
+                    DrawCommand::NotesText { text, y } => surface.draw_text(
+                        krilla::geom::Point::from_xy(72.0 + 12.5, y),
+                        font_light.clone(),
+                        FONT_SIZE_BODY_PT - 2.0,
+                        &format!("    * {text}"),
+                        false,
+                        TextDirection::Auto,
+                    ),
+                }
+            }
+
+            let footer_text = format!("Page {page_num} of {num_pages}");
+            let footer_width = measure_text_width_pt(
+                &footer_text,
+                &font_regular,
+                ROBOTO_REGULAR_FONT_BYTES,
+                0,
+                FONT_SIZE_BODY_PT - 3.0,
+            );
+            surface.draw_text(
+                krilla::geom::Point::from_xy((width - footer_width) / 2.0, height - 20.0),
+                font_regular.clone(),
+                FONT_SIZE_BODY_PT - 3.0,
+                &footer_text,
+                false,
+                TextDirection::Auto,
+            );
+
+            surface.finish();
+            page.finish();
         }
 
-        let bytes: Vec<u8> = doc
-            .with_pages(pages)
-            .save(&PdfSaveOptions::default(), &mut vec![]);
+        let bytes = doc
+            .finish()
+            .inspect_err(|err| error!("Failed to create shopping list pdf: {err}"))
+            .unwrap_or_default();
 
         writer.write_all(&bytes)?;
         Ok(())

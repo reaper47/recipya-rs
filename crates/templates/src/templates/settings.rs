@@ -842,7 +842,7 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                         }
                     }
                 }
-                (cancel_submit_form_actions(icon_arrow_down_tray(), "export-data-submit-button", true))
+                (cancel_submit_form_actions(&icon_arrow_down_tray(), "export-data-submit-button", true))
             }
         }
     }

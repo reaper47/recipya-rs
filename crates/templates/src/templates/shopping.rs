@@ -1041,10 +1041,10 @@ pub fn render_recipe_add_shopping_dialog_content(
                                         (ing.name)
                                     }
                                     td .py-1.text-center {
-                                        input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value=(ing.quantity.unwrap_or("-".into())) _="install OnMasterToggled";
+                                        input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value=(ing.quantity.unwrap_or_else(|| "-".into())) _="install OnMasterToggled";
                                     }
                                     td .py-1.text-center {
-                                        input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value=(ing.notes.unwrap_or("-".into())) _="install OnMasterToggled";
+                                        input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value=(ing.notes.unwrap_or_else(|| "-".into())) _="install OnMasterToggled";
                                     }
                                     td class="py-1 text-center select-none" {
                                         input type="hidden" .ingredient-element name="with-quantity" value="true" _="install OnMasterToggled";
@@ -1055,7 +1055,7 @@ pub fn render_recipe_add_shopping_dialog_content(
                         }
                     }
                 }
-                (cancel_submit_form_actions(html! { "Submit" }, "add-ingredients-submit-button", false))
+                (cancel_submit_form_actions(&html! { "Submit" }, "add-ingredients-submit-button", false))
             }
         }
     }

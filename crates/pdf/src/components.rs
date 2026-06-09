@@ -1,169 +1,92 @@
-use printpdf::{
-    FontId, Line, LinePoint, Mm, Op, PaintMode, ParsedFont, PdfFontHandle, Point, Polygon,
-    PolygonRing, Pt, TextItem, WindingOrder,
+use krilla::{
+    geom::PathBuilder,
+    surface::Surface,
+    text::{Font, TextDirection},
 };
 
-use crate::math::{measure_text_width_pt, pt_to_mm};
+use crate::math::measure_text_width_pt;
 
-/// Options for a component.
-#[derive(Clone)]
-pub struct ComponentOptions {
-    pub font: ParsedFont,
-    pub font_id: FontId,
-    pub font_size: f32,
-    pub font_height: f32,
-    pub page_width_mm: f32,
-    pub page_height_mm: f32,
-    pub margin_mm: f32,
+/// Adds a page title to a PDF page.
+///
+/// # Panics
+///
+/// Panics if the font data is invalid or the font index is out of bounds.
+pub fn add_page_title(
+    title: &str,
+    font: (&Font, &[u8], f32),
+    surface: &mut Surface,
+    curr_y: f32,
+    page_width: f32,
+) {
+    let (font, font_data, font_size) = font;
+
+    let title_width = measure_text_width_pt(title, font, font_data, 0, font_size);
+
+    surface.draw_text(
+        krilla::geom::Point::from_xy((page_width - title_width) / 2.0, curr_y),
+        font.clone(),
+        font_size,
+        title,
+        false,
+        TextDirection::Auto,
+    );
+
+    let underline_offset = font_size * 0.10;
+    let underline_thickness = font_size * 0.06;
+    let underline_y = curr_y + underline_offset;
+
+    let underline = {
+        let mut pb = PathBuilder::new();
+        pb.move_to((page_width - title_width) / 2.0, underline_y);
+        pb.line_to(
+            ((page_width - title_width) / 2.0) + title_width,
+            underline_y,
+        );
+        pb.finish().unwrap()
+    };
+
+    surface.set_stroke(Some(krilla::paint::Stroke {
+        paint: krilla::color::rgb::Color::new(0, 0, 0).into(),
+        width: underline_thickness,
+        ..Default::default()
+    }));
+    surface.draw_path(&underline);
+    surface.set_stroke(None);
 }
 
-/// Draws a checkbox at the given margin and current y position.
-pub fn checkbox(margin_mm: f32, current_y_mm: f32) -> Op {
-    Op::DrawPolygon {
-        polygon: Polygon {
-            rings: vec![PolygonRing {
-                points: vec![
-                    LinePoint {
-                        p: Point {
-                            x: Mm(margin_mm - 5.0).into_pt(),
-                            y: Mm(current_y_mm).into_pt(),
-                        },
-                        bezier: false,
-                    },
-                    LinePoint {
-                        p: Point {
-                            x: Mm(margin_mm - 2.5).into_pt(),
-                            y: Mm(current_y_mm).into_pt(),
-                        },
-                        bezier: false,
-                    },
-                    LinePoint {
-                        p: Point {
-                            x: Mm(margin_mm - 2.5).into_pt(),
-                            y: Mm(current_y_mm + 2.5).into_pt(),
-                        },
-                        bezier: false,
-                    },
-                    LinePoint {
-                        p: Point {
-                            x: Mm(margin_mm - 5.0).into_pt(),
-                            y: Mm(current_y_mm + 2.5).into_pt(),
-                        },
-                        bezier: false,
-                    },
-                ],
-            }],
-            mode: PaintMode::Stroke,
-            winding_order: WindingOrder::NonZero,
-        },
-    }
-}
-
-/// Returns the header section as a vector of PDF operations.
-pub fn header(
+/// Adds the header to a PDF page.
+pub fn add_header(
     left_text: Option<&str>,
     right_text: Option<&str>,
-    options: &ComponentOptions,
-) -> Vec<Op> {
-    let left_ops: &[Op] = if let Some(s) = left_text {
-        &[
-            Op::SaveGraphicsState,
-            Op::SetFont {
-                font: PdfFontHandle::External(options.font_id.clone()),
-                size: Pt(options.font_size),
-            },
-            Op::SetLineHeight {
-                lh: Pt(options.font_height),
-            },
-            Op::StartTextSection,
-            Op::SetTextCursor {
-                pos: Point::new(Mm(10.0), Mm(options.page_height_mm - 9.0)),
-            },
-            Op::ShowText {
-                items: vec![TextItem::Text(s.into())],
-            },
-            Op::EndTextSection,
-        ]
-    } else {
-        &[
-            Op::SaveGraphicsState,
-            Op::SetFont {
-                font: PdfFontHandle::External(options.font_id.clone()),
-                size: Pt(options.font_size),
-            },
-            Op::SetLineHeight {
-                lh: Pt(options.font_height),
-            },
-        ]
-    };
+    surface: &mut Surface,
+    font: (&Font, &[u8], f32),
+    margin: f32,
+    page_width: f32,
+) {
+    let (font, font_data, font_size) = font;
+    let y = margin * 0.3333;
 
-    let right_ops: &[Op] = if let Some(s) = right_text {
-        &[
-            Op::StartTextSection,
-            Op::SetTextCursor {
-                pos: Point::new(
-                    Mm(options.page_width_mm - options.margin_mm),
-                    Mm(options.page_height_mm - 9.0),
-                ),
-            },
-            Op::ShowText {
-                items: vec![TextItem::Text(s.into())],
-            },
-            Op::EndTextSection,
-            Op::RestoreGraphicsState,
-        ]
-    } else {
-        &[Op::EndTextSection, Op::RestoreGraphicsState]
-    };
+    if let Some(s) = left_text {
+        surface.draw_text(
+            krilla::geom::Point::from_xy(y, y),
+            font.clone(),
+            font_size,
+            s,
+            false,
+            TextDirection::Auto,
+        );
+    }
 
-    [left_ops, right_ops].concat()
-}
+    if let Some(s) = right_text {
+        let text_width = measure_text_width_pt(s, font, font_data, 0, font_size);
 
-pub fn title(title: &str, mut current_y_mm: f32, options: ComponentOptions) -> Vec<Op> {
-    let title_width_pt = measure_text_width_pt(title, &options.font, options.font_size);
-    let y_pos_mm = options.page_height_mm - options.margin_mm;
-    let center_x_mm = pt_to_mm((Mm(options.page_width_mm).into_pt().0 - title_width_pt) / 2.0);
-
-    vec![
-        Op::SaveGraphicsState,
-        Op::SetFont {
-            font: PdfFontHandle::External(options.font_id),
-            size: Pt(options.font_size),
-        },
-        Op::StartTextSection,
-        Op::SetTextCursor {
-            pos: Point::new(Mm(center_x_mm), Mm(y_pos_mm)),
-        },
-        Op::ShowText {
-            items: vec![TextItem::Text(title.into())],
-        },
-        Op::EndTextSection,
-        Op::SetOutlineThickness { pt: Pt(1.0) },
-        {
-            current_y_mm -= 0.5;
-
-            Op::DrawLine {
-                line: Line {
-                    points: vec![
-                        LinePoint {
-                            p: Point {
-                                x: Mm(center_x_mm).into_pt(),
-                                y: Mm(current_y_mm).into_pt(),
-                            },
-                            bezier: false,
-                        },
-                        LinePoint {
-                            p: Point {
-                                x: Mm(center_x_mm).into_pt() + Pt(title_width_pt),
-                                y: Mm(current_y_mm).into_pt(),
-                            },
-                            bezier: false,
-                        },
-                    ],
-                    is_closed: false,
-                },
-            }
-        },
-        Op::RestoreGraphicsState,
-    ]
+        surface.draw_text(
+            krilla::geom::Point::from_xy(page_width - margin.mul_add(0.3333, text_width), y),
+            font.clone(),
+            font_size,
+            s,
+            false,
+            TextDirection::Auto,
+        );
+    }
 }

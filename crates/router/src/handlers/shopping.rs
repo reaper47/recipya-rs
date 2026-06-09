@@ -305,7 +305,10 @@ async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<Ex
         })?;
 
     Ok(Some(ExportOptions {
-        paper_size: (paper_size.width_mm as f32, paper_size.height_mm as f32),
+        paper_size: (
+            paper_size.width_in as f32 * 72.0,
+            paper_size.height_in as f32 * 72.0,
+        ),
     }))
 }
 
@@ -782,7 +785,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
             },
             label: None,
             recipe_id: Some(recipe_id),
-            notes: if &notes != "-" { Some(notes) } else { None },
+            notes: if &notes == "-" { None } else { Some(notes) },
         },
     )
     .collect::<Vec<_>>();

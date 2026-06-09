@@ -234,7 +234,7 @@ mod tests {
             #[tokio::test]
             async fn test_invalid_payload_ok() -> Result<()> {
                 let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let server = build_server_logged_in(config).await?;
 
                 let res = server
                     .post(BASE_URI)
