@@ -15,7 +15,8 @@ use crate::{
         shopping_list_label_put_handler, shopping_list_labels_new_handler,
         shopping_list_labels_post_handler, shopping_list_print_handler, shopping_list_put_handler,
         shopping_list_share_post_handler, shopping_list_view_handler, shopping_lists_handler,
-        shopping_lists_post_handler,
+        shopping_lists_post_handler, shopping_recipe_ingredients_handler,
+        shopping_recipe_ingredients_post_handler,
     },
     middleware::mw_auth::mw_refresh_token,
 };
@@ -76,6 +77,10 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
         .route(
             "/lists/{:list_id}/items/{:item_id}/toggle",
             post(shopping_list_item_toggle_handler),
+        )
+        .route(
+            "/recipes/{:recipe_id}/ingredients",
+            get(shopping_recipe_ingredients_handler).post(shopping_recipe_ingredients_post_handler),
         )
         .layer(from_fn_with_state(state.clone(), mw_refresh_token))
 }
@@ -779,7 +784,7 @@ mod tests {
                 &res,
                 &[
                     &format!(
-                        r#"<li class="list-row grid grid-cols-[1fr_auto]" data-item-id="1" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/{list_id}/items/1/toggle"><div class="text-left [input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all"><p>Apples (50)</p><p class="text-xs font-light">new notes</p></div></label></div><div class="flex gap-1 place-content-end">"#
+                        r#"<li class="list-row grid grid-cols-[1fr_auto]" data-item-id="1" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/{list_id}/items/1/toggle"><div class="text-left [input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all"><p>Apples (50)</p><p class="text-xs font-light mt-1">new notes</p></div></label></div><div class="flex gap-1 place-content-end">"#
                     ),
                     &format!(
                         r#"<button class="btn join-item btn-square btn-sm [li:has(input:checked)_&amp;]:hidden transition-all" hx-target="closest li" hx-swap="outerHTML" hx-get="/shopping/lists/{list_id}/items/1/edit"><svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>"#
@@ -840,6 +845,197 @@ mod tests {
                 ],
             );
             Ok(())
+        }
+    }
+
+    mod tests_recipes_ingredients {
+        use models::Recipe;
+        use models::settings::UserSettingDetails;
+        use test_models::a_complete_recipe_for_create;
+
+        use super::*;
+
+        fn base_uri(recipe_id: i64) -> String {
+            format!("/shopping/recipes/{recipe_id}/ingredients")
+        }
+
+        #[tokio::test]
+        async fn test_shopping_recipes_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::GET, &base_uri(1)).await?;
+            assert_must_be_logged_in(Method::POST, &base_uri(1)).await
+        }
+
+        mod tests_get {
+            use super::*;
+
+            #[tokio::test]
+            async fn test_no_shopping_lists_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let server = build_server_logged_in(config.clone()).await?;
+                let state = create_app_state(config).await;
+                let user_id = User::all(&state.mm).await?[0].id;
+                let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+                let recipe = a_complete_recipe_for_create().0;
+                let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+
+                let res = server.get(&base_uri(1)).await;
+
+                res.assert_status_ok();
+                assert_html(
+                    &res,
+                    &[
+                        r##"<form class="card bg-base-100 shadow-sm" hx-post="/shopping/recipes/1/ingredients" hx-indicator="#add-ingredients-submit-button-spinner" hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()">"##,
+                        r#"<div class="card-body"><h3 class="mb-1 grid grid-flow-col"><p class="text-lg">Add ingredients to shopping list</p><input type="text" required class="input input-sm max-w-sm" placeholder="New shopping list name" name="list" value=""></h3><div class="overflow-auto h-[50vh]">"#,
+                        r#"<table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><input type="checkbox" checked class="checkbox" _="on change set &lt;input.checkbox-ingredient/&gt;'s checked to my checked then send masterToggled to &lt;input.ingredient-element/&gt; then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></th><th class="py-1">Ingredient</th><th class="py-1">Quantity</th><th class="py-1">Notes</th><th class="py-1">Include<br>Quantity</th></tr></thead><tbody><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="blue spinach" _="install OnMasterToggled">blue spinach</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="1 cup" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="cinnamon" _="install OnMasterToggled">cinnamon</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="0.5 tbsp" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="top quality chicken filet" _="install OnMasterToggled">top quality chicken filet</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="4 lb" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="lemon juice" _="install OnMasterToggled">lemon juice</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="0.125 cup" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr></tbody></table>"#,
+                        r#"</div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="add-ingredients-submit-button" type="submit" class="btn btn-sm"><img id="add-ingredients-submit-button-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading...">Submit</button></div></div></div></form>"#,
+                    ],
+                );
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_has_shopping_lists_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let server = build_server_logged_in(config.clone()).await?;
+                let state = create_app_state(config).await;
+                let user_id = User::all(&state.mm).await?[0].id;
+                let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+                let recipe = a_complete_recipe_for_create().0;
+                let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+                let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
+
+                let res = server.get(&base_uri(1)).await;
+
+                res.assert_status_ok();
+                assert_html(
+                    &res,
+                    &[
+                        r##"<form class="card bg-base-100 shadow-sm" hx-post="/shopping/recipes/1/ingredients" hx-indicator="#add-ingredients-submit-button-spinner" hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()">"##,
+                        &format!(
+                            r#"<div class="card-body"><h3 class="mb-1 grid grid-flow-col"><p class="text-lg">Add ingredients to shopping list</p><select id="add-to-shopping-list-select" class="select" name="list" required><option disabled>Pick a shopping list</option><option value="{list_id}">Test</option></select></h3><div class="overflow-auto h-[50vh]">"#
+                        ),
+                        r#"<table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><input type="checkbox" checked class="checkbox" _="on change set &lt;input.checkbox-ingredient/&gt;'s checked to my checked then send masterToggled to &lt;input.ingredient-element/&gt; then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></th><th class="py-1">Ingredient</th><th class="py-1">Quantity</th><th class="py-1">Notes</th><th class="py-1">Include<br>Quantity</th></tr></thead><tbody><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="blue spinach" _="install OnMasterToggled">blue spinach</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="1 cup" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="cinnamon" _="install OnMasterToggled">cinnamon</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="0.5 tbsp" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="top quality chicken filet" _="install OnMasterToggled">top quality chicken filet</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="4 lb" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr><tr><td class="py-1"><input type="checkbox" checked class="checkbox checkbox-ingredient" _="on change or change from &lt;input.master-checkbox/&gt; for el in &lt;input.ingredient-element/&gt; in closest &lt;tr/&gt; toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')"></td><td class="max-w-[30ch] py-1"><input class="ingredient-element" type="hidden" name="ingredients" value="lemon juice" _="install OnMasterToggled">lemon juice</td><td class="py-1 text-center"><input type="text" name="quantities" placeholder="1 cup" class="input input-sm max-w-sm ingredient-element" value="0.125 cup" _="install OnMasterToggled"></td><td class="py-1 text-center"><input type="text" name="notes" placeholder="large" class="input input-sm max-w-sm ingredient-element" value="-" _="install OnMasterToggled"></td><td class="py-1 text-center select-none"><input class="ingredient-element" type="hidden" name="with-quantity" value="true" _="install OnMasterToggled"><input type="checkbox" checked class="checkbox ingredient-element with-quantity" _="install OnMasterToggled"></td></tr></tbody></table>"#,
+                        r#"</div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="add-ingredients-submit-button" type="submit" class="btn btn-sm"><img id="add-ingredients-submit-button-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading...">Submit</button></div></div></div></form>"#,
+                    ],
+                );
+                Ok(())
+            }
+        }
+
+        mod tests_post {
+            use models::shopping::{
+                ShoppingListDetails, ShoppingListItemDetails, ShoppingListRecipeDetails,
+            };
+
+            use super::*;
+
+            #[tokio::test]
+            async fn test_no_ingredient_selected_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+
+                let res = server
+                    .post(&base_uri(1))
+                    .form(&[
+                        ("list", "Main"),
+                        ("ingredients", ""),
+                        ("quantities", ""),
+                        ("notes", ""),
+                    ])
+                    .await;
+
+                res.assert_status_bad_request();
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Payload is invalid.","status":"alert-warning","title":"Attention"}}"# ).await;
+                Ok(())
+            }
+
+            #[tokio::test]
+            async fn test_some_ingredients_selected_ok() -> Result<()> {
+                let (_test_db, config) = TestDb::new(None).await?;
+                let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+                let state = create_app_state(config).await;
+                let user_id = User::all(&state.mm).await?[0].id;
+                let list_id = ShoppingList::create(&state.mm, "Main", user_id).await?;
+                let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+                let recipe = a_complete_recipe_for_create().0;
+                let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+                let mut payload = vec![("list", list_id.to_string())];
+                for (idx, item) in recipe.ingredients.iter().enumerate().skip(1) {
+                    payload.extend_from_slice(&[
+                        ("ingredients", item.text.clone()),
+                        ("quantities", "-".into()),
+                        ("notes", "-".into()),
+                        (
+                            "with-quantity",
+                            if idx % 2 == 0 {
+                                "true".to_string()
+                            } else {
+                                "false".to_string()
+                            },
+                        ),
+                    ]);
+                }
+
+                let res = server.post(&base_uri(1)).form(&payload).await;
+
+                res.assert_status_ok();
+                assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Items added to shopping list.","status":"alert-info","title":"Success"}}"# ).await;
+                let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
+                assert_eq!(
+                    got.items,
+                    vec![
+                        ShoppingListItemDetails {
+                            id: 1,
+                            ingredient: "1/2 tbsp cinnamon".into(),
+                            quantity: None,
+                            notes: None,
+                            label_id: 1,
+                            label: "No label".into(),
+                            position: 1,
+                            recipe: Some(ShoppingListRecipeDetails {
+                                id: 1,
+                                name: "Best Chinese Kale".into(),
+                            }),
+                            is_checked: false,
+                            created_at: got.items[0].created_at,
+                            updated_at: got.items[0].created_at
+                        },
+                        ShoppingListItemDetails {
+                            id: 2,
+                            ingredient: "4 pounds top quality chicken filet".into(),
+                            quantity: None,
+                            notes: None,
+                            label_id: 1,
+                            label: "No label".into(),
+                            position: 2,
+                            recipe: Some(ShoppingListRecipeDetails {
+                                id: 1,
+                                name: "Best Chinese Kale".into(),
+                            }),
+                            is_checked: false,
+                            created_at: got.items[0].created_at,
+                            updated_at: got.items[0].created_at
+                        },
+                        ShoppingListItemDetails {
+                            id: 3,
+                            ingredient: "1/8 cup lemon juice".into(),
+                            quantity: None,
+                            notes: None,
+                            label_id: 1,
+                            label: "No label".into(),
+                            position: 3,
+                            recipe: Some(ShoppingListRecipeDetails {
+                                id: 1,
+                                name: "Best Chinese Kale".into(),
+                            }),
+                            is_checked: false,
+                            created_at: got.items[0].created_at,
+                            updated_at: got.items[0].created_at
+                        }
+                    ]
+                );
+                Ok(())
+            }
         }
     }
 
@@ -1113,7 +1309,7 @@ mod tests {
                 &res,
                 &[
                     r#"<!DOCTYPE html><html><head><meta charset="utf-8"><title>Print View</title></head><body class="p-8">"#,
-                    r#"<h1 style="text-align: center; text-decoration: underline;">Test</h1><div><details open><summary>Meat</summary><ul><li style="list-style-type: none;"><label style="display: flex;"><input class="checkbox" type="checkbox" style="margin-right: .5rem;"><div><p style="margin-bottom: 0.25rem; margin-top: 0.25rem;">chicken (1 cup)</p><p style="font-size: 0.75rem; line-height: 1.2; font-weight: 300; margin: 0;">new notes</p></div></label></li></ul></details>"#,
+                    r#"<h1 style="text-align: center; text-decoration: underline;">Test</h1><div><details open><summary>Meat</summary><ul><li style="list-style-type: none;"><label style="display: flex;"><input class="checkbox" type="checkbox" style="margin-right: .5rem;"><div><p style="margin-bottom: 0.25rem; margin-top: 0.25rem;">chicken (1 cup)</p><p style="font-size: 0.75rem; line-height: 1.2; font-weight: 300; margin: 0; margin-top: 0.25rem">new notes</p></div></label></li></ul></details>"#,
                     r"<script>window.onload = function() { window.print(); window.close(); }</script></body></html>",
                 ],
             );

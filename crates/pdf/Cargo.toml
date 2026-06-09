@@ -15,4 +15,5 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-printpdf.workspace = true
+krilla.workspace = true
+skrifa = "0.42"

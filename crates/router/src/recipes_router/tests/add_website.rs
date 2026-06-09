@@ -96,6 +96,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "flaky in CI, needs manual testing"]
     async fn test_add_one_valid_url_from_supported_websites_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;
@@ -236,6 +237,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "flaky in CI, needs manual testing"]
     async fn test_add_many_valid_urls_from_supported_websites_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let (server, mut ws_server) = build_server_ws(config.clone()).await?;

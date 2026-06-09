@@ -1,30 +1,39 @@
-use printpdf::ParsedFont;
+use krilla::text::Font;
+use skrifa::{
+    FontRef, MetadataProvider,
+    instance::{Location, Size},
+};
 
-const PT_TO_MM_FACTOR: f32 = 0.352_777_78;
-
-/// Measures the height of text in millimetres.
+/// Measures the height of text in points.
 #[allow(clippy::cast_precision_loss)]
-pub fn measure_text_height_mm(font_size_pt: f32, line_height_factor: f32, num_lines: usize) -> f32 {
+pub fn measure_text_height(font_size_pt: f32, line_height_factor: f32, num_lines: usize) -> f32 {
     let line_height_pt = font_size_pt * line_height_factor;
-    let total_height = line_height_pt * num_lines as f32;
-    pt_to_mm(total_height)
+    line_height_pt * num_lines as f32
 }
 
-/// Measures the width of a text string in points.
-#[allow(clippy::cast_precision_loss)]
-pub fn measure_text_width_pt(text: &str, font: &ParsedFont, font_size_pt: f32) -> f32 {
-    let units_per_em = f32::from(font.font_metrics.units_per_em);
+/// Measures the width of text in points.
+///
+/// # Panics
+///
+/// Panics if the font data is invalid or the font index is out of bounds.
+pub fn measure_text_width_pt(
+    text: &str,
+    font: &Font,
+    font_data: &[u8],
+    font_index: u32,
+    font_size_pt: f32,
+) -> f32 {
+    let units_per_em = font.units_per_em();
+
+    let font_ref = FontRef::from_index(font_data, font_index).unwrap();
+    let loc = Location::default();
+    let glyph_metrics = font_ref.glyph_metrics(Size::unscaled(), &loc);
+    let charmap = font_ref.charmap();
 
     text.chars()
         .map(|c| {
-            let glyph_index = font.lookup_glyph_index(c as u32).unwrap_or(0);
-            let glyph_width = font.get_glyph_width_internal(glyph_index).unwrap_or(0) as f32;
-            glyph_width / units_per_em * font_size_pt
+            let gid = charmap.map(c).unwrap_or_default();
+            glyph_metrics.advance_width(gid).unwrap_or(0.0) / units_per_em * font_size_pt
         })
         .sum()
-}
-
-/// Converts points to millimeters.
-pub fn pt_to_mm(pt: f32) -> f32 {
-    pt * PT_TO_MM_FACTOR
 }

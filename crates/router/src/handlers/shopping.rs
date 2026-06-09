@@ -9,6 +9,7 @@ use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
 use chrono::NaiveDateTime;
+use itertools::izip;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
@@ -19,6 +20,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
+use models::Recipe;
 use models::data::{Data, ShoppingData};
 use models::download::{Download, DownloadForCreate};
 use models::export::{ExportOptions, ExportType};
@@ -30,13 +32,14 @@ use models::shopping::{
     ShoppingListItemForUpdate,
 };
 use models::view::ViewMode;
+use templates::shopping::AddShoppingIngredient;
 
 use crate::handlers::get_settings;
 use crate::handlers::helpers::is_hx_request;
-use crate::handlers::message::{broadcast_error, broadcast_warning};
+use crate::handlers::message::{broadcast_error, broadcast_success, broadcast_warning};
 use crate::middleware::mw_auth::RequireAuth;
 use crate::recipes_router::params::ShareRecipeForm;
-use crate::schemas::shopping::{ListItemPayload, ListPayload};
+use crate::schemas::shopping::{ListItemPayload, ListPayload, RecipeIngredientsPayload};
 use crate::{Error, Result};
 
 /// Name of the cookie that stores the selected view mode.
@@ -107,6 +110,7 @@ pub async fn shopping_lists_handler(
 
 /// Handles GET requests to retrieve a shopping list.
 pub async fn shopping_list_handler(
+    header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
@@ -120,13 +124,15 @@ pub async fn shopping_list_handler(
         }
     };
 
+    let is_hx_request = is_hx_request(&header_map);
+
     match get_view_mode_from_cookie(&cookies) {
         ViewMode::Edit | ViewMode::Print => {
-            templates::shopping::render_shopping_list_view_edit(&list).into_response()
+            templates::shopping::render_shopping_list_view_edit(&list, is_hx_request)
+                .into_response()
         }
-        ViewMode::View => {
-            templates::shopping::render_shopping_list_view_view(&list).into_response()
-        }
+        ViewMode::View => templates::shopping::render_shopping_list_view_view(&list, is_hx_request)
+            .into_response(),
     }
 }
 
@@ -302,7 +308,10 @@ async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<Ex
         })?;
 
     Ok(Some(ExportOptions {
-        paper_size: (paper_size.width_mm as f32, paper_size.height_mm as f32),
+        paper_size: (
+            paper_size.width_in as f32 * 72.0,
+            paper_size.height_in as f32 * 72.0,
+        ),
     }))
 }
 
@@ -327,6 +336,7 @@ pub async fn shopping_list_print_handler(
 
 /// Handles GET requests to view a shopping list.
 pub async fn shopping_list_view_handler(
+    header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
@@ -351,10 +361,12 @@ pub async fn shopping_list_view_handler(
         state.config.read().await.is_production,
     );
 
+    let is_hx_request = is_hx_request(&header_map);
+
     match params.mode {
-        ViewMode::Edit => templates::shopping::render_shopping_list_view_edit(&list),
+        ViewMode::Edit => templates::shopping::render_shopping_list_view_edit(&list, is_hx_request),
         ViewMode::Print | ViewMode::View => {
-            templates::shopping::render_shopping_list_view_view(&list)
+            templates::shopping::render_shopping_list_view_view(&list, is_hx_request)
         }
     }
     .into_response()
@@ -692,5 +704,125 @@ pub async fn shopping_list_item_toggle_handler(
         return Error::Database.into_response();
     }
 
+    ().into_response()
+}
+
+/// Handles the GET request to render a recipe's ingredients for a shopping list.
+pub async fn shopping_recipe_ingredients_handler(
+    RequireAuth(user): RequireAuth,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let ingredients = match Recipe::ingredients(&state.mm, recipe_id).await {
+        Ok(v) => v
+            .into_iter()
+            .map(|ing| AddShoppingIngredient {
+                name: ing.name,
+                quantity: ing.amounts.first().map(|s| {
+                    let value = s.values().0;
+                    let unit = s.unit().to_str();
+
+                    if &unit == "whole" {
+                        format!("{value}")
+                    } else {
+                        format!("{value} {unit}")
+                    }
+                }),
+                notes: ing.modifier,
+            })
+            .collect::<Vec<_>>(),
+        Err(err) => {
+            error!("Failed to fetch ingredients for recipe '{recipe_id}': {err}");
+            broadcast_error(&state, user.id, "Failed to fetch ingredients.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    let mut shopping_lists = match ShoppingList::get_all(&state.mm, user.id).await {
+        Ok(lists) => lists,
+        Err(err) => {
+            error!(
+                "Failed to fetch shopping lists for user '{}': {err}",
+                user.id
+            );
+            broadcast_error(&state, user.id, "Failed to fetch shopping lists.").await;
+            return Error::Database.into_response();
+        }
+    };
+    shopping_lists.sort_by(|a, b| a.name.cmp(&b.name));
+
+    templates::shopping::render_recipe_add_shopping_dialog_content(
+        recipe_id,
+        shopping_lists,
+        ingredients,
+    )
+    .into_response()
+}
+
+/// Handles the POST request for adding ingredients to a shopping list for a recipe.
+pub async fn shopping_recipe_ingredients_post_handler(
+    RequireAuth(user): RequireAuth,
+    Path(recipe_id): Path<i64>,
+    State(state): State<AppState>,
+    axum_extra::extract::Form(mut payload): axum_extra::extract::Form<RecipeIngredientsPayload>,
+) -> impl IntoResponse {
+    payload.clean();
+    if payload.is_empty() {
+        broadcast_warning(&state, user.id, "Payload is invalid.").await;
+        return Error::InvalidPayload.into_response();
+    }
+
+    let list_id = match Uuid::parse_str(&payload.list) {
+        Ok(id) => id,
+        Err(_) => match ShoppingList::create(&state.mm, payload.list, user.id).await {
+            Ok(list) => list,
+            Err(err) => {
+                error!("Failed to create new shopping list: {err}",);
+                broadcast_error(&state, user.id, "Failed to create new shopping list.").await;
+                return Error::Database.into_response();
+            }
+        },
+    };
+
+    let list = match ShoppingList::get(&state.mm, list_id, user.id).await {
+        Ok(list) => list,
+        Err(err) => {
+            error!("Failed to fetch shopping list '{list_id}': {err}");
+            broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    let items = izip!(
+        &payload.ingredients,
+        payload.quantities,
+        payload.with_quantities,
+        payload.notes
+    )
+    .map(
+        |(ingredient, quantity, with_quantity, notes)| ShoppingListItemForCreate {
+            ingredient: ingredient.clone(),
+            quantity: if &with_quantity == "true" && &quantity != "-" {
+                Some(quantity)
+            } else {
+                None
+            },
+            label: None,
+            recipe_id: Some(recipe_id),
+            notes: if &notes == "-" { None } else { Some(notes) },
+        },
+    )
+    .collect::<Vec<_>>();
+
+    if let Err(err) = list
+        .add_items_for_recipe(&state.mm, items.as_slice(), recipe_id, user.id)
+        .await
+    {
+        error!("Failed to add items for recipe '{}': {err}", recipe_id);
+        broadcast_error(&state, user.id, "Failed to add items for recipe.").await;
+        return Error::Database.into_response();
+    }
+
+    broadcast_success(&state, user.id, "Items added to shopping list.").await;
     ().into_response()
 }

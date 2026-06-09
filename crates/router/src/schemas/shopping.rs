@@ -30,3 +30,39 @@ where
         Some(s) => T::deserialize(s.into_deserializer()).map(Some),
     }
 }
+
+/// The payload of a recipe's ingredients to add to a shopping list.
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct RecipeIngredientsPayload {
+    pub list: String,
+    pub ingredients: Vec<String>,
+    pub quantities: Vec<String>,
+    pub notes: Vec<String>,
+    #[serde(rename = "with-quantity", default)]
+    pub with_quantities: Vec<String>,
+}
+
+impl RecipeIngredientsPayload {
+    /// Removes noise from the fields.
+    pub fn clean(&mut self) {
+        let trim = |v: &mut Vec<String>| {
+            for s in v.iter_mut() {
+                *s = s.trim().to_string();
+            }
+            v.retain(|s| !s.is_empty());
+        };
+
+        trim(&mut self.ingredients);
+        trim(&mut self.quantities);
+        trim(&mut self.notes);
+        trim(&mut self.with_quantities);
+    }
+
+    /// Checks whether the payload has values.
+    pub const fn is_empty(&self) -> bool {
+        self.ingredients.is_empty()
+            || self.quantities.is_empty()
+            || self.with_quantities.is_empty()
+            || self.notes.is_empty()
+    }
+}

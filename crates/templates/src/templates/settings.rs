@@ -9,6 +9,7 @@ use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
 
+use crate::templates::common::cancel_submit_form_actions;
 use crate::templates::icons::{
     icon_arrow_down_tray, icon_arrow_path, icon_building_library, icon_check_circle,
     icon_chevron_right, icon_circle_stack, icon_cloud, icon_cpu, icon_cube_transparent,
@@ -791,64 +792,58 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
                 div class="overflow-auto h-[50vh]" {
                     table class="table table-zebra table-sm" {
                         thead {
-                            tr class="text-center" {
+                            tr .text-center {
                                 th class="py-1 text-left" {
                                     label {
-                                        input type="checkbox" class="checkbox" _="on change set <input.checkbox-recipe-id/>'s checked to my checked then call checkExportDataSubmit()";
+                                        input type="checkbox" class="checkbox"
+                                            _="on change set <input.checkbox-recipe-id/>'s checked to my checked then call checkDataSubmit('checkbox-recipe-id', 'export-data-submit-button')";
                                     }
                                 }
-                                th class="py-1" { "Name" }
-                                th class="py-1" { "Favourite" }
-                                th class="py-1" { "Rating" }
-                                th class="py-1" { "Page" }
-                                th class="py-1" { "Source" }
+                                th .py-1 { "Name" }
+                                th .py-1 { "Favourite" }
+                                th .py-1 { "Rating" }
+                                th .py-1 { "Page" }
+                                th .py-1 { "Source" }
                             }
                         }
                         tbody #search-results {
                             @for recipe in recipes {
                                 tr {
-                                    td class="py-1" {
+                                    td .py-1 {
                                         label {
-                                            input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value=(recipe.id) _="on change call checkExportDataSubmit()";
+                                            input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value=(recipe.id)
+                                                _="on change call checkDataSubmit('checkbox-recipe-id', 'export-data-submit-button')";
                                         }
                                     }
-                                    td class="py-1" { (recipe.name) }
+                                    td .py-1 { (recipe.name) }
                                     td class="py-1 text-center select-none" {
                                         @if recipe.is_favourite {
                                             span aria-label="Favorite" { "♥" }
                                         }
                                     }
-                                    td class="py-1 text-center" {
+                                    td .py-1.text-center {
                                         @if let Some(rating) = recipe.rating {
                                             (format!("{}/5", rating))
                                         }
                                     }
-                                    td class="py-1 text-center" {
+                                    td .py-1.text-center {
                                         a class="link" href=(format!("{current_url}/recipes/{}", recipe.id)) target="_blank" {
                                             "View"
                                         }
 
                                     }
-                                    td class="py-1 text-center" {
+                                    td .py-1.text-center {
                                         a class="link" href=(recipe.source) target="_blank" {
                                             "Visit"
                                         }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                (cancel_submit_form_actions(&icon_arrow_down_tray(), "export-data-submit-button", true))
             }
-            div class="card-actions justify-end" {
-                button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()" { "Cancel" }
-                div .cursor-not-allowed {
-                    button #export-data-submit-button type="submit" class="btn btn-sm" disabled {
-                        img #export-data-spinner class="htmx-indicator" src="/public/img/bars.svg" alt="Loading...";
-                        (icon_arrow_down_tray())
-                    }
-                }
-            }
-          }
         }
     }
 }

@@ -1,3 +1,4 @@
+mod common;
 mod core;
 mod helpers;
 mod icons;
