@@ -546,7 +546,7 @@ pub fn shopping_list_item<T: AsRef<str>>(
         div class="grid gap-1 min-w-0" {
             label class="input input-sm" {
                 (icon_carrot())
-                input required autofocus type="text" placeholder="Surloin steak" name="item" value=(ingredient);
+                input required type="text" placeholder="Surloin steak" name="item" value=(ingredient);
             }
             label class="input input-sm" {
                 (icon_scale())
@@ -585,6 +585,7 @@ pub fn shopping_list_item<T: AsRef<str>>(
                     (label)
                     (action(icon_check()))
                 }
+                script { "focusListItemInput(document.currentScript.closest('li'));" }
             } @else {
                 form class="contents"
                     hx-post=(format!("/shopping/lists/{list_id}/items"))
