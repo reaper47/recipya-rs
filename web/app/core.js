@@ -765,3 +765,9 @@ function copyHtmxResponseToClipboard(event) {
     copyToClipboard(event.detail.xhr.responseText);
   }
 }
+
+function focusListItemInput(li) {
+  const el = li.querySelector("input[name=item]");
+  el.focus();
+  el.select();
+}
