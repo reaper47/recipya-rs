@@ -2,6 +2,7 @@ use diesel::dsl::count_star;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
+use time_tz::timezones;
 use uuid::Uuid;
 
 use auth::pwd::{ContentToHash, hash_pwd};
@@ -319,6 +320,21 @@ impl User {
 
         diesel::update(users.find(user_id))
             .set(is_remember_me.eq(new_value))
+            .execute(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn update_timezone(&self, mm: &ModelManager, new_tz: &str) -> Result<()> {
+        use schema::user_settings::dsl::{timezone, user_id, user_settings};
+
+        if timezones::get_by_name(new_tz).is_none() {
+            return Err(Error::Time);
+        }
+
+        diesel::update(user_settings.filter(user_id.eq(self.id)))
+            .set(timezone.eq(new_tz))
             .execute(&mut mm.pool.get().await?)
             .await?;
 

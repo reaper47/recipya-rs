@@ -24,6 +24,7 @@ models.workspace = true
 serde_json.workspace = true
 strum.workspace = true
 support.workspace = true
+time-tz.workspace = true
 url.workspace = true
 uuid.workspace = true
 

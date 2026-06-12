@@ -2,6 +2,7 @@ use diesel::prelude::*;
 use diesel::{Identifiable, Queryable, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use strum::{Display, EnumIter, EnumString};
+use time_tz::{TimeZone, Tz, timezones};
 
 use math::cooking::units::system::MeasurementSystem;
 use repository::{ModelManager, schema};
@@ -139,9 +140,10 @@ struct UserSetting {
     default_theme: i32,
     selected_theme: i32,
     paper_size_id: i16,
+    timezone: String,
 }
 
-#[derive(Debug, Default, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct UserSettingDetails {
     pub user_id: Uuid,
     pub measurement_system: MeasurementSystem,
@@ -153,9 +155,29 @@ pub struct UserSettingDetails {
     pub selected_theme: Theme,
     pub paper_size_id: i16,
     pub paper_sizes: PaperSizes,
+    pub timezone: &'static Tz,
+}
+
+impl Default for UserSettingDetails {
+    fn default() -> Self {
+        Self {
+            user_id: Uuid::nil(),
+            measurement_system: MeasurementSystem::default(),
+            nutrition_source: NutritionDataSource::default(),
+            nutrition_sources: Vec::new(),
+            is_convert_automatically: false,
+            cookbooks_view: 0,
+            default_theme: Theme::default(),
+            selected_theme: Theme::default(),
+            paper_size_id: 0,
+            paper_sizes: PaperSizes::default(),
+            timezone: timezones::db::UTC,
+        }
+    }
 }
 
 impl UserSettingDetails {
+    /// Retrieves the user settings for the given user ID from the database.
     pub async fn get(mm: &ModelManager, user_id: Uuid) -> Result<Self> {
         use schema::{themes, user_settings};
 
@@ -194,7 +216,13 @@ impl UserSettingDetails {
             selected_theme: selected_theme_name,
             paper_size_id: settings.paper_size_id,
             paper_sizes: PaperSize::get_all(mm).await?,
+            timezone: timezones::get_by_name(&settings.timezone).unwrap_or(timezones::db::UTC),
         })
+    }
+
+    /// Returns the timezone name without the "Etc/" prefix.
+    pub fn tz_name(&self) -> String {
+        self.timezone.name().trim_start_matches("Etc/").to_string()
     }
 }
 

@@ -50,6 +50,7 @@ strum_macros.workspace = true
 support.workspace = true
 tempfile = "3.27.0"
 time.workspace = true
+time-tz.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 url.workspace = true

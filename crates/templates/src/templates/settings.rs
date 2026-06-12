@@ -1,5 +1,6 @@
 use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
+use time_tz::TimeZone;
 
 use math::cooking::units::system::MeasurementSystem;
 use models::Recipe;
@@ -350,6 +351,14 @@ fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
 }
 
 fn settings_general(user_settings: &UserSettingDetails) -> Markup {
+    let mut all_tz = time_tz::timezones::iter()
+        .filter_map(|tz| {
+            let name = tz.name();
+            (!name.to_lowercase().starts_with("etc/")).then_some(name)
+        })
+        .collect::<Vec<_>>();
+    all_tz.sort_unstable();
+
     html! {
         div #settings-general class="p-3 overflow-y-auto max-h-96 hidden" {
             div class="flex justify-between items-center text-sm" {
@@ -378,6 +387,23 @@ fn settings_general(user_settings: &UserSettingDetails) -> Markup {
                             }
                         }
                     }
+                }
+                div class="divider m-0" {}
+            }
+            div class="flex justify-between items-center text-sm mt-2" {
+                @let selected_tz = user_settings.tz_name();
+                div {
+                    p class="font-semibold" {
+                        "Time zone"
+                    }
+                    p class="text-xs" {
+                        "Display times in the selected time zone."
+                    }
+                }
+                select #settings-general-tz name="tz" class="block w-fit select select-bordered select-sm" hx-post="/settings/tz" hx-swap="none" {
+                        @for tz in all_tz {
+                            option value=(tz) selected[tz == selected_tz] { (tz) }
+                        }
                 }
                 div class="divider m-0" {}
             }
