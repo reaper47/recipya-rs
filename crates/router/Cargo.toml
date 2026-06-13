@@ -19,7 +19,6 @@ axum-test = { workspace = true }
 auth.workspace = true
 axum.workspace = true
 axum-htmx = "0.8.1"
-chrono.workspace = true
 config.workspace = true
 derive_more.workspace = true
 email.workspace = true
@@ -46,6 +45,7 @@ serde_qs = "1.1.1"
 strum_macros.workspace = true
 support.workspace = true
 templates.workspace = true
+time.workspace = true
 tokio.workspace = true
 tokio-util = "0.7.18"
 tower-cookies.workspace = true

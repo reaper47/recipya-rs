@@ -2,7 +2,6 @@
 mod tests {
     use axum::http::HeaderValue;
     use axum_test::TestResponse;
-    use chrono::Duration;
     use reqwest::Method;
     use uuid::Uuid;
 
@@ -95,6 +94,7 @@ mod tests {
 
     mod tests_put {
         use models::settings::UserSettingDetails;
+        use time::Duration;
 
         use super::*;
 

@@ -1,11 +1,11 @@
 use std::collections::BTreeSet;
 
-use diesel::internal::derives::multiconnection::chrono;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use ingredient::{Ingredient, IngredientParser};
 use itertools::Itertools;
 use repository::{ModelManager, PgPooledConn, schema};
+use time::Duration;
 use tracing::error;
 use url::Url;
 use uuid::Uuid;
@@ -461,8 +461,8 @@ pub async fn fetch_recipe_details(
         .map(|v| Video {
             video: v.video,
             duration: v.duration.map(|d| {
-                let ms = chrono::Duration::milliseconds(d.microseconds / 1000);
-                let days = chrono::Duration::days(i64::from(d.days));
+                let ms = Duration::milliseconds(d.microseconds / 1000);
+                let days = Duration::days(i64::from(d.days));
                 ms + days
             }),
             content_url: v.content_url,
@@ -523,8 +523,6 @@ pub async fn fetch_recipe_details(
 
 #[cfg(test)]
 mod tests {
-    use chrono::TimeDelta;
-
     use test_db::TestDb;
     use test_utils::{build_server_anonymous, create_app_state};
 
@@ -806,7 +804,7 @@ mod tests {
             ],
             videos: vec![Video {
                 video: images1.video,
-                duration: TimeDelta::new(420, 0),
+                duration: Some(Duration::seconds(420)),
                 content_url: Some("https://example.com/best-food.mp4".into()),
                 embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
                 created_at: got[0].videos[0].created_at,
@@ -880,7 +878,7 @@ mod tests {
             tools: want_recipe1.tools.clone(),
             videos: vec![Video {
                 video: images2.video,
-                duration: TimeDelta::new(420, 0),
+                duration: Some(Duration::seconds(420)),
                 content_url: Some("https://example.com/best-food.mp4".into()),
                 embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
                 created_at: got[1].videos[0].created_at,

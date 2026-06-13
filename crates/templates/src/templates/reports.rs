@@ -5,6 +5,7 @@ use models::{
     reports::{ReportErrors, ViewReportLog, report_types::ReportTypePrimary},
     settings::UserSettingDetails,
 };
+use time::macros::format_description;
 
 use crate::templates::{layouts, pagination::pagination};
 
@@ -65,6 +66,10 @@ fn render_index(data: &ReportsData) -> Markup {
 }
 
 /// Renders the paginated list of reports.
+///
+/// # Panics
+///
+/// Panics if the time formatting is invalid.
 pub fn render_reports_list(data: &ReportsData) -> Markup {
     html! {
         ul #report-menu class={
@@ -83,7 +88,7 @@ pub fn render_reports_list(data: &ReportsData) -> Markup {
                     div class="flex justify-between items-center gap-2 w-full" {
                         div class="min-w-0" {
                             p class="font-bold text-sm truncate" {
-                                (report.created_at.format("%b %e, %Y · %I:%M %p %Z"))
+                                (report.created_at.format(format_description!("[month repr:short] [day padding:space], [year] · [hour repr:12]:[minute] [period case:upper]")).unwrap())
                             }
                             p class="text-sm" {
                                 "Execution time: " (report.format_duration())

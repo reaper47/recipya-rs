@@ -1,10 +1,11 @@
 use std::{path::Path, sync::Arc};
 
 use diesel::{data_types::PgInterval, prelude::*};
+use time::{Duration, PrimitiveDateTime};
+use uuid::Uuid;
 
 use repository::schema;
 use support::fs::FsSupport;
-use uuid::Uuid;
 
 use super::recipe::Recipe;
 
@@ -19,13 +20,25 @@ pub(crate) struct AdditionalImageForInsert {
 }
 
 /// Represents a video associated with a recipe.
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Video {
     pub video: Uuid,
-    pub duration: Option<chrono::Duration>,
+    pub duration: Option<Duration>,
     pub content_url: Option<String>,
     pub embed_url: Option<String>,
-    pub created_at: chrono::NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
+}
+
+impl Default for Video {
+    fn default() -> Self {
+        Self {
+            video: Uuid::default(),
+            duration: None,
+            content_url: None,
+            embed_url: None,
+            created_at: PrimitiveDateTime::MIN,
+        }
+    }
 }
 
 /// Represents the association between a video and a recipe in the `videos_recipes` table.
@@ -40,14 +53,14 @@ pub struct VideoRecipe {
     pub duration: Option<PgInterval>,
     pub content_url: Option<String>,
     pub embed_url: Option<String>,
-    pub created_at: chrono::NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
 }
 
 /// Represents the data required to create a new video associated with a recipe.
 #[derive(Clone, Eq, PartialEq)]
 pub struct VideoForCreate {
     pub video: Uuid,
-    pub duration: Option<chrono::Duration>,
+    pub duration: Option<Duration>,
     pub content_url: Option<String>,
     pub embed_url: Option<String>,
 }

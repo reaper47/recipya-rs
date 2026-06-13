@@ -1,6 +1,7 @@
 use maud::{Markup, PreEscaped, html};
 
 use models::recipe::timeline::RecipeTimeline;
+use time::macros::format_description;
 
 use crate::recipes::common::{RatingSize, render_rating};
 use crate::templates::icons::{icon_check, icon_pencil, icon_x_mark};
@@ -19,7 +20,11 @@ impl From<RecipeTimeline> for Event {
     fn from(value: RecipeTimeline) -> Self {
         Self {
             id: value.id,
-            date: value.created_at.date().format("%x").to_string(),
+            date: value
+                .created_at
+                .date()
+                .format(format_description!("[year]-[month]-[day]"))
+                .expect("valid date format"),
             title: value.title,
             image: value
                 .image
@@ -182,6 +187,11 @@ fn edit_button(timeline_edit_url: &str, hx_target: &str) -> Markup {
     }
 }
 
+/// Renders the edit form for a timeline event.
+///
+/// # Panics
+///
+/// Panics if the time formatting is invalid.
 pub fn render_edit(
     event: RecipeTimeline,
     index: usize,
@@ -189,7 +199,12 @@ pub fn render_edit(
     recipe_id: i64,
 ) -> Markup {
     let event_id = event.id;
-    let local_time = event.created_at.format("%Y-%m-%dT%H:%M:%S").to_string();
+    let local_time = event
+        .created_at
+        .format(format_description!(
+            "[year]-[month]-[day]T[hour]:[minute]:[second]"
+        ))
+        .unwrap();
     let timeline_id = format!("timeline-event-{event_id}");
     let form_id = format!("{timeline_id}-edit");
     let date_id = format!("event-date-{event_id}");

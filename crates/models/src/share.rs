@@ -1,7 +1,7 @@
-use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::{Queryable, Selectable};
 use diesel_async::RunQueryDsl;
+use time::PrimitiveDateTime;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -25,11 +25,11 @@ pub struct ShareRecipe {
     /// The foreign key linking the shared recipe to its content.
     pub recipe_id: i64,
     /// The timestamp when the shared recipe link was generated.
-    pub created_at: NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
     /// The timestamp when the shared recipe link expires.
-    pub expires_at: NaiveDateTime,
+    pub expires_at: PrimitiveDateTime,
     /// The timestamp when the shared recipe was last accessed.
-    pub last_accessed: NaiveDateTime,
+    pub last_accessed: PrimitiveDateTime,
     /// The number of times the shared recipe was opened.
     pub click_count: i32,
 }
@@ -40,7 +40,7 @@ pub struct ShareRecipe {
 pub(crate) struct SharedRecipeForInsert {
     pub user_id: Uuid,
     pub recipe_id: i64,
-    pub expires_at: Option<NaiveDateTime>,
+    pub expires_at: Option<PrimitiveDateTime>,
 }
 
 impl ShareRecipe {
@@ -50,7 +50,7 @@ impl ShareRecipe {
         mm: &ModelManager,
         recipe_id: i64,
         user_id: Uuid,
-        expires_at: Option<NaiveDateTime>,
+        expires_at: Option<PrimitiveDateTime>,
     ) -> Result<Self> {
         diesel::insert_into(schema::shares_recipes::table)
             .values(&SharedRecipeForInsert {
@@ -99,9 +99,8 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod test_new {
-        use diesel::internal::derives::multiconnection::chrono;
-
         use test_utils::create_app_state;
+        use time::{Duration, OffsetDateTime};
 
         use super::*;
         use crate::user::{User, UserForCreate};
@@ -148,10 +147,12 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let user_id = add_user(&state.mm).await?.id;
             insert_recipe(&config, &state, user_id).await?;
-            let expires_at = chrono::Utc::now() + chrono::Duration::days(14);
+            let expires_at = {
+                let dt = OffsetDateTime::now_utc() + Duration::days(14);
+                PrimitiveDateTime::new(dt.date(), dt.time())
+            };
 
-            let got =
-                ShareRecipe::new(&state.mm, 1, user_id, Some(expires_at.naive_local())).await?;
+            let got = ShareRecipe::new(&state.mm, 1, user_id, Some(expires_at)).await?;
 
             assert_share_recipe(
                 &got,
@@ -161,7 +162,7 @@ mod tests {
                     user_id,
                     recipe_id: 1,
                     created_at: got.created_at,
-                    expires_at: expires_at.naive_local(),
+                    expires_at,
                     last_accessed: got.last_accessed,
                     click_count: 0,
                 },
@@ -190,19 +191,13 @@ mod tests {
             pretty_assertions::assert_eq!(got.recipe_id, want.recipe_id);
             pretty_assertions::assert_eq!(got.click_count, want.click_count);
 
-            let diff = (got.created_at - want.created_at)
-                .num_nanoseconds()
-                .unwrap_or(i64::MAX);
+            let diff = (got.created_at - want.created_at).whole_nanoseconds();
             assert!(diff.abs() <= 1000, "Created at");
 
-            let diff = (got.expires_at - want.expires_at)
-                .num_nanoseconds()
-                .unwrap_or(i64::MAX);
+            let diff = (got.expires_at - want.expires_at).whole_nanoseconds();
             assert!(diff.abs() <= 1000, "Expires at");
 
-            let diff = (got.last_accessed - want.last_accessed)
-                .num_nanoseconds()
-                .unwrap_or(i64::MAX);
+            let diff = (got.last_accessed - want.last_accessed).whole_nanoseconds();
             assert!(diff.abs() <= 1000, "Last accessed at");
         }
     }

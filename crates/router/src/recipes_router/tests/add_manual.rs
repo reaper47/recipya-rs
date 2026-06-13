@@ -3,26 +3,21 @@ mod tests {
     use axum::http::HeaderValue;
     use axum::http::Method;
     use axum_test::TestResponse;
-    use chrono::Duration;
-    use models::recipe::structs::media::VideoForCreate;
-    use models::recipe::structs::nutrition::NutritionDetails;
-    use models::recipe::structs::nutrition::NutritionDetailsForCreate;
-    use models::recipe::structs::nutrition::NutritionForCreate;
-    use models::recipe::structs::nutrition::NutritionPerServingDetails;
-    use models::recipe::structs::nutrition::NutritionPerServingDetailsForCreate;
-    use models::recipe::structs::section::Item;
-    use models::recipe::structs::section::SectionComponents;
-    use models::recipe::structs::section::SectionItem;
-    use models::recipe::structs::time::TimesForCreate;
-    use models::recipe::structs::types::Source;
-    use models::user::User;
     use uuid::Uuid;
 
-    use models::recipe::structs::nutrition::Nutrition;
-    use models::recipe::structs::recipe::RecipeForCreate;
-    use models::recipe::structs::time::Times;
-    use models::recipe::structs::tool::ToolForCreate;
-    use models::recipe::structs::tool::ToolRecipe;
+    use models::recipe::structs::{
+        media::VideoForCreate,
+        nutrition::{
+            Nutrition, NutritionDetails, NutritionDetailsForCreate, NutritionForCreate,
+            NutritionPerServingDetails, NutritionPerServingDetailsForCreate,
+        },
+        recipe::RecipeForCreate,
+        section::{Item, SectionComponents, SectionItem},
+        time::{Times, TimesForCreate},
+        tool::{ToolForCreate, ToolRecipe},
+        types::Source,
+    };
+    use models::user::User;
     use models::{Recipe, RecipeDetails};
     use test_db::TestDb;
     use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
@@ -70,6 +65,7 @@ mod tests {
 
     mod tests_post {
         use reqwest::StatusCode;
+        use time::Duration;
 
         use super::*;
 

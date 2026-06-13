@@ -436,7 +436,7 @@ mod tests {
     }
 
     mod tests_search {
-        use chrono::NaiveDateTime;
+        use time::PrimitiveDateTime;
 
         use crate::{
             recipe::structs::{
@@ -476,8 +476,8 @@ mod tests {
                     source: recipe_c.source,
                     is_favourite: false,
                     rating: recipe_c.rating,
-                    created_at: NaiveDateTime::default(),
-                    updated_at: NaiveDateTime::default(),
+                    created_at: PrimitiveDateTime::MIN,
+                    updated_at: PrimitiveDateTime::MIN,
                     user_id,
                 },
                 additional_images: if recipe_c.images.len() > 1 {
@@ -520,7 +520,7 @@ mod tests {
                         duration: v.duration,
                         content_url: v.content_url,
                         embed_url: v.embed_url,
-                        created_at: NaiveDateTime::default(),
+                        created_at: PrimitiveDateTime::MIN,
                     })
                     .collect(),
             }

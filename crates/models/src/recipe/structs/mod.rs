@@ -8,7 +8,7 @@ pub mod types;
 
 #[cfg(test)]
 pub mod test_utils {
-    use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+    use time::{Date, Duration, PrimitiveDateTime, Time};
     use uuid::Uuid;
 
     use test_fixtures::RecipeImages;
@@ -45,9 +45,10 @@ pub mod test_utils {
         let images = recipe_c.images;
         let additional_images = images.last().iter().copied().copied().collect::<Vec<_>>();
 
-        let created_date = NaiveDate::from_ymd_opt(2012, 12, 31).expect("end of the world");
-        let updated_date = NaiveDate::from_ymd_opt(2022, 2, 24).expect("russia invaded Ukraine");
-        let time = NaiveTime::from_hms_opt(0, 0, 0).expect("invalid time");
+        let created_date =
+            Date::from_calendar_date(2012, time::Month::December, 31).expect("end of the world");
+        let updated_date = Date::from_calendar_date(2022, time::Month::February, 24)
+            .expect("russia invaded Ukraine");
 
         (
             RecipeDetails {
@@ -63,8 +64,8 @@ pub mod test_utils {
                     source: recipe_c.source,
                     is_favourite: false,
                     rating: None,
-                    created_at: NaiveDateTime::new(created_date, time),
-                    updated_at: NaiveDateTime::new(updated_date, time),
+                    created_at: PrimitiveDateTime::new(created_date, Time::MIDNIGHT),
+                    updated_at: PrimitiveDateTime::new(updated_date, Time::MIDNIGHT),
                     user_id: Uuid::new_v4(),
                 },
                 additional_images,
@@ -139,7 +140,7 @@ pub mod test_utils {
                 rating: Some(4),
                 videos: vec![VideoForCreate {
                     video: images.video,
-                    duration: Some(chrono::Duration::minutes(7)),
+                    duration: Some(Duration::minutes(7)),
                     content_url: Some("https://example.com/best-food.mp4".into()),
                     embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
                 }],

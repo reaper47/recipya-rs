@@ -5,7 +5,6 @@ use std::{
 };
 
 use async_trait::async_trait;
-use chrono::NaiveDate;
 use diesel::{
     prelude::*,
     sql_types::{BigInt, Float8, Nullable, Text},
@@ -13,6 +12,7 @@ use diesel::{
 use diesel_async::{AsyncConnection as _, AsyncPgConnection, RunQueryDsl};
 use reqwest::Client;
 use scraper::{Html, Selector};
+use time::{Date, macros::format_description};
 use tracing::error;
 use zip::ZipArchive;
 
@@ -98,8 +98,12 @@ impl FdcFetcher for FdcClient<'_> {
                 .ok_or(Error::InvalidCssSelector)
                 .inspect_err(|_| error!("Failed to parse foundation food release date"))?;
 
-            let release_date =
-                NaiveDate::parse_from_str(&format!("01/{month_year_date}"), "%d/%m/%Y")?;
+            let release_date = Date::parse(
+                &format!("01/{month_year_date}"),
+                format_description!("[day]/[month]/[year]"),
+            )
+            .inspect_err(|_| error!("Failed to parse foundation food release date"))
+            .unwrap_or(Date::MIN);
 
             let json_url = document
                 .select(
