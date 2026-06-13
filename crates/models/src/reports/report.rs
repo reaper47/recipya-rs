@@ -1,7 +1,7 @@
-use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -37,7 +37,7 @@ pub struct Report {
     pub items_failed: i32,
     pub user_id: Uuid,
     pub total_exec_time_ms: i64,
-    pub created_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
 }
 
 impl Report {

@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use axum::body::Bytes;
-use chrono::Duration;
 use derive_more::derive::From;
 use directories::BaseDirs;
 use futures_util::future::join_all;
@@ -15,6 +14,7 @@ use image::codecs::webp::WebPEncoder;
 use image::imageops::FilterType;
 use image::{DynamicImage, ExtendedColorType, GenericImageView, ImageEncoder, ImageReader};
 use regex::Regex;
+use time::Duration;
 use tokio::process::Command;
 use tokio::task;
 use tokio::time::Instant;

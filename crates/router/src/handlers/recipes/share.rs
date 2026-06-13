@@ -3,7 +3,7 @@ use axum::{
     extract::{Path, State},
     response::IntoResponse,
 };
-use chrono::NaiveDateTime;
+use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 
 use app::state::AppState;
@@ -21,14 +21,29 @@ pub async fn share_recipe_post_handler(
     State(state): State<AppState>,
     Form(form): Form<ShareRecipeForm>,
 ) -> impl IntoResponse {
-    let expires_at: Option<NaiveDateTime> = form.datetime.and_then(|dt| {
-        NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%dT%H:%M")
-            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S%.f"))
-            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S"))
-            .inspect_err(|err| {
-                error!("Invalid datetime '{}': {}", dt, err);
-            })
-            .ok()
+    let expires_at: Option<PrimitiveDateTime> = form.datetime.and_then(|dt| {
+        PrimitiveDateTime::parse(
+            dt.as_str(),
+            format_description!("[year]-[month]-[day]T[hour]:[minute]"),
+        )
+        .or_else(|_| {
+            PrimitiveDateTime::parse(
+                dt.as_str(),
+                format_description!(
+                    "[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:1+]"
+                ),
+            )
+        })
+        .or_else(|_| {
+            PrimitiveDateTime::parse(
+                dt.as_str(),
+                format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
+            )
+        })
+        .inspect_err(|err| {
+            error!("Invalid datetime '{}': {}", dt, err);
+        })
+        .ok()
     });
 
     match ShareRecipe::new(&state.mm, recipe_id, user.id, expires_at).await {

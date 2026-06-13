@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use itertools::Itertools;
 use repository::extensions::pagination::Paginate;
+use time::OffsetDateTime;
+use time_tz::OffsetDateTimeExt;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -12,12 +13,13 @@ use repository::{ModelManager, schema};
 use crate::reports::report::{Items, ReportWithTypes};
 use crate::reports::report_log::{Level, ReportLog, ReportLogWithLevel};
 use crate::reports::report_types::{ReportTypePrimary, ReportTypeSecondary, ReportTypeTertiary};
+use crate::settings::UserSettingDetails;
 use crate::{Error, Result};
 
 pub const DEFAULT_REPORTS_PER_PAGE: i64 = 50;
 
 /// Represents a report to be presented to the user.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ViewReport {
     pub id: i64,
     pub report_type: ViewReportType,
@@ -25,7 +27,21 @@ pub struct ViewReport {
     pub items: Items,
     pub user_id: Uuid,
     pub total_exec_time_ms: i64,
-    pub created_at: DateTime<Utc>,
+    pub created_at: OffsetDateTime,
+}
+
+impl Default for ViewReport {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            report_type: ViewReportType::default(),
+            report_logs: Vec::new(),
+            items: Items::default(),
+            user_id: Uuid::nil(),
+            total_exec_time_ms: 0,
+            created_at: OffsetDateTime::UNIX_EPOCH,
+        }
+    }
 }
 
 /// Represents a log entry for a report to be presented to the user.
@@ -52,6 +68,8 @@ pub struct ViewReportType {
 impl ViewReport {
     /// Fetches all reports for a user.
     pub async fn fetch_all(mm: &ModelManager, page: i64, user_id: Uuid) -> Result<Vec<Self>> {
+        let tz = UserSettingDetails::get(mm, user_id).await?.timezone;
+
         let mut conn = mm.pool.get().await?;
 
         let reports = schema::reports::table
@@ -114,7 +132,7 @@ impl ViewReport {
                     },
                     user_id,
                     total_exec_time_ms: r.report.total_exec_time_ms,
-                    created_at: r.report.created_at,
+                    created_at: r.report.created_at.to_timezone(tz),
                 }
             })
             .collect::<Vec<_>>();

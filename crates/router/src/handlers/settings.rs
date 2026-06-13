@@ -27,7 +27,7 @@ use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
 use crate::schemas::settings::{
-    ExportDataPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload,
+    ExportDataPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload, TzPayload,
 };
 
 /// Handles rendering the settings page.
@@ -290,6 +290,27 @@ pub async fn set_selected_theme_handler(
         theme.save_selected(&mm, user_id).await
     })
     .await
+}
+
+/// Handles setting the selected timezone for the target user.
+pub async fn set_selected_timezone_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Form(payload): Form<TzPayload>,
+) -> impl IntoResponse {
+    match user.update_timezone(&state.mm, &payload.tz).await {
+        Ok(()) => ().into_response(),
+        Err(models::Error::Time) => {
+            error!("Selected tz '{}' is invalid", payload.tz);
+            broadcast_error(&state, user.id, "Invalid timezone.").await;
+            Error::InvalidPayload.into_response()
+        }
+        Err(err) => {
+            error!("Error updating timezone for user {}: {err}", user.id);
+            broadcast_error(&state, user.id, "Error updating timezone.").await;
+            Error::Database.into_response()
+        }
+    }
 }
 
 async fn handle_theme_request<F, Fut>(

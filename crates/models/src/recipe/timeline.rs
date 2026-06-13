@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use time::PrimitiveDateTime;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -9,9 +10,7 @@ use crate::user::User;
 use crate::{Error, Result};
 
 /// Represents the timeline entity of a recipe stored in the database.
-#[derive(
-    Debug, Default, Eq, PartialEq, AsChangeset, Associations, Queryable, Identifiable, Selectable,
-)]
+#[derive(Debug, Eq, PartialEq, AsChangeset, Associations, Queryable, Identifiable, Selectable)]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(Recipe))]
 #[diesel(table_name = schema::recipe_timelines)]
@@ -24,7 +23,22 @@ pub struct RecipeTimeline {
     pub comment: Option<String>,
     pub rating: Option<i16>,
     pub image: Option<Uuid>,
-    pub created_at: chrono::NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
+}
+
+impl Default for RecipeTimeline {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            recipe_id: 0,
+            user_id: Uuid::nil(),
+            title: String::new(),
+            comment: None,
+            rating: None,
+            image: None,
+            created_at: PrimitiveDateTime::MIN,
+        }
+    }
 }
 
 #[derive(AsChangeset)]
@@ -34,7 +48,7 @@ struct RecipeTimelinePatch<'a> {
     comment: Option<&'a str>,
     rating: Option<i16>,
     image: Option<Uuid>,
-    created_at: Option<chrono::NaiveDateTime>,
+    created_at: Option<PrimitiveDateTime>,
 }
 
 /// The minimal struct for creating a new timeline into the database.
@@ -44,7 +58,7 @@ pub struct RecipeTimelineForCreate {
     pub comment: Option<String>,
     pub rating: Option<i16>,
     pub image: Option<Uuid>,
-    pub created_at: Option<chrono::NaiveDateTime>,
+    pub created_at: Option<PrimitiveDateTime>,
 }
 
 #[derive(Insertable)]
@@ -56,7 +70,7 @@ struct TimelineForInsert {
     comment: Option<String>,
     rating: Option<i16>,
     image: Option<Uuid>,
-    created_at: Option<chrono::NaiveDateTime>,
+    created_at: Option<PrimitiveDateTime>,
 }
 
 impl RecipeTimeline {
@@ -110,7 +124,7 @@ impl RecipeTimeline {
             comment: new_timeline.comment.as_deref(),
             rating: new_timeline.rating,
             image: new_timeline.image,
-            created_at: (new_timeline.created_at != chrono::NaiveDateTime::default())
+            created_at: (new_timeline.created_at != PrimitiveDateTime::MIN)
                 .then_some(new_timeline.created_at),
         };
 
@@ -158,6 +172,8 @@ impl RecipeTimeline {
 
 #[cfg(test)]
 mod tests {
+    use time::{PrimitiveDateTime, macros::format_description};
+
     use test_db::TestDb;
     use test_utils::{build_server_anonymous, create_app_state, insert_other_user};
 
@@ -205,9 +221,9 @@ mod tests {
                     comment: Some("A comment".into()),
                     rating: Some(5),
                     image: Some(image),
-                    created_at: Some(chrono::NaiveDateTime::parse_from_str(
+                    created_at: Some(PrimitiveDateTime::parse(
                         "2025-01-22 02:32:28",
-                        "%Y-%m-%d %H:%M:%S",
+                        format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
                     )?),
                 },
             )
@@ -244,9 +260,9 @@ mod tests {
                 comment: Some("hello".into()),
                 rating: Some(4),
                 image: None,
-                created_at: Some(chrono::NaiveDateTime::parse_from_str(
+                created_at: Some(PrimitiveDateTime::parse(
                     "2025-01-22 02:32:28",
-                    "%Y-%m-%d %H:%M:%S",
+                    format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
                 )?),
             };
             let timeline_id =
@@ -299,9 +315,9 @@ mod tests {
                 comment: Some("hello".into()),
                 rating: Some(4),
                 image: None,
-                created_at: Some(chrono::NaiveDateTime::parse_from_str(
+                created_at: Some(PrimitiveDateTime::parse(
                     "2025-01-22 02:32:28",
-                    "%Y-%m-%d %H:%M:%S",
+                    format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
                 )?),
             };
             let image = Uuid::new_v4();
@@ -315,9 +331,9 @@ mod tests {
                 comment: Some("bye".into()),
                 rating: Some(1),
                 image: Some(image),
-                created_at: chrono::NaiveDateTime::parse_from_str(
+                created_at: PrimitiveDateTime::parse(
                     "2025-01-30 02:32:28",
-                    "%Y-%m-%d %H:%M:%S",
+                    format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
                 )?,
             };
 

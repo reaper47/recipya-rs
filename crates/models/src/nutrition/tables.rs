@@ -1,10 +1,10 @@
-use chrono::{Datelike, NaiveDate};
 use diesel::{
     Selectable,
     prelude::*,
     sql_types::{BigInt, Float8, Text},
 };
 use diesel_async::RunQueryDsl;
+use time::Date;
 
 use repository::{ModelManager, schema};
 
@@ -20,8 +20,8 @@ pub struct NutritionSource {
     pub description: String,
     pub url: String,
     pub country: String,
-    pub created_on: NaiveDate,
-    pub updated_on: Option<NaiveDate>,
+    pub created_on: Date,
+    pub updated_on: Option<Date>,
 }
 
 impl NutritionSource {
@@ -148,7 +148,7 @@ impl NutritionSource {
     pub async fn is_current_data_old(
         mm: &ModelManager,
         source_name: &str,
-        date: NaiveDate,
+        date: Date,
     ) -> Result<bool> {
         let mut conn = mm.pool.get().await?;
 
@@ -166,9 +166,9 @@ impl NutritionSource {
 
 #[cfg(test)]
 mod tests {
-    use chrono::Utc;
     use test_db::TestDb;
     use test_utils::create_app_state;
+    use time::OffsetDateTime;
 
     use super::*;
 
@@ -187,7 +187,7 @@ mod tests {
     async fn test_all_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
         let state = create_app_state(config.clone()).await;
-        let now = Utc::now().date_naive();
+        let now = OffsetDateTime::now_utc().date();
 
         let got = NutritionSource::all(&state.mm).await?;
 
@@ -234,7 +234,7 @@ mod tests {
         }
 
         mod tests_is_current_data_old {
-            use chrono::{Duration, Local};
+            use time::Duration;
 
             use super::*;
 
@@ -246,7 +246,7 @@ mod tests {
                 let is_old = NutritionSource::is_current_data_old(
                     &state.mm,
                     usda_fdc_source_name(),
-                    Local::now().date_naive(),
+                    OffsetDateTime::now_utc().date(),
                 )
                 .await?;
 
@@ -267,7 +267,7 @@ mod tests {
                 let is_old = NutritionSource::is_current_data_old(
                     &state.mm,
                     usda_fdc_source_name(),
-                    Local::now().date_naive(),
+                    OffsetDateTime::now_utc().date(),
                 )
                 .await?;
 
@@ -288,7 +288,7 @@ mod tests {
                 let is_old = NutritionSource::is_current_data_old(
                     &state.mm,
                     usda_fdc_source_name(),
-                    Local::now().date_naive() + Duration::weeks(6),
+                    OffsetDateTime::now_utc().date() + Duration::weeks(6),
                 )
                 .await?;
 

@@ -6,7 +6,7 @@ use app::state::AppState;
 use crate::handlers::settings::{
     export_data_handler, export_data_post_handler, set_default_theme_handler,
     set_nutrition_source_handler, set_paper_size_handler, set_selected_theme_handler,
-    settings_handler,
+    set_selected_timezone_handler, settings_handler,
 };
 use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
@@ -26,6 +26,7 @@ pub fn settings_routes(state: &AppState) -> Router<AppState> {
                 .layer(middleware::from_fn_with_state(state.clone(), mw_only_admin)),
         )
         .route("/theme-selected", post(set_selected_theme_handler))
+        .route("/tz", post(set_selected_timezone_handler))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             mw_refresh_token,
@@ -425,6 +426,58 @@ mod tests {
             res.assert_status_ok();
             let got = UserSettingDetails::get(&state.mm, user_id).await?;
             assert_eq!(got.paper_size_id, 3);
+            Ok(())
+        }
+    }
+
+    mod tests_timezone {
+        use crate::schemas::settings::TzPayload;
+
+        use super::*;
+
+        const BASE_URI: &str = "/settings/tz";
+
+        #[tokio::test]
+        async fn test_tz_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_set_invalid_tz_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&TzPayload { tz: "n00b".into() })
+                .await;
+
+            res.assert_status_bad_request();
+            assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Invalid timezone.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            let user = UserSettingDetails::get(&state.mm, user_id).await?;
+            assert_eq!(user.tz_name(), "UTC");
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_set_valid_tz_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&TzPayload {
+                    tz: "America/Montreal".into(),
+                })
+                .await;
+
+            res.assert_status_ok();
+            let user = UserSettingDetails::get(&state.mm, user_id).await?;
+            assert_eq!(user.tz_name(), "America/Montreal");
             Ok(())
         }
     }

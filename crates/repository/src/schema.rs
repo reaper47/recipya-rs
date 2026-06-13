@@ -688,6 +688,7 @@ diesel::table! {
         default_theme -> Int4,
         selected_theme -> Int4,
         paper_size_id -> Int2,
+        timezone -> Text,
     }
 }
 

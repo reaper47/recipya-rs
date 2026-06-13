@@ -5,8 +5,9 @@ use std::str::FromStr;
 
 use axum::extract::multipart::{InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
-use chrono::{NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
+use time::macros::format_description;
+use time::{Date, PrimitiveDateTime};
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -144,7 +145,7 @@ pub struct PreviewForm {
 #[derive(Default)]
 pub struct TimelineEventForm {
     pub title: String,
-    pub date: Option<NaiveDateTime>,
+    pub date: Option<PrimitiveDateTime>,
     pub image: HashMap<String, PathBuf>,
     pub original_image_filename: Option<Uuid>,
     pub comment: Option<String>,
@@ -177,9 +178,9 @@ where
                 "title" => form.title = text_trim(field).await.unwrap_or_default(),
                 "date" => {
                     form.date = text_trim(field).await.and_then(|s| {
-                        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
+                        Date::parse(&s, format_description!("[year]-[month]-[day]"))
                             .ok()
-                            .and_then(|d| d.and_hms_opt(0, 0, 0))
+                            .map(|d| PrimitiveDateTime::new(d, time::Time::MIDNIGHT))
                     });
                 }
                 "image" => {

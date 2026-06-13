@@ -27,8 +27,6 @@ pub enum Error {
 
     // Modules
     #[from]
-    Chrono(chrono::ParseError),
-    #[from]
     Config(config::Error),
     #[from]
     Scraper(recipya_scraper::Error),

@@ -5,6 +5,7 @@ use axum::{
     response::IntoResponse,
 };
 use reqwest::StatusCode;
+use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 use uuid::Uuid;
 
@@ -91,7 +92,7 @@ pub async fn timeline_put_handler(
         comment: form.comment,
         rating: form.rating,
         image,
-        created_at: form.date.unwrap_or_default(),
+        created_at: form.date.unwrap_or(PrimitiveDateTime::MIN),
     };
 
     let new_event = match RecipeTimeline::edit(&state.mm, user.id, &new_event_params).await {
@@ -151,7 +152,11 @@ pub async fn timeline_get_handler(
     };
 
     let static_events = vec![Event {
-        date: recipe.created_at.date().format("%x").to_string(),
+        date: recipe
+            .created_at
+            .date()
+            .format(format_description!("[year]-[month]-[day]"))
+            .unwrap(),
         title: "Recipe created".into(),
         ..Default::default()
     }];
