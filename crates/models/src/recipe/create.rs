@@ -196,9 +196,9 @@ impl Recipe {
 #[cfg(test)]
 mod tests {
     use app::state::AppState;
-    use chrono::NaiveDateTime;
     use test_db::TestDb;
     use test_utils::{build_server_logged_in, create_app_state, insert_user};
+    use time::PrimitiveDateTime;
 
     use super::*;
     use crate::{
@@ -388,7 +388,7 @@ mod tests {
                     created_at: got
                         .videos
                         .get(idx)
-                        .map_or_else(NaiveDateTime::default, |v| v.created_at),
+                        .map_or_else(|| PrimitiveDateTime::MIN, |v| v.created_at),
                 })
                 .collect::<Vec<_>>(),
         }

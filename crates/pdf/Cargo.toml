@@ -16,4 +16,4 @@ rust-version.workspace = true
 
 [dependencies]
 krilla.workspace = true
-skrifa = "0.42"
+skrifa = "0.43.2"

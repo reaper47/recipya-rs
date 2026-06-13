@@ -1,7 +1,6 @@
 use std::fmt::Write;
 
-use chrono::NaiveTime;
-use tracing::error;
+use time::macros::format_description;
 
 use crate::recipe::structs::time::Times;
 
@@ -26,22 +25,8 @@ impl FormattedTimes {
         let cook = humantime::parse_duration(&format!("{}s", times.cook_seconds))?;
         let prep = humantime::parse_duration(&format!("{}s", times.prep_seconds))?;
         let total = humantime::parse_duration(&format!("{}s", times.total_seconds))?;
-
-        let prep_edit = NaiveTime::from_num_seconds_from_midnight_opt(
-            u32::try_from(prep.as_secs())
-                .inspect_err(|err| error!("Failed to convert prep time '{prep:?}' to u32: {err}"))
-                .unwrap_or_default(),
-            0,
-        )
-        .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
-
-        let cook_edit = NaiveTime::from_num_seconds_from_midnight_opt(
-            u32::try_from(cook.as_secs())
-                .inspect_err(|err| error!("Failed to convert cook time '{cook:?}' to u32: {err}"))
-                .unwrap_or_default(),
-            0,
-        )
-        .map_or_else(|| "00:15:00".into(), |t| t.format("%H:%M:%S").to_string());
+        let prep_edit = secs_to_time_str(prep);
+        let cook_edit = secs_to_time_str(cook);
 
         Ok(Self {
             cook: humantime::format_duration(cook).to_string(),
@@ -54,6 +39,23 @@ impl FormattedTimes {
             total_datetime: duration_to_iso8601(total.into()),
         })
     }
+}
+
+fn secs_to_time_str(dur: std::time::Duration) -> String {
+    let secs = u32::try_from(dur.as_secs()).unwrap_or_default();
+
+    time::Time::from_hms(
+        u8::try_from(secs / 3600).unwrap_or_default(),
+        ((secs % 3600) / 60) as u8,
+        (secs % 60) as u8,
+    )
+    .map_or_else(
+        |_| "00:15:00".into(),
+        |t| {
+            t.format(format_description!("[hour]:[minute]:[second]"))
+                .unwrap()
+        },
+    )
 }
 
 fn duration_to_iso8601(duration: humantime::Duration) -> String {

@@ -92,6 +92,7 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
 mod tests {
     use axum_test::TestServer;
     use reqwest::Method;
+    use time::{Duration, OffsetDateTime, PrimitiveDateTime};
     use uuid::Uuid;
 
     use app::state::AppState;
@@ -536,7 +537,10 @@ mod tests {
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-            let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
+            let expires_at = {
+                let dt = OffsetDateTime::now_utc() + Duration::days(31);
+                PrimitiveDateTime::new(dt.date(), dt.time())
+            };
 
             let res = server
                 .post(&base_uri(list_id))
@@ -568,7 +572,10 @@ mod tests {
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-            let now = chrono::Utc::now().naive_utc();
+            let now = {
+                let dt = OffsetDateTime::now_utc();
+                PrimitiveDateTime::new(dt.date(), dt.time())
+            };
 
             let res = server
                 .post(&base_uri(list_id))
@@ -577,10 +584,7 @@ mod tests {
 
             res.assert_status_ok();
             let share = get_first_shared(state, list_id, user_id).await;
-            pretty_assertions::assert_eq!(
-                share.expires_at.signed_duration_since(now).num_days(),
-                7
-            );
+            pretty_assertions::assert_eq!((share.expires_at - now).whole_days(), 7);
             Ok(())
         }
 
@@ -592,7 +596,10 @@ mod tests {
             let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-            let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
+            let expires_at = {
+                let dt = OffsetDateTime::now_utc() + Duration::days(31);
+                PrimitiveDateTime::new(dt.date(), dt.time())
+            };
             let _ = server
                 .post(&base_uri(list_id))
                 .form(&ShareRecipeForm::new(Some(expires_at.to_string())))

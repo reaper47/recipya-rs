@@ -8,12 +8,13 @@ use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
-use chrono::NaiveDateTime;
 use itertools::izip;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
+use time::PrimitiveDateTime;
+use time::macros::format_description;
 use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
 use tracing::error;
@@ -393,14 +394,27 @@ pub async fn shopping_list_share_post_handler(
     Path(list_id): Path<Uuid>,
     Form(form): Form<ShareRecipeForm>,
 ) -> impl IntoResponse {
-    let expires_at: Option<NaiveDateTime> = form.datetime.and_then(|dt| {
-        NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%dT%H:%M")
-            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S%.f"))
-            .or_else(|_| NaiveDateTime::parse_from_str(dt.as_str(), "%Y-%m-%d %H:%M:%S"))
-            .inspect_err(|err| {
-                error!("Invalid datetime '{}': {}", dt, err);
-            })
-            .ok()
+    let expires_at: Option<PrimitiveDateTime> = form.datetime.and_then(|dt| {
+        PrimitiveDateTime::parse(
+            dt.as_str(),
+            format_description!("[year]-[month]-[day]T[hour]:[minute]"),
+        )
+        .or_else(|_| {
+            PrimitiveDateTime::parse(
+                dt.as_str(),
+                format_description!("[year]-[month]-[day] [hour]:[minute]:[second].[subsecond]"),
+            )
+        })
+        .or_else(|_| {
+            PrimitiveDateTime::parse(
+                dt.as_str(),
+                format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
+            )
+        })
+        .inspect_err(|err| {
+            error!("Invalid datetime '{}': {}", dt, err);
+        })
+        .ok()
     });
 
     match ShareShoppingList::new(&state.mm, list_id, user.id, expires_at).await {

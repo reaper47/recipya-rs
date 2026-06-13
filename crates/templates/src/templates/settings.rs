@@ -1,5 +1,6 @@
 use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
+use time::macros::format_description;
 use time_tz::TimeZone;
 
 use math::cooking::units::system::MeasurementSystem;
@@ -333,7 +334,10 @@ fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
                                         td class="py-1" { (source.name) }
                                         td class="py-1" { (source.description) }
                                         td class="py-1" { (source.country) }
-                                        td class="py-1" { (source.updated_on.map_or_else(|| "Unknown".to_string(), |date| date.format("%Y-%m-%d").to_string())) }
+                                        td class="py-1" {
+                                            (source.updated_on
+                                                .map_or_else(|| "Unknown".to_string(), |date| date.format(format_description!("[year]-[month]-[day]")).unwrap()))
+                                        }
                                         td class="py-1" { a class="link" href=(source.url) target="_blank" { "Visit" }
                                     }
                                 }

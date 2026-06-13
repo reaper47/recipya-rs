@@ -13,7 +13,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-chrono.workspace = true
 models.workspace = true
 test-fixtures.workspace = true
+time.workspace = true
 uuid.workspace = true

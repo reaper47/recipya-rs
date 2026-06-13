@@ -1,6 +1,5 @@
 use std::{collections::HashMap, io::Write, mem::take, path::PathBuf};
 
-use chrono::NaiveDateTime;
 use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
@@ -11,6 +10,7 @@ use krilla::{
     text::{Font, TextDirection},
 };
 use tempfile::{NamedTempFile, env::temp_dir};
+use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 use uuid::Uuid;
 
@@ -41,8 +41,8 @@ pub struct ShoppingList {
     pub name: String,
     pub num_items: i64,
     pub user_id: Uuid,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
+    pub updated_at: PrimitiveDateTime,
 }
 
 #[derive(Associations, Insertable)]
@@ -82,8 +82,8 @@ pub struct ShoppingListItem {
     pub shopping_list_label_id: i64,
     pub position: i32,
     pub is_checked: bool,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
+    pub updated_at: PrimitiveDateTime,
 }
 
 /// Represents a shopping list item for creation.
@@ -159,8 +159,8 @@ pub struct ShoppingListDetails {
     pub id: Uuid,
     pub name: String,
     pub items: Vec<ShoppingListItemDetails>,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
+    pub updated_at: PrimitiveDateTime,
 }
 
 enum DrawCommand {
@@ -434,7 +434,12 @@ impl ShoppingListDetails {
                 match cmd {
                     DrawCommand::Header => add_header(
                         Some("Recipya shopping list"),
-                        Some(&self.updated_at.format("%Y-%m-%d").to_string()),
+                        Some(
+                            &self
+                                .updated_at
+                                .format(&format_description!("[year]-[month]-[day]"))
+                                .unwrap(),
+                        ),
                         &mut surface,
                         (
                             &font_regular,
@@ -534,8 +539,8 @@ pub struct ShoppingListItemDetails {
     pub position: i32,
     pub recipe: Option<ShoppingListRecipeDetails>,
     pub is_checked: bool,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
+    pub updated_at: PrimitiveDateTime,
 }
 
 /// Represents a shared recipe
@@ -549,9 +554,9 @@ pub struct ShareShoppingList {
     pub link: Uuid,
     pub user_id: Uuid,
     pub list_id: Uuid,
-    pub created_at: NaiveDateTime,
-    pub expires_at: NaiveDateTime,
-    pub last_accessed: NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
+    pub expires_at: PrimitiveDateTime,
+    pub last_accessed: PrimitiveDateTime,
     pub click_count: i32,
 }
 
@@ -561,7 +566,7 @@ pub struct ShareShoppingList {
 pub(crate) struct ShareShoppingListForInsert {
     pub user_id: Uuid,
     pub list_id: Uuid,
-    pub expires_at: Option<NaiveDateTime>,
+    pub expires_at: Option<PrimitiveDateTime>,
 }
 
 /// Represents a recipe with its details for a shopping list item.
@@ -1205,7 +1210,7 @@ impl ShareShoppingList {
         mm: &ModelManager,
         list_id: Uuid,
         user_id: Uuid,
-        expires_at: Option<NaiveDateTime>,
+        expires_at: Option<PrimitiveDateTime>,
     ) -> Result<Self> {
         diesel::insert_into(schema::shares_shopping_lists::table)
             .values(&ShareShoppingListForInsert {
@@ -1241,6 +1246,8 @@ impl ShareShoppingList {
 
 #[cfg(test)]
 mod tests {
+    use time::{Duration, OffsetDateTime};
+
     use test_db::TestDb;
     use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
 
@@ -1883,19 +1890,13 @@ mod tests {
             pretty_assertions::assert_eq!(got.list_id, want.list_id);
             pretty_assertions::assert_eq!(got.click_count, want.click_count);
 
-            let diff = (got.created_at - want.created_at)
-                .num_nanoseconds()
-                .unwrap_or(i64::MAX);
+            let diff = (got.created_at - want.created_at).whole_nanoseconds();
             assert!(diff.abs() <= 1000, "Created at");
 
-            let diff = (got.expires_at - want.expires_at)
-                .num_nanoseconds()
-                .unwrap_or(i64::MAX);
+            let diff = (got.expires_at - want.expires_at).whole_nanoseconds();
             assert!(diff.abs() <= 1000, "Expires at");
 
-            let diff = (got.last_accessed - want.last_accessed)
-                .num_nanoseconds()
-                .unwrap_or(i64::MAX);
+            let diff = (got.last_accessed - want.last_accessed).whole_nanoseconds();
             assert!(diff.abs() <= 1000, "Last accessed at");
         }
 
@@ -1935,15 +1936,13 @@ mod tests {
                 let user_id = add_user(&state.mm).await?.id;
                 insert_recipe(&config, &state, user_id).await?;
                 let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
-                let expires_at = chrono::Utc::now() + chrono::Duration::days(14);
+                let expires_at = {
+                    let dt = OffsetDateTime::now_utc() + Duration::days(14);
+                    PrimitiveDateTime::new(dt.date(), dt.time())
+                };
 
-                let got = ShareShoppingList::new(
-                    &state.mm,
-                    list_id,
-                    user_id,
-                    Some(expires_at.naive_local()),
-                )
-                .await?;
+                let got =
+                    ShareShoppingList::new(&state.mm, list_id, user_id, Some(expires_at)).await?;
 
                 assert_share_list(
                     &got,
@@ -1953,7 +1952,7 @@ mod tests {
                         user_id,
                         list_id,
                         created_at: got.created_at,
-                        expires_at: expires_at.naive_local(),
+                        expires_at,
                         last_accessed: got.last_accessed,
                         click_count: 0,
                     },
@@ -2030,19 +2029,21 @@ mod tests {
         }
 
         fn a_list_with_no_items() -> ShoppingListDetails {
-            let now = chrono::Local::now().naive_local();
+            let now = OffsetDateTime::now_utc();
+            let primitive = PrimitiveDateTime::new(now.date(), now.time());
 
             ShoppingListDetails {
                 id: Uuid::new_v4(),
                 name: "Main Shopping List".into(),
                 items: vec![],
-                created_at: now,
-                updated_at: now,
+                created_at: primitive,
+                updated_at: primitive,
             }
         }
 
         fn a_list_with_items_no_labels() -> ShoppingListDetails {
-            let now = chrono::Local::now().naive_local();
+            let now = OffsetDateTime::now_utc();
+            let primitive = PrimitiveDateTime::new(now.date(), now.time());
 
             ShoppingListDetails {
                 id: Uuid::new_v4(),
@@ -2058,8 +2059,8 @@ mod tests {
                         position: 1,
                         recipe: None,
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                     ShoppingListItemDetails {
                         id: 2,
@@ -2071,8 +2072,8 @@ mod tests {
                         position: 2,
                         recipe: Some(a_recipe()),
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                     ShoppingListItemDetails {
                         id: 3,
@@ -2084,17 +2085,18 @@ mod tests {
                         position: 3,
                         recipe: Some(a_recipe()),
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                 ],
-                created_at: now,
-                updated_at: now,
+                created_at: primitive,
+                updated_at: primitive,
             }
         }
 
         fn a_list_with_mix_labels() -> ShoppingListDetails {
-            let now = chrono::Local::now().naive_local();
+            let now = OffsetDateTime::now_utc();
+            let primitive = PrimitiveDateTime::new(now.date(), now.time());
 
             ShoppingListDetails {
                 id: Uuid::new_v4(),
@@ -2110,8 +2112,8 @@ mod tests {
                         position: 1,
                         recipe: None,
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                     ShoppingListItemDetails {
                         id: 2,
@@ -2123,8 +2125,8 @@ mod tests {
                         position: 2,
                         recipe: Some(other_recipe()),
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                     ShoppingListItemDetails {
                         id: 3,
@@ -2136,8 +2138,8 @@ mod tests {
                         position: 3,
                         recipe: None,
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                     ShoppingListItemDetails {
                         id: 3,
@@ -2149,8 +2151,8 @@ mod tests {
                         position: 3,
                         recipe: None,
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                     ShoppingListItemDetails {
                         id: 3,
@@ -2162,12 +2164,12 @@ mod tests {
                         position: 5,
                         recipe: Some(a_recipe()),
                         is_checked: false,
-                        created_at: now,
-                        updated_at: now,
+                        created_at: primitive,
+                        updated_at: primitive,
                     },
                 ],
-                created_at: now,
-                updated_at: now,
+                created_at: primitive,
+                updated_at: primitive,
             }
         }
 

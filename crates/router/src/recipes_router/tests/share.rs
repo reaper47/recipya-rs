@@ -1,9 +1,10 @@
 #[cfg(test)]
 mod tests {
     use axum::http::Method;
-    use diesel::internal::derives::multiconnection::chrono;
     use diesel::prelude::*;
     use diesel_async::RunQueryDsl;
+    use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+    use uuid::Uuid;
 
     use app::state::AppState;
     use models::share::ShareRecipe;
@@ -14,7 +15,6 @@ mod tests {
     use test_fixtures::assert_html;
     use test_models::a_complete_recipe_for_create;
     use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
-    use uuid::Uuid;
 
     use crate::recipes_router::params::ShareRecipeForm;
 
@@ -77,7 +77,10 @@ mod tests {
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
-        let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
+        let expires_at = {
+            let dt = OffsetDateTime::now_utc() + Duration::days(31);
+            PrimitiveDateTime::new(dt.date(), dt.time())
+        };
 
         let res = server
             .post(&base_uri(1))
@@ -111,7 +114,7 @@ mod tests {
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
-        let now = chrono::Utc::now().naive_utc();
+        let now = OffsetDateTime::now_utc();
 
         let res = server
             .post(&base_uri(1))
@@ -120,7 +123,7 @@ mod tests {
 
         let share = get_first_shared_recipe(state, user_id).await;
         res.assert_status_ok();
-        pretty_assertions::assert_eq!(share.expires_at.signed_duration_since(now).num_days(), 7);
+        pretty_assertions::assert_eq!((share.expires_at.assume_utc() - now).whole_days(), 7);
         Ok(())
     }
 
@@ -134,7 +137,10 @@ mod tests {
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
-        let expires_at = (chrono::Utc::now() + chrono::Duration::days(31)).naive_utc();
+        let expires_at = {
+            let dt = OffsetDateTime::now_utc() + Duration::days(31);
+            PrimitiveDateTime::new(dt.date(), dt.time())
+        };
         let _ = server
             .post(&base_uri(1))
             .form(&ShareRecipeForm::new(Some(expires_at.to_string())))

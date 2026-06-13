@@ -299,7 +299,7 @@ pub async fn set_selected_timezone_handler(
     Form(payload): Form<TzPayload>,
 ) -> impl IntoResponse {
     match user.update_timezone(&state.mm, &payload.tz).await {
-        Ok(_) => ().into_response(),
+        Ok(()) => ().into_response(),
         Err(models::Error::Time) => {
             error!("Selected tz '{}' is invalid", payload.tz);
             broadcast_error(&state, user.id, "Invalid timezone.").await;

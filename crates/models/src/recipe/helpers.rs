@@ -584,23 +584,30 @@ where
                         video: video.video,
                         recipe_id,
                         duration: video.duration.map(|duration| {
-                            let days = i32::try_from(duration.num_days())
+                            let days = i32::try_from(duration.whole_days())
                                 .inspect_err(|err| {
                                     error!(
                                         "Failed to cast num days '{}': {err}",
-                                        duration.num_days()
+                                        duration.whole_days()
                                     );
                                 })
                                 .unwrap_or_default();
 
                             PgInterval::new(
-                                duration.num_microseconds().unwrap_or_default(),
+                                i64::try_from(duration.whole_microseconds())
+                                    .inspect_err(|err| {
+                                        error!(
+                                            "Failed to cast num microseconds '{}': {err}",
+                                            duration.whole_microseconds()
+                                        );
+                                    })
+                                    .unwrap_or_default(),
                                 days,
-                                i32::try_from(duration.num_weeks() * 100_000 / 434_524)
+                                i32::try_from(duration.whole_weeks() * 100_000 / 434_524)
                                     .inspect_err(|err| {
                                         error!(
                                             "Failed to cast num weeks '{}': {err}",
-                                            duration.num_weeks()
+                                            duration.whole_weeks()
                                         );
                                     })
                                     .unwrap_or_default(),

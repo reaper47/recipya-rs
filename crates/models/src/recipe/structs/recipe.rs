@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use diesel::prelude::*;
 use serde_json::json;
+use time::PrimitiveDateTime;
 use tracing::error;
 use uuid::Uuid;
 use whatlang::Lang;
@@ -53,16 +54,7 @@ bitflags! {
 
 /// Represents a recipe entity stored in the database.
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    Eq,
-    PartialEq,
-    AsChangeset,
-    Associations,
-    Queryable,
-    Identifiable,
-    Selectable,
+    Clone, Debug, Eq, PartialEq, AsChangeset, Associations, Queryable, Identifiable, Selectable,
 )]
 #[diesel(belongs_to(User))]
 #[diesel(belongs_to(MeasurementSystem))]
@@ -94,11 +86,32 @@ pub struct Recipe {
     /// Optional 1-5 rating. None is used for no rating.
     pub rating: Option<i16>,
     /// The timestamp when the nutrition entry was created.
-    pub created_at: chrono::NaiveDateTime,
+    pub created_at: PrimitiveDateTime,
     /// The timestamp when the nutrition entry was last updated.
-    pub updated_at: chrono::NaiveDateTime,
+    pub updated_at: PrimitiveDateTime,
     /// The foreign key linking the recipe to its creator.
     pub user_id: Uuid,
+}
+
+impl Default for Recipe {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            name: String::new(),
+            description: None,
+            image: None,
+            r#yield: 0,
+            language: String::new(),
+            measurement_system_id: 0,
+            notes: None,
+            source: Source::default(),
+            is_favourite: false,
+            rating: None,
+            created_at: PrimitiveDateTime::MIN,
+            updated_at: PrimitiveDateTime::MIN,
+            user_id: Uuid::nil(),
+        }
+    }
 }
 
 /// Represents the data required to insert a new recipe into the database.
