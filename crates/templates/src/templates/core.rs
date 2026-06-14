@@ -77,10 +77,9 @@ pub(super) fn toast_ws(title: &str, content: &str, is_toast_visible: bool) -> Ma
     html! {
         (toast())
         div #ws-notification-container class={
-            @if is_toast_visible {
-                "z-20 fixed bottom-0 right-0 p-6 cursor-default"
-            } @else {
-                "z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"
+            "z-20 fixed bottom-0 right-0 p-6 cursor-default"
+            @if !is_toast_visible {
+                " hidden"
             }
         } {
             div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md" {
