@@ -396,7 +396,7 @@ pub async fn recrape_recipe_put_handler(
             .get("rating")
             .and_then(|v| v.first())
             .and_then(|s| s.parse::<i16>().ok())
-            .filter(|&r| (1..=5).contains(&r))
+            .filter(|&r| (1..=5).contains(&r)); 
     }
 
     if map
