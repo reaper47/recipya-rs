@@ -14,10 +14,7 @@ use crate::{ENABLE_JS, Error, FORBIDDEN, Result};
 #[async_trait]
 pub trait HttpClient {
     /// Performs an asynchronous HTTP GET request.
-    async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String>;
-
-    /// Performs a synchronous HTTP GET request.
-    fn get(&self, host: Website, url: &str) -> Result<String>;
+    async fn get<'a>(&'a self, host: Website, url: &str) -> Result<String>;
 
     /// Fetches the content from a URL and uploads it to the temporary directory.
     async fn get_bytes(&self, url: &str) -> Result<Bytes>;
@@ -43,7 +40,7 @@ impl Default for AppHttpClient {
 
 #[async_trait::async_trait]
 impl HttpClient for AppHttpClient {
-    async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String> {
+    async fn get<'a>(&'a self, host: Website, url: &str) -> Result<String> {
         let url = match host {
             Website::AllRecipes => {
                 if url.ends_with('/') {
@@ -102,13 +99,6 @@ impl HttpClient for AppHttpClient {
         } else {
             Ok(text)
         }
-    }
-
-    fn get(&self, _host: Website, url: &str) -> Result<String> {
-        let client = reqwest::blocking::Client::new();
-        let res = client.get(url).send()?;
-        let body = res.text()?;
-        Ok(body)
     }
 
     async fn get_bytes(&self, url: &str) -> Result<Bytes> {

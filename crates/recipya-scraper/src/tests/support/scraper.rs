@@ -23,7 +23,7 @@ pub struct MockHttpClient;
 
 #[async_trait::async_trait]
 impl HttpClient for MockHttpClient {
-    async fn get_async<'a>(&'a self, host: Website, url: &str) -> Result<String> {
+    async fn get<'a>(&'a self, host: Website, url: &str) -> Result<String> {
         let path = get_html_file_path(
             host,
             url.rsplit_once("<number>")
@@ -43,10 +43,6 @@ impl HttpClient for MockHttpClient {
             let content = String::from_utf8_lossy(&bytes).to_string();
             Ok(content)
         }
-    }
-
-    fn get(&self, _host: Website, _url: &str) -> Result<String> {
-        unimplemented!()
     }
 
     async fn get_bytes(&self, _url: &str) -> Result<Bytes> {
