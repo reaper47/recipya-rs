@@ -44,7 +44,7 @@ impl Scraper {
     /// Scrapes the given URL and returns a `RecipeSchema`.
     pub async fn scrape(&self, url: &str) -> Result<Recipe> {
         let website = Website::from(url)?;
-        let content = self.client.get_async(website, url).await?;
+        let content = self.client.get(website, url).await?;
         let doc = Html::parse_document(&content);
 
         match Self::parse_ld_json(url, &doc, website) {
