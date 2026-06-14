@@ -6,7 +6,7 @@ use axum::{
     http::{HeaderMap, HeaderValue},
     response::IntoResponse,
 };
-use axum_htmx::{HX_LOCATION, HX_REDIRECT};
+use axum_htmx::HX_REDIRECT;
 use indexmap::IndexMap;
 use reqwest::StatusCode;
 use support::strings::calc_seconds_from_parts;
@@ -127,7 +127,6 @@ pub async fn recrape_recipe_handler(
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::cast_possible_truncation)]
 pub async fn recrape_recipe_put_handler(
-    header_map: HeaderMap,
     RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
@@ -272,8 +271,12 @@ pub async fn recrape_recipe_put_handler(
                     t.prep_seconds = calc_seconds_from_parts(&value);
                 }
             }
+            "rating-source" => {
+                map.entry("rating-source".into())
+                    .or_insert_with(|| vec![value]);
+            }
             "rating-new" => {
-                recipe.r#rating = value.parse::<i16>().ok().filter(|&r| (1..=5).contains(&r));
+                map.entry("rating".into()).or_insert_with(|| vec![value]);
             }
             "title-new" => {
                 recipe.name = value;
@@ -384,6 +387,19 @@ pub async fn recrape_recipe_put_handler(
     }
 
     if map
+        .get("rating-source")
+        .and_then(|v| v.first())
+        .map(String::as_str)
+        == Some("new")
+    {
+        recipe.rating = map
+            .get("rating")
+            .and_then(|v| v.first())
+            .and_then(|s| s.parse::<i16>().ok())
+            .filter(|&r| (1..=5).contains(&r))
+    }
+
+    if map
         .get("nutrition-source")
         .and_then(|v| v.first())
         .map(String::as_str)
@@ -457,11 +473,6 @@ pub async fn recrape_recipe_put_handler(
     }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
-    if header_map.get(HX_LOCATION).is_some()
-        && let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}"))
-    {
-        res.headers_mut().insert(HX_LOCATION, value);
-    }
     if let Ok(value) = HeaderValue::from_str(&format!("/recipes/{recipe_id}")) {
         res.headers_mut().insert(HX_REDIRECT, value);
     }
