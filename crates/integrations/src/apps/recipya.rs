@@ -150,13 +150,13 @@ fn migrate_recipe(v: &mut Value) {
     if let Some(tool_value) = v.get_mut("tool") {
         match tool_value {
             Value::String(name) => {
-                *tool_value = migrate_tool_string(name.clone());
+                *tool_value = migrate_tool_string(name);
             }
             Value::Array(items) => {
                 let migrated_items = items
                     .iter()
                     .map(|item| match item {
-                        Value::String(name) => migrate_tool_string(name.clone()),
+                        Value::String(name) => migrate_tool_string(name),
                         Value::Object(tool) => migrate_tool_object(tool.clone()),
                         _ => item.clone(),
                     })
@@ -172,7 +172,7 @@ fn migrate_recipe(v: &mut Value) {
     }
 }
 
-fn migrate_tool_string(name: String) -> Value {
+fn migrate_tool_string(name: &str) -> Value {
     json!({
         "@type": "HowToTool",
         "name": name,

@@ -1,5 +1,4 @@
 use std::io::{Cursor, Read, Seek};
-use std::ops::Deref;
 
 use scraper::{Html, Selector};
 use winnow::Result as WResult;
@@ -43,10 +42,10 @@ struct RecipeComponents<'a> {
 impl From<ChefTapRecipe> for Recipe {
     fn from(mut r: ChefTapRecipe) -> Self {
         if let Some(notes) = r.notes {
-            let notes = if !notes.to_lowercase().starts_with("note") {
-                format!("Notes: {notes}")
-            } else {
+            let notes = if notes.to_lowercase().starts_with("note") {
                 notes
+            } else {
+                format!("Notes: {notes}")
             };
 
             r.instructions
@@ -130,6 +129,10 @@ where
 }
 
 /// Parses a single HTML file and returns a [`Recipe`] if one is found.
+///
+/// # Panics
+///
+/// Panics if the file cannot be read or parsed.
 pub fn parse_html<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
@@ -149,7 +152,7 @@ where
         .map(|el| el.attr("href"))
         .collect::<Vec<_>>()
         .first()
-        .cloned()
+        .copied()
         .unwrap_or_default()
         .map(String::from);
 
@@ -165,32 +168,20 @@ where
     };
 
     let mut notes = Vec::new();
-    let mut keywords = Vec::new();
-    let mut _total_time: Option<String> = None;
 
     for el in doc.select(&Selector::parse("p").unwrap()).skip(1) {
         let text = el.text().collect::<String>();
-        if text.contains("•") {
-            keywords.extend_from_slice(
-                &text
-                    .split("•")
-                    .map(|s| s.trim().to_string())
-                    .collect::<Vec<_>>(),
-            );
-        } else if text.starts_with("Cook Time ") {
-            recipe.cook_time = Some(text[10..].trim().to_string());
-        } else if text.starts_with("Prep Time ") {
-            recipe.prep_time = Some(text[10..].trim().to_string());
-        } else if text.starts_with("Total Time ") {
-            _total_time = Some(text[10..].trim().to_string());
-        } else if text.starts_with("Yield ") {
+        if text.contains("•") || text.starts_with("Total Time ") {
+            continue;
+        }
+
+        if let Some(stripped) = text.strip_prefix("Cook Time ") {
+            recipe.cook_time = Some(stripped.trim().to_string());
+        } else if let Some(stripped) = text.strip_prefix("Prep Time ") {
+            recipe.prep_time = Some(stripped.trim().to_string());
+        } else if let Some(stripped) = text.strip_prefix("Yield ") {
             if recipe.r#yield.is_none() {
-                recipe.r#yield = text[6..]
-                    .trim()
-                    .to_string()
-                    .parse::<i16>()
-                    .ok()
-                    .and_then(Some);
+                recipe.r#yield = stripped.trim().parse::<i16>().ok();
             }
         } else if text.starts_with(|c: char| c.is_ascii_digit()) {
             recipe
@@ -205,7 +196,7 @@ where
         }
     }
 
-    for note in notes.into_iter().filter(|s| s.deref() != recipe.title) {
+    for note in notes.into_iter().filter(|s| **s != recipe.title) {
         recipe.notes = Some(note);
     }
 
