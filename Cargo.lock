@@ -2639,6 +2639,7 @@ dependencies = [
  "recipemd",
  "reqwest",
  "schema-org",
+ "scraper",
  "serde",
  "serde-xml-rs 0.8.2",
  "serde_json",

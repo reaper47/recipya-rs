@@ -36,7 +36,12 @@ where
     match app {
         App::AccuChef => accuchef::parse(r),
         App::BigOven => bigoven::parse(r),
-        App::ChefTap => cheftap::parse(r),
+        App::ChefTap => match file_format {
+            FileFormat::Html => cheftap::parse_html(r),
+            FileFormat::Txt => cheftap::parse_txt(r),
+            FileFormat::Zip => cheftap::parse_zip(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
         App::Cooklang => CookLang::default().parse(r, file_name),
         App::CookMate => match file_format {
             FileFormat::MCB => cookmate::parse_backup(r),

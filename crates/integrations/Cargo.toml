@@ -28,6 +28,7 @@ libpaprika = { version = "0.4.1", default-features = false }
 recipemd = "0.2.0"
 reqwest = { workspace = true, features = ["json"] }
 schema-org.workspace = true
+scraper.workspace = true
 serde.workspace = true
 serde-xml-rs = "0.8.2"
 serde_json.workspace = true

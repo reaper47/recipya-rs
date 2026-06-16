@@ -11,7 +11,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
     let applications = [
         ("AccuChef", "https://www.accuchef.com", vec![]),
         ("BigOven", "https://www.bigoven.com", vec![".txt"]),
-        ("ChefTap", "https://cheftap.com", vec![".txt"]),
+        (
+            "ChefTap",
+            "https://cheftap.com",
+            vec![".html", ".txt", ".zip"],
+        ),
         ("Cooklang", "https://cooklang.org/", vec![".cook"]),
         (
             "COOKmate",

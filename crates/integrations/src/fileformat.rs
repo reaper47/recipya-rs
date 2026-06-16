@@ -5,6 +5,7 @@ use tracing::warn;
 /// Represents the supported file formats for some applications.
 #[derive(Clone, Debug, Default, strum_macros::Display, Eq, PartialEq)]
 pub enum FileFormat {
+    Html,
     Json,
     MCB,
     MX2,
@@ -35,9 +36,10 @@ impl FileFormat {
                     .strip_prefix('.')
                     .filter(|s| !s.is_empty() && !s.contains('.'))
             })
-            .unwrap_or("");
+            .unwrap_or_default();
 
         match ext {
+            "html" => Self::Html,
             "json" => Self::Json,
             "mcb" => Self::MCB,
             "mx2" => Self::MX2,
@@ -60,6 +62,7 @@ impl FileFormat {
         vec![
             ".cook",
             ".crumb",
+            ".html",
             ".json",
             ".mcb",
             ".md",
@@ -86,6 +89,19 @@ mod tests {
 
     mod from_filename {
         use super::*;
+
+        #[test]
+        fn test_html_format() {
+            pretty_assertions::assert_eq!(
+                FileFormat::from_filename("recipe.html"),
+                FileFormat::Html
+            );
+            pretty_assertions::assert_eq!(FileFormat::from_filename("data.HTML"), FileFormat::Html);
+            pretty_assertions::assert_eq!(
+                FileFormat::from_filename("config.Html"),
+                FileFormat::Html
+            );
+        }
 
         #[test]
         fn test_json_format() {

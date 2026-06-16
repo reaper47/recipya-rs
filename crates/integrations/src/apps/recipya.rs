@@ -5,12 +5,13 @@ use std::io::{Read, Seek, copy};
 use std::path::{Component, Path, PathBuf};
 
 use schema_org::field::RecipeImageFieldEnum;
+use serde_json::{Map, Value, json};
 use tracing::{debug, error, info};
+use zip::ZipArchive;
 
 use schema_org::Recipe;
 
 use crate::{Error, Result};
-use serde_json::{Map, Value};
 
 pub fn at_context() -> Option<String> {
     Some(String::from("https://schema.org"))
@@ -21,7 +22,7 @@ pub fn parse_zip<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let mut archive = zip::ZipArchive::new(r)?;
+    let mut archive = ZipArchive::new(r)?;
     let mut entries: HashMap<String, (Option<Recipe>, Vec<PathBuf>)> = HashMap::new();
 
     for i in 0..archive.len() {
@@ -172,11 +173,11 @@ fn migrate_recipe(v: &mut Value) {
 }
 
 fn migrate_tool_string(name: String) -> Value {
-    let mut tool = Map::new();
-    tool.insert("@type".into(), Value::String("HowToTool".into()));
-    tool.insert("name".into(), Value::String(name));
-    tool.insert("requiredQuantity".into(), Value::Number(1.into()));
-    Value::Object(tool)
+    json!({
+        "@type": "HowToTool",
+        "name": name,
+        "requiredQuantity": 1
+    })
 }
 
 fn migrate_tool_object(mut tool: Map<String, Value>) -> Value {
@@ -202,6 +203,8 @@ mod tests {
     use schema_org::{AtType, Clip, DurationOrText, Energy, Mass, NutritionInformation, Recipe};
     use tracing_test::traced_test;
 
+    use test_fixtures::open_test_file;
+
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod test_recipes {
@@ -211,7 +214,6 @@ mod tests {
         #[test]
         fn test_recipya_zip_import_ok() -> Result<()> {
             // Import from the test ZIP file and compare the first recipe to the expected result.
-            use test_fixtures::open_test_file;
             let buf = open_test_file("integrations/recipya.zip");
 
             let got = parse_zip(buf)?;
