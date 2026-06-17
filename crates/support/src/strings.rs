@@ -1,4 +1,7 @@
-use std::str::{FromStr, from_utf8};
+use std::{
+    borrow::Cow,
+    str::{FromStr, from_utf8},
+};
 
 use derive_more::From;
 use encoding_rs::{ISO_8859_15, WINDOWS_1252};
@@ -23,6 +26,7 @@ pub fn auto_convert_to_utf8(buffer: &[u8]) -> String {
     String::from_utf8_lossy(buffer).to_string()
 }
 
+/// Calculates the number of seconds from a string in the format `hh:mm:ss`.
 pub fn calc_seconds_from_parts(s: &str) -> i32 {
     let parts: Vec<&str> = s.split(':').collect();
     if parts.len() == 3 {
@@ -82,6 +86,32 @@ pub fn normalise_vulgar_fractions(input: &str) -> String {
     }
 
     result.trim().replace("  ", " ")
+}
+
+/// Inserts a space after a leading number in a string.
+pub fn insert_space_after_leading_number(s: &str) -> Cow<'_, str> {
+    let Some(boundary) = s
+        .char_indices()
+        .take_while(|(_, c)| c.is_ascii_digit())
+        .last()
+        .map(|(i, c)| i + c.len_utf8())
+    else {
+        return Cow::Borrowed(s);
+    };
+
+    if s[boundary..]
+        .chars()
+        .next()
+        .is_none_or(|c| !c.is_alphabetic())
+    {
+        return Cow::Borrowed(s);
+    }
+
+    let mut result = String::with_capacity(s.len() + 1);
+    result.push_str(&s[..boundary]);
+    result.push(' ');
+    result.push_str(&s[boundary..]);
+    Cow::Owned(result)
 }
 
 /// Result type for errors related to strings.
@@ -315,6 +345,19 @@ mod tests {
             let input = "Add 1/6 cup of sugar and 1/2 tsp of salt.";
 
             assert_eq!(normalise_vulgar_fractions(input), input);
+        }
+    }
+
+    mod tests_insert_space_after_leading_number {
+        use super::*;
+
+        #[test]
+        fn test_insert_space_after_leading_number() {
+            let input = "1eggs whole fresh, beaten";
+
+            let got = insert_space_after_leading_number(input);
+
+            assert_eq!(got, "1 eggs whole fresh, beaten");
         }
     }
 }

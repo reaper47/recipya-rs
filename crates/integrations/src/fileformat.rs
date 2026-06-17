@@ -5,6 +5,7 @@ use tracing::warn;
 /// Represents the supported file formats for some applications.
 #[derive(Clone, Debug, Default, strum_macros::Display, Eq, PartialEq)]
 pub enum FileFormat {
+    Csv,
     Html,
     Json,
     MCB,
@@ -39,6 +40,7 @@ impl FileFormat {
             .unwrap_or_default();
 
         match ext {
+            "csv" => Self::Csv,
             "html" => Self::Html,
             "json" => Self::Json,
             "mcb" => Self::MCB,
@@ -62,6 +64,7 @@ impl FileFormat {
         vec![
             ".cook",
             ".crumb",
+            ".csv",
             ".html",
             ".json",
             ".mcb",
@@ -89,6 +92,13 @@ mod tests {
 
     mod from_filename {
         use super::*;
+
+        #[test]
+        fn test_csv_format() {
+            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.csv"), FileFormat::Csv);
+            pretty_assertions::assert_eq!(FileFormat::from_filename("data.CSV"), FileFormat::Csv);
+            pretty_assertions::assert_eq!(FileFormat::from_filename("config.Csv"), FileFormat::Csv);
+        }
 
         #[test]
         fn test_html_format() {

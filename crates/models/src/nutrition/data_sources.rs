@@ -4,6 +4,7 @@ use diesel_async::AsyncPgConnection;
 use ingredient::{Ingredient, IngredientParser};
 use math::cooking::units::{traits::UnitOperations, unit::Unit, unitless::units::Unitless};
 use strum::{EnumIter, EnumString, IntoEnumIterator as _};
+use support::strings::insert_space_after_leading_number;
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
@@ -67,7 +68,8 @@ impl NutritionDataSource {
             .into_iter()
             .map(|ing| IngredientForCalculation {
                 original: ing.clone(),
-                parsed: IngredientParser::new(false).from_str(&ing),
+                parsed: IngredientParser::new(false)
+                    .from_str(&insert_space_after_leading_number(&ing)),
                 unit: Unit::from_str(&ing).unwrap_or(Unit::Unitless(Unitless { value: 1.0 })),
             })
             .collect::<Vec<_>>();

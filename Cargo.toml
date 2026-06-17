@@ -30,6 +30,7 @@ diesel-async = { version = "0.9.0", features = ["postgres", "bb8", "async-connec
 diesel_full_text_search = "2.3.0"
 dotenvy = "0.15.7"
 email = { path = "./crates/email" }
+encoding_rs = "0.8.35"
 futures = "0.3.32"
 futures-core = "0.3.32"
 futures-util = "0.3.32"
@@ -66,7 +67,7 @@ test-utils = { path = "./crates/test-utils" }
 time = { version = "0.3.47", features = ["serde"] }
 time-tz = { version = "2.0.0", features = ["db"] }
 tracing-test = "0.2.6"
-tokio = { version = "1.50.0", features = ["process", "signal"] }
+tokio = { version = "1.50.0", features = ["fs", "process", "signal"] }
 tower-cookies = "0.11.0"
 tower-http = { version = "0.6.8", features = ["fs"] }
 tracing = "0.1.44"

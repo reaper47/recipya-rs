@@ -9,6 +9,7 @@ pub enum App {
     AccuChef,
     BigOven,
     ChefTap,
+    ComputerCuisineDeluxe,
     Cooklang,
     CookMate,
     Crouton,

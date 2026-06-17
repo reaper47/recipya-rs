@@ -39,6 +39,7 @@ enum TertiaryInner {
     AccuChef,
     BigOven,
     ChefTap,
+    ComputerCuisineDeluxe,
     Cooklang,
     CookMate,
     Crouton,
@@ -221,6 +222,11 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::ChefTap)
     }
 
+    /// Creates a new tertiary report type for the `ComputerCuisineDeluxe` software.
+    pub const fn computer_cuisine_deluxe() -> Self {
+        Self::new(TertiaryInner::ComputerCuisineDeluxe)
+    }
+
     /// Creates a new tertiary report type for the `Cooklang` software.
     pub const fn cooklang() -> Self {
         Self::new(TertiaryInner::Cooklang)
@@ -304,6 +310,7 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::Rezkonv => 17,
             TertiaryInner::Saffron => 18,
             TertiaryInner::Recipya => 19,
+            TertiaryInner::ComputerCuisineDeluxe => 20,
         }
     }
 }

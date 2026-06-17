@@ -24,6 +24,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
         ),
         ("Crouton", "https://crouton.app", vec![".crumb"]),
         (
+            "Computer Cuisine Deluxe",
+            "https://www.inakasoftware.com/computer-cuisine-deluxe-mac-windows-recipe-software-organizer/",
+            vec![".csv"],
+        ),
+        (
             "Easy Recipe Deluxe",
             "https://easy-recipe-deluxe.software.informer.com",
             vec![],
