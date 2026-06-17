@@ -93,291 +93,206 @@ mod tests {
     mod from_filename {
         use super::*;
 
+        macro_rules! assert_format {
+            ($($filename:expr => $expected:expr),+ $(,)?) => {
+                $(
+                    pretty_assertions::assert_eq!(
+                        FileFormat::from_filename($filename),
+                        $expected,
+                        "unexpected format for filename {:?}",
+                        $filename
+                    );
+                )+
+            };
+        }
+
         #[test]
         fn test_csv_format() {
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.csv"), FileFormat::Csv);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.CSV"), FileFormat::Csv);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("config.Csv"), FileFormat::Csv);
+            assert_format!(
+                "recipe.csv" => FileFormat::Csv,
+                "data.CSV" => FileFormat::Csv,
+                "config.Csv" => FileFormat::Csv,
+            );
         }
 
         #[test]
         fn test_html_format() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.html"),
-                FileFormat::Html
-            );
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.HTML"), FileFormat::Html);
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("config.Html"),
-                FileFormat::Html
+            assert_format!(
+                "recipe.html" => FileFormat::Html,
+                "data.HTML" => FileFormat::Html,
+                "config.Html" => FileFormat::Html,
             );
         }
 
         #[test]
         fn test_json_format() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.json"),
-                FileFormat::Json
-            );
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.JSON"), FileFormat::Json);
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("config.Json"),
-                FileFormat::Json
+            assert_format!(
+                "recipe.json" => FileFormat::Json,
+                "data.JSON" => FileFormat::Json,
+                "config.Json" => FileFormat::Json,
             );
         }
 
         #[test]
         fn test_mcb_format() {
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.mcb"), FileFormat::MCB);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.MCB"), FileFormat::MCB);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.Mcb"), FileFormat::MCB);
+            assert_format!(
+                "recipe.mcb" => FileFormat::MCB,
+                "data.MCB" => FileFormat::MCB,
+                "file.Mcb" => FileFormat::MCB,
+            );
         }
 
         #[test]
         fn test_mx2_format() {
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.mx2"), FileFormat::MX2);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.MX2"), FileFormat::MX2);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.Mx2"), FileFormat::MX2);
+            assert_format!(
+                "recipe.mx2" => FileFormat::MX2,
+                "data.MX2" => FileFormat::MX2,
+                "file.Mx2" => FileFormat::MX2,
+            );
         }
 
         #[test]
         fn test_mxp_format() {
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.mxp"), FileFormat::MXP);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.MXP"), FileFormat::MXP);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.Mxp"), FileFormat::MXP);
+            assert_format!(
+                "recipe.mxp" => FileFormat::MXP,
+                "data.MXP" => FileFormat::MXP,
+                "file.Mxp" => FileFormat::MXP,
+            );
         }
 
         #[test]
         fn test_mz2_format() {
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.mz2"), FileFormat::MZ2);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.MZ2"), FileFormat::MZ2);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.Mz2"), FileFormat::MZ2);
+            assert_format!(
+                "recipe.mz2" => FileFormat::MZ2,
+                "data.MZ2" => FileFormat::MZ2,
+                "file.Mz2" => FileFormat::MZ2,
+            );
         }
 
         #[test]
         fn test_meal_master_format() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.mm"),
-                FileFormat::MealMaster
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("data.MM"),
-                FileFormat::MealMaster
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("file.mmf"),
-                FileFormat::MealMaster
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.MMF"),
-                FileFormat::MealMaster
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("data.Mm"),
-                FileFormat::MealMaster
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("file.Mmf"),
-                FileFormat::MealMaster
+            assert_format!(
+                "recipe.mm" => FileFormat::MealMaster,
+                "data.MM" => FileFormat::MealMaster,
+                "file.mmf" => FileFormat::MealMaster,
+                "recipe.MMF" => FileFormat::MealMaster,
+                "data.Mm" => FileFormat::MealMaster,
+                "file.Mmf" => FileFormat::MealMaster,
             );
         }
 
         #[test]
         fn test_rezkonv_format() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.rzk"),
-                FileFormat::Rezkonv
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("data.RZK"),
-                FileFormat::Rezkonv
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("file.rk"),
-                FileFormat::Rezkonv
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.RK"),
-                FileFormat::Rezkonv
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("data.Rzk"),
-                FileFormat::Rezkonv
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("file.Rk"),
-                FileFormat::Rezkonv
+            assert_format!(
+                "recipe.rzk" => FileFormat::Rezkonv,
+                "data.RZK" => FileFormat::Rezkonv,
+                "file.rk" => FileFormat::Rezkonv,
+                "recipe.RK" => FileFormat::Rezkonv,
+                "data.Rzk" => FileFormat::Rezkonv,
+                "file.Rk" => FileFormat::Rezkonv,
             );
         }
 
         #[test]
         fn test_txt_format() {
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.txt"), FileFormat::Txt);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.TXT"), FileFormat::Txt);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.Txt"), FileFormat::Txt);
+            assert_format!(
+                "recipe.txt" => FileFormat::Txt,
+                "data.TXT" => FileFormat::Txt,
+                "file.Txt" => FileFormat::Txt,
+            );
         }
 
         #[test]
         fn test_xml_format() {
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe.xml"), FileFormat::Xml);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.XML"), FileFormat::Xml);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.Xml"), FileFormat::Xml);
+            assert_format!(
+                "recipe.xml" => FileFormat::Xml,
+                "data.XML" => FileFormat::Xml,
+                "file.Xml" => FileFormat::Xml,
+            );
         }
 
         #[test]
         fn test_unknown_formats() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.pdf"),
-                FileFormat::Unknown
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("data.doc"),
-                FileFormat::Unknown
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("file.xyz"),
-                FileFormat::Unknown
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("unknown.abc"),
-                FileFormat::Unknown
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("test.csv"),
-                FileFormat::Unknown
+            assert_format!(
+                "recipe.pdf" => FileFormat::Unknown,
+                "data.doc" => FileFormat::Unknown,
+                "file.xyz" => FileFormat::Unknown,
+                "unknown.abc" => FileFormat::Unknown,
             );
         }
 
         #[test]
         fn test_edge_cases() {
-            // No extension
-            pretty_assertions::assert_eq!(FileFormat::from_filename("recipe"), FileFormat::Unknown);
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("no_extension"),
-                FileFormat::Unknown
-            );
-
-            // Empty filename
-            pretty_assertions::assert_eq!(FileFormat::from_filename(""), FileFormat::Unknown);
-
-            // Only extension
-            pretty_assertions::assert_eq!(FileFormat::from_filename(".json"), FileFormat::Json);
-            pretty_assertions::assert_eq!(FileFormat::from_filename(".xml"), FileFormat::Xml);
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename(".unknown"),
-                FileFormat::Unknown
-            );
-
-            // Multiple dots
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.backup.json"),
-                FileFormat::Json
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("data.old.xml"),
-                FileFormat::Xml
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("file.v1.2.mcb"),
-                FileFormat::MCB
-            );
-
-            // Dot at the end
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe."),
-                FileFormat::Unknown
+            assert_format!(
+                // No extension
+                "recipe" => FileFormat::Unknown,
+                "no_extension" => FileFormat::Unknown,
+                // Empty filename
+                "" => FileFormat::Unknown,
+                // Only extension
+                ".json" => FileFormat::Json,
+                ".xml" => FileFormat::Xml,
+                ".unknown" => FileFormat::Unknown,
+                // Multiple dots
+                "recipe.backup.json" => FileFormat::Json,
+                "data.old.xml" => FileFormat::Xml,
+                "file.v1.2.mcb" => FileFormat::MCB,
+                // Dot at the end
+                "recipe." => FileFormat::Unknown,
             );
         }
 
         #[test]
         fn test_paths_with_directories() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("/path/to/recipe.json"),
-                FileFormat::Json
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("../recipes/data.xml"),
-                FileFormat::Xml
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("./local/file.mcb"),
-                FileFormat::MCB
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("C:\\Users\\recipes\\meal.mm"),
-                FileFormat::MealMaster
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("~/documents/recipe.mxp"),
-                FileFormat::MXP
+            assert_format!(
+                "/path/to/recipe.json" => FileFormat::Json,
+                "../recipes/data.xml" => FileFormat::Xml,
+                "./local/file.mcb" => FileFormat::MCB,
+                "C:\\Users\\recipes\\meal.mm" => FileFormat::MealMaster,
+                "~/documents/recipe.mxp" => FileFormat::MXP,
             );
         }
 
         #[test]
         fn test_case_insensitive_matching() {
-            // Test various case combinations
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.JSON"),
-                FileFormat::Json
+            assert_format!(
+                "recipe.JSON" => FileFormat::Json,
+                "recipe.Json" => FileFormat::Json,
+                "recipe.jSoN" => FileFormat::Json,
+                "data.XML" => FileFormat::Xml,
+                "data.Xml" => FileFormat::Xml,
+                "data.xMl" => FileFormat::Xml,
+                "file.TXT" => FileFormat::Txt,
+                "file.Txt" => FileFormat::Txt,
+                "file.tXt" => FileFormat::Txt,
             );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.Json"),
-                FileFormat::Json
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe.jSoN"),
-                FileFormat::Json
-            );
-
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.XML"), FileFormat::Xml);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.Xml"), FileFormat::Xml);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("data.xMl"), FileFormat::Xml);
-
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.TXT"), FileFormat::Txt);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.Txt"), FileFormat::Txt);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("file.tXt"), FileFormat::Txt);
         }
 
         #[test]
         fn test_special_characters() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe with spaces.json"),
-                FileFormat::Json
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe-with-dashes.xml"),
-                FileFormat::Xml
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe_with_underscores.txt"),
-                FileFormat::Txt
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe@symbol.mcb"),
-                FileFormat::MCB
-            );
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipe#hash.mx2"),
-                FileFormat::MX2
+            assert_format!(
+                "recipe with spaces.json" => FileFormat::Json,
+                "recipe-with-dashes.xml" => FileFormat::Xml,
+                "recipe_with_underscores.txt" => FileFormat::Txt,
+                "recipe@symbol.mcb" => FileFormat::MCB,
+                "recipe#hash.mx2" => FileFormat::MX2,
             );
         }
 
         #[test]
         fn test_unicode_filenames() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recette.json"),
-                FileFormat::Json
+            assert_format!(
+                "recette.json" => FileFormat::Json,
+                "レシピ.xml" => FileFormat::Xml,
+                "рецепт.txt" => FileFormat::Txt,
+                "食谱.mcb" => FileFormat::MCB,
             );
-            pretty_assertions::assert_eq!(FileFormat::from_filename("レシピ.xml"), FileFormat::Xml);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("рецепт.txt"), FileFormat::Txt);
-            pretty_assertions::assert_eq!(FileFormat::from_filename("食谱.mcb"), FileFormat::MCB);
         }
 
         #[test]
         fn test_zip_filenames() {
-            pretty_assertions::assert_eq!(
-                FileFormat::from_filename("recipya.zip"),
-                FileFormat::Zip
+            assert_format!(
+                "recipya.zip" => FileFormat::Zip,
             );
         }
     }
