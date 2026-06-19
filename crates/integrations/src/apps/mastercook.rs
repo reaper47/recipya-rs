@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::io::{Read, Seek};
+use std::io::{Cursor, Read, Seek};
 
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, space0, space1};
@@ -7,6 +7,7 @@ use winnow::combinator::{
     alt, delimited, empty, opt, preceded, repeat, separated, seq, terminated,
 };
 use winnow::prelude::*;
+use winnow::token::{literal, rest, take_until};
 
 use schema_org::field::{
     AggregateRatingRatingValueFieldEnum, ImageObjectImageFieldEnum, RecipeAuthorFieldEnum,
@@ -17,7 +18,6 @@ use schema_org::{
     AggregateRating, AtType, Energy, ImageObject, Mass, NutritionInformation, Recipe,
 };
 use serde::Deserialize;
-use winnow::token::{literal, rest, take_until};
 
 use crate::apps::cookmate;
 use crate::apps::helpers::{
@@ -496,7 +496,11 @@ where
     R: Read + Seek,
 {
     let archive = zip::ZipArchive::new(r)?;
-    let (mut recipes, images) = extract_archive_contents(archive, cookmate::parse)?;
+    let (mut recipes, images) = extract_archive_contents(
+        archive,
+        cookmate::parse_xml,
+        None::<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
+    )?;
     update_recipe_image_paths(&mut recipes, &images);
     Ok(recipes)
 }

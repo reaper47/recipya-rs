@@ -4,6 +4,7 @@ use std::io::{Cursor, Read, Seek};
 use std::path::Path;
 
 use humantime::parse_duration;
+use scraper::{Html, Selector};
 use serde::Deserialize;
 use tracing::error;
 use url::Url;
@@ -30,7 +31,7 @@ struct CookbookXML<'a> {
 }
 
 #[allow(dead_code)]
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 struct CookmateRecipe<'a> {
     title: Cow<'a, str>,
     preptime: Cow<'a, str>,
@@ -63,6 +64,9 @@ struct List<'a> {
 }
 
 impl List<'_> {
+    const fn new() -> Self {
+        Self { items: Vec::new() }
+    }
     const fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
@@ -260,26 +264,13 @@ impl<'a> From<CookmateRecipe<'a>> for Recipe {
     }
 }
 
-/// Parses a `COOKmate` XML recipe file.
-pub fn parse<R>(mut r: R) -> Result<Vec<Recipe>>
-where
-    R: Read,
-{
-    let mut buf = Vec::new();
-    r.read_to_end(&mut buf)?;
-
-    let root: CookbookXML = quick_xml::de::from_reader(Cursor::new(buf))
-        .map_err(|err| Error::Parse(err.to_string()))?;
-
-    Ok(root.recipes.into_iter().map(Recipe::from).collect())
-}
-
+/// Parses a `COOKmate` archive.
 pub fn parse_backup<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
     let archive = zip::ZipArchive::new(r)?;
-    let (mut recipes, images) = extract_archive_contents(archive, parse)?;
+    let (mut recipes, images) = extract_archive_contents(archive, parse_xml, Some(parse_html))?;
 
     for recipe in &mut recipes {
         for image in &mut recipe.image {
@@ -296,6 +287,125 @@ where
     Ok(recipes)
 }
 
+/// Parses a `COOKmate` XML recipe file.
+pub fn parse_xml<R>(mut r: R) -> Result<Vec<Recipe>>
+where
+    R: Read,
+{
+    let mut buf = Vec::new();
+    r.read_to_end(&mut buf)?;
+
+    let root: CookbookXML = quick_xml::de::from_reader(Cursor::new(buf))
+        .map_err(|err| Error::Parse(err.to_string()))?;
+
+    Ok(root.recipes.into_iter().map(Recipe::from).collect())
+}
+
+pub fn parse_html<R>(mut r: R) -> Result<Vec<Recipe>>
+where
+    R: Read,
+{
+    let mut buf = String::new();
+    r.read_to_string(&mut buf)?;
+
+    let doc = Html::parse_document(&buf);
+
+    let txt = |sel: &str| {
+        doc.select(&Selector::parse(sel).unwrap())
+            .next()
+            .map(|el| el.text().collect::<String>())
+            .unwrap_or_default()
+    };
+
+    let list = |sel: &str| {
+        doc.select(&Selector::parse(sel).unwrap())
+            .fold(List::new(), |mut acc, el| {
+                let text = el.text().collect::<String>();
+                acc.items.push(Cow::Owned(text));
+                acc
+            })
+    };
+
+    let notes = doc
+        .select(&Selector::parse("span[itemprop='note']").unwrap())
+        .fold(List::new(), |mut acc, el| {
+            acc.items.extend_from_slice(
+                el.text()
+                    .map(str::trim)
+                    .map(Cow::Borrowed)
+                    .collect::<Vec<_>>()
+                    .as_slice(),
+            );
+            acc
+        });
+
+    let recipe = CookmateRecipe {
+        title: Cow::Borrowed(&txt("h1[itemprop='name']")),
+        preptime: Cow::Borrowed(&txt("span[itemprop='prepTime']")),
+        cooktime: Cow::Borrowed(&txt("span[itemprop='cookTime']")),
+        totaltime: Cow::Borrowed(&txt("span[itemprop='totalTime']")),
+        description: Cow::Borrowed(&txt("span[itemprop='description']")),
+        ingredient: list("li[itemprop='recipeIngredient'] p"),
+        recipetext: list("li[itemprop='recipeInstructions'] p"),
+        url: Cow::Borrowed(&txt("a[itemprop='note']")),
+        imagepath: doc
+            .select(&Selector::parse("img[itemprop='image']").unwrap())
+            .next()
+            .map(|el| {
+                Cow::Borrowed(
+                    el.attr("src")
+                        .unwrap_or_default()
+                        .trim_start_matches("img/"),
+                )
+            })
+            .unwrap_or_default(),
+        quantity: Cow::Borrowed(&txt("span[itemprop='recipeYield']")),
+        nutrition: doc
+            .select(&Selector::parse("span[itemprop='nutrition']").unwrap())
+            .fold(List::new(), |mut acc, el| {
+                acc.items.extend_from_slice(
+                    el.text()
+                        .map(str::trim)
+                        .map(Cow::Borrowed)
+                        .collect::<Vec<_>>()
+                        .as_slice(),
+                );
+                acc
+            }),
+        rating: doc
+            .select(&Selector::parse("img.rating").unwrap())
+            .next()
+            .map(|el| el.attr("src").unwrap_or_default())
+            .map(|s| {
+                s.trim_start_matches("./rating_")
+                    .trim_end_matches(".svg")
+                    .parse::<i64>()
+                    .unwrap_or_default()
+            })
+            .unwrap_or_default(),
+        comments: if notes.is_empty() { None } else { Some(notes) },
+        source: Cow::Borrowed(&txt("span[itemprop='author']")),
+        video: Cow::Borrowed(&txt("a[itemprop='video']")),
+        categories: doc
+            .select(&Selector::parse("span[itemprop='recipeCategory']").unwrap())
+            .map(|el| el.text().collect::<String>())
+            .map(Cow::Owned)
+            .collect::<Vec<_>>(),
+        tags: doc
+            .select(&Selector::parse("span[itemprop='recipeTag']").unwrap())
+            .map(|el| el.text().collect::<String>())
+            .map(Cow::Owned)
+            .collect::<Vec<_>>(),
+        ..Default::default()
+    };
+
+    Ok(if recipe.title.is_empty() {
+        vec![]
+    } else {
+        vec![recipe.into()]
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -303,16 +413,18 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod test_recipes {
-        use super::*;
-
         use std::io::Cursor;
+
+        use test_fixtures::open_test_file;
+
+        use super::*;
 
         #[test]
         fn test_cm_xml_ok() -> Result<()> {
             let file = files::xml_file();
             let buf = Cursor::new(file);
 
-            let got = parse(buf)?;
+            let got = parse_xml(buf)?;
 
             pretty_assertions::assert_eq!(got, results::xml_recipes());
             Ok(())
@@ -323,7 +435,7 @@ mod tests {
             let file = files::xml_file2();
             let buf = Cursor::new(file);
 
-            let got = parse(buf)?;
+            let got = parse_xml(buf)?;
 
             pretty_assertions::assert_eq!(got, results::xml2_recipes());
             Ok(())
@@ -343,6 +455,26 @@ mod tests {
             });
             got[4].image = want[4].image.clone();
             pretty_assertions::assert_eq!(got[..5], want);
+            Ok(())
+        }
+
+        #[test]
+        fn test_cm_zip_ok() -> Result<()> {
+            let buf = open_test_file("integrations/cookmate.zip");
+
+            let got = parse_backup(buf)?;
+
+            pretty_assertions::assert_eq!(got.len(), 3);
+            let want = results::xml2_recipes();
+            let want = want
+                .into_iter()
+                .zip(got.clone())
+                .map(|(mut a, b)| {
+                    a.image = b.image.clone();
+                    a
+                })
+                .collect::<Vec<_>>();
+            pretty_assertions::assert_eq!(got, want);
             Ok(())
         }
     }

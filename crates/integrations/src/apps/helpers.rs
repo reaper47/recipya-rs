@@ -181,13 +181,15 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
     !c.is_control() && (c != '\n' && c != '\r')
 }
 
-pub(super) fn extract_archive_contents<R, F>(
+pub(super) fn extract_archive_contents<R, F1, F2>(
     mut archive: ZipArchive<R>,
-    parser_xml: F,
+    parser_xml: F1,
+    parser_html: Option<F2>,
 ) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,
-    F: Fn(io::Cursor<Vec<u8>>) -> Result<Vec<Recipe>>,
+    F1: Fn(io::Cursor<Vec<u8>>) -> Result<Vec<Recipe>>,
+    F2: Fn(io::Cursor<Vec<u8>>) -> Result<Vec<Recipe>>,
 {
     let mut recipes = Vec::new();
     let mut images = HashMap::new();
@@ -203,6 +205,13 @@ where
 
                 let cursor = io::Cursor::new(buffer);
                 let r = parse_mx2(cursor)?;
+                recipes.extend(r);
+            }
+            FileFormat::Html if let Some(parser) = parser_html.as_ref() => {
+                let mut buf = Vec::new();
+                file.read_to_end(&mut buf)?;
+
+                let r = parser(io::Cursor::new(buf))?;
                 recipes.extend(r);
             }
             FileFormat::Jpg => {
@@ -224,7 +233,7 @@ where
                 recipes.extend(r);
             }
             _ => {
-                warn!("Unzip .mcb archive, skipping file: {file_name}");
+                warn!("Unzip archive, skipping file: {file_name}");
             }
         }
     }
