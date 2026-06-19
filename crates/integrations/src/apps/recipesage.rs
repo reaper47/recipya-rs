@@ -1,4 +1,5 @@
-use std::io::{Read, Seek};
+use std::borrow::Cow;
+use std::io::{Cursor, Read, Seek};
 use std::str::FromStr;
 
 use iso8601::DateTime;
@@ -54,46 +55,46 @@ struct RecipeComponents<'a> {
 }
 
 #[derive(Deserialize)]
-struct RecipeSageXMLData {
+struct RecipeSageXMLData<'a> {
     #[serde(rename = "recipe")]
-    pub recipes: Vec<RecipeSageXMLRecipe>,
+    pub recipes: Vec<RecipeSageXMLRecipe<'a>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct RecipeSageXMLRecipe {
-    id: String,
-    title: String,
-    description: String,
+struct RecipeSageXMLRecipe<'a> {
+    id: Cow<'a, str>,
+    title: Cow<'a, str>,
+    description: Cow<'a, str>,
     #[serde(rename = "yield")]
-    r#yield: String,
-    active_time: String,
-    total_time: String,
-    source: String,
-    url: String,
-    notes: String,
-    ingredients: String,
-    instructions: String,
-    folder: String,
-    created_at: String,
-    updated_at: String,
-    user_id: String,
-    from_user: String,
-    labels: Option<Vec<Label>>,
-    images: Option<Images>,
+    r#yield: Cow<'a, str>,
+    active_time: Cow<'a, str>,
+    total_time: Cow<'a, str>,
+    source: Cow<'a, str>,
+    url: Cow<'a, str>,
+    notes: Cow<'a, str>,
+    ingredients: Cow<'a, str>,
+    instructions: Cow<'a, str>,
+    folder: Cow<'a, str>,
+    created_at: Cow<'a, str>,
+    updated_at: Cow<'a, str>,
+    user_id: Cow<'a, str>,
+    from_user: Cow<'a, str>,
+    labels: Option<Vec<Label<'a>>>,
+    images: Option<Images<'a>>,
 }
 
 #[derive(Debug, Deserialize)]
-struct Label {
-    title: String,
+struct Label<'a> {
+    title: Cow<'a, str>,
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
-struct Images {
-    id: String,
-    location: String,
+struct Images<'a> {
+    id: Cow<'a, str>,
+    location: Cow<'a, str>,
 }
 
 impl From<RecipeComponents<'_>> for RecipeSage {
@@ -128,14 +129,14 @@ impl From<RecipeComponents<'_>> for RecipeSage {
     }
 }
 
-impl From<RecipeSageXMLRecipe> for RecipeSage {
+impl<'a> From<RecipeSageXMLRecipe<'_>> for RecipeSage {
     fn from(r: RecipeSageXMLRecipe) -> Self {
         let labels = r.labels.unwrap_or_default();
         let items = labels.split_first();
 
         Self {
-            category: items.map(|(a, _b)| a.title.clone()),
-            description: Some(r.description).filter(|s| !s.is_empty()),
+            category: items.map(|(a, _b)| a.title.to_string()),
+            description: Some(r.description.to_string()).filter(|s| !s.is_empty()),
             ingredients: r
                 .ingredients
                 .lines()
@@ -147,15 +148,15 @@ impl From<RecipeSageXMLRecipe> for RecipeSage {
                 .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().replace('\n', " ")))
                 .collect(),
             keywords: items
-                .map(|(_a, b)| b.iter().map(|s| s.title.clone()).collect())
+                .map(|(_a, b)| b.iter().map(|s| s.title.to_string()).collect())
                 .unwrap_or_default(),
             source: if r.source.is_empty() {
-                Some(r.url).filter(|s| !s.is_empty())
+                Some(r.url.to_string()).filter(|s| !s.is_empty())
             } else {
-                Some(r.source)
+                Some(r.source.to_string())
             },
-            notes: Some(r.notes).filter(|s| !s.is_empty()),
-            title: r.title,
+            notes: Some(r.notes.to_string()).filter(|s| !s.is_empty()),
+            title: r.title.to_string(),
             r#yield: extract_number(&r.r#yield).unwrap_or_default(),
         }
     }
@@ -278,7 +279,7 @@ impl From<RecipeSage> for Recipe {
     }
 }
 
-impl From<RecipeSageXMLRecipe> for Recipe {
+impl<'a> From<RecipeSageXMLRecipe<'_>> for Recipe {
     fn from(r: RecipeSageXMLRecipe) -> Self {
         let categories = r.labels.unwrap_or_default();
         let categories = categories.split_first();
@@ -313,7 +314,7 @@ impl From<RecipeSageXMLRecipe> for Recipe {
                 vec![]
             } else {
                 vec![Comment {
-                    text: vec![r.notes],
+                    text: vec![r.notes.to_string()],
                     ..Default::default()
                 }]
             },
@@ -329,7 +330,7 @@ impl From<RecipeSageXMLRecipe> for Recipe {
             description: if r.description.is_empty() {
                 vec![]
             } else {
-                vec![RecipeDescriptionFieldEnum::Text(r.description)]
+                vec![RecipeDescriptionFieldEnum::Text(r.description.to_string())]
             },
             is_based_on: if url.is_none() && !r.url.is_empty() {
                 to_is_based_on(&r.url)
@@ -340,14 +341,14 @@ impl From<RecipeSageXMLRecipe> for Recipe {
                 .map(|(_, b)| b.iter().map(|s| s.title.clone()).collect::<Vec<_>>())
                 .map(|v| {
                     v.into_iter()
-                        .map(RecipeKeywordsFieldEnum::TextOrURL)
+                        .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
                         .collect()
                 })
                 .unwrap_or_default(),
-            name: vec![r.title],
+            name: vec![r.title.to_string()],
             prep_time: seconds_to_duration(active_time_secs),
             recipe_category: categories
-                .map(|(a, _b)| vec![a.title.clone()])
+                .map(|(a, _b)| vec![a.title.to_string()])
                 .unwrap_or_default(),
             recipe_ingredient: r
                 .ingredients
@@ -379,11 +380,14 @@ where
 }
 
 /// Parses a `RecipeSage` recipes XML file.
-pub fn parse_xml<R>(r: R) -> Result<Vec<Recipe>>
+pub fn parse_xml<R>(mut r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
 {
-    let root: RecipeSageXMLData = serde_xml_rs::from_reader(r).map_err(|err| {
+    let mut buf = Vec::new();
+    r.read_to_end(&mut buf)?;
+
+    let root: RecipeSageXMLData = quick_xml::de::from_reader(Cursor::new(buf)).map_err(|err| {
         error!("Failed to read RecipeSage XML file: {err}");
         Error::Parse(err.to_string())
     })?;
@@ -584,7 +588,12 @@ mod tests {
 
             let got = parse_xml(buf)?;
 
-            pretty_assertions::assert_eq!(got, results::all_recipes());
+            let mut want = results::all_recipes();
+            want.iter_mut().for_each(|r| {
+                r.prep_time = seconds_to_duration(15 * 60);
+                r.cook_time = seconds_to_duration(15 * 60);
+            });
+            pretty_assertions::assert_eq!(got, want);
             Ok(())
         }
 

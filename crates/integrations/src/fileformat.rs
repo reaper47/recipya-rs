@@ -7,6 +7,7 @@ use tracing::warn;
 pub enum FileFormat {
     Csv,
     Html,
+    Jpg,
     Json,
     MCB,
     MX2,
@@ -42,6 +43,7 @@ impl FileFormat {
         match ext {
             "csv" => Self::Csv,
             "html" => Self::Html,
+            "jpg" => Self::Jpg,
             "json" => Self::Json,
             "mcb" => Self::MCB,
             "mx2" => Self::MX2,
@@ -66,6 +68,7 @@ impl FileFormat {
             ".crumb",
             ".csv",
             ".html",
+            // Omit: jpg - apps usually don't export recipes as jpg
             ".json",
             ".mcb",
             ".md",
@@ -121,6 +124,14 @@ mod tests {
                 "recipe.html" => FileFormat::Html,
                 "data.HTML" => FileFormat::Html,
                 "config.Html" => FileFormat::Html,
+            );
+        }
+
+        #[test]
+        fn test_jpg_format() {
+            assert_format!(
+                "test.jpg" => FileFormat::Jpg,
+                "data.JPG" => FileFormat::Jpg,
             );
         }
 

@@ -1,11 +1,14 @@
-use std::io::{Read, Seek};
+use std::{
+    borrow::Cow,
+    io::{Read, Seek},
+};
 
 use encoding_rs::WINDOWS_1252;
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
 
 use schema_org::{
-    AggregateRating, AtType, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
+    AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
     VideoObject,
     field::{
         RecipeAuthorFieldEnum, RecipeIsBasedOnUrlFieldEnum, RecipeRecipeIngredientFieldEnum,
@@ -15,71 +18,71 @@ use schema_org::{
 
 use crate::{Result, apps::recipya::at_context};
 
-pub type Recipes = Vec<CuisineRecipe>;
+pub type Recipes<'a> = Vec<CuisineRecipe<'a>>;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
-pub struct CuisineRecipe {
+pub struct CuisineRecipe<'a> {
     #[allow(unused)]
     #[serde(rename = "calcium")]
-    calcium: StringOrNumber,
-    calories: StringOrNumber,
-    cholesterol: StringOrNumber,
+    calcium: StringOrNumber<'a>,
+    calories: StringOrNumber<'a>,
+    cholesterol: StringOrNumber<'a>,
     #[serde(rename = "Cooking Time")]
-    cooking_time: String,
+    cooking_time: Cow<'a, str>,
     #[serde(rename = "Dietary Fiber")]
-    dietary_fiber: StringOrNumber,
+    dietary_fiber: StringOrNumber<'a>,
     #[serde(rename = "Ingredients 3 Final")]
-    ingredients_3_final: String,
+    ingredients_3_final: Cow<'a, str>,
     #[allow(unused)]
-    iron: StringOrNumber,
+    iron: StringOrNumber<'a>,
     #[serde(rename = "Item Name")]
-    title: String,
-    method: String,
+    title: Cow<'a, str>,
+    method: Cow<'a, str>,
     #[serde(rename = "Preparation Time")]
-    preparation_time: String,
-    protein: StringOrNumber,
+    preparation_time: Cow<'a, str>,
+    protein: StringOrNumber<'a>,
     #[serde(rename = "Recipe From Name")]
-    recipe_from_name: String,
+    recipe_from_name: Cow<'a, str>,
     #[serde(rename = "Recipe From Website")]
-    recipe_from_website: String,
+    recipe_from_website: Cow<'a, str>,
     #[serde(rename = "Recipe Notes")]
-    recipe_notes: String,
+    recipe_notes: Cow<'a, str>,
     #[serde(rename = "Recipe Rating")]
     recipe_rating: RecipeRating,
     #[serde(rename = "Saturated Fat")]
-    saturated_fat: StringOrNumber,
-    serves: StringOrNumber,
-    sodium: StringOrNumber,
-    style: String,
-    sugars: StringOrNumber,
+    saturated_fat: StringOrNumber<'a>,
+    serves: StringOrNumber<'a>,
+    sodium: StringOrNumber<'a>,
+    style: Cow<'a, str>,
+    sugars: StringOrNumber<'a>,
     #[serde(rename = "Total Carbohydrate")]
-    total_carbohydrate: StringOrNumber,
+    total_carbohydrate: StringOrNumber<'a>,
     #[serde(rename = "Total Fat")]
-    total_fat: StringOrNumber,
+    total_fat: StringOrNumber<'a>,
     #[serde(rename = "Type")]
-    root_type: String,
+    root_type: Cow<'a, str>,
     #[serde(rename = "Video Reference Link 1")]
-    video_reference_link_1: String,
+    video_reference_link_1: Cow<'a, str>,
     #[serde(rename = "Video Reference Link 2")]
-    video_reference_link_2: String,
+    video_reference_link_2: Cow<'a, str>,
     #[serde(rename = "Video Reference Link 3")]
-    video_reference_link_3: String,
+    video_reference_link_3: Cow<'a, str>,
     #[serde(rename = "Video Reference Link 4")]
-    video_reference_link_4: String,
+    video_reference_link_4: Cow<'a, str>,
     #[allow(unused)]
     #[serde(rename = "Vitamin A")]
-    vitamin_a: StringOrNumber,
+    vitamin_a: StringOrNumber<'a>,
     #[allow(unused)]
     #[serde(rename = "Vitamin C")]
-    vitamin_c: StringOrNumber,
+    vitamin_c: StringOrNumber<'a>,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum StringOrNumber {
+pub enum StringOrNumber<'a> {
     Integer(i64),
-    String(String),
+    String(Cow<'a, str>),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -191,21 +194,6 @@ where
             nut.fat_content = vec![Mass::new(format!("{n} g"))];
         }
 
-        let mut recipe_instructions = recipe
-            .method
-            .split('\x0B')
-            .map(str::trim)
-            .filter(|s| !s.is_empty())
-            .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
-            .collect::<Vec<_>>();
-
-        if !recipe.recipe_notes.is_empty() {
-            recipe_instructions.push(RecipeRecipeInstructionsFieldEnum::Text(format!(
-                "Notes: {}",
-                recipe.recipe_notes.trim()
-            )));
-        }
-
         let num_servings = match recipe.serves {
             StringOrNumber::Integer(n) => n,
             StringOrNumber::String(_) => 4,
@@ -239,13 +227,21 @@ where
             } else {
                 vec![DurationOrText::Text(recipe.cooking_time.replace('&', ""))]
             },
+            comment: if recipe.recipe_notes.is_empty() {
+                vec![]
+            } else {
+                vec![Comment {
+                    text: vec![recipe.recipe_notes.trim().into()],
+                    ..Default::default()
+                }]
+            },
             is_based_on_url: if url.is_empty() {
                 vec![]
             } else {
-                vec![RecipeIsBasedOnUrlFieldEnum::URL(url.into())]
+                vec![RecipeIsBasedOnUrlFieldEnum::URL(url.to_string())]
             },
             nutrition: if nut.is_empty() { vec![] } else { vec![nut] },
-            name: vec![recipe.title],
+            name: vec![recipe.title.to_string()],
             prep_time: if recipe.preparation_time.to_lowercase() == "none" {
                 vec![]
             } else {
@@ -256,12 +252,12 @@ where
             recipe_cuisine: if recipe.style.is_empty() {
                 vec![]
             } else {
-                vec![recipe.style]
+                vec![recipe.style.to_string()]
             },
             recipe_category: if recipe.root_type.is_empty() {
                 vec![]
             } else {
-                vec![recipe.root_type]
+                vec![recipe.root_type.to_string()]
             },
             recipe_ingredient: recipe
                 .ingredients_3_final
@@ -269,15 +265,21 @@ where
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.into()))
-                .collect::<Vec<_>>(),
-            recipe_instructions,
+                .collect(),
+            recipe_instructions: recipe
+                .method
+                .split('\x0B')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.into()))
+                .collect(),
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::Number(f64::from(
                 i32::try_from(num_servings).unwrap_or(i32::MAX),
             ))],
             url: if url.is_empty() {
                 vec![]
             } else {
-                vec![url.into()]
+                vec![url.to_string()]
             },
             video: video_links
                 .into_iter()
@@ -286,7 +288,7 @@ where
                         VideoObject {
                             r#type: AtType::VideoObject.to_opt(),
                             context: at_context(),
-                            url: vec![s],
+                            url: vec![s.to_string()],
                             ..Default::default()
                         }
                         .into(),
@@ -392,15 +394,16 @@ mod tests {
                 ],
                 recipe_instructions: vec![
                     RecipeRecipeInstructionsFieldEnum::Text(
-                        "1. Melt butter in a large pot over medium heat. Sauté onion, celery, and garlic powder until onions are tender. Stir in potatoes, carrots, broth, salt, pepper, and dill. Bring to a boil, and reduce heat. Cover, and simmer 20 minutes.".into(),
+                        "1. Melt butter in a large pot over medium heat. SautÃ© onion, celery, and garlic powder until onions are tender. Stir in potatoes, carrots, broth, salt, pepper, and dill. Bring to a boil, and reduce heat. Cover, and simmer 20 minutes.".into(),
                     ),
                     RecipeRecipeInstructionsFieldEnum::Text(
                         "2. Stir in salmon, evaporated milk, corn, and cheese. Cook until heated through.".into(),
                     ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Notes: A fantastic recipe!".into(),
-                    ),
                 ],
+                comment: vec![Comment {
+                    text: vec!["A fantastic recipe!".into()],
+                    ..Default::default()
+                }],
                 recipe_category: vec!["Soups".into()],
                 prep_time: vec![
                     DurationOrText::Text("15 mins.".into()),
@@ -495,10 +498,11 @@ mod tests {
                     RecipeRecipeInstructionsFieldEnum::Text(
                         "Melt the butter and slowly add cheese cream and cooked pasta. You need to add the cheese slowly so it doesnt form clumps. I have modified this recipe by taking out all the butter and using whipping cream and milk instead of all whipping cream. It doesnt taste as good but its not nearly as bad. Sprinkle with nutmeg to serve".into(),
                     ),
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        "Notes: This recipe was included with the purchase of Computer Cuisine Deluxe. \u{b}\u{b}If you would like to remove all of the included recipes before you have entered any of your own, simply select \"Delete All Recipes...\" from the Recipes menu.".into(),
-                    ),
                 ],
+                comment: vec![Comment {
+                    text: vec!["This recipe was included with the purchase of Computer Cuisine Deluxe. \u{b}\u{b}If you would like to remove all of the included recipes before you have entered any of your own, simply select \"Delete All Recipes...\" from the Recipes menu.".into()],
+                    ..Default::default()
+                }],
                 recipe_category: vec!["Sauces".into()],
                 prep_time: vec![
                     DurationOrText::Text("10 mins.".into()),

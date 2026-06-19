@@ -131,7 +131,11 @@ impl From<MealMasterRecipe> for Recipe {
                 .filter(|s| !s.is_empty())
                 .map(|s| vec![s])
                 .unwrap_or_default(),
-            recipe_category: vec![r.category.unwrap_or_default()],
+            recipe_category: if let Some(c) = r.category.as_ref().filter(|s| !s.is_empty()) {
+                vec![c.to_string()]
+            } else {
+                vec![]
+            },
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: to_yield(i64::from(r.yield_)),
@@ -228,6 +232,7 @@ fn parse_title<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
 
 fn parse_categories<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
     alt((
+        delimited(space1, literal("Categories:"), line_ending).value(Vec::new()),
         preceded(
             (
                 opt(one_of(' ')),
@@ -250,6 +255,13 @@ fn parse_categories<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
                 repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
             ),
         ),
+        preceded(
+            (space0, literal("Categories: ")),
+            terminated(
+                parse_categlist_spaces,
+                repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
+            ),
+        ),
     ))
     .parse_next(input)
 }
@@ -264,7 +276,7 @@ fn parse_tags<'s>(input: &mut &'s str) -> ModalResult<Vec<&'s str>> {
             ),
         ),
         (
-            literal("Tags:"),
+            (space0, literal("Tags:")),
             take_until(0.., "\n"),
             repeat::<_, _, Vec<_>, _, _>(1.., line_ending),
         )
@@ -560,6 +572,7 @@ fn take_until_earliest_of<'a>(
         }
     }
 }
+
 fn parse_section<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     preceded(
         parse_separator,
@@ -579,16 +592,22 @@ fn parse_not_dash<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     take_while(1.., |c: char| c != '-').parse_next(input)
 }
 fn parse_footer<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
-    terminated(parse_separator, multispace0).parse_next(input)
+    delimited(space0, parse_separator, multispace0).parse_next(input)
 }
 
 fn parse_separator<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
-    alt((
-        literal("MMMMM"),
-        literal("-----"),
-        literal("-------------"),
-        literal("-----------------------------------------------------------------------------"),
-    ))
+    delimited(
+        space0,
+        alt((
+            literal("MMMMM"),
+            literal("-----"),
+            literal("-------------"),
+            literal(
+                "-----------------------------------------------------------------------------",
+            ),
+        )),
+        space0,
+    )
     .take()
     .parse_next(input)
 }
@@ -758,6 +777,17 @@ mod tests {
             let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![recipe_cookmate()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_cookmate2_ok() -> Result<()> {
+            let file = recipe_cookmate_file2();
+            let buf = Cursor::new(file);
+
+            let got = parse(buf)?;
+
+            pretty_assertions::assert_eq!(got, recipes_cookmate2());
             Ok(())
         }
 
@@ -1561,6 +1591,103 @@ Typed for you by Karen Mintzias
 
 
 -----
+"#
+        }
+
+        pub fn recipe_cookmate_file2<'a>() -> &'a str {
+            r#"----- Recipe via Cookmate [Meal-Master Export Format] -----
+
+                  Title: Simple White Cake
+            Categories:
+            Tags:
+                  Yield: 12
+
+                  1 c  white sugar
+                0.5 c  unsalted butter
+                  2    large eggs
+                  2 ts vanilla extract
+                1.5 c  all-purpose flour
+               1.75 ts baking powder
+                1/4 ts table salt
+                0.5 c  milk
+
+
+            Gather all ingredients. Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square cake pan.
+            Beat sugar and butter together in a mixing bowl with an electric mixer until lighter in color and fluffy, 3 to 4 minutes. Add eggs, one at a time, beating briefly after each addition, 30 seconds total. Mix in vanilla, about 15 seconds.
+            Whisk flour, baking powder, and salt in a separate bowl. With mixer on low speed, add flour mixture to butter mixture in 3 batches, alternating with milk, beginning and ending with flour. Mix just until combined stopping to scrape down sides if needed, about 2 minutes.
+            Spread cake batter into the prepared pan.
+            Bake cake in the preheated oven until a toothpick inserted into the center comes out clean, about 30 minutes.
+            Remove cake from the oven and let cool in pan on a wire rack for 10 minutes. Invert cake onto wire rack; remove pan and let cake cool completely before frosting. Enjoy!
+
+
+            -----
+
+            ----- Recipe via Cookmate [Meal-Master Export Format] -----
+
+                  Title: The Best Chicken Fried Steak
+            Categories: Starter, Main course
+            Tags: cheeses, baloney
+                  Yield: 4
+
+                  4    (1/2 pound) beef cube
+                       -steaks
+               2.25 c  all-purpose flour, divided
+                  2 ts baking powder
+                  1 ts baking soda
+                  1 ts black pepper
+               0.75 ts salt
+                1.5 c  buttermilk
+                  1    large egg
+                  1 tb hot pepper sauce (e.g.
+                       -Tabasco?)
+                  2    cloves garlic, minced
+                  3 c  vegetable shortening for
+                       -frying
+                  4 c  milk
+                       kosher salt and ground
+
+
+
+            Place steaks between two sheets of heavy plastic on a solid, level surface; firmly pound with a meat mallet to a ¼-inch thickness.
+            Place 2 cups flour in a shallow bowl.
+            Combine baking powder, baking soda, 1 teaspoon pepper, and ¾ teaspoon salt in a separate shallow bowl; stir in buttermilk, egg, Tabasco, and garlic to combine.
+            Heat shortening in a deep cast-iron skillet to 325 degrees F (165 degrees C). Place a wire rack over a sheet of parchment paper.
+            Meanwhile, dredge 1 steak in flour to coat; shake off excess. Dip into buttermilk batter; lift up so excess batter drips back into the bowl. Dredge in flour again to coat both sides completely. Place breaded steak on the prepared wire rack. Repeat with remaining steaks.
+            Fry steaks, in batches if necessary, until evenly golden brown, 3 to 5 minutes per side. Transfer steaks to a paper towel-lined plate to drain. Cover with foil to keep warm.
+            Drain fat from the skillet, reserving ¼ cup and as much solid remnants as possible.
+            Place skillet over medium-low heat. Add reserved ¼ cup oil; whisk in remaining ¼ cup flour. Scrape the brown bits of food off the bottom of the skillet with a spatula.
+            Stir in milk; increase heat to medium and bring gravy to a simmer. Cook, stirring often, until thick, 6 to 7 minutes. Season gravy with salt and black pepper.
+            Transfer steaks to a platter; pour gravy over top.
+
+
+            -----
+
+            ----- Recipe via Cookmate [Meal-Master Export Format] -----
+
+                  Title: To Die For Fettuccine Alfredo
+            Categories: Dessert
+            Tags: baloney
+                  Yield: 6
+
+                 24 oz dry fettuccine pasta
+                  1 c  butter
+               0.75 pt heavy cream
+                  1 ds garlic salt
+                       salt and pepper to taste
+               0.75 c  grated Romano cheese
+                0.5 c  grated Parmesan cheese
+
+
+            Gather all ingredients.
+            Fill a large pot with lightly salted water and bring to a rolling boil. Cook fettuccine at a boil until tender yet firm to the bite, about 8 minutes. Drain.
+            Heat butter and cream in a large saucepan over low heat until butter melted; add garlic salt, salt, and black pepper.
+            Increase the heat to medium; stir in Romano and Parmesan cheeses until melted and sauce has thickened.
+            Add cooked pasta to sauce; toss until thoroughly coated. Serve immediately.
+
+
+            -----
+
+
 "#
         }
     }
@@ -2405,6 +2532,95 @@ SOURCE: Gourmet, December 1992
                 recipe_yield: to_yield(36),
                 ..Default::default()
             }
+        }
+
+        pub fn recipes_cookmate2() -> Vec<Recipe> {
+            vec![
+                Recipe {
+                    recipe_yield: to_yield(12),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 c white sugar".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.5 c unsalted butter".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 large eggs".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 ts vanilla extract".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1.5 c all-purpose flour".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1.75 ts baking powder".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 ts table salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.5 c milk".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Gather all ingredients. Preheat the oven to 350 degrees F (175 degrees C). Grease and flou".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "r a 9-inch square cake pan. Beat sugar and butter together in a mixing bowl with an electric mixer until lighter in color and fluffy, 3 to 4 minutes. Add eggs, one at a time, beating briefly after each addition, 30 seconds total. Mix in vanilla, about 15 seconds. Whisk flour, baking powder, and salt in a separate bowl. With mixer on low speed, add flour mixture to butter mixture in 3 batches, alternating with milk, beginning and ending with flour. Mix just until combined stopping to scrape down sides if needed, about 2 minutes. Spread cake batter into the prepared pan. Bake cake in the preheated oven until a toothpick inserted into the center comes out clean, about 30 minutes. Remove cake from the oven and let cool in pan on a wire rack for 10 minutes. Invert cake onto wire rack; remove pan and let cake cool completely before frosting. Enjoy!".into(),
+                        ),
+                    ],
+                    is_based_on: to_is_based_on("Cookmate [Meal-Master Export Format]"),
+                    name: vec!["Simple White Cake".into()],
+                    ..Default::default()
+                },
+                Recipe {
+                    recipe_yield: to_yield(4),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("4 (1/2 pound) beef cube".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-steaks".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2.25 c all-purpose flour, divided".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 ts baking powder".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ts baking soda".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ts black pepper".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.75 ts salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1.5 c buttermilk".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 large egg".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 tb hot pepper sauce (e.g.".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-Tabasco?)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 cloves garlic, minced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 c vegetable shortening for".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-frying".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 c milk".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("kosher salt and ground".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Place steaks between two sheets of heavy plastic on a solid, level surface; firmly pound w".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "ith a meat mallet to a ¼-inch thickness. Place 2 cups flour in a shallow bowl. Combine baking powder, baking soda, 1 teaspoon pepper, and ¾ teaspoon salt in a separate shallow bowl; stir in buttermilk, egg, Tabasco, and garlic to combine. Heat shortening in a deep cast-iron skillet to 325 degrees F (165 degrees C). Place a wire rack over a sheet of parchment paper. Meanwhile, dredge 1 steak in flour to coat; shake off excess. Dip into buttermilk batter; lift up so excess batter drips back into the bowl. Dredge in flour again to coat both sides completely. Place breaded steak on the prepared wire rack. Repeat with remaining steaks. Fry steaks, in batches if necessary, until evenly golden brown, 3 to 5 minutes per side. Transfer steaks to a paper towel-lined plate to drain. Cover with foil to keep warm. Drain fat from the skillet, reserving ¼ cup and as much solid remnants as possible. Place skillet over medium-low heat. Add reserved ¼ cup oil; whisk in remaining ¼ cup flour. Scrape the brown bits of food off the bottom of the skillet with a spatula. Stir in milk; increase heat to medium and bring gravy to a simmer. Cook, stirring often, until thick, 6 to 7 minutes. Season gravy with salt and black pepper. Transfer steaks to a platter; pour gravy over top.".into(),
+                        ),
+                    ],
+                    recipe_category: vec![
+                        "Starter,".into(),
+                    ],
+                    keywords: vec![
+                        RecipeKeywordsFieldEnum::TextOrURL("Main".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("course".into()),
+                    ],
+                    is_based_on: to_is_based_on("Cookmate [Meal-Master Export Format]"),
+                    name: vec!["The Best Chicken Fried Steak".into()],
+                    ..Default::default()
+                },
+                Recipe {
+                    recipe_yield: to_yield(6),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("24 oz dry fettuccine pasta".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 c butter".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.75 pt heavy cream".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ds garlic salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("salt and pepper to taste".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.75 c grated Romano cheese".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.5 c grated Parmesan cheese".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Gather all ingredients.".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Fill a large pot with lightly salted water and bring to a rolling boil. Cook fettuccine at".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "a boil until tender yet firm to the bite, about 8 minutes. Drain. Heat butter and cream in a large saucepan over low heat until butter melted; add garlic salt, salt, and black pepper. Increase the heat to medium; stir in Romano and Parmesan cheeses until melted and sauce has thickened. Add cooked pasta to sauce; toss until thoroughly coated. Serve immediately.".into(),
+                        ),
+                    ],
+                    recipe_category: vec![
+                        "Dessert".into(),
+                    ],
+                    is_based_on: to_is_based_on("Cookmate [Meal-Master Export Format]"),
+                    name: vec!["To Die For Fettuccine Alfredo".into()],
+                    ..Default::default()
+                },
+            ]
         }
     }
 }

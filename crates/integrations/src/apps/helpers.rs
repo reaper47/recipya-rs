@@ -18,8 +18,8 @@ use schema_org::field::{
 use schema_org::{ImageObject, Recipe};
 use support::strings::auto_convert_to_utf8;
 
-use crate::Result;
-use crate::apps::{cookmate, mastercook::parse_mx2};
+use crate::apps::mastercook::parse_mx2;
+use crate::{FileFormat, Result};
 
 #[derive(Debug)]
 pub(super) enum Instruction<'a> {
@@ -181,11 +181,13 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
     !c.is_control() && (c != '\n' && c != '\r')
 }
 
-pub(super) fn extract_archive_contents<R>(
+pub(super) fn extract_archive_contents<R, F>(
     mut archive: ZipArchive<R>,
+    parser_xml: F,
 ) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,
+    F: Fn(io::Cursor<Vec<u8>>) -> Result<Vec<Recipe>>,
 {
     let mut recipes = Vec::new();
     let mut images = HashMap::new();
@@ -193,14 +195,9 @@ where
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
         let file_name = file.name().to_string();
-        let ext = Path::new(&file_name)
-            .extension()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default();
 
-        match ext.to_lowercase().as_str() {
-            "mx2" => {
+        match FileFormat::from_filename(&file_name) {
+            FileFormat::MX2 => {
                 let mut buffer = Vec::new();
                 file.read_to_end(&mut buffer)?;
 
@@ -208,7 +205,7 @@ where
                 let r = parse_mx2(cursor)?;
                 recipes.extend(r);
             }
-            "jpg" => {
+            FileFormat::Jpg => {
                 let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
                 let mut tmp_file = File::create(tmp_path.clone())?;
                 io::copy(&mut file, &mut tmp_file)?;
@@ -219,8 +216,11 @@ where
                     warn!("Could not get file name from: {file_name}");
                 }
             }
-            "xml" => {
-                let r = cookmate::parse(file)?;
+            FileFormat::Xml => {
+                let mut buf = Vec::new();
+                file.read_to_end(&mut buf)?;
+
+                let r = parser_xml(io::Cursor::new(buf))?;
                 recipes.extend(r);
             }
             _ => {

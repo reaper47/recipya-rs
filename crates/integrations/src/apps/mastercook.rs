@@ -19,6 +19,7 @@ use schema_org::{
 use serde::Deserialize;
 use winnow::token::{literal, rest, take_until};
 
+use crate::apps::cookmate;
 use crate::apps::helpers::{
     Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
 };
@@ -255,7 +256,7 @@ struct Directions {
 struct Direction {
     #[serde(rename = "@img")]
     img: String,
-    #[serde(rename = "#text")]
+    #[serde(rename = "$value")]
     text: String,
 }
 
@@ -332,10 +333,14 @@ impl From<MastercookRecipe> for Recipe {
                 .unwrap_or_default(),
             author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
             cook_time: seconds_to_duration(cook_secs),
-            description: vec![RecipeDescriptionFieldEnum::Text(r.description)],
+            description: vec![RecipeDescriptionFieldEnum::Text(
+                r.description.trim().into(),
+            )],
             is_based_on: match url::Url::parse(&source) {
-                Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(source.clone())],
-                Err(_) => vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&source)],
+                Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(source)],
+                Err(_) => vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                    &source.trim().replace('\n', ""),
+                )],
             },
             image: (!r.img.is_empty())
                 .then_some(vec![RecipeImageFieldEnum::ImageObject(Box::new(
@@ -362,25 +367,29 @@ impl From<MastercookRecipe> for Recipe {
                 .ingredients
                 .into_iter()
                 .map(|ing| {
-                    RecipeRecipeIngredientFieldEnum::Text(format!(
-                        "{}{}{}{}",
-                        ing.qty,
-                        ing.unit.map_or_else(String::new, |s| format!(" {s}")),
-                        if ing.name.is_empty() {
-                            String::new()
-                        } else {
-                            format!(" {}", ing.name)
-                        },
-                        ing.preparation
-                            .map_or_else(String::new, |s| format!(", {s}"))
-                    ))
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        format!(
+                            "{}{}{}{}",
+                            ing.qty,
+                            ing.unit.map_or_else(String::new, |s| format!(" {s}")),
+                            if ing.name.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", ing.name)
+                            },
+                            ing.preparation
+                                .map_or_else(String::new, |s| format!(", {s}"))
+                        )
+                        .trim()
+                        .replace('\n', ""),
+                    )
                 })
                 .collect(),
             recipe_instructions: r
                 .directions
                 .directions
                 .into_iter()
-                .map(|d| RecipeRecipeInstructionsFieldEnum::Text(d.text))
+                .map(|d| RecipeRecipeInstructionsFieldEnum::Text(d.text.trim().into()))
                 .collect(),
             recipe_yield: to_yield(r.serving.qty.parse().unwrap_or_default()),
             total_time: seconds_to_duration(total_secs),
@@ -394,8 +403,8 @@ fn parse_time(s: &str) -> i32 {
         return 0;
     }
 
-    let mut s = s.trim_end_matches('"').replacen(':', "m", 1);
-    s.push('s');
+    let mut s = s.trim_end_matches('"').replacen(':', "h", 1);
+    s.push('m');
     i32::try_from(humantime::parse_duration(&s).unwrap_or_default().as_secs()).unwrap_or_default()
 }
 
@@ -411,10 +420,16 @@ fn parse_nutrition_schema(s: &[&str]) -> Vec<NutritionInformation> {
             continue;
         }
 
-        let energy = Energy::new(value);
         let mass = Mass::new(value);
 
-        if key == "Calories" {
+        if key.ends_with("Calories") {
+            let energy = Energy::new(
+                s.split(":")
+                    .last()
+                    .unwrap_or_default()
+                    .replace("Calories", "kcal")
+                    .trim(),
+            );
             nutrition.calories = vec![energy];
         } else if key.starts_with("Fat") {
             nutrition.fat_content = vec![mass];
@@ -455,7 +470,7 @@ where
         .join("\n");
 
     let root: Mx2 =
-        serde_xml_rs::from_str(&cleaned).map_err(|err| Error::Parse(err.to_string()))?;
+        quick_xml::de::from_str(&cleaned).map_err(|err| Error::Parse(err.to_string()))?;
 
     Ok(root.recipes.into_iter().map(Recipe::from).collect())
 }
@@ -481,7 +496,7 @@ where
     R: Read + Seek,
 {
     let archive = zip::ZipArchive::new(r)?;
-    let (mut recipes, images) = extract_archive_contents(archive)?;
+    let (mut recipes, images) = extract_archive_contents(archive, cookmate::parse)?;
     update_recipe_image_paths(&mut recipes, &images);
     Ok(recipes)
 }
@@ -772,7 +787,7 @@ mod tests {
         use std::io::Cursor;
 
         #[test]
-        fn test_mx2() -> Result<()> {
+        fn test_mastercook_mx2() -> Result<()> {
             let file = files::mx2();
             let buf = Cursor::new(file);
 
@@ -783,7 +798,7 @@ mod tests {
         }
 
         #[test]
-        fn test_mxp() -> Result<()> {
+        fn test_mastercook_mxp() -> Result<()> {
             let file = files::mxp();
             let buf = Cursor::new(file);
 
@@ -794,7 +809,7 @@ mod tests {
         }
 
         #[test]
-        fn test_mz2() -> Result<()> {
+        fn test_mastercook_mz2() -> Result<()> {
             let buf = files::mz2();
 
             let mut got = parse_mz2(buf)?;
@@ -1221,7 +1236,7 @@ Nutr. Assoc. : 0 0 0
                     name: vec!["Best Chicken".into()],
                     nutrition: vec![NutritionInformation {
                         r#type: AtType::NutritionInformation.to_opt(),
-                        calories: vec![Energy::new("340")],
+                        calories: vec![Energy::new("340 kcal")],
                         cholesterol_content: vec![Mass::new("97mg")],
                         fat_content: vec![Mass::new("23g")],
                         protein_content: vec![Mass::new("32g")],
@@ -1260,7 +1275,7 @@ Nutr. Assoc. : 0 0 0
                     name: vec!["Delicious Ramen".into()],
                     nutrition: vec![NutritionInformation {
                         r#type: AtType::NutritionInformation.to_opt(),
-                        calories: vec![Energy::new("34")],
+                        calories: vec![Energy::new("34 kcal")],
                         carbohydrate_content: vec![Mass::new("6g")],
                         cholesterol_content: vec![Mass::new("31mg")],
                         fat_content: vec![Mass::new("1g")],

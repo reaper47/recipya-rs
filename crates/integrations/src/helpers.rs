@@ -7,7 +7,7 @@ use schema_org::{AtType, CreativeWork, DurationOrText, QuantitativeValue, Recipe
 
 /// Converts seconds to a `DurationOrText` enum.
 pub fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
-    format!("P{secs}S")
+    format!("PT{secs}S")
         .parse::<Duration>()
         .ok()
         .filter(|&d| d != Duration::default())

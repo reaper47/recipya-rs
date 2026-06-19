@@ -1,5 +1,6 @@
+use std::borrow::Cow;
 use std::fmt::Display;
-use std::io::Read;
+use std::io::{Cursor, Read};
 use std::str::FromStr;
 
 use iso8601::{DateTime, Duration};
@@ -22,149 +23,149 @@ use crate::{Error, Result};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Cookml {
+struct Cookml<'a> {
     #[serde(rename = "@version")]
-    version: String,
+    version: Cow<'a, str>,
     #[serde(default, rename = "@name")]
-    name: String,
+    name: Cow<'a, str>,
     #[serde(rename = "@prog")]
-    prog: String,
+    prog: Cow<'a, str>,
     #[serde(rename = "@progver")]
-    progver: String,
-    recipe: Vec<CookmlRecipe>,
-    menu: Option<Menu>,
+    progver: Cow<'a, str>,
+    recipe: Vec<CookmlRecipe<'a>>,
+    menu: Option<Menu<'a>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct CookmlRecipe {
+struct CookmlRecipe<'a> {
     #[serde(rename = "@lang")]
-    lang: Option<String>,
-    head: Head,
-    part: Vec<Part>,
-    preparation: Preparation,
-    remark: Option<Remark>,
+    lang: Option<Cow<'a, str>>,
+    head: Head<'a>,
+    part: Vec<Part<'a>>,
+    preparation: Preparation<'a>,
+    remark: Option<Remark<'a>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Head {
+struct Head<'a> {
     #[serde(rename = "@title")]
-    title: String,
+    title: Cow<'a, str>,
     #[serde(rename = "@rid")]
-    rid: Option<String>,
+    rid: Option<Cow<'a, str>>,
     #[serde(rename = "@servingqty")]
-    servingqty: String,
+    servingqty: Cow<'a, str>,
     #[serde(rename = "@servingtype")]
-    servingtype: String,
+    servingtype: Cow<'a, str>,
     #[serde(rename = "@createdate")]
-    createdate: Option<String>,
+    createdate: Option<Cow<'a, str>>,
     #[serde(rename = "@createuser")]
-    createuser: Option<String>,
+    createuser: Option<Cow<'a, str>>,
     #[serde(rename = "@createemail")]
-    createemail: Option<String>,
+    createemail: Option<Cow<'a, str>>,
     #[serde(rename = "@changedate")]
-    changedate: Option<String>,
+    changedate: Option<Cow<'a, str>>,
     #[serde(rename = "@changeuser")]
-    changeuser: Option<String>,
+    changeuser: Option<Cow<'a, str>>,
     #[serde(rename = "@changeemail")]
-    changeemail: Option<String>,
+    changeemail: Option<Cow<'a, str>>,
     #[serde(rename = "@timeallqty")]
-    timeallqty: Option<String>,
+    timeallqty: Option<Cow<'a, str>>,
     #[serde(rename = "@timeprepqty")]
-    timeprepqty: Option<String>,
+    timeprepqty: Option<Cow<'a, str>>,
     #[serde(rename = "@timecookqty")]
-    timecookqty: Option<String>,
+    timecookqty: Option<Cow<'a, str>>,
     #[serde(rename = "@costs")]
-    costs: Option<String>,
+    costs: Option<Cow<'a, str>>,
     #[serde(rename = "@country")]
-    country: Option<String>,
+    country: Option<Cow<'a, str>>,
     #[serde(rename = "@proteins")]
-    proteins: Option<String>,
+    proteins: Option<Cow<'a, str>>,
     #[serde(rename = "@carbohydrates")]
-    carbohydrates: Option<String>,
+    carbohydrates: Option<Cow<'a, str>>,
     #[serde(rename = "@fat")]
-    fat: Option<String>,
+    fat: Option<Cow<'a, str>>,
     #[serde(rename = "@quality")]
-    quality: Option<String>,
+    quality: Option<Cow<'a, str>>,
     #[serde(rename = "@wwpoints")]
-    wwpoints: Option<String>,
-    cat: Vec<String>,
-    hint: Option<Vec<String>>,
-    sourceline: Option<Vec<String>>,
-    card: Option<Vec<String>>,
-    allergies: Option<Allergies>,
-    content: Option<Content>,
-    picture: Option<Vec<Picture>>,
-    picbin: Option<Vec<Picbin>>,
+    wwpoints: Option<Cow<'a, str>>,
+    cat: Vec<Cow<'a, str>>,
+    hint: Option<Vec<Cow<'a, str>>>,
+    sourceline: Option<Vec<Cow<'a, str>>>,
+    card: Option<Vec<Cow<'a, str>>>,
+    allergies: Option<Allergies<'a>>,
+    content: Option<Content<'a>>,
+    picture: Option<Vec<Picture<'a>>>,
+    picbin: Option<Vec<Picbin<'a>>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Allergies {
+struct Allergies<'a> {
     #[serde(rename = "@allergy")]
-    allergy: Vec<String>,
+    allergy: Vec<Cow<'a, str>>,
     #[serde(rename = "@name")]
-    name: String,
+    name: Cow<'a, str>,
     #[serde(rename = "@contains")]
-    contains: String,
+    contains: Cow<'a, str>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Content {
+struct Content<'a> {
     #[serde(rename = "@type")]
-    r#type: String,
+    r#type: Cow<'a, str>,
     #[serde(rename = "@value")]
-    value: String,
+    value: Cow<'a, str>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Picture {
+struct Picture<'a> {
     #[serde(rename = "@file")]
-    file: String,
+    file: Cow<'a, str>,
 }
 
 #[derive(Deserialize)]
-struct Picbin {
+struct Picbin<'a> {
     #[serde(rename = "@format")]
-    format: String,
-    #[serde(rename = "#text")]
-    value: String,
+    format: Cow<'a, str>,
+    #[serde(rename = "$value")]
+    value: Cow<'a, str>,
 }
 
 #[derive(Deserialize)]
-struct Part {
+struct Part<'a> {
     #[serde(default, rename = "@title")]
-    title: String,
-    ingredient: Vec<Ingredient>,
+    title: Cow<'a, str>,
+    ingredient: Vec<Ingredient<'a>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Ingredient {
+struct Ingredient<'a> {
     #[serde(rename = "@qty")]
-    qty: String,
+    qty: Cow<'a, str>,
     #[serde(default, rename = "@unit")]
-    unit: String,
+    unit: Cow<'a, str>,
     #[serde(rename = "@item")]
-    item: String,
-    inote: Option<Vec<String>>,
+    item: Cow<'a, str>,
+    inote: Option<Vec<Cow<'a, str>>>,
     #[serde(rename = "@bls")]
-    bls: Option<String>,
+    bls: Option<Cow<'a, str>>,
     #[serde(rename = "@gram")]
-    gram: Option<String>,
+    gram: Option<Cow<'a, str>>,
     #[serde(rename = "@shop")]
-    shop: Option<String>,
+    shop: Option<Cow<'a, str>>,
     #[serde(rename = "@calc")]
-    calc: Option<String>,
+    calc: Option<Cow<'a, str>>,
     #[serde(rename = "@ridlink")]
-    ridlink: Option<String>,
-    prep: Option<Preparation>,
+    ridlink: Option<Cow<'a, str>>,
+    prep: Option<Preparation<'a>>,
 }
 
-impl Display for Ingredient {
+impl<'a> Display for Ingredient<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut parts = vec![self.qty.clone(), self.unit.clone(), self.item.clone()];
 
@@ -172,14 +173,14 @@ impl Display for Ingredient {
             parts.push(bls);
         }
 
-        if let Some(gram) = self.gram.clone() {
-            parts.push(format!("gram={gram}"));
+        if let Some(gram) = &self.gram {
+            parts.push(Cow::Owned(format!("gram={gram}")));
         }
 
-        if let Some(inote) = self.inote.clone()
+        if let Some(inote) = &self.inote
             && !inote.is_empty()
         {
-            parts.push(format!("[{}]", inote.join(",")));
+            parts.push(Cow::Owned(format!("[{}]", inote.join(","))));
         }
 
         write!(f, "{}", parts.join(" "))
@@ -188,63 +189,63 @@ impl Display for Ingredient {
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Preparation {
-    text: String,
+struct Preparation<'a> {
+    text: Cow<'a, str>,
     #[serde(default)]
-    step: Vec<String>,
+    step: Vec<Cow<'a, str>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Remark {
+struct Remark<'a> {
     #[serde(rename = "@user")]
-    user: Option<String>,
+    user: Option<Cow<'a, str>>,
     #[serde(rename = "@line")]
-    line: Option<String>,
+    line: Option<Cow<'a, str>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct Menu {
+struct Menu<'a> {
     #[serde(rename = "@title")]
-    title: String,
+    title: Cow<'a, str>,
     #[serde(rename = "@date")]
-    date: Option<String>,
+    date: Option<Cow<'a, str>>,
     #[serde(rename = "@yield")]
-    r#yield: Option<String>,
-    frontpage: Option<FrontPage>,
-    backpage: Option<BackPage>,
-    mrecipe: Option<MRecipe>,
+    r#yield: Option<Cow<'a, str>>,
+    frontpage: Option<FrontPage<'a>>,
+    backpage: Option<BackPage<'a>>,
+    mrecipe: Option<MRecipe<'a>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct FrontPage {
+struct FrontPage<'a> {
     #[serde(rename = "@datatype")]
-    datatype: Option<String>,
+    datatype: Option<Cow<'a, str>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct BackPage {
+struct BackPage<'a> {
     #[serde(rename = "@datatype")]
-    datatype: Option<String>,
+    datatype: Option<Cow<'a, str>>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
-struct MRecipe {
+struct MRecipe<'a> {
     #[serde(rename = "@title")]
-    title: Option<String>,
+    title: Option<Cow<'a, str>>,
     #[serde(rename = "@rid")]
-    rid: Option<String>,
+    rid: Option<Cow<'a, str>>,
     #[serde(rename = "@amount")]
-    amount: Option<String>,
+    amount: Option<Cow<'a, str>>,
     #[serde(rename = "@persons")]
-    persons: Option<String>,
+    persons: Option<Cow<'a, str>>,
 }
 
-impl From<CookmlRecipe> for Recipe {
+impl<'a> From<CookmlRecipe<'a>> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: CookmlRecipe) -> Self {
         let created_date = DateTime::from_str(&r.head.createdate.unwrap_or_default()).ok();
@@ -312,7 +313,7 @@ impl From<CookmlRecipe> for Recipe {
             estimated_cost: r
                 .head
                 .costs
-                .map(|s| vec![RecipeEstimatedCostFieldEnum::Text(s)])
+                .map(|s| vec![RecipeEstimatedCostFieldEnum::Text(s.to_string())])
                 .unwrap_or_default(),
             image: images
                 .iter()
@@ -320,16 +321,16 @@ impl From<CookmlRecipe> for Recipe {
                 .collect(),
             in_language: r
                 .lang
-                .map(|l| vec![RecipeInLanguageFieldEnum::Text(l)])
+                .map(|l| vec![RecipeInLanguageFieldEnum::Text(l.to_string())])
                 .unwrap_or_default(),
             keywords: keywords
                 .map(|v| {
                     v.into_iter()
-                        .map(RecipeKeywordsFieldEnum::TextOrURL)
+                        .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
                         .collect()
                 })
                 .unwrap_or_default(),
-            name: Some(r.head.title)
+            name: Some(r.head.title.to_string())
                 .filter(|v| !v.is_empty())
                 .map(|s| vec![s])
                 .unwrap_or_default(),
@@ -344,8 +345,12 @@ impl From<CookmlRecipe> for Recipe {
             prep_time: prep_time
                 .map(|c| vec![DurationOrText::Text(c.to_string())])
                 .unwrap_or_default(),
-            recipe_category: category.map(|s| vec![s]).unwrap_or_default(),
-            recipe_cuisine: r.head.country.map(|s| vec![s]).unwrap_or_default(),
+            recipe_category: category.map(|s| vec![s.to_string()]).unwrap_or_default(),
+            recipe_cuisine: r
+                .head
+                .country
+                .map(|s| vec![s.to_string()])
+                .unwrap_or_default(),
             recipe_ingredient: r
                 .part
                 .into_iter()
@@ -366,7 +371,7 @@ impl From<CookmlRecipe> for Recipe {
                                 .into_iter()
                                 .map(|ing| ItemListItemListElementFieldEnum::Text(ing.to_string()))
                                 .collect(),
-                            name: vec![title],
+                            name: vec![title.to_string()],
                             number_of_items: vec![i32::try_from(num_items).unwrap_or_default()],
                             ..Default::default()
                         })]
@@ -377,7 +382,9 @@ impl From<CookmlRecipe> for Recipe {
                 .preparation
                 .text
                 .split("\n\n")
-                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace('\n', " ")))
+                .map(|s| {
+                    RecipeRecipeInstructionsFieldEnum::Text(s.replace('\n', " ").trim_end().into())
+                })
                 .collect(),
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text(format!(
                 "{} {}",
@@ -389,11 +396,15 @@ impl From<CookmlRecipe> for Recipe {
 }
 
 /// Parses a `CookML` recipe file.
-pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
+pub fn parse<R>(mut r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
 {
-    let root: Cookml = serde_xml_rs::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
+    let mut buf = Vec::new();
+    r.read_to_end(&mut buf)?;
+
+    let root: Cookml = quick_xml::de::from_reader(Cursor::new(buf))
+        .map_err(|err| Error::Parse(err.to_string()))?;
 
     Ok(root
         .recipe

@@ -16,18 +16,18 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             "https://cheftap.com",
             vec![".html", ".txt", ".zip"],
         ),
-        ("Cooklang", "https://cooklang.org/", vec![".cook"]),
-        (
-            "COOKmate",
-            "https://cooklang.org/",
-            vec![".mcb", ".mmf", ".rk", ".xml"],
-        ),
-        ("Crouton", "https://crouton.app", vec![".crumb"]),
         (
             "Computer Cuisine Deluxe",
             "https://www.inakasoftware.com/computer-cuisine-deluxe-mac-windows-recipe-software-organizer/",
             vec![".csv"],
         ),
+        ("Cooklang", "https://cooklang.org/", vec![".cook"]),
+        (
+            "COOKmate",
+            "https://cooklang.org/",
+            vec![".mcb", ".mmf", ".rk", ".xml", ".zip"],
+        ),
+        ("Crouton", "https://crouton.app", vec![".crumb"]),
         (
             "Easy Recipe Deluxe",
             "https://easy-recipe-deluxe.software.informer.com",
