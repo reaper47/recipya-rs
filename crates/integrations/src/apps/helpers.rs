@@ -184,7 +184,7 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
 pub(super) fn extract_archive_contents<R, F1, F2>(
     mut archive: ZipArchive<R>,
     parser_xml: F1,
-    parser_html: Option<F2>,
+    parser_html: Option<&F2>,
 ) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,

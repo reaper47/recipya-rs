@@ -129,7 +129,7 @@ impl From<RecipeComponents<'_>> for RecipeSage {
     }
 }
 
-impl<'a> From<RecipeSageXMLRecipe<'_>> for RecipeSage {
+impl From<RecipeSageXMLRecipe<'_>> for RecipeSage {
     fn from(r: RecipeSageXMLRecipe) -> Self {
         let labels = r.labels.unwrap_or_default();
         let items = labels.split_first();
@@ -279,7 +279,7 @@ impl From<RecipeSage> for Recipe {
     }
 }
 
-impl<'a> From<RecipeSageXMLRecipe<'_>> for Recipe {
+impl From<RecipeSageXMLRecipe<'_>> for Recipe {
     fn from(r: RecipeSageXMLRecipe) -> Self {
         let categories = r.labels.unwrap_or_default();
         let categories = categories.split_first();

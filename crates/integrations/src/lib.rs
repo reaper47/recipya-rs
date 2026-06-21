@@ -19,7 +19,7 @@ use schema_org::Recipe;
 
 use crate::apps::cooklang::CookLang;
 use crate::apps::{
-    accuchef, bigoven, cheftap, computer_cuisine_deluxe, cookmate, cookml, crouton, kalorio,
+    accuchef, bigoven, cheftap, computer_cuisine_deluxe, cookmate, cookml, cookn, crouton, kalorio,
     mastercook, mealmaster, paprika, recipemd, recipesage, recipya, rezkonv, saffron,
 };
 
@@ -45,11 +45,15 @@ where
         App::ComputerCuisineDeluxe => computer_cuisine_deluxe::parse_csv(r),
         App::Cooklang => CookLang::default().parse(r, file_name),
         App::CookMate => match file_format {
-            FileFormat::MCB => cookmate::parse_backup(r),
+            FileFormat::MCB | FileFormat::Zip => cookmate::parse_backup(r),
             FileFormat::Rezkonv => rezkonv::parse(r),
             FileFormat::MealMaster => mealmaster::parse(r),
             FileFormat::Xml => cookmate::parse_xml(r),
-            FileFormat::Zip => cookmate::parse_backup(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
+        App::Cookn => match file_format {
+            FileFormat::Txt => cookn::parse_txt(r),
+            FileFormat::Zip => cookn::parse_archive(r),
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::Crouton => crouton::parse(r),

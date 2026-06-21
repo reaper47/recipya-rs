@@ -78,7 +78,7 @@ impl From<List<'_>> for NutritionInformation {
             v.items
                 .iter()
                 .find(|i| i.starts_with(prefix))
-                .map(|i| i.strip_prefix(prefix).clone())
+                .map(|i| i.strip_prefix(prefix))
                 .unwrap_or_default()
                 .filter(|s| s != &"0 g")
                 .map(|i| vec![Energy::new(i)])
@@ -89,7 +89,7 @@ impl From<List<'_>> for NutritionInformation {
             v.items
                 .iter()
                 .find(|i| i.starts_with(prefix))
-                .map(|i| i.strip_prefix(prefix).clone())
+                .map(|i| i.strip_prefix(prefix))
                 .unwrap_or_default()
                 .filter(|s| s != &"0 g")
                 .map(|i| vec![Mass::new(i)])
@@ -121,7 +121,7 @@ impl fmt::Display for List<'_> {
     }
 }
 
-impl<'a> From<CookmateRecipe<'a>> for Recipe {
+impl From<CookmateRecipe<'_>> for Recipe {
     #[allow(clippy::too_many_lines)]
     #[allow(clippy::cast_precision_loss)]
     fn from(r: CookmateRecipe) -> Self {
@@ -270,7 +270,7 @@ where
     R: Read + Seek,
 {
     let archive = zip::ZipArchive::new(r)?;
-    let (mut recipes, images) = extract_archive_contents(archive, parse_xml, Some(parse_html))?;
+    let (mut recipes, images) = extract_archive_contents(archive, parse_xml, Some(&parse_html))?;
 
     for recipe in &mut recipes {
         for image in &mut recipe.image {
@@ -287,7 +287,11 @@ where
     Ok(recipes)
 }
 
-/// Parses a `COOKmate` XML recipe file.
+/// Parses a `COOKmate` recipe file in the XML format.
+///
+/// # Panics
+///
+/// Panics if the file cannot be read or parsed.
 pub fn parse_xml<R>(mut r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
@@ -301,6 +305,12 @@ where
     Ok(root.recipes.into_iter().map(Recipe::from).collect())
 }
 
+/// Parses a `COOKmate` recipe file in the HTML format.
+///
+/// # Panics
+///
+/// - When the file cannot be read or parsed
+/// - When the CSS selectors are invalid.
 pub fn parse_html<R>(mut r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
@@ -320,8 +330,7 @@ where
     let list = |sel: &str| {
         doc.select(&Selector::parse(sel).unwrap())
             .fold(List::new(), |mut acc, el| {
-                let text = el.text().collect::<String>();
-                acc.items.push(Cow::Owned(text));
+                acc.items.push(Cow::Owned(el.text().collect::<String>()));
                 acc
             })
     };

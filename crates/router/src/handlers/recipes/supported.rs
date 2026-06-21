@@ -27,6 +27,7 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             "https://cooklang.org/",
             vec![".mcb", ".mmf", ".rk", ".xml", ".zip"],
         ),
+        ("Cook'n", "https://www.dvo.com/", vec![".txt", ".zip"]),
         ("Crouton", "https://crouton.app", vec![".crumb"]),
         (
             "Easy Recipe Deluxe",

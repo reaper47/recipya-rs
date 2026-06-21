@@ -131,11 +131,11 @@ impl From<MealMasterRecipe> for Recipe {
                 .filter(|s| !s.is_empty())
                 .map(|s| vec![s])
                 .unwrap_or_default(),
-            recipe_category: if let Some(c) = r.category.as_ref().filter(|s| !s.is_empty()) {
-                vec![c.to_string()]
-            } else {
-                vec![]
-            },
+            recipe_category: r
+                .category
+                .as_ref()
+                .filter(|s| !s.is_empty())
+                .map_or_else(Vec::new, |c| vec![c.clone()]),
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: to_yield(i64::from(r.yield_)),

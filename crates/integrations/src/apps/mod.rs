@@ -7,6 +7,7 @@ pub mod computer_cuisine_deluxe;
 pub mod cooklang;
 pub mod cookmate;
 pub mod cookml;
+pub mod cookn;
 pub mod crouton;
 pub mod kalorio;
 pub mod mastercook;

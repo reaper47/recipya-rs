@@ -424,8 +424,8 @@ fn parse_nutrition_schema(s: &[&str]) -> Vec<NutritionInformation> {
 
         if key.ends_with("Calories") {
             let energy = Energy::new(
-                s.split(":")
-                    .last()
+                s.split(':')
+                    .next_back()
                     .unwrap_or_default()
                     .replace("Calories", "kcal")
                     .trim(),
@@ -499,7 +499,7 @@ where
     let (mut recipes, images) = extract_archive_contents(
         archive,
         cookmate::parse_xml,
-        None::<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
+        None::<&fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
     )?;
     update_recipe_image_paths(&mut recipes, &images);
     Ok(recipes)
@@ -576,23 +576,18 @@ fn parse_flush_mxp<'s>(input: &mut &'s str) -> WResult<&'s str> {
 }
 
 /// Parses a `MasterCook` TXT file.
-pub fn parse_txt<R>(mut r: R) -> Result<Vec<Recipe>>
-where
-    R: Read,
-{
+pub fn parse_txt<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
     let mut content = String::new();
     r.read_to_string(&mut content)?;
 
-    let recipes = parse_txt_helper(&mut content.as_str())?
+    Ok(parse_txt_helper(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
-        .collect::<Vec<_>>();
-
-    Ok(recipes)
+        .collect())
 }
 
 fn parse_txt_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
-    repeat(1.., parse_recipe_txt.map(|r| r))
+    repeat(1.., parse_recipe_txt)
         .parse_next(input)
         .map_err(|err| Error::Parse(err.to_string()))
 }
@@ -787,8 +782,9 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod test_recipes {
-        use super::*;
         use std::io::Cursor;
+
+        use super::*;
 
         #[test]
         fn test_mastercook_mx2() -> Result<()> {

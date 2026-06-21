@@ -14,6 +14,8 @@ pub enum App {
     Cooklang,
     #[strum(to_string = "COOKmate")]
     CookMate,
+    #[strum(to_string = "Cook'n")]
+    Cookn,
     Crouton,
     Kalorio,
     MasterCook,

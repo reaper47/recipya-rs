@@ -165,7 +165,7 @@ struct Ingredient<'a> {
     prep: Option<Preparation<'a>>,
 }
 
-impl<'a> Display for Ingredient<'a> {
+impl Display for Ingredient<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut parts = vec![self.qty.clone(), self.unit.clone(), self.item.clone()];
 
@@ -245,7 +245,7 @@ struct MRecipe<'a> {
     persons: Option<Cow<'a, str>>,
 }
 
-impl<'a> From<CookmlRecipe<'a>> for Recipe {
+impl From<CookmlRecipe<'_>> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: CookmlRecipe) -> Self {
         let created_date = DateTime::from_str(&r.head.createdate.unwrap_or_default()).ok();
