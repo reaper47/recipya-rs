@@ -183,7 +183,7 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
 
 pub(super) fn extract_archive_contents<R, F1, F2>(
     mut archive: ZipArchive<R>,
-    parser_xml: F1,
+    parser_xml: Option<F1>,
     parser_html: Option<&F2>,
 ) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
@@ -207,11 +207,11 @@ where
                 let r = parse_mx2(cursor)?;
                 recipes.extend(r);
             }
-            FileFormat::Html if let Some(parser) = parser_html.as_ref() => {
+            FileFormat::Html if let Some(parse) = parser_html.as_ref() => {
                 let mut buf = Vec::new();
                 file.read_to_end(&mut buf)?;
 
-                let r = parser(io::Cursor::new(buf))?;
+                let r = parse(io::Cursor::new(buf))?;
                 recipes.extend(r);
             }
             FileFormat::Jpg => {
@@ -225,11 +225,11 @@ where
                     warn!("Could not get file name from: {file_name}");
                 }
             }
-            FileFormat::Xml => {
+            FileFormat::Xml if let Some(parse) = parser_xml.as_ref() => {
                 let mut buf = Vec::new();
                 file.read_to_end(&mut buf)?;
 
-                let r = parser_xml(io::Cursor::new(buf))?;
+                let r = parse(io::Cursor::new(buf))?;
                 recipes.extend(r);
             }
             _ => {

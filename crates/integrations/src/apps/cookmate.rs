@@ -8,6 +8,7 @@ use scraper::{Html, Selector};
 use serde::Deserialize;
 use tracing::error;
 use url::Url;
+use zip::ZipArchive;
 
 use schema_org::field::{
     AggregateRatingRatingValueFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
@@ -269,8 +270,9 @@ pub fn parse_backup<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let archive = zip::ZipArchive::new(r)?;
-    let (mut recipes, images) = extract_archive_contents(archive, parse_xml, Some(&parse_html))?;
+    let archive = ZipArchive::new(r)?;
+    let (mut recipes, images) =
+        extract_archive_contents(archive, Some(parse_xml), Some(&parse_html))?;
 
     for recipe in &mut recipes {
         for image in &mut recipe.image {

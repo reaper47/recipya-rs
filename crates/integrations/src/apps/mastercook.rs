@@ -498,7 +498,7 @@ where
     let archive = zip::ZipArchive::new(r)?;
     let (mut recipes, images) = extract_archive_contents(
         archive,
-        cookmate::parse_xml,
+        Some(&cookmate::parse_xml),
         None::<&fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
     )?;
     update_recipe_image_paths(&mut recipes, &images);
