@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::io::{Cursor, Read, Seek};
+use std::io::{Read, Seek};
 
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, space0, space1};
@@ -21,7 +21,8 @@ use serde::Deserialize;
 
 use crate::apps::cookmate;
 use crate::apps::helpers::{
-    Ingredient, Instruction, extract_archive_contents, read_file, update_recipe_image_paths,
+    Ingredient, Instruction, Parsers, extract_archive_contents, read_file,
+    update_recipe_image_paths,
 };
 use crate::helpers::{seconds_to_duration, to_yield};
 use crate::{Error, Result};
@@ -498,8 +499,10 @@ where
     let archive = zip::ZipArchive::new(r)?;
     let (mut recipes, images) = extract_archive_contents(
         archive,
-        Some(&cookmate::parse_xml),
-        None::<&fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
+        Parsers {
+            xml: Some(cookmate::parse_xml),
+            ..Default::default()
+        },
     )?;
     update_recipe_image_paths(&mut recipes, &images);
     Ok(recipes)

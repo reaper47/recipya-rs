@@ -16,6 +16,8 @@ pub enum App {
     CookMate,
     #[strum(to_string = "Cook'n")]
     Cookn,
+    #[strum(to_string = "Copy Me That")]
+    CopyMeThat,
     Crouton,
     Kalorio,
     MasterCook,

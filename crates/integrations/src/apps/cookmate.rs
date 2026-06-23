@@ -21,6 +21,7 @@ use schema_org::{
 use support::strings::extract_number;
 
 use super::helpers::{extract_archive_contents, update_recipe_image_paths};
+use crate::apps::helpers::Parsers;
 use crate::apps::recipya::at_context;
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 use crate::{Error, Result};
@@ -271,8 +272,14 @@ where
     R: Read + Seek,
 {
     let archive = ZipArchive::new(r)?;
-    let (mut recipes, images) =
-        extract_archive_contents(archive, Some(parse_xml), Some(&parse_html))?;
+    let (mut recipes, images) = extract_archive_contents(
+        archive,
+        Parsers {
+            xml: Some(parse_xml),
+            html: Some(parse_html),
+            ..Default::default()
+        },
+    )?;
 
     for recipe in &mut recipes {
         for image in &mut recipe.image {

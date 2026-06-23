@@ -8,6 +8,7 @@ pub mod cooklang;
 pub mod cookmate;
 pub mod cookml;
 pub mod cookn;
+pub mod copymethat;
 pub mod crouton;
 pub mod kalorio;
 pub mod mastercook;

@@ -3,9 +3,8 @@ use std::{
     io::{Read, Seek},
 };
 
-use encoding_rs::WINDOWS_1252;
 use serde::{Deserialize, Serialize};
-use tracing::{error, warn};
+use tracing::error;
 
 use schema_org::{
     AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
@@ -16,7 +15,10 @@ use schema_org::{
     },
 };
 
-use crate::{Result, apps::recipya::at_context};
+use crate::{
+    Result,
+    apps::{helpers::read_file, recipya::at_context},
+};
 
 pub type Recipes<'a> = Vec<CuisineRecipe<'a>>;
 
@@ -112,21 +114,12 @@ impl RecipeRating {
 
 #[allow(clippy::too_many_lines)]
 /// Parses a `ChefTap` recipe in the text format from the file's content.
-pub fn parse_csv<R>(mut r: R) -> Result<Vec<Recipe>>
+pub fn parse_csv<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let mut raw = Vec::new();
-    r.read_to_end(&mut raw)?;
-
-    let (decoded, _, has_err) = WINDOWS_1252.decode(&raw);
-    if has_err {
-        warn!(
-            "Computer Cuisine Deluxe parser: Some bytes could not be cleanly decoded as Windows-1252"
-        );
-    }
-
-    let mut reader = csv::Reader::from_reader(decoded.as_bytes());
+    let content = read_file(r)?;
+    let mut reader = csv::Reader::from_reader(content.as_bytes());
     let mut recipes = Vec::new();
 
     for result in reader.deserialize() {
@@ -394,7 +387,7 @@ mod tests {
                 ],
                 recipe_instructions: vec![
                     RecipeRecipeInstructionsFieldEnum::Text(
-                        "1. Melt butter in a large pot over medium heat. SautÃ© onion, celery, and garlic powder until onions are tender. Stir in potatoes, carrots, broth, salt, pepper, and dill. Bring to a boil, and reduce heat. Cover, and simmer 20 minutes.".into(),
+                        "1. Melt butter in a large pot over medium heat. Sauté onion, celery, and garlic powder until onions are tender. Stir in potatoes, carrots, broth, salt, pepper, and dill. Bring to a boil, and reduce heat. Cover, and simmer 20 minutes.".into(),
                     ),
                     RecipeRecipeInstructionsFieldEnum::Text(
                         "2. Stir in salmon, evaporated milk, corn, and cheese. Cook until heated through.".into(),

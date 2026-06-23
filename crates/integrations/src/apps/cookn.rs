@@ -1,10 +1,8 @@
 use std::borrow::Cow;
-use std::io::{Cursor, Read, Seek};
+use std::io::{Read, Seek};
 use std::path::Path;
 
-use encoding_rs::WINDOWS_1252;
 use scraper::{Html, Selector};
-use tracing::warn;
 use winnow::Result as WResult;
 use winnow::ascii::{line_ending, multispace0, multispace1, space0, till_line_ending};
 use winnow::combinator::{alt, delimited, eof, not, opt, peek, seq, terminated};
@@ -20,7 +18,9 @@ use schema_org::field::{
 };
 use schema_org::{AtType, Comment, DurationOrText, Recipe, at_context};
 
-use crate::apps::helpers::{Ingredient, extract_archive_contents, update_recipe_image_paths};
+use crate::apps::helpers::{
+    Ingredient, Parsers, extract_archive_contents, read_file, update_recipe_image_paths,
+};
 use crate::{Error, Result};
 
 enum Instruction<'a> {
@@ -156,23 +156,19 @@ impl From<RecipeComponents<'_>> for Recipe {
 }
 
 /// Parses a `Cook'n` text file.
-pub fn parse_txt<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
-    let mut raw = Vec::new();
-    r.read_to_end(&mut raw)?;
-
-    let (decoded, _, has_err) = WINDOWS_1252.decode(&raw);
-    if has_err {
-        warn!(
-            "Computer Cuisine Deluxe parser: Some bytes could not be cleanly decoded as Windows-1252"
-        );
-    }
-
-    Ok(
-        parse_txt_helper(&mut decoded.replace("\r\n", "\n").replace('\r', "\n").as_ref())?
-            .into_iter()
-            .map(Recipe::from)
-            .collect(),
-    )
+pub fn parse_txt<R>(r: R) -> Result<Vec<Recipe>>
+where
+    R: Read + Seek,
+{
+    Ok(parse_txt_helper(
+        &mut read_file(r)?
+            .replace("\r\n", "\n")
+            .replace('\r', "\n")
+            .as_ref(),
+    )?
+    .into_iter()
+    .map(Recipe::from)
+    .collect())
 }
 
 fn parse_txt_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
@@ -337,8 +333,10 @@ where
 
     let (mut recipes, images) = extract_archive_contents(
         archive,
-        None::<&fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
-        Some(&parse_html),
+        Parsers {
+            html: Some(parse_html),
+            ..Default::default()
+        },
     )?;
 
     for recipe in &mut recipes {
@@ -1116,7 +1114,7 @@ mod tests {
                     r#type: AtType::Recipe.to_opt(),
                     context: at_context(),
                     cook_time: vec![DurationOrText::Text("45 minutes".into())],
-                    description: vec![RecipeDescriptionFieldEnum::Text("Gary and Pat Teske, retired innkeepers of The Thistle Inn, of Holland, Michigan, share their recipe for one of their guests' favorite breakfasts.".into())],
+                    description: vec![RecipeDescriptionFieldEnum::Text("Gary and Pat Teske, retired innkeepers of The Thistle Inn, of Holland, Michigan, share their recipe for one of their guests\u{92} favorite breakfasts.".into())],
                     name: vec!["Farmer's Casserole".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::Text("3 cups frozen shredded hash brown potatoes".into()),
@@ -1270,7 +1268,7 @@ mod tests {
                 Recipe {
                     r#type: AtType::Recipe.to_opt(),
                     context: at_context(),
-                    description: vec![RecipeDescriptionFieldEnum::Text("This treat is as tasty as it is pretty to look at, and so easy to prepare! We've all seen berries dipped in chocolate, but consider how clever Mom will think you are by stuffing them instead.".into())],
+                    description: vec![RecipeDescriptionFieldEnum::Text("This treat is as tasty as it is pretty to look at, and so easy to prepare! We\u{92}ve all seen berries dipped in chocolate, but consider how clever Mom will think you are by stuffing them instead.".into())],
                     name: vec!["Cheesecake and Chocolate Stuffed Strawberries".into()],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::new_section("CHOCOLATE STUFFING", &[
@@ -1306,7 +1304,7 @@ mod tests {
                     context: at_context(),
                     author: vec![RecipeAuthorFieldEnum::new_person("Megan and Jill Stapley")],
                     description: vec![
-                        RecipeDescriptionFieldEnum::Text("This extra-special cake was first prepared for a potluck by 16-year-old Megan Stapley, of Pinetop, Arizona. She started with two 8-inch cake rounds sliced in half to make four layers. Each layer was mounded with Cloud Nine Frosting. This dessert won raves and applause from everyone who tried it and Megan's baking career was launched.\n\n\n\n                Megan's mother, Jill, toyed with the idea of covering the sides of this already amazing cake with her grandma's fudge frosting. Not only did the fudge frosting addition make the cake more decadent, it added to the beauty of the cake. And thus was born the now famous Chocolate Fudge Dream Cake.".into())
+                        RecipeDescriptionFieldEnum::Text("This extra-special cake was first prepared for a potluck by 16-year-old Megan Stapley, of Pinetop, Arizona. She started with two 8-inch cake rounds sliced in half to make four layers. Each layer was mounded with Cloud Nine Frosting. This dessert won raves and applause from everyone who tried it and Megan\u{92}s baking career was launched.\n\n\n\n                Megan\u{92}s mother, Jill, toyed with the idea of covering the sides of this already amazing cake with her grandma\u{92}s fudge frosting. Not only did the fudge frosting addition make the cake more decadent, it added to the beauty of the cake. And thus was born the now famous Chocolate Fudge Dream Cake.".into())
                     ],
                     prep_time: vec![DurationOrText::Text("20 minutes".into())],
                     cook_time: vec![DurationOrText::Text("30 minutes".into())],

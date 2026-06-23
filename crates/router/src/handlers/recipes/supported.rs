@@ -28,6 +28,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             vec![".mcb", ".mmf", ".rk", ".xml", ".zip"],
         ),
         ("Cook'n", "https://www.dvo.com/", vec![".txt", ".zip"]),
+        (
+            "Copy Me That",
+            "https://www.copymethat.com/",
+            vec![".html", ".txt", ".yml", ".zip"],
+        ),
         ("Crouton", "https://crouton.app", vec![".crumb"]),
         (
             "Easy Recipe Deluxe",

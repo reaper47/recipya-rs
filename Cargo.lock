@@ -2629,7 +2629,6 @@ dependencies = [
  "cooklang",
  "csv",
  "derive_more",
- "encoding_rs",
  "futures",
  "futures-core",
  "humantime",

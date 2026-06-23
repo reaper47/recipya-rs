@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env::temp_dir;
 use std::fs::File;
-use std::io;
+use std::io::{self, Cursor};
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 
@@ -181,15 +181,19 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
     !c.is_control() && (c != '\n' && c != '\r')
 }
 
-pub(super) fn extract_archive_contents<R, F1, F2>(
+#[derive(Default)]
+pub(super) struct Parsers {
+    pub html: Option<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
+    pub txt: Option<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
+    pub xml: Option<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
+}
+
+pub(super) fn extract_archive_contents<R>(
     mut archive: ZipArchive<R>,
-    parser_xml: Option<F1>,
-    parser_html: Option<&F2>,
+    parsers: Parsers,
 ) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,
-    F1: Fn(io::Cursor<Vec<u8>>) -> Result<Vec<Recipe>>,
-    F2: Fn(io::Cursor<Vec<u8>>) -> Result<Vec<Recipe>>,
 {
     let mut recipes = Vec::new();
     let mut images = HashMap::new();
@@ -203,15 +207,15 @@ where
                 let mut buffer = Vec::new();
                 file.read_to_end(&mut buffer)?;
 
-                let cursor = io::Cursor::new(buffer);
+                let cursor = Cursor::new(buffer);
                 let r = parse_mx2(cursor)?;
                 recipes.extend(r);
             }
-            FileFormat::Html if let Some(parse) = parser_html.as_ref() => {
+            FileFormat::Html if let Some(parse) = parsers.html.as_ref() => {
                 let mut buf = Vec::new();
                 file.read_to_end(&mut buf)?;
 
-                let r = parse(io::Cursor::new(buf))?;
+                let r = parse(Cursor::new(buf))?;
                 recipes.extend(r);
             }
             FileFormat::Jpg => {
@@ -225,11 +229,18 @@ where
                     warn!("Could not get file name from: {file_name}");
                 }
             }
-            FileFormat::Xml if let Some(parse) = parser_xml.as_ref() => {
+            FileFormat::Txt if let Some(parse) = parsers.txt.as_ref() => {
                 let mut buf = Vec::new();
                 file.read_to_end(&mut buf)?;
 
-                let r = parse(io::Cursor::new(buf))?;
+                let r = parse(Cursor::new(buf))?;
+                recipes.extend(r);
+            }
+            FileFormat::Xml if let Some(parse) = parsers.xml.as_ref() => {
+                let mut buf = Vec::new();
+                file.read_to_end(&mut buf)?;
+
+                let r = parse(Cursor::new(buf))?;
                 recipes.extend(r);
             }
             _ => {
