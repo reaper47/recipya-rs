@@ -177,3 +177,13 @@ pub struct Comment {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub name: Vec<String>,
 }
+
+impl Comment {
+    /// Creates a new `Comment` with the given text.
+    pub fn new(text: String) -> Self {
+        Self {
+            text: vec![text],
+            ..Default::default()
+        }
+    }
+}

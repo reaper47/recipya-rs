@@ -25,6 +25,7 @@ futures.workspace = true
 futures-core.workspace = true
 humantime.workspace = true
 iso8601.workspace = true
+itertools.workspace = true
 libpaprika = { version = "0.4.1", default-features = false }
 recipemd = "0.2.0"
 reqwest = { workspace = true, features = ["json"] }
@@ -33,6 +34,7 @@ scraper.workspace = true
 serde.workspace = true
 quick-xml = { version = "0.40.1", features = ["serialize"] }
 serde_json.workspace = true
+serde_yaml_ng = "0.9"
 strum.workspace = true
 strum_macros.workspace = true
 support.workspace = true

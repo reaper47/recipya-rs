@@ -2,24 +2,230 @@ use std::borrow::Cow;
 use std::io::{Read, Seek};
 use std::path::Path;
 
+use itertools::Itertools;
+use serde::Deserialize;
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space1, till_line_ending};
 use winnow::combinator::{alt, delimited, not, opt, peek, preceded, repeat, terminated};
 use winnow::token::{literal, rest};
 use winnow::{Parser, combinator::seq};
+use zip::ZipArchive;
 
 use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
-    RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum,
+    RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+    RecipeRecipeYieldFieldEnum,
 };
-use schema_org::{AggregateRating, AtType, Comment, Recipe, at_context};
-use zip::ZipArchive;
+use schema_org::{
+    AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
+    at_context,
+};
 
 use crate::apps::helpers::{Parsers, extract_archive_contents, update_recipe_image_paths};
 use crate::{
     Error, Result,
     apps::helpers::{Ingredient, Instruction, read_file},
 };
+
+#[derive(Deserialize)]
+struct RecipeYaml {
+    name: String,
+    description: Option<String>,
+    servings: Option<String>,
+    source: Option<String>,
+    rating: Option<f32>,
+    image: Option<String>,
+    prep_time: Option<String>,
+    cook_time: Option<String>,
+    notes: Option<String>,
+    images: Option<Vec<String>>,
+    keywords: Option<String>,
+    tags: Option<Vec<String>>,
+    nutrition: Option<String>,
+    ingredients: Vec<String>,
+    directions: Vec<String>,
+}
+
+impl From<RecipeYaml> for Recipe {
+    fn from(r: RecipeYaml) -> Self {
+        let mut images = r.images.unwrap_or_default();
+        images.extend_from_slice(r.image.map(|s| vec![s]).unwrap_or_default().as_slice());
+
+        let mut keywords = r.tags.unwrap_or_default();
+        keywords.extend_from_slice(
+            r.keywords
+                .as_deref()
+                .unwrap_or_default()
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .collect::<Vec<_>>()
+                .as_slice(),
+        );
+        keywords = keywords.into_iter().unique().collect();
+
+        let (cat, keywords) = match keywords.as_slice() {
+            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
+            [] => (None, vec![]),
+        };
+
+        Self {
+            r#type: AtType::Recipe.to_opt(),
+            context: at_context(),
+            aggregate_rating: r
+                .rating
+                .map(|n| vec![AggregateRating::new(n, 1)])
+                .unwrap_or_default(),
+            comment: r.notes.map(|n| vec![Comment::new(n)]).unwrap_or_default(),
+            description: r
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            image: images
+                .into_iter()
+                .map(|s| RecipeImageFieldEnum::URL(s))
+                .collect(),
+            keywords: keywords
+                .into_iter()
+                .map(|k| RecipeKeywordsFieldEnum::TextOrURL(k))
+                .collect::<Vec<_>>(),
+            name: vec![r.name],
+            prep_time: r
+                .prep_time
+                .map(|s| vec![DurationOrText::Text(s)])
+                .unwrap_or_default(),
+            cook_time: r
+                .cook_time
+                .map(|s| vec![DurationOrText::Text(s)])
+                .unwrap_or_default(),
+            nutrition: r
+                .nutrition
+                .filter(|n| !n.trim().is_empty())
+                .map(|n| {
+                    let lines = n.lines().map(ToString::to_string).collect::<Vec<_>>();
+
+                    let extract = |prefix: &str| {
+                        lines
+                            .iter()
+                            .find(|l| l.starts_with(prefix))
+                            .map(|s| s.trim_start_matches(prefix).trim().to_string())
+                            .filter(|s| !s.starts_with("0.00"))
+                    };
+
+                    let extract_mass = |prefix: &str| {
+                        extract(prefix)
+                            .map(|l| vec![Mass::new(l)])
+                            .unwrap_or_default()
+                    };
+
+                    let nut = NutritionInformation {
+                        calories: extract("Calories:")
+                            .map(|l| vec![Energy::new(l.trim().to_string())])
+                            .unwrap_or_default(),
+                        carbohydrate_content: extract_mass("Carbs:"),
+                        cholesterol_content: extract_mass("Cholesterol:"),
+                        context: at_context(),
+                        fat_content: extract_mass("Total fat:"),
+                        fiber_content: extract_mass("Fiber:"),
+                        protein_content: extract_mass("Protein:"),
+                        saturated_fat_content: extract_mass("Saturated fat:"),
+                        serving_size: extract("Servings:")
+                            .map(|l| vec![l.trim().to_string()])
+                            .unwrap_or_default(),
+                        sodium_content: extract_mass("Sodium:"),
+                        sugar_content: extract_mass("Sugars:"),
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        trans_fat_content: extract_mass("Trans fat:"),
+                        unsaturated_fat_content: extract_mass("Unsaturated fat:"),
+                    };
+                    if nut.is_empty() { vec![] } else { vec![nut] }
+                })
+                .unwrap_or_default(),
+            recipe_category: cat.map(|c| vec![c]).unwrap_or_default(),
+            recipe_ingredient: r
+                .ingredients
+                .into_iter()
+                .filter_map(|s| {
+                    if s.trim().is_empty() {
+                        None
+                    } else if s.ends_with(':') {
+                        Some(Ingredient::Section(Cow::Owned(
+                            s.trim_end_matches(':').to_string(),
+                        )))
+                    } else {
+                        Some(Ingredient::Line(Cow::Owned(s)))
+                    }
+                })
+                .fold(Vec::new(), |mut acc, items| match items {
+                    Ingredient::Line(s)
+                        if let Some(RecipeRecipeIngredientFieldEnum::ItemList(list)) =
+                            acc.last_mut() =>
+                    {
+                        list.item_list_element
+                            .push(ItemListItemListElementFieldEnum::Text(s.to_string()));
+                        if let Some(i) = list.number_of_items.first_mut() {
+                            *i += 1;
+                        }
+                        acc
+                    }
+                    Ingredient::Line(s) => {
+                        acc.push(RecipeRecipeIngredientFieldEnum::Text(s.to_string()));
+                        acc
+                    }
+                    Ingredient::Section(s) => {
+                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
+                            &s.to_string(),
+                            &[],
+                        ));
+                        acc
+                    }
+                }),
+            recipe_instructions: r
+                .directions
+                .into_iter()
+                .filter_map(|s| {
+                    if s.trim().is_empty() {
+                        None
+                    } else if s.ends_with(':') {
+                        Some(Instruction::Section(Cow::Owned(
+                            s.trim_end_matches(':').to_string(),
+                        )))
+                    } else {
+                        Some(Instruction::Line(Cow::Owned(s)))
+                    }
+                })
+                .fold(Vec::new(), |mut acc, items| match items {
+                    Instruction::Line(s)
+                        if let Some(RecipeRecipeInstructionsFieldEnum::ItemList(list)) =
+                            acc.last_mut() =>
+                    {
+                        list.item_list_element
+                            .push(ItemListItemListElementFieldEnum::Text(s.to_string()));
+                        if let Some(i) = list.number_of_items.first_mut() {
+                            *i += 1;
+                        }
+                        acc
+                    }
+                    Instruction::Line(s) => {
+                        acc.push(RecipeRecipeInstructionsFieldEnum::Text(s.to_string()));
+                        acc
+                    }
+                    Instruction::Section(s) => {
+                        acc.push(RecipeRecipeInstructionsFieldEnum::new_section(
+                            &s.to_string(),
+                            Vec::<String>::new(),
+                        ));
+                        acc
+                    }
+                }),
+            recipe_yield: r
+                .servings
+                .map(|s| vec![RecipeRecipeYieldFieldEnum::Text(s)])
+                .unwrap_or_default(),
+            url: r.source.map(|u| vec![u]).unwrap_or_default(),
+            ..Default::default()
+        }
+    }
+}
 
 #[derive(Default)]
 struct RecipeComponents<'a> {
@@ -45,16 +251,13 @@ impl From<RecipeComponents<'_>> for Recipe {
             comment: r
                 .notes
                 .map(|n| {
-                    vec![Comment {
-                        text: vec![
-                            n.lines()
-                                .map(|s| s.trim())
-                                .filter(|s| !s.is_empty())
-                                .collect::<Vec<_>>()
-                                .join("\n\n"),
-                        ],
-                        ..Default::default()
-                    }]
+                    vec![Comment::new(
+                        n.lines()
+                            .map(|s| s.trim())
+                            .filter(|s| !s.is_empty())
+                            .collect::<Vec<_>>()
+                            .join("\n\n"),
+                    )]
                 })
                 .unwrap_or_default(),
             description: r
@@ -119,6 +322,7 @@ where
         archive,
         Parsers {
             txt: Some(parse_txt),
+            yaml: Some(parse_yaml),
             ..Default::default()
         },
     )?;
@@ -246,6 +450,17 @@ fn parse_notes<'s>(input: &mut &'s str) -> WResult<&'s str> {
     preceded((literal("NOTES"), multispace1), rest).parse_next(input)
 }
 
+/// Parses a YAML recipe file into a [`Recipe`] struct.
+pub fn parse_yaml<R>(r: R) -> Result<Vec<Recipe>>
+where
+    R: Read,
+{
+    let recipe: RecipeYaml =
+        serde_yaml_ng::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
+
+    Ok(vec![recipe.into()])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -284,6 +499,16 @@ mod tests {
             let got = parse_txt(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![results::txt3()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_cmt_yaml_ok() -> Result<()> {
+            let buf = Cursor::new(files::yaml());
+
+            let got = parse_yaml(buf)?;
+
+            pretty_assertions::assert_eq!(got, vec![results::yaml()]);
             Ok(())
         }
     }
@@ -453,14 +678,89 @@ mod tests {
 
             "
         }
+
+        pub fn yaml<'a>() -> &'a str {
+            r#"name: Berry Acai Bowl
+description: Perfect healthy breakfast for easy mornings. Acai bowls are
+    essentially thick smoothie bowls loaded with toppings - yum! Thanks to their
+    high antioxidant content, acai berries have many potential health benefits.
+    They're loaded with powerful plant compounds that act as antioxidants and
+    could have benefits for your brain, heart and overall health.
+servings: 1 Bowl
+source: CookBook App
+rating: 5
+image: https://media.cookbookmanager.com/61/R9P2vnN9QyjBrmZvErppJ0IE3thtNPJWg7MWLlCrcOakJKBnS46XzxOl421ii7qh.png
+prep_time: PT5M
+cook_time: PT5M
+notes: Keep in mind that using brown sugar will result in a slightly different
+    taste and colour compared to using caster sugar. Brown sugar has a deeper,
+    more caramel-like flavour, while caster sugar has a cleaner, more neutral
+    sweetness.
+on_favorites: yes
+favorite: yes
+cook_count: 0
+images:
+    - https://media.cookbookmanager.com/61/93CUAnLdaRci4QBdLuDl7iHgnqBqplFNjp85goax9Roq8jGoChqqCjlisrlFOC5O.png
+keywords: Breakfast, Lunch, Vegetarian, Smoothies, Healthy
+tags:
+    - Breakfast
+    - Lunch
+    - Vegetarian
+    - Smoothies
+    - Healthy
+nutrition: |-
+    Servings: 1.00
+    Calories: 511.65 kcal
+    Carbs: 102.84 g
+    Protein: 8.76 g
+    Total fat: 11.82 g
+    Saturated fat: 2.39 g
+    Unsaturated fat: 7.58 g
+    Trans fat: 0.03 g
+    Sugars: 53.61 g
+    Fiber: 16.26 g
+    Cholesterol: 0.00 mg
+    Sodium: 150.92 mg
+ingredients:
+    - ""
+    - 1 cup milk
+    - 2 tbsp baking powder
+    - "Smoothie:"
+    - 2 tsp acai powder
+    - 1 handful blueberries
+    - 1 medium banana
+    - 0.75 cup almond milk, or milk of your choice - adjust recipe as required
+    - "Topping:"
+    - 4 strawberries, sliced
+    - 1 sprinkle coconut flakes
+    - sprinkle chia seeds
+    - 1 medium banana, sliced
+    - 1 small handful raspberries
+    - 1 handful blueberries
+    - 0.5 kiwi, sliced
+    - 1 handful granola
+directions:
+    - ""
+    - Put all the smoothie ingredients into a blender
+    - If the mixture is having trouble blending, add more almond milk or water
+    - Blend for 2-3 minutes or until the smoothie has no lumps. Pour the smoothie
+      mixture into a bowl
+    - Top with desired ingredients
+    - Serve and enjoy!
+exportedBy: |-
+    Shared from CookBook
+    https://cookbookmanager.com
+"#
+        }
     }
 
     mod results {
         use schema_org::{
-            AggregateRating, Comment,
+            AggregateRating, Comment, DurationOrText, Energy, Mass, NutritionInformation,
             field::{
-                RecipeDescriptionFieldEnum, RecipeRecipeIngredientFieldEnum,
-                RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum,
+                RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum,
+                RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
+                RecipeRecipeYieldFieldEnum,
             },
         };
 
@@ -606,6 +906,81 @@ mod tests {
                 ],
                 recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("5".into())],
                 url: vec!["https://marketgrow.com/beef-wellington/".into()],
+                ..Default::default()
+            }
+        }
+
+        pub fn yaml() -> Recipe {
+            Recipe {
+                r#type: AtType::Recipe.to_opt(),
+                context: at_context(),
+                name: vec!["Berry Acai Bowl".into()],
+                aggregate_rating: vec![AggregateRating::new(5.0, 1)],
+                comment: vec![Comment {
+                    text: vec!["Keep in mind that using brown sugar will result in a slightly different taste and colour compared to using caster sugar. Brown sugar has a deeper, more caramel-like flavour, while caster sugar has a cleaner, more neutral sweetness.".into()],
+                    ..Default::default()
+                }],
+                description: vec![RecipeDescriptionFieldEnum::Text(
+                    "Perfect healthy breakfast for easy mornings. Acai bowls are essentially thick smoothie bowls loaded with toppings - yum! Thanks to their high antioxidant content, acai berries have many potential health benefits. They're loaded with powerful plant compounds that act as antioxidants and could have benefits for your brain, heart and overall health.".into(),
+                )],
+                image: vec![
+                    RecipeImageFieldEnum::URL("https://media.cookbookmanager.com/61/93CUAnLdaRci4QBdLuDl7iHgnqBqplFNjp85goax9Roq8jGoChqqCjlisrlFOC5O.png".into()),
+                    RecipeImageFieldEnum::URL("https://media.cookbookmanager.com/61/R9P2vnN9QyjBrmZvErppJ0IE3thtNPJWg7MWLlCrcOakJKBnS46XzxOl421ii7qh.png".into()),
+                ],
+                keywords: vec![
+                    RecipeKeywordsFieldEnum::TextOrURL("Lunch".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Vegetarian".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Smoothies".into()),
+                    RecipeKeywordsFieldEnum::TextOrURL("Healthy".into()),
+                ],
+                prep_time: vec![DurationOrText::Text("PT5M".into())],
+                cook_time: vec![DurationOrText::Text("PT5M".into())],
+                nutrition: vec![NutritionInformation {
+                    calories: vec![Energy::new("511.65 kcal")],
+                    carbohydrate_content: vec![Mass::new("102.84 g")],
+                    cholesterol_content: vec![],
+                    context: at_context(),
+                    fat_content: vec![Mass::new("11.82 g")],
+                    fiber_content: vec![Mass::new("16.26 g")],
+                    protein_content: vec![Mass::new("8.76 g")],
+                    saturated_fat_content: vec![Mass::new("2.39 g")],
+                    serving_size: vec!["1.00".into()],
+                    sodium_content: vec![Mass::new("150.92 mg")],
+                    sugar_content: vec![Mass::new("53.61 g")],
+                    r#type: AtType::NutritionInformation.to_opt(),
+                    trans_fat_content: vec![Mass::new("0.03 g")],
+                    unsaturated_fat_content: vec![Mass::new("7.58 g")],
+                }],
+                recipe_category: vec!["Breakfast".into()],
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text("1 cup milk".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("2 tbsp baking powder".into()),
+                    RecipeRecipeIngredientFieldEnum::new_section("Smoothie", &[
+                        "2 tsp acai powder",
+                        "1 handful blueberries",
+                        "1 medium banana",
+                        "0.75 cup almond milk, or milk of your choice - adjust recipe as required",
+                    ]),
+                    RecipeRecipeIngredientFieldEnum::new_section("Topping", &[
+                        "4 strawberries, sliced",
+                        "1 sprinkle coconut flakes",
+                        "sprinkle chia seeds",
+                        "1 medium banana, sliced",
+                        "1 small handful raspberries",
+                        "1 handful blueberries",
+                        "0.5 kiwi, sliced",
+                        "1 handful granola",
+                    ]),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text("Put all the smoothie ingredients into a blender".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("If the mixture is having trouble blending, add more almond milk or water".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Blend for 2-3 minutes or until the smoothie has no lumps. Pour the smoothie mixture into a bowl".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Top with desired ingredients".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Serve and enjoy!".into()),
+                ],
+                url: vec!["CookBook App".into()],
+                recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("1 Bowl".into())],
                 ..Default::default()
             }
         }

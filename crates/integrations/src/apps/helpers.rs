@@ -181,11 +181,14 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
     !c.is_control() && (c != '\n' && c != '\r')
 }
 
+type ParserFn = fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>;
+
 #[derive(Default)]
 pub(super) struct Parsers {
-    pub html: Option<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
-    pub txt: Option<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
-    pub xml: Option<fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>>,
+    pub html: Option<ParserFn>,
+    pub txt: Option<ParserFn>,
+    pub xml: Option<ParserFn>,
+    pub yaml: Option<ParserFn>,
 }
 
 pub(super) fn extract_archive_contents<R>(
@@ -201,50 +204,53 @@ where
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
         let file_name = file.name().to_string();
+        let format = FileFormat::from_filename(&file_name);
 
-        match FileFormat::from_filename(&file_name) {
-            FileFormat::MX2 => {
-                let mut buffer = Vec::new();
-                file.read_to_end(&mut buffer)?;
+        if format == FileFormat::Jpg {
+            let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
+            let mut tmp_file = File::create(tmp_path.clone())?;
+            io::copy(&mut file, &mut tmp_file)?;
 
-                let cursor = Cursor::new(buffer);
-                let r = parse_mx2(cursor)?;
-                recipes.extend(r);
+            if let Some(name) = Path::new(&file_name).file_name().and_then(|s| s.to_str()) {
+                images.insert(name.to_string(), tmp_path);
+            } else {
+                warn!("Could not get file name from: {file_name}");
             }
-            FileFormat::Html if let Some(parse) = parsers.html.as_ref() => {
-                let mut buf = Vec::new();
-                file.read_to_end(&mut buf)?;
 
-                let r = parse(Cursor::new(buf))?;
-                recipes.extend(r);
-            }
-            FileFormat::Jpg => {
-                let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
-                let mut tmp_file = File::create(tmp_path.clone())?;
-                io::copy(&mut file, &mut tmp_file)?;
+            continue;
+        }
 
-                if let Some(name) = Path::new(&file_name).file_name().and_then(|s| s.to_str()) {
-                    images.insert(name.to_string(), tmp_path);
-                } else {
-                    warn!("Could not get file name from: {file_name}");
-                }
-            }
-            FileFormat::Txt if let Some(parse) = parsers.txt.as_ref() => {
-                let mut buf = Vec::new();
-                file.read_to_end(&mut buf)?;
-
-                let r = parse(Cursor::new(buf))?;
-                recipes.extend(r);
-            }
-            FileFormat::Xml if let Some(parse) = parsers.xml.as_ref() => {
-                let mut buf = Vec::new();
-                file.read_to_end(&mut buf)?;
-
-                let r = parse(Cursor::new(buf))?;
-                recipes.extend(r);
-            }
+        let parse_fn: Option<&ParserFn> = match format {
+            FileFormat::MX2 => None,
+            FileFormat::Html => parsers.html.as_ref(),
+            FileFormat::Txt => parsers.txt.as_ref(),
+            FileFormat::Xml => parsers.xml.as_ref(),
+            FileFormat::Yaml => parsers.yaml.as_ref(),
             _ => {
                 warn!("Unzip archive, skipping file: {file_name}");
+                continue;
+            }
+        };
+
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf)?;
+        let cursor = Cursor::new(buf);
+
+        if format == FileFormat::MX2 {
+            recipes.extend(parse_mx2(cursor)?);
+            continue;
+        }
+
+        let Some(parse) = parse_fn else {
+            continue;
+        };
+
+        match parse(cursor) {
+            Ok(r) => {
+                recipes.extend(r);
+            }
+            Err(err) => {
+                warn!("Failed to parse {file_name}: {err}");
             }
         }
     }

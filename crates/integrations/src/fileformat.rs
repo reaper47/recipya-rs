@@ -17,6 +17,7 @@ pub enum FileFormat {
     Rezkonv,
     Txt,
     Xml,
+    Yaml,
     Zip,
     #[default]
     Unknown,
@@ -53,6 +54,7 @@ impl FileFormat {
             "rzk" | "rk" => Self::Rezkonv,
             "txt" => Self::Txt,
             "xml" => Self::Xml,
+            "yml" | "yaml" => Self::Yaml,
             "zip" => Self::Zip,
             _ => {
                 warn!("File '{filename}' has an unknown file format: {ext}");
@@ -84,6 +86,8 @@ impl FileFormat {
             ".rzk",
             ".txt",
             ".xml",
+            ".yml",
+            ".yaml",
             ".zip",
         ]
     }
@@ -219,6 +223,14 @@ mod tests {
                 "recipe.xml" => FileFormat::Xml,
                 "data.XML" => FileFormat::Xml,
                 "file.Xml" => FileFormat::Xml,
+            );
+        }
+
+        #[test]
+        fn test_yaml_format() {
+            assert_format!(
+                "recipe.yml" => FileFormat::Yaml,
+                "recipe.YAML" => FileFormat::Yaml,
             );
         }
 

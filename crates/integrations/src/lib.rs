@@ -60,6 +60,7 @@ where
         App::Crouton => crouton::parse(r),
         App::CopyMeThat => match file_format {
             FileFormat::Txt => copymethat::parse_txt(r),
+            FileFormat::Yaml => copymethat::parse_yaml(r),
             FileFormat::Zip => copymethat::parse_archive(r),
             _ => Err(Error::UnsupportedFileFormat),
         },
