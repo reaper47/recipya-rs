@@ -3,6 +3,7 @@ use std::io::{Read, Seek};
 use std::path::Path;
 
 use itertools::Itertools;
+use scraper::{ElementRef, Html, Selector};
 use serde::Deserialize;
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space1, till_line_ending};
@@ -27,7 +28,7 @@ use crate::{
     apps::helpers::{Ingredient, Instruction, read_file},
 };
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 struct RecipeYaml {
     name: String,
     description: Option<String>,
@@ -64,7 +65,10 @@ impl From<RecipeYaml> for Recipe {
         keywords = keywords.into_iter().unique().collect();
 
         let (cat, keywords) = match keywords.as_slice() {
-            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
+            [first, rest @ ..] => (
+                Some(first.clone()).filter(|s| !s.trim().is_empty()),
+                rest.to_vec(),
+            ),
             [] => (None, vec![]),
         };
 
@@ -321,6 +325,7 @@ where
     let (mut recipes, images) = extract_archive_contents(
         archive,
         Parsers {
+            html: Some(parse_html),
             txt: Some(parse_txt),
             yaml: Some(parse_yaml),
             ..Default::default()
@@ -461,6 +466,91 @@ where
     Ok(vec![recipe.into()])
 }
 
+/// Parses an HTML recipe file into a [`Recipe`] struct.
+pub fn parse_html<R>(mut r: R) -> Result<Vec<Recipe>>
+where
+    R: Read,
+{
+    let mut buf = String::new();
+    r.read_to_string(&mut buf)?;
+
+    let sel_name = Selector::parse("#name").unwrap();
+    let sel_desc = Selector::parse("#description").unwrap();
+    let sel_img = Selector::parse("img.recipeImage").unwrap();
+    let sel_rating = Selector::parse("#ratingValue").unwrap();
+    let sel_yield = Selector::parse("#recipeYield").unwrap();
+    let sel_source = Selector::parse("#original_link").unwrap();
+    let sel_notes = Selector::parse("#recipeNotes li.recipeNote").unwrap();
+    let sel_ing = Selector::parse("#recipeIngredients li.recipeIngredient").unwrap();
+    let sel_ins = Selector::parse("#recipeInstructions").unwrap();
+
+    let txt = |el: ElementRef<'_>, sel: &Selector| {
+        el.select(sel)
+            .next()
+            .map(|el| el.text().collect::<String>())
+            .map(|s| s.trim().to_string())
+    };
+
+    Ok(Html::parse_document(&buf)
+        .select(&Selector::parse("div.recipe").unwrap())
+        .map(|el| {
+            RecipeYaml {
+                name: txt(el, &sel_name).unwrap_or_default(),
+                description: txt(el, &sel_desc),
+                servings: txt(el, &sel_yield),
+                source: el
+                    .select(&sel_source)
+                    .next()
+                    .map(|el| el.attr("href").unwrap_or_default().to_string()),
+                rating: txt(el, &sel_rating)
+                    .map(|s| s.parse::<f32>().ok())
+                    .flatten(),
+                image: el.select(&sel_img).next().map(|el| {
+                    el.attr("src")
+                        .unwrap_or_default()
+                        .trim_start_matches("images/")
+                        .to_string()
+                }),
+                notes: {
+                    let notes = el
+                        .select(&sel_notes)
+                        .collect::<Vec<_>>()
+                        .iter()
+                        .map(|el| {
+                            let str = el.text().collect::<String>();
+                            str.trim().to_string()
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n\n");
+
+                    if notes.is_empty() { None } else { Some(notes) }
+                },
+                ingredients: el
+                    .select(&sel_ing)
+                    .collect::<Vec<_>>()
+                    .iter()
+                    .map(|el| el.text().collect::<String>())
+                    .collect::<Vec<_>>(),
+                directions: el
+                    .select(&sel_ins)
+                    .next()
+                    .map(|el| {
+                        el.children()
+                            .filter_map(ElementRef::wrap)
+                            .map(|el| {
+                                let txt = el.text().collect::<String>();
+                                txt.trim().to_string()
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default(),
+                ..Default::default()
+            }
+            .into()
+        })
+        .collect())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -509,6 +599,27 @@ mod tests {
             let got = parse_yaml(buf)?;
 
             pretty_assertions::assert_eq!(got, vec![results::yaml()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_cmt_html_ok() -> Result<()> {
+            let buf = Cursor::new(files::html());
+
+            let got = parse_html(buf)?;
+
+            pretty_assertions::assert_eq!(got.len(), 3);
+            let mut expected = results::html();
+            expected[0].image = vec![RecipeImageFieldEnum::URL(
+                "the_best_blueberry_pie_modjr.jpg".into(),
+            )];
+            expected[1].image = vec![RecipeImageFieldEnum::URL(
+                "zucchini_cornbread_nd0jw.jpg".into(),
+            )];
+            expected[2].image = vec![RecipeImageFieldEnum::URL(
+                "beef_wellington_4gaej.jpg".into(),
+            )];
+            pretty_assertions::assert_eq!(got, expected);
             Ok(())
         }
     }
@@ -752,6 +863,10 @@ exportedBy: |-
     https://cookbookmanager.com
 "#
         }
+
+        pub fn html<'a>() -> &'a str {
+            r#"<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"><meta name="escaped characters" content="&lt; &gt; &quot; &amp; &#39;"><meta name="copymethat_class_id_version" content="2"></head><html><style type="text/css">.recipe{margin-top:20px;border-top:solid 3px #000}#name{font-weight:700;font-size:130%;margin:10px 0}#link{margin-bottom:10px}.recipeImage{width:125px}#categories,#description,#extra_info,#recipeIngredients,#recipeInstructions,#recipeNotes,#servings{margin:10px 0}#recipeIngredient_header,#recipeInstructions_header,#recipeNotes_header{font-weight:700}.instruction_subheader,.recipeIngredient_subheader{font-weight:700;margin:5px 0}.recipeIngredient_spacer{height:10px}</style><body><div class="recipe"><div id="name">The best blueberry pie</div><img class="recipeImage" src="images/the_best_blueberry_pie_modjr.jpg" width="120px"><div id="description">There is nothing like it</div><div id="extra_info"><span id="rating">Rated<span id="ratingValue">4</span>/5</span></div><div id="servings">Servings:<a id="recipeYield">4</a></div><div id="recipeIngredient_header">Ingredients</div><ul id="recipeIngredients"><li class="recipeIngredient">1 cup of blueberries</li><li class="recipeIngredient">50g of milk</li><li class="recipeIngredient">lemon juice</li></ul><div id="recipeInstructions_header">Steps</div><ol id="recipeInstructions"><li class="instruction" value="1">Mix all ingredients together</li><li class="instruction" value="2">Preheat oven to 350f</li><li class="instruction" value="3">Cook for 1 hour</li></ol><div id="recipeNotes_header">Notes</div><ul id="recipeNotes"><li class="recipeNote">Nothing in paritcular</li></ul></div><div class="recipe"><div id="name">Zucchini Cornbread</div><div id="link">Adapted from<a id="original_link" href="https://southern-bytes.com/zucchini-cornbread-recipe/">https://southern-bytes.com/zucchini-cornbread-recipe/</a></div><img class="recipeImage" src="images/zucchini_cornbread_nd0jw.jpg" width="120px"><div id="servings">Servings:<a id="recipeYield">9 SLICES</a></div><div id="recipeIngredient_header">Ingredients</div><ul id="recipeIngredients"><li class="recipeIngredient">¾ cup yellow cornmeal</li><li class="recipeIngredient">1 ¼ cup all-purpose flour</li><li class="recipeIngredient">2 teaspoons baking powder</li><li class="recipeIngredient">½ teaspoon baking soda</li><li class="recipeIngredient">½ teaspoon kosher salt</li><li class="recipeIngredient">½ cup butter melted and cooled</li><li class="recipeIngredient">⅓ cup sugar</li><li class="recipeIngredient">2 large eggs</li><li class="recipeIngredient">⅔ cup buttermilk</li><li class="recipeIngredient">1 cup zucchini grated and very tightly packed</li></ul><div id="recipeInstructions_header">Steps</div><ol id="recipeInstructions"><li class="instruction" value="1">Grate your zucchini if you have not already done so and preheat the oven to 400°F.</li><li class="instruction" value="2">Drop about a tablespoon of butter into an 8×8 or 9×9 square baking pan or a skillet and set it in the oven as it preheats.</li><li class="instruction" value="3">In a large bowl, combine the flour, cornmeal, baking powder, baking soda, and salt.</li><li class="instruction" value="4">In another bowl, whisk the melted butter and sugar together.</li><li class="instruction" value="5">Combine the eggs and buttermilk, then combine this with the butter and sugar.</li><li class="instruction" value="6">Fold the wet ingredients into the dry ingredients, and stir until just combined.</li><li class="instruction" value="7">Stir in the shredded zucchini and fold gently to combine.</li><li class="instruction" value="8">Remove the warm baking dish from the oven and turn it so the butter runs up the sides of the pan.</li><li class="instruction" value="9">Pour the batter into the prepared dish and return it to the hot oven. (If the dish is glass, set it on a trivet or towel while you pour – not a cold surface or the glass can explode.)</li><li class="instruction" value="10">Bake for about 30 minutes, depending on the size of the pan* that you use, until the top is golden brown and a toothpick inserted into the center comes out clean. (Without wet batter on it – crumbs are okay.)</li><li class="instruction" value="11">Allow the cornbread to cool slightly before you slice it, then serve with honey butter.</li></ol><div id="recipeNotes_header">Notes</div><ul id="recipeNotes"><li class="recipeNote">Baking Times</li><li class="recipeNote">25-35 minutes for a 9×9 dish, a pie pan, or a small skillet (10-inch)</li><li class="recipeNote">35-40 minutes for an 8×8 dish</li><li class="recipeNote">Buttermilk Substitute</li><li class="recipeNote">Add 1 tablespoon of fresh lemon juice or white vinegar to a liquid measuring cup. Fill with milk to the ⅔ line. Let sit for 10 minutes, then stir before using.</li><li class="recipeNote">Preheat the baking dish for extra crispy edges on your cornbread.</li><li class="recipeNote">Try not to overmix your cornbread or it will be tough.</li><li class="recipeNote">Grate zucchini with a food processor to make it easier.</li><li class="recipeNote">Freeze extra grated zucchini to use for later. (I like to freeze 1-2 cups of zucchini at a time.)</li><li class="recipeNote">Variations</li><li class="recipeNote">Make it Savory – Exclude the sugar and add ½ cup shredded cheddar cheese, ½ cup fresh corn, and 1-2 diced jalapeños.</li><li class="recipeNote">Use Different Types of Squash – This recipe works great with yellow squash!</li><li class="recipeNote">Storage</li><li class="recipeNote">Once cooled, store in an airtight container or freeze in small portions.</li></ul></div><div class="recipe"><div id="name">Beef Wellington</div><div id="link">Adapted from<a id="original_link" href="https://marketgrow.com/beef-wellington/">https://marketgrow.com/beef-wellington/</a></div><img class="recipeImage" src="images/beef_wellington_4gaej.jpg" width="120px"><div id="description">The best</div><div id="servings">Servings:<a id="recipeYield">5</a></div><div id="recipeIngredient_header">Ingredients</div><ul id="recipeIngredients"><li class="recipeIngredient">1 (2-pound) beef tenderloin, trimmed</li><li class="recipeIngredient">Salt and black pepper, to taste</li><li class="recipeIngredient">2 tablespoons olive oil</li><li class="recipeIngredient">2 tablespoons Dijon mustard</li><li class="recipeIngredient">1 tablespoon unsalted butter</li><li class="recipeIngredient">1 pound mushrooms (such as cremini or button), finely chopped</li><li class="recipeIngredient">2 cloves garlic, minced</li><li class="recipeIngredient">1 tablespoon fresh thyme leaves, chopped</li><li class="recipeIngredient">1/4 cup dry white wine</li><li class="recipeIngredient">8-10 slices prosciutto</li><li class="recipeIngredient">1 sheet puff pastry, thawed</li><li class="recipeIngredient">1 egg, beaten</li><li class="recipeIngredient">1 tablespoon all-purpose flour (for dusting)</li></ul><div id="recipeInstructions_header">Steps</div><ol id="recipeInstructions"><div class="instruction instruction_subheader">Sear the beef:</div><li class="instruction" value="1">Preheat your oven to 400°F (200°C). Season the beef tenderloin generously with salt and pepper. Heat olive oil in a large skillet over high heat. Sear the beef on all sides until browned, about 2-3 minutes per side. Remove from the skillet and brush with Dijon mustard while warm. Set aside to cool.</li><div class="instruction instruction_subheader">Prepare the mushroom duxelles:</div><li class="instruction" value="1">In the same skillet, melt butter over medium heat. Add the finely chopped mushrooms, garlic, and thyme. Cook for about 10 minutes, stirring occasionally, until the mushrooms release their moisture and become dry. Add white wine and cook until it has evaporated. Season with salt and pepper. Remove from heat and let cool completely.</li><div class="instruction instruction_subheader">Assemble the Wellington:</div><li class="instruction" value="1">Lay a large piece of plastic wrap on a flat surface. Arrange the prosciutto slices, slightly overlapping, to form a rectangle large enough to wrap around the beef. Spread the cooled mushroom duxelles evenly over the prosciutto. Place the beef on top and carefully roll it up tightly using the plastic wrap, twisting the ends to seal. Refrigerate for 15-20 minutes to set.</li><div class="instruction instruction_subheader">Wrap in puff pastry:</div><li class="instruction" value="1">Roll out the puff pastry on a lightly floured surface to a size that will fully encase the beef. Unwrap the beef from the plastic wrap and place it in the center of the pastry. Brush the edges of the pastry with beaten egg. Fold over the pastry, trimming any excess, and seal the edges. Place seam-side down on a baking sheet. Brush the top with more beaten egg.</li><div class="instruction instruction_subheader">Bake the Wellington:</div><li class="instruction" value="1">Bake in the preheated oven for 25-30 minutes, or until the pastry is golden brown and the internal temperature of the beef reaches your desired doneness (135°F/57°C for medium-rare). Remove from the oven and let rest for 10 minutes before slicing.</li><div class="instruction instruction_subheader">Serve:</div><li class="instruction" value="1">Slice the Beef Wellington and serve warm, accompanied by your choice of sides such as roasted vegetables or mashed potatoes.</li><li class="instruction" value="2">Enjoy your Beef Wellington as a luxurious and impressive dish that’s perfect for any celebration or special dinner, delivering a blend of flavors and textures that are sure to impress.</li></ol></div></body></html>"#
+        }
     }
 
     mod results {
@@ -983,6 +1098,10 @@ exportedBy: |-
                 recipe_yield: vec![RecipeRecipeYieldFieldEnum::Text("1 Bowl".into())],
                 ..Default::default()
             }
+        }
+
+        pub fn html() -> Vec<Recipe> {
+            vec![txt2(), txt1(), txt3()]
         }
     }
 }
