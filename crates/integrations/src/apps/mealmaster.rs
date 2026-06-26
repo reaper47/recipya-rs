@@ -1595,7 +1595,7 @@ Typed for you by Karen Mintzias
         }
 
         pub fn recipe_cookmate_file2<'a>() -> &'a str {
-            r#"----- Recipe via Cookmate [Meal-Master Export Format] -----
+            r"----- Recipe via Cookmate [Meal-Master Export Format] -----
 
                   Title: Simple White Cake
             Categories:
@@ -1688,7 +1688,7 @@ Typed for you by Karen Mintzias
             -----
 
 
-"#
+"
         }
     }
 

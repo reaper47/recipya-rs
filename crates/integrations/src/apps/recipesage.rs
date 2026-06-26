@@ -589,10 +589,10 @@ mod tests {
             let got = parse_xml(buf)?;
 
             let mut want = results::all_recipes();
-            want.iter_mut().for_each(|r| {
+            for r in &mut want {
                 r.prep_time = seconds_to_duration(15 * 60);
                 r.cook_time = seconds_to_duration(15 * 60);
-            });
+            }
             pretty_assertions::assert_eq!(got, want);
             Ok(())
         }

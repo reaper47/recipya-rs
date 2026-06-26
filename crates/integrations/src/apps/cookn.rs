@@ -333,7 +333,7 @@ where
 
     let (mut recipes, images) = extract_archive_contents(
         archive,
-        Parsers {
+        &Parsers {
             html: Some(parse_html),
             ..Default::default()
         },
@@ -354,6 +354,7 @@ where
     Ok(recipes)
 }
 
+#[allow(clippy::too_many_lines)]
 fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
     let mut buf = String::new();
     r.read_to_string(&mut buf)?;
@@ -371,11 +372,11 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
 
     let parts = summary.split("\n\n").collect::<Vec<_>>();
     let mut author: Option<&str> = None;
-    if parts.len() > 0 {
+    if !parts.is_empty() {
         if parts[0].starts_with("from the kitchen of:") {
-            author = Some(parts[0].trim_start_matches("from the kitchen of:").trim())
+            author = Some(parts[0].trim_start_matches("from the kitchen of:").trim());
         } else if parts[0].starts_with("By ") {
-            author = Some(parts[0].trim_start_matches("By ").trim())
+            author = Some(parts[0].trim_start_matches("By ").trim());
         }
     }
 
@@ -430,8 +431,7 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
                     Ingredient::Line(Cow::Owned(
                         [quantity, unit, prefix, food, suffix]
                             .into_iter()
-                            .filter(|o| o.is_some())
-                            .map(|o| o.unwrap())
+                            .flatten()
                             .collect::<Vec<_>>()
                             .join(" "),
                     ))
@@ -452,13 +452,16 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
                 {
                     return None;
                 }
-                Some(if let Some(tip) = s.strip_prefix("TIP:") {
-                    Instruction::Tip(Cow::Borrowed(tip.trim()))
-                } else if s.chars().all(|c| c.is_uppercase() || c.is_whitespace()) {
-                    Instruction::Section(Cow::Borrowed(s))
-                } else {
-                    Instruction::Line(Cow::Borrowed(s))
-                })
+                Some(s.strip_prefix("TIP:").map_or_else(
+                    || {
+                        if s.chars().all(|c| c.is_uppercase() || c.is_whitespace()) {
+                            Instruction::Section(Cow::Borrowed(s))
+                        } else {
+                            Instruction::Line(Cow::Borrowed(s))
+                        }
+                    },
+                    |tip| Instruction::Tip(Cow::Borrowed(tip.trim())),
+                ))
             })
             .collect(),
         cook_time: doc
@@ -519,7 +522,9 @@ mod tests {
 
             pretty_assertions::assert_eq!(got.len(), 3);
             let want = results::txt();
-            got.iter_mut().for_each(|r| r.image.clear());
+            for r in &mut got {
+                r.image.clear();
+            }
             for name in [
                 "Apple Raisin Strata",
                 "Blackberry Syrup",
@@ -552,6 +557,7 @@ mod tests {
     }
 
     mod files {
+        #[allow(clippy::too_many_lines)]
         pub fn html<'a>() -> &'a str {
             r#"	<!DOCTYPE html>
 	<html lang="en">
@@ -679,6 +685,7 @@ mod tests {
 "#
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn txt<'a>() -> &'a str {
             r"@@@@@
                 Apple Raisin Strata
@@ -1027,6 +1034,7 @@ mod tests {
 
         use super::*;
 
+        #[allow(clippy::too_many_lines)]
         pub fn txt() -> Vec<Recipe> {
             vec![
                 Recipe {

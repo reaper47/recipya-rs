@@ -11,6 +11,7 @@ pub enum App {
     ChefTap,
     #[strum(to_string = "Computer Cuisine Deluxe")]
     ComputerCuisineDeluxe,
+    CookBook,
     Cooklang,
     #[strum(to_string = "COOKmate")]
     CookMate,

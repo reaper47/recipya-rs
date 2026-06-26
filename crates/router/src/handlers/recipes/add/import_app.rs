@@ -91,6 +91,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             integrations::App::ComputerCuisineDeluxe => {
                 ReportTypeFull::app(TertiaryReportType::computer_cuisine_deluxe())
             }
+            integrations::App::CookBook => ReportTypeFull::app(TertiaryReportType::cookbook()),
             integrations::App::Cooklang => ReportTypeFull::app(TertiaryReportType::cooklang()),
             integrations::App::CookMate => ReportTypeFull::app(TertiaryReportType::cookmate()),
             integrations::App::Crouton => ReportTypeFull::app(TertiaryReportType::crouton()),

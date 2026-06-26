@@ -499,7 +499,7 @@ where
     let archive = zip::ZipArchive::new(r)?;
     let (mut recipes, images) = extract_archive_contents(
         archive,
-        Parsers {
+        &Parsers {
             xml: Some(cookmate::parse_xml),
             ..Default::default()
         },

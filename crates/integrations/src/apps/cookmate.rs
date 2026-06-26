@@ -274,7 +274,7 @@ where
     let archive = ZipArchive::new(r)?;
     let (mut recipes, images) = extract_archive_contents(
         archive,
-        Parsers {
+        &Parsers {
             xml: Some(parse_xml),
             html: Some(parse_html),
             ..Default::default()
@@ -488,7 +488,7 @@ mod tests {
                 .into_iter()
                 .zip(got.clone())
                 .map(|(mut a, b)| {
-                    a.image = b.image.clone();
+                    a.image = b.image;
                     a
                 })
                 .collect::<Vec<_>>();

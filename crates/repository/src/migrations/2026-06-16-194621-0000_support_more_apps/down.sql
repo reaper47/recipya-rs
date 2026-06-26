@@ -3,5 +3,6 @@ WHERE
   name IN (
     'computer cuisine deluxe',
     'cookn',
-    'copy me that'
+    'copy me that',
+    'cookbook'
   );

@@ -21,6 +21,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             "https://www.inakasoftware.com/computer-cuisine-deluxe-mac-windows-recipe-software-organizer/",
             vec![".csv"],
         ),
+        (
+            "CookBook",
+            "https://cookbookmanager.com",
+            vec![".txt", ".zip"],
+        ),
         ("Cooklang", "https://cooklang.org/", vec![".cook"]),
         (
             "COOKmate",

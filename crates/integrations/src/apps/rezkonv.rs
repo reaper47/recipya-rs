@@ -699,7 +699,7 @@ minutes of baking.
         }
 
         pub fn cookmate2<'a>() -> &'a str {
-            r#"===== Recipe via Cookmate [REZKONV Export Format] =====
+            r"===== Recipe via Cookmate [REZKONV Export Format] =====
 
                   Titel: Simple White Cake
             Kategorien:
@@ -824,7 +824,7 @@ minutes of baking.
             =====
 
 
-"#
+"
         }
 
         #[allow(clippy::too_many_lines)]
@@ -1150,6 +1150,7 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
             ]
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn cookmate2() -> Vec<Recipe> {
             vec![
                 Recipe {

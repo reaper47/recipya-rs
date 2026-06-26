@@ -4,6 +4,7 @@ pub mod accuchef;
 pub mod bigoven;
 pub mod cheftap;
 pub mod computer_cuisine_deluxe;
+pub mod cookbook;
 pub mod cooklang;
 pub mod cookmate;
 pub mod cookml;

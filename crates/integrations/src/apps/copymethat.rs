@@ -48,6 +48,7 @@ struct RecipeYaml {
 }
 
 impl From<RecipeYaml> for Recipe {
+    #[allow(clippy::too_many_lines)]
     fn from(r: RecipeYaml) -> Self {
         let mut images = r.images.unwrap_or_default();
         images.extend_from_slice(r.image.map(|s| vec![s]).unwrap_or_default().as_slice());
@@ -84,13 +85,10 @@ impl From<RecipeYaml> for Recipe {
                 .description
                 .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
                 .unwrap_or_default(),
-            image: images
-                .into_iter()
-                .map(|s| RecipeImageFieldEnum::URL(s))
-                .collect(),
+            image: images.into_iter().map(RecipeImageFieldEnum::URL).collect(),
             keywords: keywords
                 .into_iter()
-                .map(|k| RecipeKeywordsFieldEnum::TextOrURL(k))
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect::<Vec<_>>(),
             name: vec![r.name],
             prep_time: r
@@ -177,7 +175,7 @@ impl From<RecipeYaml> for Recipe {
                     }
                     Ingredient::Section(s) => {
                         acc.push(RecipeRecipeIngredientFieldEnum::new_section(
-                            &s.to_string(),
+                            s.as_ref(),
                             &[],
                         ));
                         acc
@@ -215,7 +213,7 @@ impl From<RecipeYaml> for Recipe {
                     }
                     Instruction::Section(s) => {
                         acc.push(RecipeRecipeInstructionsFieldEnum::new_section(
-                            &s.to_string(),
+                            s.as_ref(),
                             Vec::<String>::new(),
                         ));
                         acc
@@ -257,7 +255,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                 .map(|n| {
                     vec![Comment::new(
                         n.lines()
-                            .map(|s| s.trim())
+                            .map(str::trim)
                             .filter(|s| !s.is_empty())
                             .collect::<Vec<_>>()
                             .join("\n\n"),
@@ -299,7 +297,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                     }
                     Instruction::Section(s) => {
                         acc.push(RecipeRecipeInstructionsFieldEnum::new_section(
-                            &s.to_string(),
+                            &s,
                             Vec::<String>::new(),
                         ));
                         acc
@@ -324,7 +322,7 @@ where
 
     let (mut recipes, images) = extract_archive_contents(
         archive,
-        Parsers {
+        &Parsers {
             html: Some(parse_html),
             txt: Some(parse_txt),
             yaml: Some(parse_yaml),
@@ -368,7 +366,6 @@ fn parse_txt_helper<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
         ingredients: parse_ingredients,
         instructions: parse_instructions,
         notes: opt(parse_notes),
-        ..Default::default()
     }}
     .parse_next(input)
 }
@@ -392,7 +389,7 @@ fn parse_description<'s>(input: &mut &'s str) -> WResult<&'s str> {
     terminated(till_line_ending, multispace0).parse_next(input)
 }
 
-fn parse_rating<'s>(input: &mut &'s str) -> WResult<f32> {
+fn parse_rating(input: &mut &str) -> WResult<f32> {
     delimited(literal("Rated "), digit1, (till_line_ending, multispace0))
         .parse_next(input)
         .map(|s| s.parse().unwrap_or_default())
@@ -467,6 +464,10 @@ where
 }
 
 /// Parses an HTML recipe file into a [`Recipe`] struct.
+///
+/// # Panics
+///
+/// Panics if the HTML is not valid or does not contain the expected elements.
 pub fn parse_html<R>(mut r: R) -> Result<Vec<Recipe>>
 where
     R: Read,
@@ -481,7 +482,7 @@ where
     let sel_yield = Selector::parse("#recipeYield").unwrap();
     let sel_source = Selector::parse("#original_link").unwrap();
     let sel_notes = Selector::parse("#recipeNotes li.recipeNote").unwrap();
-    let sel_ing = Selector::parse("#recipeIngredients li.recipeIngredient").unwrap();
+    let sel_inredient = Selector::parse("#recipeIngredients li.recipeIngredient").unwrap();
     let sel_ins = Selector::parse("#recipeInstructions").unwrap();
 
     let txt = |el: ElementRef<'_>, sel: &Selector| {
@@ -502,9 +503,7 @@ where
                     .select(&sel_source)
                     .next()
                     .map(|el| el.attr("href").unwrap_or_default().to_string()),
-                rating: txt(el, &sel_rating)
-                    .map(|s| s.parse::<f32>().ok())
-                    .flatten(),
+                rating: txt(el, &sel_rating).and_then(|s| s.parse::<f32>().ok()),
                 image: el.select(&sel_img).next().map(|el| {
                     el.attr("src")
                         .unwrap_or_default()
@@ -526,7 +525,7 @@ where
                     if notes.is_empty() { None } else { Some(notes) }
                 },
                 ingredients: el
-                    .select(&sel_ing)
+                    .select(&sel_inredient)
                     .collect::<Vec<_>>()
                     .iter()
                     .map(|el| el.text().collect::<String>())
@@ -870,15 +869,6 @@ exportedBy: |-
     }
 
     mod results {
-        use schema_org::{
-            AggregateRating, Comment, DurationOrText, Energy, Mass, NutritionInformation,
-            field::{
-                RecipeDescriptionFieldEnum, RecipeKeywordsFieldEnum,
-                RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
-                RecipeRecipeYieldFieldEnum,
-            },
-        };
-
         use super::*;
 
         pub fn txt1() -> Recipe {

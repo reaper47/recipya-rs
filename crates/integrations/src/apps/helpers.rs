@@ -193,7 +193,7 @@ pub(super) struct Parsers {
 
 pub(super) fn extract_archive_contents<R>(
     mut archive: ZipArchive<R>,
-    parsers: Parsers,
+    parsers: &Parsers,
 ) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,
