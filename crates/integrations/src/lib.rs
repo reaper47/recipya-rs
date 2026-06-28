@@ -20,8 +20,8 @@ use schema_org::Recipe;
 use crate::apps::cooklang::CookLang;
 use crate::apps::{
     accuchef, bigoven, cheftap, computer_cuisine_deluxe, cookbook, cookmate, cookml, cookn,
-    copymethat, crouton, kalorio, mastercook, mealmaster, paprika, recipemd, recipesage, recipya,
-    rezkonv, saffron,
+    copymethat, crouton, homecookin, kalorio, mastercook, mealmaster, paprika, recipemd,
+    recipesage, recipya, rezkonv, saffron,
 };
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
@@ -67,6 +67,13 @@ where
             FileFormat::Txt => copymethat::parse_txt(r),
             FileFormat::Yaml => copymethat::parse_yaml(r),
             FileFormat::Zip => copymethat::parse_archive(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
+        App::HomeCookin => match file_format {
+            FileFormat::Hc => homecookin::parse_hc(r),
+            FileFormat::MZ2 => mastercook::parse_mz2(r),
+            FileFormat::Txt => homecookin::parse_txt(r),
+            FileFormat::Xml => homecookin::parse_xml(r),
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::Kalorio => match file_format {

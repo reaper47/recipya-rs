@@ -4,4 +4,5 @@ VALUES
   ('computer cuisine deluxe'),
   ('cookn'),
   ('copy me that'),
-  ('cookbook');
+  ('cookbook'),
+  ('home cookin');

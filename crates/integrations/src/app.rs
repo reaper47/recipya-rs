@@ -20,6 +20,8 @@ pub enum App {
     #[strum(to_string = "Copy Me That")]
     CopyMeThat,
     Crouton,
+    #[strum(to_string = "Home Cookin")]
+    HomeCookin,
     Kalorio,
     MasterCook,
     MealMaster,

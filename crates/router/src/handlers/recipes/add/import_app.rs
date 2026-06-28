@@ -97,6 +97,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             integrations::App::Crouton => ReportTypeFull::app(TertiaryReportType::crouton()),
             integrations::App::Cookn => ReportTypeFull::app(TertiaryReportType::cookn()),
             integrations::App::CopyMeThat => ReportTypeFull::app(TertiaryReportType::copymethat()),
+            integrations::App::HomeCookin => ReportTypeFull::app(TertiaryReportType::home_cookin()),
             integrations::App::Kalorio => ReportTypeFull::app(TertiaryReportType::kalorio()),
             integrations::App::MasterCook => ReportTypeFull::app(TertiaryReportType::mastercook()),
             integrations::App::MealMaster => ReportTypeFull::app(TertiaryReportType::mealmaster()),

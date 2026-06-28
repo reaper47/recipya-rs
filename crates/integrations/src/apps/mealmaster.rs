@@ -13,6 +13,7 @@
 //!     - Meal-Master v8.06
 //!     - `COOKmate`
 //!     - Now You're Cooking! v4.72 (Meal-Master Export Format)
+//!     - Home Cookin
 
 use std::borrow::Cow;
 use std::io::{Read, Seek};
@@ -20,20 +21,27 @@ use std::io::{Read, Seek};
 use url::Url;
 use winnow::ModalResult;
 use winnow::Parser;
-use winnow::ascii::{Caseless, line_ending, multispace0, multispace1, space0, space1};
-use winnow::combinator::{alt, delimited, opt, peek, preceded, repeat, separated, seq, terminated};
-use winnow::error::{ContextError, ErrMode};
+use winnow::ascii::{
+    Caseless, line_ending, multispace0, multispace1, space0, space1, till_line_ending,
+};
+use winnow::combinator::{
+    alt, delimited, not, opt, peek, preceded, repeat, separated, seq, terminated,
+};
+use winnow::error::{ContextError, ErrMode, StrContext};
 
-use schema_org::Recipe;
 use schema_org::field::{
     RecipeAuthorFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
     RecipeRecipeInstructionsFieldEnum,
 };
+use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};
 use winnow::token::{literal, one_of, take_until, take_while};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
+use crate::apps::recipya::at_context;
 use crate::helpers::{to_is_based_on, to_yield};
 use crate::{Error, Result};
+
+const SKIPPED: &str = "SKIPPED";
 
 struct MealMasterRecipe {
     author: Option<String>,
@@ -44,8 +52,10 @@ struct MealMasterRecipe {
     ingredients: Vec<RecipeRecipeIngredientFieldEnum>,
     instructions: Vec<RecipeRecipeInstructionsFieldEnum>,
     source: String,
+    nutrition: Option<NutritionInformation>,
 }
 
+#[derive(Default)]
 #[allow(dead_code)]
 struct RecipeComponents<'a> {
     author: Option<&'a str>,
@@ -57,6 +67,7 @@ struct RecipeComponents<'a> {
     ingredients: Vec<Ingredient<'a>>,
     ingredient_notes: Option<Ingredient<'a>>,
     instructions: Vec<Instruction<'a>>,
+    nutrition: Option<NutritionInformation>,
 }
 
 impl From<RecipeComponents<'_>> for MealMasterRecipe {
@@ -79,13 +90,19 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
         Self {
             author: r.author.map(String::from),
             title: r.title.to_string(),
-            category: items.map(|(a, _b)| a.to_string()),
+            category: items.map(|(a, _)| a.to_string()),
             keywords: items
-                .map(|(_a, b)| b.iter().map(std::string::ToString::to_string).collect())
+                .map(|(_, b)| {
+                    b.iter()
+                        .filter(|&s| s != &"and")
+                        .map(std::string::ToString::to_string)
+                        .collect()
+                })
                 .unwrap_or_default(),
             yield_: r.servings,
             ingredients: r.ingredients.to_sections(),
             instructions,
+            nutrition: r.nutrition,
             source: format!("{} {}", r.header.0, r.header.1.trim_end_matches('-').trim()),
         }
     }
@@ -131,6 +148,7 @@ impl From<MealMasterRecipe> for Recipe {
                 .filter(|s| !s.is_empty())
                 .map(|s| vec![s])
                 .unwrap_or_default(),
+            nutrition: r.nutrition.map(|n| vec![n]).unwrap_or_default(),
             recipe_category: r
                 .category
                 .as_ref()
@@ -157,6 +175,7 @@ where
 
     Ok(parse_meal_master_recipe(&mut content.as_str())?
         .into_iter()
+        .filter(|r| r.title != SKIPPED)
         .map(Recipe::from)
         .collect())
 }
@@ -177,20 +196,36 @@ fn parse_meal_master_recipe(input: &mut &str) -> Result<Vec<MealMasterRecipe>> {
 }
 
 fn parse_recipe<'s>(input: &mut &'s str) -> ModalResult<RecipeComponents<'s>> {
-    seq! {RecipeComponents {
-        _: repeat(0.., line_ending).fold(|| (), |(), _| ()),
-        header: parse_header,
-        title: parse_title,
-        categories: parse_categories,
-        tags: opt(parse_tags),
-        servings: parse_servings,
-        author: opt(parse_author),
-        ingredients: parse_ingredients,
-        ingredient_notes: opt(parse_ingredient_notes),
-        instructions: parse_instructions,
-        _: parse_footer,
-    }}
+    alt((
+        seq! {RecipeComponents {
+            _: repeat(0.., line_ending).fold(|| (), |(), _| ()),
+            header: parse_header,
+            title: parse_title,
+            categories: parse_categories,
+            tags: opt(parse_tags),
+            servings: parse_servings,
+            author: opt(parse_author),
+            ingredients: parse_ingredients,
+            ingredient_notes: opt(parse_ingredient_notes),
+            instructions: parse_instructions,
+            nutrition: opt(parse_nutrition),
+            _: opt(parse_exported),
+            _: parse_footer,
+        }},
+        skip_to_next_header,
+    ))
     .parse_next(input)
+}
+
+fn skip_to_next_header<'s>(input: &mut &'s str) -> ModalResult<RecipeComponents<'s>> {
+    const HEADER: &str = "MMMMM----- Meal-Master Recipe";
+    let _: ModalResult<&str, ContextError> = literal(HEADER).parse_next(input);
+    take_until(0.., HEADER).parse_next(input)?;
+
+    Ok(RecipeComponents {
+        title: SKIPPED,
+        ..Default::default()
+    })
 }
 
 fn parse_header<'s>(input: &mut &'s str) -> ModalResult<(&'s str, &'s str)> {
@@ -407,7 +442,7 @@ fn ingredtwo<'s>(input: &mut &'s str) -> ModalResult<Ingredient<'s>> {
 
 fn parse_amount<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     take_while(1..=7, |c: char| {
-        is_vchar_or_space(c) || c == '.' || c == '/'
+        is_vchar_or_space(c) || c == '.' || c == '/' || c == '-'
     })
     .parse_next(input)
 }
@@ -482,6 +517,7 @@ fn parse_units3<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
 fn parse_units4<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     alt((
         alt((
+            Caseless("pk"),
             Caseless("st"),
             Caseless("cv"),
             Caseless("sp"),
@@ -540,8 +576,10 @@ fn parse_instructions<'s>(input: &mut &'s str) -> ModalResult<Vec<Instruction<'s
 }
 
 fn parse_instruction<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
+    peek(not((multispace0, literal("Exported from")))).parse_next(input)?;
+
     terminated(
-        take_until_earliest_of(&["\n-----", "\n\n"]).verify(|line: &str| {
+        take_until_earliest_of(&["\n-----", "\n\n", "Calories: "]).verify(|line: &str| {
             !line.trim_start().starts_with("MMMMM") && !line.trim_start().starts_with("-----")
         }),
         repeat(1.., line_ending).fold(|| (), |(), _| ()),
@@ -578,7 +616,7 @@ fn parse_section<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
         parse_separator,
         terminated(
             delimited(parse_dashes, parse_not_dash, parse_dashes),
-            line_ending,
+            (line_ending, opt(line_ending)),
         ),
     )
     .parse_next(input)
@@ -591,12 +629,73 @@ fn parse_dashes<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
 fn parse_not_dash<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     take_while(1.., |c: char| c != '-').parse_next(input)
 }
+
+fn parse_nutrition<'s>(input: &mut &'s str) -> ModalResult<NutritionInformation> {
+    peek((multispace0, literal("Calories: "))).parse_next(input)?;
+
+    delimited(space0, take_until(1.., "\n\n"), (line_ending, line_ending))
+        .map(|s: &str| {
+            let parts = s
+                .split(',')
+                .filter_map(|parts| parts.split_once(':'))
+                .map(|t| (t.0.trim().to_lowercase(), t.1.trim().to_lowercase()))
+                .collect::<Vec<_>>();
+
+            let mass = |s: &str| {
+                parts
+                    .iter()
+                    .find(|t| t.0.starts_with(s))
+                    .map(|t| vec![Mass::new(&t.1)])
+                    .unwrap_or_default()
+            };
+
+            NutritionInformation {
+                calories: parts
+                    .iter()
+                    .find(|t| t.0.starts_with("calories"))
+                    .map(|t| vec![Energy::new(&t.1)])
+                    .unwrap_or_default(),
+                carbohydrate_content: mass("carbohydrates"),
+                cholesterol_content: mass("cholesterol"),
+                context: at_context(),
+                fat_content: mass("fat"),
+                fiber_content: mass("fiber"),
+                protein_content: mass("protein"),
+                saturated_fat_content: mass("saturated fat"),
+                serving_size: vec![],
+                sodium_content: mass("sodium"),
+                sugar_content: mass("sugar"),
+                r#type: AtType::NutritionInformation.to_opt(),
+                trans_fat_content: mass("trans fat"),
+                unsaturated_fat_content: mass("unsaturated fat"),
+            }
+        })
+        .parse_next(input)
+}
+
+fn parse_exported<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
+    delimited(
+        multispace0,
+        terminated(literal("Exported from"), till_line_ending),
+        line_ending,
+    )
+    .parse_next(input)
+}
+
 fn parse_footer<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
-    delimited(space0, parse_separator, multispace0).parse_next(input)
+    (
+        space0,
+        opt((literal("Exported from"), take_until(0.., '\n'))),
+        multispace0,
+        parse_separator,
+        multispace0,
+    )
+        .take()
+        .parse_next(input)
 }
 
 fn parse_separator<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
-    delimited(
+    (
         space0,
         alt((
             literal("MMMMM"),
@@ -608,8 +707,9 @@ fn parse_separator<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
         )),
         space0,
     )
-    .take()
-    .parse_next(input)
+        .take()
+        .context(StrContext::Label("separator"))
+        .parse_next(input)
 }
 
 #[cfg(test)]
@@ -628,8 +728,7 @@ mod tests {
 
         #[test]
         fn test_recipe_unspecified_version() -> Result<()> {
-            let file = recipe_unspecified_version_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_unspecified_version_file());
 
             let got = parse(buf)?;
 
@@ -639,8 +738,7 @@ mod tests {
 
         #[test]
         fn test_recipes_unspecified_version() -> Result<()> {
-            let file = recipes_unspecified_version_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipes_unspecified_version_file());
 
             let got = parse(buf)?;
 
@@ -650,8 +748,7 @@ mod tests {
 
         #[test]
         fn test_v6_14_ok() -> Result<()> {
-            let file = recipe_v6_14_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v6_14_file());
 
             let got = parse(buf)?;
 
@@ -661,8 +758,7 @@ mod tests {
 
         #[test]
         fn test_v6_20_ok() -> Result<()> {
-            let file = recipe_v6_20_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v6_20_file());
 
             let got = parse(buf)?;
 
@@ -672,8 +768,7 @@ mod tests {
 
         #[test]
         fn test_v7_01_ok() -> Result<()> {
-            let file = recipe_v7_01_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v7_01_file());
 
             let got = parse(buf)?;
 
@@ -683,8 +778,7 @@ mod tests {
 
         #[test]
         fn test_v7_04_ok() -> Result<()> {
-            let file = recipe_v7_04_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v7_04_file());
 
             let got = parse(buf)?;
 
@@ -694,8 +788,7 @@ mod tests {
 
         #[test]
         fn test_v7_07_ok() -> Result<()> {
-            let file = recipe_v7_07_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v7_07_file());
 
             let got = parse(buf)?;
 
@@ -705,8 +798,7 @@ mod tests {
 
         #[test]
         fn test_v8_00_ok() -> Result<()> {
-            let file = recipe_v8_00_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v8_00_file());
 
             let got = parse(buf)?;
 
@@ -716,8 +808,7 @@ mod tests {
 
         #[test]
         fn test_v8_01_ok() -> Result<()> {
-            let file = recipe_v8_01_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v8_01_file());
 
             let got = parse(buf)?;
 
@@ -727,8 +818,7 @@ mod tests {
 
         #[test]
         fn test_v8_02_ok() -> Result<()> {
-            let file = recipe_v8_02_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v8_02_file());
 
             let got = parse(buf)?;
 
@@ -738,8 +828,7 @@ mod tests {
 
         #[test]
         fn test_v8_05_ok() -> Result<()> {
-            let file = recipe_v8_05_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v8_05_file());
 
             let got = parse(buf)?;
 
@@ -749,8 +838,7 @@ mod tests {
 
         #[test]
         fn test_v8_06_ok() -> Result<()> {
-            let file = recipe_v8_06_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_v8_06_file());
 
             let got = parse(buf)?;
 
@@ -760,8 +848,7 @@ mod tests {
 
         #[test]
         fn test_now_youre_cooking_v4_72() -> Result<()> {
-            let file = now_youre_cooking_v4_72_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(now_youre_cooking_v4_72_file());
 
             let got = parse(buf)?;
 
@@ -771,8 +858,7 @@ mod tests {
 
         #[test]
         fn test_cookmate_ok() -> Result<()> {
-            let file = recipe_cookmate_file();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_cookmate_file());
 
             let got = parse(buf)?;
 
@@ -782,12 +868,23 @@ mod tests {
 
         #[test]
         fn test_cookmate2_ok() -> Result<()> {
-            let file = recipe_cookmate_file2();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(recipe_cookmate_file2());
 
             let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, recipes_cookmate2());
+            Ok(())
+        }
+
+        #[test]
+        fn test_homecookin_ok() -> Result<()> {
+            let buf = Cursor::new(recipe_homecookin_file());
+
+            let got = parse(buf)?;
+
+            let expected = recipes_homecookin();
+            pretty_assertions::assert_eq!(got.len(), expected.len());
+            pretty_assertions::assert_eq!(got, expected);
             Ok(())
         }
 
@@ -1690,12 +1787,275 @@ Typed for you by Karen Mintzias
 
 "
         }
+
+        pub fn recipe_homecookin_file<'a>() -> &'a str {
+            r#"MMMMM----- Meal-Master Recipe
+
+              Title: Baked Ham and Kraut Rolls
+         Categories: Pork and Lamb
+              Yield: 2
+
+              3 lb Beef, cut into 1-1/2"
+                   -squares
+              2 tb Olive oil
+              8 oz can sauerkraut, drained
+              2 tb sliced green onion
+            1/2 ts caraway seed
+            1/4 c  mayonnaise
+              2 tb milk
+          4-1/2 c  Water
+                   Granulated Sugar
+
+        Finely chop 2 slices of the ham.
+
+        Combine chopped ham and all remaining ingredients.
+
+        Place a little of the sauerkraut mixture on each remaining ham
+        slice. Roll up each slice from one side.
+
+        Microwave on high till heated through.
+
+        Calories: 278, Cholesterol: 54 mg, Fat: 8 grams, Protein: 22 gram,
+        Sodium: 300 mg, Carbohydrates: 29 gram, Potassium: 502 mg
+
+          Exported from Home Cookin 9.96 (www.mountainsoftware.com)
+
+        MMMMM
+
+        MMMMM----- Meal-Master Recipe
+
+              Title: Barbecued Pork
+         Categories: Pork and Lamb
+              Yield: 4
+
+            1/4 c  catsup
+            1/3 c  water
+              1 tb cornstarch
+              1 tb brown sugar
+              1 tb chili powder
+              1 tb Worcestershire sauce
+              2 tb vinegar
+            1/4 ts pepper
+
+            1/2 c  onion, chopped
+            1/2 c  carrot, chopped
+            1/2 c  celery, chopped
+              1 lb pork, cut in bite size
+                   -strips
+
+                   Pita Bread
+
+
+        Mix first 8 ingredients, set aside. Stir fry pork in a wok 2-3
+        minutes. Add onion, carrot, and celery. Stir fry until vegetables
+        are tender.
+
+        Stir in sauce, cook and stir till mixture thickens and boils.
+
+        Serve in Pita Bread
+
+
+          Exported from Home Cookin 9.96 (www.mountainsoftware.com)
+
+        MMMMM
+
+        MMMMM----- Meal-Master Recipe
+
+              Title: Blood Alcohol Levels
+         Categories: Reference Text
+
+        DO NOT DRIVE UNDER THE INFLUENCE:
+
+        Your driving ability is related to your Blood Alcohol Concentration.  Alcohol
+        is a drug that affects your judgement and slows your reactions. When you have
+        been drinking -- Don't Gamble! Call a Cab, Call a sober friend!
+
+        Blood Alcohol Concentration Guide:
+
+        Alcohol is burned up by your body at .015% per hour.
+
+        If your BAC is .025% it takes 1.7 hours to reach .000%
+        If your BAC is .050% it takes 3.3 hours to reach .000%
+        If your BAC is .075% it takes 5.0 hours to reach .000%
+        If your BAC is .100% it takes 6.7 hours to reach .000%
+        If your BAC is .125% it takes 8.3 hours to reach .000%
+
+        Percent of Alcohol in Bloodstream:
+
+        .100% is legally drunk in most states.
+        Crash risk quadruples at .08% which is now the legal limit in many states.
+
+        If you weigh 100 pounds:  2 drinks = .058%, 3 drinks = .088%, 4 drinks =
+        .117%, 5 drinks = .146%
+        If you weigh 120 pounds:  3 drinks = .073%, 4 drinks = .097%, 5 drinks =
+        .121%, 6 drinks = .145%
+        If you weigh 140 pounds:  3 drinks = .063%, 4 drinks = .083%, 5 drinks =
+        .104%, 6 drinks = .125%
+        If you weigh 160 pounds:  4 drinks = .073%, 5 drinks = .091%, 6 drinks =
+        .109%, 7 drinks = .128%
+        If you weigh 180 pounds:  4 drinks = .065%, 5 drinks = .081%, 6 drinks =
+        .097%, 7 drinks = .113%
+        If you weigh 200 pounds:  5 drinks = .073%, 6 drinks = .087%, 7 drinks =
+        .102%, 8 drinks = .117%
+        If you weigh 220 pounds:  5 drinks = .067%, 6 drinks = .080%, 7 drinks =
+        .093%, 8 drinks = .106%
+        If you weigh 240 pounds:  6 drinks = .073%, 7 drinks = .085%, 8 drinks =
+        .097%, 9 drinks = .109%
+
+        One Drink Equals: 1 oz. of 80 proof Alcohol
+        One Drink Equals: 2 oz. of 20% wine
+        One Drink Equals: 3 oz. of 12% wine
+        One Drink Equals: 12 oz. Bottle of Beer
+
+        Source: Washington State Liquor Control Board
+
+          Exported from Home Cookin 9.96 (www.mountainsoftware.com)
+
+        MMMMM
+
+        MMMMM----- Meal-Master Recipe
+
+              Title: Calzone
+         Categories: Pork and Lamb
+              Yield: 10
+
+        MMMMM--------------------------Dough----------------------------------
+
+              1 pk yeast
+            3/4 c  warm water
+              3 c  Flour
+                   Salt to taste
+            1/2 c  warm water
+              1 tb olive oil
+
+        MMMMM-------------------------Filling---------------------------------
+
+              1 lb sweet italian sausage
+              1 sm Onion, diced
+              1    green pepper, chopped
+              4 oz black olives, sliced
+            1/2 lb Pepperoni, in 1/4" cubes
+              1 tb parsley
+              8 oz tomato sauce
+
+              2 c  mozzarella cheese, shredded
+
+
+        Dough:
+
+        Mix yeast and 3/4 cup water and set aside to proof. Gradually stir
+        in flour, salt, 1/2 cup water, and oil. Knead dough for 10
+        minutes. Cover and let rise until double.
+
+        Filling:
+
+        Brown sausage in a skillet. Add onion, green pepper, olives,
+        pepperoni, and parsley. Saute until onion is soft and clear. Stir
+        in tomato sauce.
+
+        Preparation:
+
+        Roll out 2-3 inch ball of dough to 1/8" thickness. Spoon small
+        amount of filling into center, then sprinkle with mozzarella
+        cheese. Fold over to form a semi-circle, then press to seal edges.
+        Place on a greased cookie sheet. Brush tops with olive oil and
+        bake at 450' for 25 minutes or till golden brown.
+
+
+          Exported from Home Cookin 9.96 (www.mountainsoftware.com)
+
+        MMMMM
+
+        MMMMM----- Meal-Master Recipe
+
+              Title: Fat Types and Their Sources
+         Categories: Reference Text
+
+        HDL:
+        High-density lipoprotein ("Good" cholesterol)  - Clears the blood of
+        artery-clogging cholesterol.
+
+        LDL:
+        Low-density liprotein ("Bad" cholesterol) -  Deposits on artery walls,
+        causing obstructions.
+
+        Saturated Fats (Worse):
+        Foods from animals, such as meat, milk, butter, tropical vegetable oils
+        (coconut and palm oil). Raises LDL. Lowers HDL.
+
+        Trans Fats:
+        Margarine, cake, potato chips, fast-food, french fries, other processed
+        foods. May increase LDL. May decrease HDL
+
+        Poly-Unsaturated Fats:
+        Oils from plants (corn, soybeans, cotton, sunflower, sesame) Lowers LDL.
+        Lowers HDL.
+
+        Mono-Unsaturated fats (Best):
+        Olive and canola oil Reduces LDL. Maintains HDL.
+
+        Source:
+        Center for Science in the Public interest National Food Processors
+        Association World Book Health and Medical Annual
+
+
+          Exported from Home Cookin 9.96 (www.mountainsoftware.com)
+
+        MMMMM
+
+        MMMMM----- Meal-Master Recipe
+
+              Title: Tony's Cherry Cheesecake
+         Categories: Desserts
+              Yield: 10
+
+              1 c  Graham cracker crumbs
+            1/4 c  Margarine, melted
+
+             24 oz Cream cheese, softened
+            3/4 c  Sugar
+              3 lg eggs
+              1 ts Vanilla
+
+             21 oz Cherry pie filling (1 cans)
+
+        Combine crumbs and margarine; press onto bottom of 9-inch
+        springform pan. Bake at 325'F for 10 minutes.
+
+        Combine cream cheese and sugar, mixing at medium speed on electric
+        mixer until well blended. Add eggs, one at a time mixing well
+        after each addition. Blend in vanilla; pour over crust.
+
+        Bake at 450'F for 10 minutes. Reduce oven temperature to 250'F,
+        continue baking 30 minutes or until set. Loosen cake from rim of
+        pan; cool before removing rim of pan. Chill. Top with pie filling
+        just before serving.
+
+          Exported from Home Cookin 9.96 (www.mountainsoftware.com)
+
+        MMMMM
+
+        MMMMM----- Meal-Master Recipe
+
+              Title: USDA Food Pyramid
+         Categories: Reference Text
+
+
+
+          Exported from Home Cookin 9.96 (www.mountainsoftware.com)
+
+        MMMMM
+
+"#
+        }
     }
 
     mod results {
+        use crate::apps::recipya::at_context;
+
         use super::*;
 
-        use schema_org::Recipe;
+        use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};
 
         pub fn recipe_unspecified_version() -> Recipe {
             Recipe {
@@ -2618,6 +2978,170 @@ SOURCE: Gourmet, December 1992
                     ],
                     is_based_on: to_is_based_on("Cookmate [Meal-Master Export Format]"),
                     name: vec!["To Die For Fettuccine Alfredo".into()],
+                    ..Default::default()
+                },
+            ]
+        }
+
+        pub fn recipes_homecookin() -> Vec<Recipe> {
+            vec![
+                Recipe {
+                    is_based_on: to_is_based_on("Meal-Master Recipe"),
+                    name: vec!["Baked Ham and Kraut Rolls".into()],
+                    recipe_category: vec!["Pork".into()],
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Lamb".into())],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("3 lb Beef, cut into 1-1/2\"".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-squares".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tb Olive oil".into()),
+                        RecipeRecipeIngredientFieldEnum::Text(
+                            "8 oz can sauerkraut, drained".into(),
+                        ),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tb sliced green onion".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 ts caraway seed".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 c mayonnaise".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tb milk".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "4-1/2 c Water Granulated Sugar".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Finely chop 2 slices of the ham.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Combine chopped ham and all remaining ingredients.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Place a little of the sauerkraut mixture on each remaining ham slice. Roll up each slice from one side.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Microwave on high till heated through.".into(),
+                        ),
+                    ],
+
+                    recipe_yield: to_yield(2),
+                    nutrition: vec![NutritionInformation {
+                        calories: vec![Energy::new("278")],
+                        carbohydrate_content: vec![Mass::new("29 gram")],
+                        cholesterol_content: vec![Mass::new("54 mg")],
+                        context: at_context(),
+                        fat_content: vec![Mass::new("8 grams")],
+                        protein_content: vec![Mass::new("22 gram")],
+                        sodium_content: vec![Mass::new("300 mg")],
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                Recipe {
+                    is_based_on: to_is_based_on("Meal-Master Recipe"),
+                    name: vec!["Barbecued Pork".into()],
+                    recipe_category: vec!["Pork".into()],
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Lamb".into())],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 c catsup".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/3 c water".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 tb cornstarch".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 tb brown sugar".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 tb chili powder".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 tb Worcestershire sauce".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tb vinegar".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 ts pepper".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 c onion, chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 c carrot, chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 c celery, chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 lb pork, cut in bite size".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("-strips".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("Pita Bread".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mix first 8 ingredients, set aside. Stir fry pork in a wok 2-3 minutes. Add onion, carrot, and celery. Stir fry until vegetables are tender.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Stir in sauce, cook and stir till mixture thickens and boils.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Serve in Pita Bread".into()),
+                    ],
+                    recipe_yield: to_yield(4),
+                    ..Default::default()
+                },
+                Recipe {
+                    is_based_on: to_is_based_on("Meal-Master Recipe"),
+                    name: vec!["Calzone".into()],
+                    recipe_category: vec!["Pork".into()],
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Lamb".into())],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::new_section(
+                            "Dough",
+                            &[
+                                "1 pk yeast",
+                                "3/4 c warm water",
+                                "3 c Flour",
+                                "Salt to taste",
+                                "1/2 c warm water",
+                                "1 tb olive oil",
+                            ],
+                        ),
+                        RecipeRecipeIngredientFieldEnum::new_section(
+                            "Filling",
+                            &[
+                                "1 lb sweet italian sausage",
+                                "1 sm Onion, diced",
+                                "1 green pepper, chopped",
+                                "4 oz black olives, sliced",
+                                "1/2 lb Pepperoni, in 1/4\" cubes",
+                                "1 tb parsley",
+                                "8 oz tomato sauce",
+                                "2 c mozzarella cheese, shredded",
+                            ],
+                        ),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Dough:".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mix yeast and 3/4 cup water and set aside to proof. Gradually stir in flour, salt, 1/2 cup water, and oil. Knead dough for 10 minutes. Cover and let rise until double.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Filling:".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Brown sausage in a skillet. Add onion, green pepper, olives, pepperoni, and parsley. Saute until onion is soft and clear. Stir in tomato sauce.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text("Preparation:".into()),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Roll out 2-3 inch ball of dough to 1/8\" thickness. Spoon small amount of filling into center, then sprinkle with mozzarella cheese. Fold over to form a semi-circle, then press to seal edges. Place on a greased cookie sheet. Brush tops with olive oil and bake at 450' for 25 minutes or till golden brown.".into()
+                        ),
+                    ],
+                    recipe_yield: to_yield(10),
+                    ..Default::default()
+                },
+                Recipe {
+                    is_based_on: to_is_based_on("Meal-Master Recipe"),
+                    name: vec!["Tony's Cherry Cheesecake".into()],
+                    recipe_category: vec!["Desserts".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 c Graham cracker crumbs".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 c Margarine, melted".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("24 oz Cream cheese, softened".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3/4 c Sugar".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 lg eggs".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ts Vanilla".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("21 oz Cherry pie filling (1 cans)".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Combine crumbs and margarine; press onto bottom of 9-inch springform pan. Bake at 325'F for 10 minutes.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Combine cream cheese and sugar, mixing at medium speed on electric mixer until well blended. Add eggs, one at a time mixing well after each addition. Blend in vanilla; pour over crust.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Bake at 450'F for 10 minutes. Reduce oven temperature to 250'F, continue baking 30 minutes or until set. Loosen cake from rim of pan; cool before removing rim of pan. Chill. Top with pie filling just before serving.".into()
+                        ),
+                    ],
+                    recipe_yield: to_yield(10),
                     ..Default::default()
                 },
             ]

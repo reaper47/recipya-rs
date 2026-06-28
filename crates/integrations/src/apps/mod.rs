@@ -11,6 +11,7 @@ pub mod cookml;
 pub mod cookn;
 pub mod copymethat;
 pub mod crouton;
+pub mod homecookin;
 pub mod kalorio;
 pub mod mastercook;
 pub mod mealmaster;

@@ -46,6 +46,7 @@ enum TertiaryInner {
     Cookn,
     CopyMeThat,
     Crouton,
+    HomeCookin,
     Kalorio,
     MasterCook,
     MealMaster,
@@ -260,6 +261,11 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::Crouton)
     }
 
+    /// Creates a new tertiary report type for the `Home Cookin` software.
+    pub const fn home_cookin() -> Self {
+        Self::new(TertiaryInner::HomeCookin)
+    }
+
     /// Creates a new tertiary report type for the `Kalorio` software.
     pub const fn kalorio() -> Self {
         Self::new(TertiaryInner::Kalorio)
@@ -332,6 +338,7 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::Cookn => 21,
             TertiaryInner::CopyMeThat => 22,
             TertiaryInner::CookBook => 23,
+            TertiaryInner::HomeCookin => 23,
         }
     }
 }

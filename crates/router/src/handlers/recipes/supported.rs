@@ -44,6 +44,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             "https://easy-recipe-deluxe.software.informer.com",
             vec![],
         ),
+        (
+            "Home Cookin",
+            "https://www.mountainsoftware.com/homecook.php",
+            vec![".hc", ".mz2", ".txt", ".xml"],
+        ),
         ("Kalorio", "https://www.kalorio.de", vec![".txt", ".xml"]),
         (
             "MasterCook",
