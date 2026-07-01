@@ -441,29 +441,31 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
         instructions: doc
             .select(&Selector::parse("div[itemprop='recipeInstructions']").unwrap())
             .next()
-            .unwrap()
-            .text()
-            .filter_map(|s| {
-                let s = s.trim();
-                if s.is_empty()
-                    || s.starts_with("Recipe formatted with the Cook'n")
-                    || s.starts_with("Recipe Software")
-                    || s.contains("DVO Enter")
-                {
-                    return None;
-                }
-                Some(s.strip_prefix("TIP:").map_or_else(
-                    || {
-                        if s.chars().all(|c| c.is_uppercase() || c.is_whitespace()) {
-                            Instruction::Section(Cow::Borrowed(s))
-                        } else {
-                            Instruction::Line(Cow::Borrowed(s))
+            .map(|el| {
+                el.text()
+                    .filter_map(|s| {
+                        let s = s.trim();
+                        if s.is_empty()
+                            || s.starts_with("Recipe formatted with the Cook'n")
+                            || s.starts_with("Recipe Software")
+                            || s.contains("DVO Enter")
+                        {
+                            return None;
                         }
-                    },
-                    |tip| Instruction::Tip(Cow::Borrowed(tip.trim())),
-                ))
+                        Some(s.strip_prefix("TIP:").map_or_else(
+                            || {
+                                if s.chars().all(|c| c.is_uppercase() || c.is_whitespace()) {
+                                    Instruction::Section(Cow::Borrowed(s))
+                                } else {
+                                    Instruction::Line(Cow::Borrowed(s))
+                                }
+                            },
+                            |tip| Instruction::Tip(Cow::Borrowed(tip.trim())),
+                        ))
+                    })
+                    .collect::<Vec<_>>()
             })
-            .collect(),
+            .unwrap_or_default(),
         cook_time: doc
             .select(&Selector::parse("time[itemprop='cookTime']").unwrap())
             .next()

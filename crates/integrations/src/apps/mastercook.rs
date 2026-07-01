@@ -167,7 +167,7 @@ struct Mx2 {
     #[serde(rename = "@date")]
     date: String,
     #[serde(rename = "Summ")]
-    summary: Summary,
+    summary: Option<Summary>,
     #[serde(rename = "RcpE")]
     recipes: Vec<MastercookRecipe>,
 }
@@ -194,14 +194,14 @@ struct MastercookRecipe {
     prep_time: Option<PrepTime>,
     #[serde(rename = "CatS")]
     categories: Option<Categories>,
-    #[serde(rename = "IngR")]
+    #[serde(rename = "IngR", default)]
     ingredients: Vec<Ing>,
     #[serde(rename = "DirS")]
     directions: Directions,
     #[serde(rename = "Desc")]
-    description: String,
+    description: Option<String>,
     #[serde(rename = "Srce")]
-    source: String,
+    source: Option<String>,
     #[serde(rename = "Yield")]
     yield_info: Option<Yield>,
     #[serde(rename = "TTim")]
@@ -213,7 +213,7 @@ struct MastercookRecipe {
     #[serde(rename = "Note")]
     note: Option<String>,
     #[serde(rename = "Nutr")]
-    nutrition: String,
+    nutrition: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -237,18 +237,18 @@ pub struct Categories {
 #[derive(Deserialize)]
 struct Ing {
     #[serde(rename = "@name")]
-    name: String,
+    name: Option<String>,
     #[serde(rename = "@unit")]
     unit: Option<String>,
     #[serde(rename = "@qty")]
-    qty: String,
+    qty: Option<String>,
     #[serde(rename = "IPrp")]
     preparation: Option<String>,
 }
 
 #[derive(Deserialize)]
 struct Directions {
-    #[serde(rename = "DirT")]
+    #[serde(rename = "DirT", default)]
     directions: Vec<Direction>,
 }
 
@@ -257,7 +257,7 @@ struct Directions {
 struct Direction {
     #[serde(rename = "@img")]
     img: String,
-    #[serde(rename = "$value")]
+    #[serde(rename = "$value", default)]
     text: String,
 }
 
@@ -291,6 +291,7 @@ struct Rating {
 }
 
 impl From<MastercookRecipe> for Recipe {
+    #[allow(clippy::too_many_lines)]
     fn from(r: MastercookRecipe) -> Self {
         let (category, keywords) = match r.categories.unwrap_or_default().categories.as_slice() {
             [first, rest @ ..] => (first.trim().to_string(), rest.to_vec()),
@@ -301,17 +302,26 @@ impl From<MastercookRecipe> for Recipe {
         let total_secs = r.total_time.map_or(0, |t| parse_time(&t.elapsed));
         let cook_secs = total_secs.saturating_sub(prep_secs);
 
-        let source = if r.source.is_empty() {
-            "Exported from MasterCook".into()
-        } else {
-            let mut s = r.source;
-            s.push_str(" [Exported from MasterCook]");
-            s
-        };
+        let source = r
+            .source
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .map(|s| {
+                if s.is_empty() {
+                    "Exported from MasterCook".into()
+                } else {
+                    format!("{s} [Exported from MasterCook]")
+                }
+            })
+            .unwrap_or_default();
 
         let nutrition = r
             .nutrition
-            .trim_start_matches("Per Serving (excluding unknown items): ");
+            .map(|s| {
+                s.trim_start_matches("Per Serving (excluding unknown items): ")
+                    .to_string()
+            })
+            .unwrap_or_default();
 
         Self {
             r#type: AtType::Recipe.to_opt(),
@@ -334,9 +344,10 @@ impl From<MastercookRecipe> for Recipe {
                 .unwrap_or_default(),
             author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
             cook_time: seconds_to_duration(cook_secs),
-            description: vec![RecipeDescriptionFieldEnum::Text(
-                r.description.trim().into(),
-            )],
+            description: r
+                .description
+                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s.trim().into())])
+                .unwrap_or_default(),
             is_based_on: match url::Url::parse(&source) {
                 Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(source)],
                 Err(_) => vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
@@ -367,16 +378,19 @@ impl From<MastercookRecipe> for Recipe {
             recipe_ingredient: r
                 .ingredients
                 .into_iter()
+                .filter(|ing| ing.name.is_some())
                 .map(|ing| {
+                    let name = ing.name.unwrap();
+
                     RecipeRecipeIngredientFieldEnum::Text(
                         format!(
                             "{}{}{}{}",
-                            ing.qty,
+                            ing.qty.unwrap_or_default(),
                             ing.unit.map_or_else(String::new, |s| format!(" {s}")),
-                            if ing.name.is_empty() {
+                            if name.is_empty() {
                                 String::new()
                             } else {
-                                format!(" {}", ing.name)
+                                format!(" {name}")
                             },
                             ing.preparation
                                 .map_or_else(String::new, |s| format!(", {s}"))
@@ -468,12 +482,18 @@ where
             s.starts_with("<?xml") || s.starts_with("<!DOCTYPE") || s.is_empty()
         })
         .collect::<Vec<_>>()
-        .join("\n");
+        .join("\n")
+        .replace(" & ", " and ");
 
     let root: Mx2 =
         quick_xml::de::from_str(&cleaned).map_err(|err| Error::Parse(err.to_string()))?;
 
-    Ok(root.recipes.into_iter().map(Recipe::from).collect())
+    Ok(root
+        .recipes
+        .into_iter()
+        .filter(|r| !r.ingredients.is_empty())
+        .map(Recipe::from)
+        .collect())
 }
 
 /// Parses a `MasterCook` MXP file.

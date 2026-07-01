@@ -630,7 +630,7 @@ fn parse_not_dash<'s>(input: &mut &'s str) -> ModalResult<&'s str> {
     take_while(1.., |c: char| c != '-').parse_next(input)
 }
 
-fn parse_nutrition<'s>(input: &mut &'s str) -> ModalResult<NutritionInformation> {
+fn parse_nutrition(input: &mut &str) -> ModalResult<NutritionInformation> {
     peek((multispace0, literal("Calories: "))).parse_next(input)?;
 
     delimited(space0, take_until(1.., "\n\n"), (line_ending, line_ending))

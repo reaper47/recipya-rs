@@ -115,14 +115,20 @@ async fn extract_images(
     state: &AppState,
     fs_support: Arc<dyn FsSupport>,
 ) -> Vec<Uuid> {
+    use schema_org::field::FieldEnum22;
+
     let image_refs = schema
         .image
         .iter()
         .filter_map(|img| match img {
-            schema_org::field::FieldEnum22::ImageObject(image_object) => {
-                image_object.url.first().cloned()
+            FieldEnum22::ImageObject(obj) => {
+                if let Some(FieldEnum22::URL(url)) = obj.image.first().cloned() {
+                    Some(url)
+                } else {
+                    obj.url.first().cloned()
+                }
             }
-            schema_org::field::FieldEnum22::URL(u) => Some(u.clone()),
+            FieldEnum22::URL(u) => Some(u.clone()),
         })
         .flat_map(|url| {
             url.split(';')

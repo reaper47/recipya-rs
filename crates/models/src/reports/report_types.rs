@@ -338,7 +338,7 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::Cookn => 21,
             TertiaryInner::CopyMeThat => 22,
             TertiaryInner::CookBook => 23,
-            TertiaryInner::HomeCookin => 23,
+            TertiaryInner::HomeCookin => 24,
         }
     }
 }

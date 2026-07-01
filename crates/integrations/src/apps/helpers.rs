@@ -270,16 +270,18 @@ pub(super) fn update_recipe_image_paths(recipes: &mut [Recipe], images: &HashMap
 fn rewrite_image_id(img: &mut RecipeImageFieldEnum, images: &HashMap<String, PathBuf>) {
     match img {
         RecipeImageFieldEnum::ImageObject(obj) => {
-            obj.image.iter().for_each(|img| match img {
+            obj.image.iter_mut().for_each(|img| match img {
                 ImageObjectImageFieldEnum::ImageObject(_) => {}
                 ImageObjectImageFieldEnum::URL(path) => {
                     let Some(name) = Path::new(path).file_name().and_then(|s| s.to_str()) else {
                         return;
                     };
 
-                    let Some(_) = images.get(name) else {
+                    let Some(new_img) = images.get(name) else {
                         return;
                     };
+
+                    *img = ImageObjectImageFieldEnum::URL(new_img.to_string_lossy().to_string());
                 }
             });
         }
@@ -288,9 +290,11 @@ fn rewrite_image_id(img: &mut RecipeImageFieldEnum, images: &HashMap<String, Pat
                 return;
             };
 
-            let Some(_) = images.get(name) else {
+            let Some(new_img) = images.get(name) else {
                 return;
             };
+
+            *path = new_img.to_string_lossy().to_string();
         }
     }
 }
