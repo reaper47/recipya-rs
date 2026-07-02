@@ -68,41 +68,92 @@ The user interface is better than the the original.
 
 ## Getting Started
 
-### Installation (todo later)
-
-The installation instructions are written in
+The installation instructions are located in
 the [installation section](https://recipes.musicavis.ca/guide/docs/installation/) of the documentation.
 
-### Building the Project
+## Development
 
-#### Prerequisites
+### Linux
 
-1. Rust: https://www.rust-lang.org/
-2. Nodejs: https://nodejs.org/en/download/package-manager
-3. PostgreSQL: https://www.postgresql.org/download/ and the [pg_cron extension](https://github.com/citusdata/pg_cron)
-4. [Diesel](https://diesel.rs/): `cargo install diesel_cli --no-default-features --features postgres`
-5. [cargo-metask](https://crates.io/crates/cargo-metask): `cargo install cargo-metask`
+Follow these instructions to set up your development environment on Linux.
 
-PostgreSQL extensions:
+#### Tooling
 
-Add the following to `/var/lib/pgsql/data/postgresql.conf` once `pg_cron` is installed:
+1. Install [Rust](https://www.rust-lang.org/)
+1. Install [Nodejs](https://nodejs.org/en/download/package-manager)
+1. Install [PostgreSQL](https://www.postgresql.org/download/) 
+1. Clone and setup the [pg_cron extension](https://github.com/citusdata/pg_cron)
+1. Modify `/var/lib/pgsql/data/postgresql.conf`:
+    - `shared_preload_libraries = 'pg_cron'` <- Uncomment this line
+    - `cron.database_name = 'recipya'` <- Add line
+1. Install [Diesel](https://diesel.rs/): `cargo install diesel_cli --no-default-features --features postgres`
+1. Install [cargo-metask](https://crates.io/crates/cargo-metask): `cargo install cargo-metask`
+1. Open a terminal and connect to postgres: `psql -U postgres`
+1. Create the Recipya database: `CREATE DATABASE recipya;`
+1. Create the Recipya test database: `CREATE DATABASE recipya_test;`
 
-- `shared_preload_libraries = 'pg_cron'` <- Uncomment this line
-- `cron.database_name = 'recipya'` <- New line
+#### Running Recipya
 
-#### Build
+1. Clone the repository: `git clone https://github.com/reaper47/recipya-rs.git`
+1. Open the repository in your IDE
+1. Install the NPM dependencies: `cargo task web-install-deps`
+1. Copy the `deploy/.env.example` file to the root of the repository and rename it to `.env`
+1. Update the `DATABASE_URL` variable to point to your local Postgres database
+1. Run the SQL migrations: `diesel migration run`
+1. Run `cargo run server` to start the web server
 
-1. Set the environment variables in the `.env` file. The [template](https://github.com/reaper47/recipya-rs/blob/main/deploy/.env.example) is found in /deploy.
-2. Run recipya: `cargo run server`
+### Windows
 
-#### Development Container
+Follow these instructions to set up your development environment on Windows if you do not use WSL nor Docker.
+
+#### Tooling
+
+1. Install Git: `winget install --id Git.Git -e --source winget`
+1. Install Rust using [rustup-init](https://rust-lang.org/tools/install/)
+1. Install [Postgresql 17.XX](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
+1. Add the PostgreSQL lib to your user LIB: `C:\Program Files\PostgreSQL\17\lib`
+1. Add the PostgreSQL bin to your user PATH: `C:\Program Files\PostgreSQL\17\bin`
+1. Install Visual Studio "Desktop development with C++" using the Visual Studio Installer
+1. Install NASM: `winget install NASM.NASM`
+1. Install LLVM: `winget install LLVM.LLVM`
+1. Install the [PostgreSQL pg_cron extension](https://github.com/hakanrw/pg_cron_windows#building-on-windows)
+    - Download and unzip the [latest release zip](https://github.com/hakanrw/pg_cron_windows/releases)
+    - Install [GNU Make](https://gnuwin32.sourceforge.net/packages/make.htm)
+    - Add the GNU Make bin directory to your user system PATH: `C:\Program Files (x86)\GnuWin32\bin`
+    - Run the `Git Bash` app as admin
+    - Navigate to the unzipped release directory: `cd /c/Users/<username>/Downloads/pg_cron_windows_msvc_x64/pg_cron/`
+    - Run `make install`
+1. Modify `C:\Program Files\PostgreSQL\17\data\postgresql.conf`:
+    - `shared_preload_libraries = 'pg_cron'` <- Uncomment this line
+    - `cron.database_name = 'recipya'` <- Add line
+1. Install [cargo-metask](https://crates.io/crates/cargo-metask): `cargo install cargo-metask`
+1. Install [Diesel](https://diesel.rs): `cargo install diesel_cli --no-default-features --features postgres`
+1. Open a command prompt and connect to postgres: `psql -U postgres`
+1. Create the Recipya database: `CREATE DATABASE recipya;`
+1. Create the Recipya test database: `CREATE DATABASE recipya_test;`
+
+#### Running Recipya
+
+1. Clone the repository: `git clone https://github.com/reaper47/recipya-rs.git`
+1. Open the repository in your IDE
+1. Install the NPM dependencies: `cargo task web-install-deps`
+1. Copy the `deploy\.env.example` file to the root of the repository and rename it to `.env`
+1. Update the `DATABASE_URL` variable to point to your local Postgres database
+1. Run the SQL migrations: `diesel migration run`
+1. Run `cargo run server` to start the web server
+
+### Development Container
 
 You may use the devcontainer to help develop Recipya. The `DATABASE_URL` environment variable in your
 `.env` file would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432"`.
 
-## Development
+### Useful Commands
 
-### Database
+#### Frontend
+
+Run `cargo task web-build` to build the frontend.
+
+#### Database
 
 Run `diesel migration run` to run all pending migrations.
 
@@ -110,11 +161,9 @@ Run `diesel migration generate {migration_name}` to create a new SQL migration u
 
 Run `diesel migration redo` to rerun the latest migration.
 
-### Frontend
+Run `diesel migration redo --all` to rerun all migrations.
 
-Run `cargo task web-install-deps` to install the npm dependencies.
-
-Run `cargo task web-build` to build the frontend.
+Run `./.devcontainer/clean_test_dbs.sh` to clean up any test databases.
 
 ## Contributing
 
