@@ -228,7 +228,7 @@ mod tests {
             let state = create_app_state(config.clone()).await;
             let server = build_server_logged_in(config).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let file_path = "/tmp/test_export.zip".to_string();
+            let file_path = std::env::temp_dir().join("test_export.zip");
             tokio::fs::write(&file_path, b"some zip bytes").await?;
             let token = Uuid::new_v4();
             Download::create(

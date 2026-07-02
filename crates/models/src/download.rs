@@ -118,10 +118,8 @@ mod tests {
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-    const TEST_FILE_PATH: &str = "/tmp/recipes.zip";
-
-    fn test_file_path() -> PathBuf {
-        PathBuf::from(TEST_FILE_PATH)
+    fn test_file_path() -> std::path::PathBuf {
+        std::env::temp_dir().join("recipes.zip")
     }
 
     fn a_download_for_create(user_id: Uuid) -> DownloadForCreate {
