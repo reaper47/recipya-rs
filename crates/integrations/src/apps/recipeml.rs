@@ -68,8 +68,7 @@ pub struct Amt {
 
 #[derive(Serialize, Deserialize)]
 pub struct IngDivTitle {
-    #[serde(rename = "$text")]
-    pub text: String,
+    pub text: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -132,15 +131,17 @@ impl From<RecipeXML> for Recipe {
                         .collect::<Vec<_>>();
 
                     match div.title {
-                        Some(title) => vec![RecipeRecipeIngredientFieldEnum::new_section(
-                            &title.text,
-                            ingredients
-                                .iter()
-                                .map(String::as_str)
-                                .collect::<Vec<_>>()
-                                .as_slice(),
-                        )],
-                        None => ingredients
+                        Some(title) if title.text.is_some() => {
+                            vec![RecipeRecipeIngredientFieldEnum::new_section(
+                                &title.text.unwrap(),
+                                ingredients
+                                    .iter()
+                                    .map(String::as_str)
+                                    .collect::<Vec<_>>()
+                                    .as_slice(),
+                            )]
+                        }
+                        _ => ingredients
                             .into_iter()
                             .map(RecipeRecipeIngredientFieldEnum::Text)
                             .collect(),
@@ -152,10 +153,14 @@ impl From<RecipeXML> for Recipe {
                 .step
                 .into_iter()
                 .filter(|s| !s.is_empty())
-                .map(|s| {
-                    RecipeRecipeInstructionsFieldEnum::Text(
-                        s.trim().lines().map(str::trim).join(" "),
-                    )
+                .filter_map(|s| {
+                    if s.trim().is_empty() {
+                        None
+                    } else {
+                        Some(RecipeRecipeInstructionsFieldEnum::Text(
+                            s.trim().lines().map(str::trim).join(" "),
+                        ))
+                    }
                 })
                 .collect(),
             ..Default::default()
