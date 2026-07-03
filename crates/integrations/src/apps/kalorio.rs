@@ -359,8 +359,7 @@ mod tests {
 
         #[test]
         fn test_txt() -> Result<()> {
-            let file = files::txt();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(files::txt());
 
             let got = parse(buf)?;
 

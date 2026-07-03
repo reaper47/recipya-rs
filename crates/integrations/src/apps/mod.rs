@@ -17,6 +17,7 @@ pub mod mastercook;
 pub mod mealmaster;
 pub mod paprika;
 pub mod recipemd;
+pub mod recipeml;
 pub mod recipesage;
 pub mod recipya;
 pub mod rezkonv;
