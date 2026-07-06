@@ -19,6 +19,7 @@ axum-test = { workspace = true }
 auth.workspace = true
 axum.workspace = true
 axum-htmx = "0.8.1"
+base64.workspace = true
 config.workspace = true
 derive_more.workspace = true
 email.workspace = true

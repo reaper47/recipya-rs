@@ -200,8 +200,9 @@ mod tests {
 
             let got = parse_xml(buf)?;
 
-            pretty_assertions::assert_eq!(got.len(), results::xml().len());
-            pretty_assertions::assert_eq!(got, results::xml());
+            let expected = results::xml();
+            pretty_assertions::assert_eq!(got.len(), expected.len());
+            pretty_assertions::assert_eq!(got, expected);
             Ok(())
         }
     }

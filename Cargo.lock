@@ -4686,6 +4686,7 @@ dependencies = [
  "axum-extra",
  "axum-htmx",
  "axum-test",
+ "base64",
  "config",
  "derive_more",
  "diesel",

@@ -3,12 +3,15 @@ use std::sync::atomic::AtomicI64;
 
 use axum::extract::State;
 use axum::response::IntoResponse;
+use base64::Engine;
+use base64::engine::general_purpose;
 use futures::StreamExt;
 use reqwest::StatusCode;
 use tokio::fs;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 use tokio::time::Instant;
+use tokio_util::bytes;
 use tracing::{error, warn};
 use uuid::Uuid;
 
@@ -39,18 +42,18 @@ pub async fn add_recipe_import_app_handler(
     State(state): State<AppState>,
     form: ImportFromAppForm,
 ) -> impl IntoResponse {
-    save_parsed_recipes(state, form, user.id);
+    save_parsed_recipes(state, form, user.id).await;
 
     (StatusCode::ACCEPTED, "").into_response()
 }
 
-fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
+async fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
     tokio::spawn(async move {
         let app = form.app.to_string();
         let state = state.clone();
         let start_time = Arc::new(Instant::now());
 
-        let recipes = match parse_recipes(&state, form.clone(), user_id).await {
+        let mut recipes = match parse_recipes(&state, form.clone(), user_id).await {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
@@ -68,6 +71,24 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
                 return;
             }
         };
+
+        for recipe in &mut recipes {
+            for image in &mut recipe.image {
+                match image {
+                    schema_org::field::FieldEnum22::URL(s) if s.starts_with("/") => {
+                        if let Ok(bytes) = general_purpose::STANDARD.decode(s.as_bytes())
+                            && let Ok(path) = state
+                                .fs_support
+                                .upload_to_temp(bytes::Bytes::from(bytes))
+                                .await
+                        {
+                            *s = path.to_string_lossy().to_string();
+                        }
+                    }
+                    _ => (),
+                }
+            }
+        }
 
         let num_recipes = recipes
             .len()

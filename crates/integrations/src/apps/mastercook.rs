@@ -599,9 +599,11 @@ fn parse_flush_mxp<'s>(input: &mut &'s str) -> WResult<&'s str> {
 }
 
 /// Parses a `MasterCook` TXT file.
-pub fn parse_txt<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
-    let mut content = String::new();
-    r.read_to_string(&mut content)?;
+pub fn parse_txt<R>(r: R) -> Result<Vec<Recipe>>
+where
+    R: Read + Seek,
+{
+    let content = read_file(r)?;
 
     Ok(parse_txt_helper(&mut content.as_str())?
         .into_iter()
