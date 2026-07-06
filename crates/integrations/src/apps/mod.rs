@@ -16,6 +16,7 @@ pub mod kalorio;
 pub mod mastercook;
 pub mod mealmaster;
 pub mod paprika;
+pub mod recipekeeper;
 pub mod recipemd;
 pub mod recipeml;
 pub mod recipesage;

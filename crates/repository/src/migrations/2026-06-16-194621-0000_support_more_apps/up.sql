@@ -5,4 +5,5 @@ VALUES
   ('cookn'),
   ('copy me that'),
   ('cookbook'),
-  ('home cookin');
+  ('home cookin'),
+  ('recipe keeper');

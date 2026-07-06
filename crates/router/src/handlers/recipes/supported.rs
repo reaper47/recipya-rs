@@ -65,7 +65,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             "https://www.paprikaapp.com",
             vec![".paprikarecipes"],
         ),
-        ("Recipe Keeper", "https://recipekeeperonline.com", vec![]),
+        (
+            "Recipe Keeper",
+            "https://recipekeeperonline.com",
+            vec![".zip"],
+        ),
         ("RecipeMD", "https://recipemd.org/", vec![".md"]),
         (
             "RecipeSage",

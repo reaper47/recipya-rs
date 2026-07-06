@@ -26,6 +26,8 @@ pub enum App {
     MasterCook,
     MealMaster,
     Paprika,
+    #[strum(to_string = "Recipe Keeper")]
+    RecipeKeeper,
     RecipeMD,
     RecipeSage,
     Recipya,
