@@ -2,8 +2,8 @@ use std::borrow::Cow;
 use std::io::{Cursor, Read, Seek};
 
 use itertools::Itertools;
-use winnow::ascii::{digit1, line_ending, multispace1, space0, till_line_ending};
-use winnow::combinator::{alt, delimited, opt, peek, repeat, repeat_till, seq, terminated};
+use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space0, till_line_ending};
+use winnow::combinator::{alt, delimited, eof, opt, peek, repeat, repeat_till, seq, terminated};
 use winnow::token::{any, literal, take_until, take_while};
 use winnow::{Parser, Result as WResult};
 
@@ -87,10 +87,15 @@ impl From<NutritionComponents<'_>> for NutritionInformation {
 impl TryFrom<RecipeComponents<'_>> for Recipe {
     type Error = String;
 
-    fn try_from(r: RecipeComponents<'_>) -> std::result::Result<Self, Self::Error> {
+    fn try_from(mut r: RecipeComponents<'_>) -> std::result::Result<Self, Self::Error> {
         if r.category == "Reference Text" || r.ingredients.is_empty() {
             return Err("skipped".into());
         }
+
+        r.instructions.retain(|ins| match ins {
+            Instruction::Line(text) => text.trim() != "-----",
+            Instruction::Section(_) => true,
+        });
 
         Ok(Self {
             r#type: AtType::Recipe.to_opt(),
@@ -249,7 +254,7 @@ fn parse_image<'s>(input: &mut &'s str) -> WResult<&'s str> {
     .parse_next(input)
 }
 
-fn parse_servings<'s>(input: &mut &'s str) -> WResult<i64> {
+fn parse_servings(input: &mut &str) -> WResult<i64> {
     delimited(literal("Servings: "), digit1, multispace1)
         .parse_to()
         .parse_next(input)
@@ -284,7 +289,126 @@ where
 }
 
 fn parse_txt_helper<'s>(input: &mut &'s str) -> Result<Vec<RecipeComponents<'s>>> {
-    todo!()
+    repeat(1.., parse_recipe_txt)
+        .parse_next(input)
+        .map_err(|err| Error::Parse(err.to_string()))
+}
+
+fn parse_recipe_txt<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
+    seq! {RecipeComponents {
+        title: parse_title_txt,
+        category: parse_category,
+        r#yield: parse_servings_txt,
+        ingredients: parse_ingredients_txt,
+        instructions: parse_instructions_txt,
+        nutrition: opt(parse_nutrition),
+        ..Default::default()
+    }}
+    .parse_next(input)
+}
+
+fn parse_title_txt<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(
+        (opt(literal("-----")), multispace0, literal("Title: ")),
+        till_line_ending,
+        (line_ending, space0),
+    )
+    .parse_next(input)
+}
+
+fn parse_category<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(literal("Chapter: "), till_line_ending, multispace1).parse_next(input)
+}
+
+fn parse_servings_txt(input: &mut &str) -> WResult<i64> {
+    opt(delimited(literal("Servings: "), digit1, multispace1).parse_to())
+        .map(|opt_val| opt_val.unwrap_or(0))
+        .parse_next(input)
+}
+
+fn parse_ingredients_txt<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
+    repeat(0.., parse_ingredient_block)
+        .map(|blocks: Vec<Vec<&str>>| {
+            blocks
+                .into_iter()
+                .flatten()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| {
+                    if s.ends_with(':') {
+                        Ingredient::Section(Cow::Borrowed(s.trim_end_matches(':')))
+                    } else {
+                        Ingredient::Line(Cow::Borrowed(s))
+                    }
+                })
+                .collect()
+        })
+        .parse_next(input)
+}
+
+fn parse_ingredient_block<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
+    terminated(
+        repeat(
+            1..,
+            terminated(
+                till_line_ending.verify(|s: &str| !s.trim().is_empty()),
+                (line_ending, space0),
+            ),
+        )
+        .verify(|lines: &Vec<&'s str>| {
+            (lines.len() == 1 && lines[0].trim().ends_with(':'))
+                || lines.iter().any(|l| {
+                    let t = l.trim();
+                    t.chars()
+                        .find(|c| c.is_alphanumeric())
+                        .is_some_and(|c| c.is_ascii_digit())
+                        || t.contains(['½', '¼', '¾', '⅓', '⅔'])
+                })
+        }),
+        repeat(0.., (line_ending, space0)).map(|()| ()),
+    )
+    .parse_next(input)
+}
+
+fn parse_instructions_txt<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> {
+    repeat(
+        1..,
+        terminated(
+            alt((parse_section_header, parse_instruction_line)),
+            repeat::<_, _, (), _, _>(0.., (line_ending, space0)),
+        ),
+    )
+    .parse_next(input)
+}
+
+fn parse_section_header<'s>(input: &mut &'s str) -> WResult<Instruction<'s>> {
+    terminated(
+        till_line_ending,
+        alt(((line_ending, space0).void(), eof.void())),
+    )
+    .verify(|s: &str| s.trim().ends_with(':'))
+    .map(|s: &str| Instruction::Section(Cow::Borrowed(s.trim().trim_end_matches(':').trim())))
+    .parse_next(input)
+}
+
+fn parse_instruction_line<'s>(input: &mut &'s str) -> WResult<Instruction<'s>> {
+    repeat::<_, _, (), _, _>(
+        1..,
+        terminated(
+            till_line_ending.verify(|s: &str| {
+                let t = s.trim();
+                !t.is_empty()
+                    && !t.ends_with(':')
+                    && !t.starts_with("Title:")
+                    && !t.starts_with("Calories")
+                    && !t.starts_with("Servings")
+            }),
+            alt(((line_ending, space0).void(), eof.void())),
+        ),
+    )
+    .take()
+    .map(|s: &str| Instruction::Line(Cow::Borrowed(s.trim())))
+    .parse_next(input)
 }
 
 #[cfg(test)]
@@ -305,9 +429,22 @@ mod tests {
             pretty_assertions::assert_eq!(got, expected);
             Ok(())
         }
+
+        #[test]
+        fn test_hm_txt_ok() -> Result<()> {
+            let buf = Cursor::new(files::txt());
+
+            let got = parse_txt(buf)?;
+
+            let expected = results::txt();
+            pretty_assertions::assert_eq!(got.len(), expected.len());
+            pretty_assertions::assert_eq!(got, expected);
+            Ok(())
+        }
     }
 
     mod files {
+        #[allow(clippy::too_many_lines)]
         pub fn hc<'a>() -> &'a str {
             r"Home Cookin Chapter: Pork and Lamb
 
@@ -695,6 +832,131 @@ mod tests {
         Exported from Home Cookin 9.96 (www.mountainsoftware.com)
 "
         }
+
+        pub fn txt<'a>() -> &'a str {
+            r"Title: Baked Ham and Kraut Rolls
+            Chapter: Pork and Lamb
+            Servings: 2
+
+            6 ounces thinly sliced ham
+            8 ounces can sauerkraut, drained
+            2 tablespoons sliced green onion
+            1/2 teaspoon caraway seed
+            1/4 cup mayonnaise
+            2 tablespoons milk
+            2 teaspoons mustard
+
+            Finely chop 2 slices of the ham.
+
+            Combine chopped ham and all remaining ingredients.
+
+            Place a little of the sauerkraut mixture on each remaining ham slice. Roll up each slice from one side.
+
+            Microwave on high till heated through.
+
+
+            -----
+
+            Title: Blood Alcohol Levels
+            Chapter: Reference Text
+
+            DO NOT DRIVE UNDER THE INFLUENCE:
+
+            Your driving ability is related to your Blood Alcohol Concentration.  Alcohol is a drug that affects your judgement and slows your reactions. When you have been drinking -- Don't Gamble! Call a Cab, Call a sober friend!
+
+            Blood Alcohol Concentration Guide:
+
+            Alcohol is burned up by your body at .015% per hour.
+
+            If your BAC is .025% it takes 1.7 hours to reach .000%
+            If your BAC is .050% it takes 3.3 hours to reach .000%
+            If your BAC is .075% it takes 5.0 hours to reach .000%
+            If your BAC is .100% it takes 6.7 hours to reach .000%
+            If your BAC is .125% it takes 8.3 hours to reach .000%
+
+            Percent of Alcohol in Bloodstream:
+
+            .100% is legally drunk in most states.
+            Crash risk quadruples at .08% which is now the legal limit in many states.
+
+            If you weigh 100 pounds:  2 drinks = .058%, 3 drinks = .088%, 4 drinks = .117%, 5 drinks = .146%
+            If you weigh 120 pounds:  3 drinks = .073%, 4 drinks = .097%, 5 drinks = .121%, 6 drinks = .145%
+            If you weigh 140 pounds:  3 drinks = .063%, 4 drinks = .083%, 5 drinks = .104%, 6 drinks = .125%
+            If you weigh 160 pounds:  4 drinks = .073%, 5 drinks = .091%, 6 drinks = .109%, 7 drinks = .128%
+            If you weigh 180 pounds:  4 drinks = .065%, 5 drinks = .081%, 6 drinks = .097%, 7 drinks = .113%
+            If you weigh 200 pounds:  5 drinks = .073%, 6 drinks = .087%, 7 drinks = .102%, 8 drinks = .117%
+            If you weigh 220 pounds:  5 drinks = .067%, 6 drinks = .080%, 7 drinks = .093%, 8 drinks = .106%
+            If you weigh 240 pounds:  6 drinks = .073%, 7 drinks = .085%, 8 drinks = .097%, 9 drinks = .109%
+
+            One Drink Equals: 1 oz. of 80 proof Alcohol
+            One Drink Equals: 2 oz. of 20% wine
+            One Drink Equals: 3 oz. of 12% wine
+            One Drink Equals: 12 oz. Bottle of Beer
+
+            Source: Washington State Liquor Control Board
+
+            -----
+
+            Title: Coconut Cream Trifle
+            Chapter: Desserts
+            Servings: 4
+
+            Cake:
+
+            2 cups cake flour
+            1 cup sugar
+            2 teaspoons baking powder
+            1 cup sour milk
+            3 eggs
+            1/4 cup vegetable oil
+            2 teaspoons vanilla extract
+
+            Coconut Cream:
+
+            3 cups milk
+            1 cup fine unsweetened coconut
+            6 tablespoons flour
+            1 cup sugar
+            pinch of salt
+            1 egg
+            2 tablespoons butter
+            1 teaspoon vanilla extract
+            1/2 teaspoon coconut extract
+            1/2 teaspoon almond extract
+
+            Whipped Cream:
+
+            2 cups whipping cream
+            6 tablespoons sugar
+            2 teaspoons vanilla extract
+
+            1.5 ounces coconut rum
+            Cake:
+
+            Mix flour, sugar, and baking powder. Add sour milk, eggs, oil, and vanilla. Bake in a 9x13 greased and floured baking pan at 325°F for 30 minutes. Cool completely and cut into cubes.
+
+            Coconut Cream:
+
+            Scald milk and coconut in the microwave. Meanwhile, in a saucepan combine flour, sugar, and salt. Over medium heat, slowly add the scalded milk whisking constantly.
+
+            Continue to cook over medium heat until mixture begins to slightly thicken. At this point remove from heat and pour about a half cup of this mixture onto a slightly beaten extra large egg whisking constantly. Pour the egg mixture immediately back into the pot, continuing to constantly stir. Cook for an additional minute or two until pudding consistency and remove from the flame.
+
+            Stir in butter and extracts. Cool completely.
+
+            Vanilla Whipped Cream:
+
+            Combine whipping cream, sugar, and vanila. Whip to firm peaks.
+
+            To assemble your trifle divide your cake and filling into 3 equal portions. In a large serving bowl, place a layer of cake cubes and sprinkle with rum.
+
+            Repeat for the remaining layers and top with Vanilla Whipped Cream and toasted coconut to garnish.
+
+            Calories: 252, Cholesterol: 77mg, Fat: 11g, Protein: 25g, Sodium: 304mg, Carbohydrates: 11g, Potassium: 520mg
+
+            -----
+
+            "
+        }
     }
 
     mod results {
@@ -706,6 +968,7 @@ mod tests {
         use super::*;
         use crate::helpers::{to_is_based_on, to_yield};
 
+        #[allow(clippy::too_many_lines)]
         pub fn hc() -> Vec<Recipe> {
             vec![
                 Recipe {
@@ -805,6 +1068,104 @@ mod tests {
                         ]),
                     ],
                     is_based_on: to_is_based_on("Home Cookin 9.96"),
+                    ..Default::default()
+                },
+            ]
+        }
+
+        pub fn txt() -> Vec<Recipe> {
+            vec![
+                Recipe {
+                    r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
+                    name: vec!["Baked Ham and Kraut Rolls".into()],
+                    recipe_category: vec!["Pork and Lamb".into()],
+                    recipe_yield: to_yield(2),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("6 ounces thinly sliced ham".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("8 ounces can sauerkraut, drained".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tablespoons sliced green onion".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 teaspoon caraway seed".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 cup mayonnaise".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tablespoons milk".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 teaspoons mustard".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Finely chop 2 slices of the ham.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Combine chopped ham and all remaining ingredients.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Place a little of the sauerkraut mixture on each remaining ham slice. Roll up each slice from one side.".into(),
+                        ),
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Microwave on high till heated through.".into(),
+                        ),
+                    ],
+                    ..Default::default()
+                },
+                Recipe {
+                    r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
+                    name: vec!["Coconut Cream Trifle".into()],
+                    nutrition: vec![NutritionInformation {
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        context: at_context(),
+                        calories: vec![Energy::new("252 kcal")],
+                        carbohydrate_content: vec![Mass::new("11g")],
+                        cholesterol_content: vec![Mass::new("77mg")],
+                        fat_content: vec![Mass::new("11g")],
+                        protein_content: vec![Mass::new("25g")],
+                        sodium_content: vec![Mass::new("304mg")],
+                        ..Default::default()
+                    }],
+                    recipe_category: vec!["Desserts".into()],
+                    recipe_yield: to_yield(4),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::new_section("Cake", &[
+                            "2 cups cake flour",
+                            "1 cup sugar",
+                            "2 teaspoons baking powder",
+                            "1 cup sour milk",
+                            "3 eggs",
+                            "1/4 cup vegetable oil",
+                            "2 teaspoons vanilla extract",
+                        ]),
+                        RecipeRecipeIngredientFieldEnum::new_section("Coconut Cream", &[
+                            "3 cups milk",
+                            "1 cup fine unsweetened coconut",
+                            "6 tablespoons flour",
+                            "1 cup sugar",
+                            "pinch of salt",
+                            "1 egg",
+                            "2 tablespoons butter",
+                            "1 teaspoon vanilla extract",
+                            "1/2 teaspoon coconut extract",
+                            "1/2 teaspoon almond extract",
+                        ]),
+                        RecipeRecipeIngredientFieldEnum::new_section("Whipped Cream", &[
+                            "2 cups whipping cream",
+                            "6 tablespoons sugar",
+                            "2 teaspoons vanilla extract",
+                            "1.5 ounces coconut rum",
+                        ]),
+                        RecipeRecipeIngredientFieldEnum::new_section("Cake", &[]),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text("Mix flour, sugar, and baking powder. Add sour milk, eggs, oil, and vanilla. Bake in a 9x13 greased and floured baking pan at 325°F for 30 minutes. Cool completely and cut into cubes.".into()),
+                        RecipeRecipeInstructionsFieldEnum::new_section("Coconut Cream", vec![
+                            "Scald milk and coconut in the microwave. Meanwhile, in a saucepan combine flour, sugar, and salt. Over medium heat, slowly add the scalded milk whisking constantly.",
+                            "Continue to cook over medium heat until mixture begins to slightly thicken. At this point remove from heat and pour about a half cup of this mixture onto a slightly beaten extra large egg whisking constantly. Pour the egg mixture immediately back into the pot, continuing to constantly stir. Cook for an additional minute or two until pudding consistency and remove from the flame.",
+                            "Stir in butter and extracts. Cool completely.",
+                        ]),
+                        RecipeRecipeInstructionsFieldEnum::new_section("Vanilla Whipped Cream", vec![
+                            "Combine whipping cream, sugar, and vanila. Whip to firm peaks.",
+                            "To assemble your trifle divide your cake and filling into 3 equal portions. In a large serving bowl, place a layer of cake cubes and sprinkle with rum.",
+                            "Repeat for the remaining layers and top with Vanilla Whipped Cream and toasted coconut to garnish.",
+                        ]),
+                    ],
                     ..Default::default()
                 },
             ]

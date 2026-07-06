@@ -42,12 +42,12 @@ pub async fn add_recipe_import_app_handler(
     State(state): State<AppState>,
     form: ImportFromAppForm,
 ) -> impl IntoResponse {
-    save_parsed_recipes(state, form, user.id).await;
+    save_parsed_recipes(state, form, user.id);
 
     (StatusCode::ACCEPTED, "").into_response()
 }
 
-async fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
+fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
     tokio::spawn(async move {
         let app = form.app.to_string();
         let state = state.clone();
@@ -131,13 +131,13 @@ async fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: 
     });
 }
 
-async fn upload_images(state: &AppState, recipes: &mut Vec<schema_org::Recipe>) {
+async fn upload_images(state: &AppState, recipes: &mut [schema_org::Recipe]) {
     let mut set = JoinSet::new();
 
     for (idx_recipe, recipe) in recipes.iter().enumerate() {
         for (idx_img, image) in recipe.image.iter().enumerate() {
             match image {
-                schema_org::field::FieldEnum22::URL(s) if s.starts_with("/") => {
+                schema_org::field::FieldEnum22::URL(s) if s.starts_with('/') => {
                     if let Ok(bytes) = general_purpose::STANDARD.decode(s.as_bytes()) {
                         let fs_support = state.fs_support.clone();
                         set.spawn(async move {

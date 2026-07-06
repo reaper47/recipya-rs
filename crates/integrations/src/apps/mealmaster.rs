@@ -1788,6 +1788,7 @@ Typed for you by Karen Mintzias
 "
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn recipe_homecookin_file<'a>() -> &'a str {
             r#"MMMMM----- Meal-Master Recipe
 
@@ -2983,6 +2984,7 @@ SOURCE: Gourmet, December 1992
             ]
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn recipes_homecookin() -> Vec<Recipe> {
             vec![
                 Recipe {

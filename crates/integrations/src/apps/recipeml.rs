@@ -208,6 +208,7 @@ mod tests {
     }
 
     mod files {
+        #[allow(clippy::too_many_lines)]
         pub fn xml<'a>() -> &'a str {
             r#"<?xml version="1.0" ?><recipeml version="0.5"><recipe><head><title>Baked Ham and Kraut Rolls</title><categories><cat>Pork and Lamb</cat></categories><yield>2</yield></head><ingredients><ing-div><ing><amt><qty>6</qty><unit>ounces</unit></amt><item>thinly sliced ham</item></ing><ing><amt><qty>8</qty><unit>ounces</unit></amt><item>can sauerkraut, drained</item></ing><ing><amt><qty>2</qty><unit>tablespoons</unit></amt><item>sliced green onion</item></ing><ing><amt><qty>1/2</qty><unit>teaspoon</unit></amt><item>caraway seed</item></ing><ing><amt><qty>1/4</qty><unit>cup</unit></amt><item>mayonnaise</item></ing><ing><amt><qty>2</qty><unit>tablespoons</unit></amt><item>milk</item></ing><ing><amt><qty>2</qty><unit>teaspoons</unit></amt><item>mustard</item></ing></ing-div></ingredients><directions><step>
             Finely chop 2 slices of the ham.
@@ -353,6 +354,7 @@ mod tests {
 
         use super::*;
 
+        #[allow(clippy::too_many_lines)]
         pub fn xml() -> Vec<Recipe> {
             vec![
                 Recipe {
