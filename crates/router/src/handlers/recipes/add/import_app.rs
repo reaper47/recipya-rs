@@ -72,23 +72,7 @@ async fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: 
             }
         };
 
-        for recipe in &mut recipes {
-            for image in &mut recipe.image {
-                match image {
-                    schema_org::field::FieldEnum22::URL(s) if s.starts_with("/") => {
-                        if let Ok(bytes) = general_purpose::STANDARD.decode(s.as_bytes())
-                            && let Ok(path) = state
-                                .fs_support
-                                .upload_to_temp(bytes::Bytes::from(bytes))
-                                .await
-                        {
-                            *s = path.to_string_lossy().to_string();
-                        }
-                    }
-                    _ => (),
-                }
-            }
-        }
+        upload_images(&state, &mut recipes).await;
 
         let num_recipes = recipes
             .len()
@@ -145,6 +129,39 @@ async fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: 
         );
         broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
     });
+}
+
+async fn upload_images(state: &AppState, recipes: &mut Vec<schema_org::Recipe>) {
+    let mut set = JoinSet::new();
+
+    for (idx_recipe, recipe) in recipes.iter().enumerate() {
+        for (idx_img, image) in recipe.image.iter().enumerate() {
+            match image {
+                schema_org::field::FieldEnum22::URL(s) if s.starts_with("/") => {
+                    if let Ok(bytes) = general_purpose::STANDARD.decode(s.as_bytes()) {
+                        let fs_support = state.fs_support.clone();
+                        set.spawn(async move {
+                            (
+                                idx_recipe,
+                                idx_img,
+                                fs_support.upload_to_temp(bytes::Bytes::from(bytes)).await,
+                            )
+                        });
+                    }
+                }
+                _ => (),
+            }
+        }
+    }
+
+    while let Some(res) = set.join_next().await {
+        if let Ok((idx_recipe, idx_image, Ok(path))) = res
+            && let schema_org::field::FieldEnum22::URL(s) =
+                &mut recipes[idx_recipe].image[idx_image]
+        {
+            *s = path.to_string_lossy().to_string();
+        }
+    }
 }
 
 async fn parse_recipes(

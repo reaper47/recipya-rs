@@ -13,13 +13,12 @@ use zip::ZipArchive;
 
 use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
-    RecipeImageFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
-    RecipeRecipeYieldFieldEnum,
+    RecipeImageFieldEnum, RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum,
 };
 use schema_org::{AtType, Comment, DurationOrText, Recipe, at_context};
 
 use crate::apps::helpers::{
-    Ingredient, Parsers, extract_archive_contents, read_file, update_recipe_image_paths,
+    Ingredient, Parsers, ToSections, extract_archive_contents, read_file, update_recipe_image_paths,
 };
 use crate::{Error, Result};
 
@@ -118,33 +117,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                 .map(|s| s.split(',').next().unwrap_or_default())
                 .map(|s| vec![DurationOrText::Text(s.into())])
                 .unwrap_or_default(),
-            recipe_ingredient: r.ingredients.into_iter().fold(
-                Vec::new(),
-                |mut acc, item| match item {
-                    Ingredient::Line(s)
-                        if let Some(RecipeRecipeIngredientFieldEnum::ItemList(list)) =
-                            acc.last_mut() =>
-                    {
-                        list.item_list_element
-                            .push(ItemListItemListElementFieldEnum::Text(s.to_string()));
-                        if let Some(i) = list.number_of_items.first_mut() {
-                            *i += 1;
-                        }
-                        acc
-                    }
-                    Ingredient::Line(s) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::Text(s.to_string()));
-                        acc
-                    }
-                    Ingredient::Section(s) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
-                            s.as_ref(),
-                            &[],
-                        ));
-                        acc
-                    }
-                },
-            ),
+            recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions,
             recipe_yield: [r.servings, r.r#yield]
                 .into_iter()

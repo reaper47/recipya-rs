@@ -22,7 +22,9 @@ use schema_org::{
     at_context,
 };
 
-use crate::apps::helpers::{Parsers, extract_archive_contents, update_recipe_image_paths};
+use crate::apps::helpers::{
+    Parsers, ToSections, extract_archive_contents, update_recipe_image_paths,
+};
 use crate::{
     Error, Result,
     apps::helpers::{Ingredient, Instruction, read_file},
@@ -267,42 +269,8 @@ impl From<RecipeComponents<'_>> for Recipe {
                 .map(|s| vec![RecipeDescriptionFieldEnum::Text(s.into())])
                 .unwrap_or_default(),
             name: vec![r.title.into()],
-            recipe_ingredient: r
-                .ingredients
-                .into_iter()
-                .map(|ing| match ing {
-                    Ingredient::Line(cow) | Ingredient::Section(cow) => {
-                        RecipeRecipeIngredientFieldEnum::Text(cow.to_string())
-                    }
-                })
-                .collect(),
-            recipe_instructions: r
-                .instructions
-                .into_iter()
-                .fold(Vec::new(), |mut acc, items| match items {
-                    Instruction::Line(s)
-                        if let Some(RecipeRecipeInstructionsFieldEnum::ItemList(list)) =
-                            acc.last_mut() =>
-                    {
-                        list.item_list_element
-                            .push(ItemListItemListElementFieldEnum::Text(s.to_string()));
-                        if let Some(i) = list.number_of_items.first_mut() {
-                            *i += 1;
-                        }
-                        acc
-                    }
-                    Instruction::Line(s) => {
-                        acc.push(RecipeRecipeInstructionsFieldEnum::Text(s.to_string()));
-                        acc
-                    }
-                    Instruction::Section(s) => {
-                        acc.push(RecipeRecipeInstructionsFieldEnum::new_section(
-                            &s,
-                            Vec::<String>::new(),
-                        ));
-                        acc
-                    }
-                }),
+            recipe_ingredient: r.ingredients.to_sections(),
+            recipe_instructions: r.instructions.to_sections(),
             recipe_yield: r
                 .servings
                 .map(|s| vec![RecipeRecipeYieldFieldEnum::Text(s.to_string())])

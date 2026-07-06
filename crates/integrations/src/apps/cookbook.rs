@@ -3,10 +3,6 @@ use std::{
     io::{Read, Seek},
 };
 
-use schema_org::{
-    AtType, Recipe,
-    field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum},
-};
 use winnow::{
     Parser, Result as WResult,
     ascii::{digit1, line_ending, multispace1, space0, space1, till_line_ending},
@@ -15,10 +11,14 @@ use winnow::{
 };
 use zip::ZipArchive;
 
+use schema_org::{AtType, Recipe};
+
 use crate::{
     Error, Result,
     apps::{
-        helpers::{Ingredient, Instruction, Parsers, extract_archive_contents, read_file},
+        helpers::{
+            Ingredient, Instruction, Parsers, ToSections, extract_archive_contents, read_file,
+        },
         recipya::at_context,
     },
 };
@@ -36,24 +36,8 @@ impl From<RecipeComponents<'_>> for Recipe {
             r#type: AtType::Recipe.to_opt(),
             context: at_context(),
             name: vec![r.title.into()],
-            recipe_ingredient: r
-                .ingredients
-                .into_iter()
-                .map(|ing| match ing {
-                    Ingredient::Line(cow) | Ingredient::Section(cow) => {
-                        RecipeRecipeIngredientFieldEnum::Text(cow.to_string())
-                    }
-                })
-                .collect(),
-            recipe_instructions: r
-                .instructions
-                .into_iter()
-                .map(|ins| match ins {
-                    Instruction::Line(cow) | Instruction::Section(cow) => {
-                        RecipeRecipeInstructionsFieldEnum::Text(cow.to_string())
-                    }
-                })
-                .collect(),
+            recipe_ingredient: r.ingredients.to_sections(),
+            recipe_instructions: r.instructions.to_sections(),
             ..Default::default()
         }
     }

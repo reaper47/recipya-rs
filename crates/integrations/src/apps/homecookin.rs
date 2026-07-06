@@ -7,12 +7,10 @@ use winnow::combinator::{alt, delimited, opt, peek, repeat, repeat_till, seq, te
 use winnow::token::{any, literal, take_until, take_while};
 use winnow::{Parser, Result as WResult};
 
-use schema_org::field::{
-    ItemListItemListElementFieldEnum, RecipeImageFieldEnum, RecipeRecipeIngredientFieldEnum,
-    RecipeRecipeInstructionsFieldEnum,
-};
+use schema_org::field::RecipeImageFieldEnum;
 use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};
 
+use crate::apps::helpers::ToSections;
 use crate::helpers::{to_is_based_on, to_yield};
 use crate::{
     Error, Result,
@@ -124,64 +122,8 @@ impl TryFrom<RecipeComponents<'_>> for Recipe {
                 if n.is_empty() { vec![] } else { vec![n.into()] }
             }),
             recipe_category: vec![r.category.into()],
-            recipe_ingredient: r.ingredients.into_iter().fold(
-                Vec::new(),
-                |mut acc, item| match item {
-                    Ingredient::Line(s)
-                        if let Some(RecipeRecipeIngredientFieldEnum::ItemList(list)) =
-                            acc.last_mut() =>
-                    {
-                        list.item_list_element
-                            .push(ItemListItemListElementFieldEnum::Text(s.to_string()));
-                        if let Some(i) = list.number_of_items.first_mut() {
-                            *i += 1;
-                        }
-                        acc
-                    }
-                    Ingredient::Line(s) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::Text(s.to_string()));
-                        acc
-                    }
-                    Ingredient::Section(s) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
-                            s.as_ref(),
-                            &[],
-                        ));
-                        acc
-                    }
-                },
-            ),
-            recipe_instructions: r
-                .instructions
-                .into_iter()
-                .fold(Vec::new(), |mut acc, item| match item {
-                    Instruction::Line(s)
-                        if let Some(RecipeRecipeInstructionsFieldEnum::ItemList(list)) =
-                            acc.last_mut() =>
-                    {
-                        list.item_list_element
-                            .push(ItemListItemListElementFieldEnum::Text(
-                                s.split_whitespace().join(" "),
-                            ));
-                        if let Some(i) = list.number_of_items.first_mut() {
-                            *i += 1;
-                        }
-                        acc
-                    }
-                    Instruction::Line(s) => {
-                        acc.push(RecipeRecipeInstructionsFieldEnum::Text(
-                            s.split_whitespace().join(" "),
-                        ));
-                        acc
-                    }
-                    Instruction::Section(s) => {
-                        acc.push(RecipeRecipeInstructionsFieldEnum::new_section(
-                            s.as_ref(),
-                            Vec::<String>::new(),
-                        ));
-                        acc
-                    }
-                }),
+            recipe_ingredient: r.ingredients.to_sections(),
+            recipe_instructions: r.instructions.to_sections(),
             recipe_yield: to_yield(r.r#yield),
             ..Default::default()
         })

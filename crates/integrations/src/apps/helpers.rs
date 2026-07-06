@@ -140,40 +140,40 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
     type Section = RecipeRecipeInstructionsFieldEnum;
 
     fn to_sections(&self) -> Vec<RecipeRecipeInstructionsFieldEnum> {
-        self.iter()
-            .fold(Vec::new(), |mut acc, ins| {
-                match ins {
-                    Instruction::Section(section) => {
-                        acc.push(RecipeRecipeInstructionsFieldEnum::new_section::<String>(
-                            section,
-                            vec![],
-                        ));
-                    }
-                    Instruction::Line(line) => {
-                        let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
+        self.iter().fold(Vec::new(), |mut acc, ins| {
+            match ins {
+                Instruction::Section(section) => {
+                    acc.push(RecipeRecipeInstructionsFieldEnum::new_section::<String>(
+                        section,
+                        vec![],
+                    ));
+                }
+                Instruction::Line(line) => {
+                    let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
 
-                        let line = match line.trim().find('.') {
-                            Some(i) if i < 3 => line[i + 1..].trim().to_string(),
-                            _ => line,
-                        };
+                    let line = match line.trim().find('.') {
+                        Some(i) if i < 3 => line[i + 1..].trim().to_string(),
+                        _ => line,
+                    };
 
-                        if !line.is_empty() {
-                            if let Some(schema_org::field::FieldEnum141::ItemList(list)) =
-                                acc.last_mut()
-                            {
-                                list.item_list_element
-                                    .push(ItemListItemListElementFieldEnum::Text(line));
-                                list.number_of_items.get_mut(0).map(|i| *i + 1);
-                            } else {
-                                acc.push(RecipeRecipeInstructionsFieldEnum::Text(line));
+                    if !line.is_empty() {
+                        if let Some(schema_org::field::FieldEnum141::ItemList(list)) =
+                            acc.last_mut()
+                        {
+                            list.item_list_element
+                                .push(ItemListItemListElementFieldEnum::Text(line));
+
+                            if let Some(i) = list.number_of_items.first_mut() {
+                                *i += 1;
                             }
+                        } else {
+                            acc.push(RecipeRecipeInstructionsFieldEnum::Text(line));
                         }
                     }
                 }
-                acc
-            })
-            .into_iter()
-            .collect()
+            }
+            acc
+        })
     }
 }
 
