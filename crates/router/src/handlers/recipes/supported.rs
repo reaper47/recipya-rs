@@ -45,6 +45,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             vec![],
         ),
         (
+            "Le Collectionneur de Recettes",
+            "http://www.collectionneurderecettes.com/",
+            vec![".html", ".txt", ".zip"],
+        ),
+        (
             "Home Cookin",
             "https://www.mountainsoftware.com/homecook.php",
             vec![".hc", ".mz2", ".txt", ".xml"],

@@ -6,5 +6,6 @@ WHERE
     'copy me that',
     'cookbook',
     'home cookin',
-    'recipe keeper'
+    'recipe keeper',
+    'le collectionneur de recettes'
   );

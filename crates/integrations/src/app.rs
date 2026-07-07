@@ -23,6 +23,8 @@ pub enum App {
     #[strum(to_string = "Home Cookin")]
     HomeCookin,
     Kalorio,
+    #[strum(to_string = "Le Collectionneur de Recettes")]
+    LeCollectionneurDeRecettes,
     MasterCook,
     MealMaster,
     Paprika,

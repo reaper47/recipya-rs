@@ -1,6 +1,7 @@
 use std::io::{Read, Seek};
 
 use cooklang::{Content, CooklangParser, Item, Value};
+use itertools::Itertools;
 use tracing::{error, warn};
 use url::Url;
 
@@ -277,7 +278,7 @@ impl CookLang {
                         .split(',')
                         .map(str::trim)
                         .map(String::from)
-                        .collect::<Vec<_>>()
+                        .collect_vec()
                 })
                 .unwrap_or_default(),
             ingredients: recipe

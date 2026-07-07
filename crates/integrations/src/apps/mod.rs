@@ -13,6 +13,7 @@ pub mod copymethat;
 pub mod crouton;
 pub mod homecookin;
 pub mod kalorio;
+pub mod lecollectionneurderecettes;
 pub mod mastercook;
 pub mod mealmaster;
 pub mod paprika;
