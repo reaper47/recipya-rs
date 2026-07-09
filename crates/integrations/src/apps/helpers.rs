@@ -21,7 +21,7 @@ use support::strings::auto_convert_to_utf8;
 use crate::apps::mastercook::parse_mx2;
 use crate::{FileFormat, Result};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) enum Instruction<'a> {
     Line(Cow<'a, str>),
     Section(Cow<'a, str>),

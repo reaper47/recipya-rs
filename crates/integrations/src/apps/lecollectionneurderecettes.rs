@@ -1,12 +1,11 @@
 use std::{
     borrow::Cow,
     io::{Read, Seek},
+    path::Path,
 };
 
-use schema_org::{
-    DurationOrText, Recipe,
-    field::{RecipeDescriptionFieldEnum, RecipeIsBasedOnUrlFieldEnum, RecipeRecipeYieldFieldEnum},
-};
+use itertools::Itertools;
+use scraper::{Html, Selector};
 use winnow::{
     Parser, Result as WResult,
     ascii::{line_ending, multispace0, multispace1, space0, till_line_ending},
@@ -15,32 +14,48 @@ use winnow::{
 };
 use zip::ZipArchive;
 
+use schema_org::{
+    DurationOrText, Recipe,
+    field::{
+        RecipeDescriptionFieldEnum, RecipeImageFieldEnum, RecipeIsBasedOnUrlFieldEnum,
+        RecipeRecipeYieldFieldEnum,
+    },
+};
+
 use crate::{
     Error, Result,
     apps::helpers::{
         Ingredient, Instruction, Parsers, ToSections, extract_archive_contents, read_file,
+        update_recipe_image_paths,
     },
 };
 
 #[derive(Default)]
 struct RecipeComponents<'a> {
-    description: Option<&'a str>,
+    description: Option<Cow<'a, str>>,
+    image: Option<Cow<'a, str>>,
     ingredients: Vec<Ingredient<'a>>,
     instructions: Vec<Instruction<'a>>,
-    prep_time: Option<&'a str>,
-    cook_time: Option<&'a str>,
+    prep_time: Option<Cow<'a, str>>,
+    cook_time: Option<Cow<'a, str>>,
     title: &'a str,
     url: Option<&'a str>,
-    r#yield: Option<&'a str>,
+    r#yield: Option<Cow<'a, str>>,
 }
 
 impl From<RecipeComponents<'_>> for Recipe {
     fn from(r: RecipeComponents<'_>) -> Self {
         Self {
-            description: r.description.map_or(Vec::new(), |s| {
-                vec![RecipeDescriptionFieldEnum::Text(s.into())]
-            }),
+            description: r
+                .description
+                .filter(|s| !s.trim().is_empty())
+                .map_or(Vec::new(), |s| {
+                    vec![RecipeDescriptionFieldEnum::Text(s.trim().into())]
+                }),
             name: vec![r.title.into()],
+            image: r.image.map_or(Vec::new(), |i| {
+                vec![RecipeImageFieldEnum::URL(i.to_string())]
+            }),
             is_based_on_url: r.url.map_or(Vec::new(), |s| {
                 vec![RecipeIsBasedOnUrlFieldEnum::URL(s.into())]
             }),
@@ -67,7 +82,7 @@ where
 {
     let archive = ZipArchive::new(r)?;
 
-    let (recipes, _) = extract_archive_contents(
+    let (mut recipes, images) = extract_archive_contents(
         archive,
         &Parsers {
             html: Some(parse_html),
@@ -76,15 +91,163 @@ where
         },
     )?;
 
+    for recipe in &mut recipes {
+        for image in &mut recipe.image {
+            if let RecipeImageFieldEnum::URL(u) = image
+                && let Some(file_name) = Path::new(u.as_str()).file_name()
+                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
+            {
+                *u = path.to_string_lossy().into_owned();
+            }
+        }
+    }
+
+    update_recipe_image_paths(&mut recipes, &images);
     Ok(recipes)
 }
 
 /// Parses an `Le Collectionneur de Recettes` HTML file.
+///
+/// # Panics
+///
+/// Does not panic under normal operation. The `Selector::parse` calls in
+/// this function use hardcoded, valid CSS selector strings, so their
+/// `.unwrap()` calls cannot fail.
+#[allow(clippy::too_many_lines)]
 pub fn parse_html<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    todo!()
+    let content = read_file(r)?;
+    let doc = Html::parse_document(&content);
+
+    let sel_metalabel_li = Selector::parse("#metainfo li").unwrap();
+    let sel_metalabel = Selector::parse("span.metalabel").unwrap();
+    let sel_metavalue = Selector::parse("span.metavalue").unwrap();
+    let sel_ingredient_groups = Selector::parse("li.ingredientGroup").unwrap();
+    let sel_instruction_groups = Selector::parse("li.instructionGroup").unwrap();
+    let sel_li = Selector::parse("li").unwrap();
+
+    let metalabel_items = doc.select(&sel_metalabel_li).collect::<Vec<_>>();
+
+    let extract_metavalue = |prefix: &str| {
+        metalabel_items
+            .iter()
+            .find(|li| {
+                li.select(&sel_metalabel)
+                    .next()
+                    .map(|el| el.text().collect::<String>())
+                    .is_some_and(|t| t.trim_start().starts_with(prefix))
+            })
+            .and_then(|li| li.select(&sel_metavalue).next())
+            .map(|el| el.text().collect::<String>())
+            .map(Cow::Owned)
+    };
+
+    let ingredients_container = match doc.select(&Selector::parse("#inglist").unwrap()).next() {
+        Some(el) => match el.child_elements().nth(1) {
+            Some(ul) => ul,
+            None => return Err(Error::Parse("No ingredients list found".into())),
+        },
+        None => return Err(Error::Parse("No ingredients".into())),
+    };
+
+    let Some(instructions_container) = doc.select(&Selector::parse("#inslist").unwrap()).next()
+    else {
+        return Err(Error::Parse("No instructions".into()));
+    };
+
+    Ok(vec![
+        RecipeComponents {
+            description: doc
+                .select(&Selector::parse("#presentation").unwrap())
+                .next()
+                .map(|el| {
+                    let text = el.text().collect::<String>();
+                    Cow::Owned(text)
+                }),
+            ingredients: match ingredients_container.select(&sel_ingredient_groups).count() {
+                0 => ingredients_container
+                    .select(&sel_li)
+                    .map(|el| el.text().collect::<String>())
+                    .map(|s| Ingredient::Line(Cow::Owned(s)))
+                    .collect_vec(),
+                _ => ingredients_container
+                    .select(&sel_ingredient_groups)
+                    .flat_map(|block| {
+                        let mut section = vec![Ingredient::Section(Cow::Owned(
+                            block
+                                .children()
+                                .filter_map(|node| node.value().as_text())
+                                .map(|t| t.as_ref() as &str)
+                                .map(str::trim)
+                                .collect::<String>(),
+                        ))];
+
+                        let ingredients = block
+                            .select(&sel_li)
+                            .map(|el| el.text().collect::<String>())
+                            .map(|s| Ingredient::Line(Cow::Owned(s)))
+                            .collect_vec();
+
+                        section.extend_from_slice(ingredients.as_slice());
+                        section
+                    })
+                    .collect_vec(),
+            },
+            instructions: match instructions_container
+                .select(&sel_instruction_groups)
+                .count()
+            {
+                0 => instructions_container
+                    .select(&sel_li)
+                    .map(|el| el.text().collect::<String>())
+                    .map(|s| Instruction::Line(Cow::Owned(s)))
+                    .collect_vec(),
+                _ => instructions_container
+                    .select(&sel_instruction_groups)
+                    .flat_map(|block| {
+                        let mut section = vec![Instruction::Section(Cow::Owned(
+                            block
+                                .children()
+                                .filter_map(|node| node.value().as_text())
+                                .map(|t| t.as_ref() as &str)
+                                .map(str::trim)
+                                .collect::<String>(),
+                        ))];
+
+                        let instructions = block
+                            .select(&sel_li)
+                            .map(|el| el.text().collect::<String>())
+                            .map(|s| Instruction::Line(Cow::Owned(s)))
+                            .collect_vec();
+
+                        section.extend_from_slice(instructions.as_slice());
+                        section
+                    })
+                    .collect_vec(),
+            },
+            prep_time: extract_metavalue("Preparation:"),
+            cook_time: extract_metavalue("Cooking:"),
+            title: doc
+                .select(&Selector::parse("h3").unwrap())
+                .next()
+                .map(|el| el.text().collect::<String>())
+                .unwrap_or_default()
+                .as_ref(),
+            url: None,
+            r#yield: extract_metavalue("For:"),
+            image: doc
+                .select(&Selector::parse("#mainImg img").unwrap())
+                .next()
+                .map(|el| el.attr("src").unwrap_or_default())
+                .map(|src| {
+                    let src = src.replace("%20", " ").replace("%C3%A9", "é");
+                    Cow::Owned(src)
+                }),
+        }
+        .into(),
+    ])
 }
 
 /// Parses an `Le Collectionneur de Recettes` text file.
@@ -113,6 +276,7 @@ fn parse_recipe_txt<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
         cook_time: opt(parse_cook),
         ingredients: parse_ingredients,
         instructions: parse_instructions,
+        ..Default::default()
     }}
     .parse_next(input)
 }
@@ -127,7 +291,7 @@ fn parse_url<'s>(input: &mut &'s str) -> WResult<&'s str> {
         .parse_next(input)
 }
 
-fn parse_description<'s>(input: &mut &'s str) -> WResult<&'s str> {
+fn parse_description<'s>(input: &mut &'s str) -> WResult<Cow<'s, str>> {
     peek(not(alt((
         (multispace0, literal("For: ")),
         (multispace0, literal("Preparation: ")),
@@ -135,19 +299,27 @@ fn parse_description<'s>(input: &mut &'s str) -> WResult<&'s str> {
     ))))
     .parse_next(input)?;
 
-    terminated(till_line_ending, multispace0).parse_next(input)
+    terminated(till_line_ending, multispace0)
+        .map(Cow::Borrowed)
+        .parse_next(input)
 }
 
-fn parse_servings<'s>(input: &mut &'s str) -> WResult<&'s str> {
-    delimited(literal("For: "), till_line_ending, multispace0).parse_next(input)
+fn parse_servings<'s>(input: &mut &'s str) -> WResult<Cow<'s, str>> {
+    delimited(literal("For: "), till_line_ending, multispace0)
+        .map(Cow::Borrowed)
+        .parse_next(input)
 }
 
-fn parse_prep<'s>(input: &mut &'s str) -> WResult<&'s str> {
-    delimited(literal("Preparation: "), till_line_ending, multispace0).parse_next(input)
+fn parse_prep<'s>(input: &mut &'s str) -> WResult<Cow<'s, str>> {
+    delimited(literal("Preparation: "), till_line_ending, multispace0)
+        .map(Cow::Borrowed)
+        .parse_next(input)
 }
 
-fn parse_cook<'s>(input: &mut &'s str) -> WResult<&'s str> {
-    delimited(literal("Cooking: "), till_line_ending, multispace0).parse_next(input)
+fn parse_cook<'s>(input: &mut &'s str) -> WResult<Cow<'s, str>> {
+    delimited(literal("Cooking: "), till_line_ending, multispace0)
+        .map(Cow::Borrowed)
+        .parse_next(input)
 }
 
 fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>>> {
@@ -222,7 +394,8 @@ mod tests {
 
             let got = parse_html(buf)?;
 
-            let expected = results::recipe();
+            let mut expected = results::recipe();
+            expected[0].is_based_on_url.clear();
             pretty_assertions::assert_eq!(got.len(), expected.len());
             pretty_assertions::assert_eq!(got, expected);
             Ok(())
@@ -234,7 +407,8 @@ mod tests {
 
             let got = parse_html(buf)?;
 
-            let expected = results::recipe2();
+            let mut expected = results::recipe2();
+            expected[0].is_based_on_url.clear();
             pretty_assertions::assert_eq!(got.len(), expected.len());
             pretty_assertions::assert_eq!(got, expected);
             Ok(())
@@ -246,7 +420,8 @@ mod tests {
 
             let got = parse_txt(buf)?;
 
-            let expected = results::recipe();
+            let mut expected = results::recipe();
+            expected[0].image.clear();
             pretty_assertions::assert_eq!(got.len(), expected.len());
             pretty_assertions::assert_eq!(got, expected);
             Ok(())
@@ -258,7 +433,8 @@ mod tests {
 
             let got = parse_txt(buf)?;
 
-            let expected = results::recipe2();
+            let mut expected = results::recipe2();
+            expected[0].image.clear();
             pretty_assertions::assert_eq!(got.len(), expected.len());
             pretty_assertions::assert_eq!(got, expected);
             Ok(())
@@ -458,6 +634,7 @@ mod tests {
         pub fn recipe() -> Vec<Recipe> {
             vec![Recipe {
                 name: vec!["Sautéed chicken with maple".into()],
+                image: vec![RecipeImageFieldEnum::URL("Sautéed chicken with maple_1.jpg".into())],
                 is_based_on_url: vec![RecipeIsBasedOnUrlFieldEnum::URL(
                     "http://ilovemaple.ca/recipes/sauteed-chicken-maple".into(),
                 )],
@@ -495,6 +672,7 @@ mod tests {
         pub fn recipe2() -> Vec<Recipe> {
             vec![Recipe {
                 name: vec!["Barbequed Curried Chicken Burgers with Yogurt Sauce".into()],
+                image: vec![RecipeImageFieldEnum::URL("Barbequed Curried Chicken Burgers with Yogurt Sauce_1.jpg".into())],
                 is_based_on_url: vec![RecipeIsBasedOnUrlFieldEnum::URL(
                     "http://www.dairygoodness.ca/recipes/barbequed-curried-chicken-burgers-with-yogurt-sauce".into(),
                 )],
