@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
-use std::path::Path;
 
 use itertools::Itertools;
 use scraper::{ElementRef, Html, Selector};
@@ -10,7 +9,6 @@ use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space1, till_
 use winnow::combinator::{alt, delimited, not, opt, peek, preceded, repeat, terminated};
 use winnow::token::{literal, rest};
 use winnow::{Parser, combinator::seq};
-use zip::ZipArchive;
 
 use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
@@ -22,9 +20,7 @@ use schema_org::{
     at_context,
 };
 
-use crate::apps::helpers::{
-    Parsers, ToSections, extract_archive_contents, update_recipe_image_paths,
-};
+use crate::apps::helpers::{Parsers, ToSections, parse_archive_helper};
 use crate::{
     Error, Result,
     apps::helpers::{Ingredient, Instruction, read_file},
@@ -286,31 +282,15 @@ pub fn parse_archive<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let archive = ZipArchive::new(r)?;
-
-    let (mut recipes, images) = extract_archive_contents(
-        archive,
+    parse_archive_helper(
+        r,
         &Parsers {
             html: Some(parse_html),
             txt: Some(parse_txt),
             yaml: Some(parse_yaml),
             ..Default::default()
         },
-    )?;
-
-    for recipe in &mut recipes {
-        for image in &mut recipe.image {
-            if let RecipeImageFieldEnum::URL(u) = image
-                && let Some(file_name) = Path::new(u.as_str()).file_name()
-                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
-            {
-                *u = path.to_string_lossy().into_owned();
-            }
-        }
-    }
-
-    update_recipe_image_paths(&mut recipes, &images);
-    Ok(recipes)
+    )
 }
 
 /// Parses a `Cook'n` text file.

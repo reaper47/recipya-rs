@@ -1,11 +1,9 @@
 use std::{
     borrow::Cow,
     io::{Read, Seek},
-    path::Path,
 };
 
 use scraper::{Html, Selector};
-use zip::ZipArchive;
 
 use schema_org::{
     AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
@@ -15,10 +13,7 @@ use schema_org::{
 use crate::{
     Result,
     apps::{
-        helpers::{
-            Ingredient, Instruction, Parsers, ToSections, extract_archive_contents,
-            update_recipe_image_paths,
-        },
+        helpers::{Ingredient, Instruction, Parsers, ToSections, parse_archive_helper},
         recipya::at_context,
     },
     helpers::to_is_based_on,
@@ -153,29 +148,13 @@ pub fn parse_archive<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let archive = ZipArchive::new(r)?;
-
-    let (mut recipes, images) = extract_archive_contents(
-        archive,
+    parse_archive_helper(
+        r,
         &Parsers {
             html: Some(parse_html),
             ..Default::default()
         },
-    )?;
-
-    for recipe in &mut recipes {
-        for image in &mut recipe.image {
-            if let RecipeImageFieldEnum::URL(u) = image
-                && let Some(file_name) = Path::new(u.as_str()).file_name()
-                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
-            {
-                *u = path.to_string_lossy().into_owned();
-            }
-        }
-    }
-
-    update_recipe_image_paths(&mut recipes, &images);
-    Ok(recipes)
+    )
 }
 
 #[allow(clippy::too_many_lines)]

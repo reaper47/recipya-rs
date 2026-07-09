@@ -185,7 +185,9 @@ type ParserFn = fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>;
 
 #[derive(Default)]
 pub(super) struct Parsers {
+    pub csv: Option<ParserFn>,
     pub html: Option<ParserFn>,
+    pub json: Option<ParserFn>,
     pub txt: Option<ParserFn>,
     pub xml: Option<ParserFn>,
     pub yaml: Option<ParserFn>,
@@ -221,8 +223,10 @@ where
         }
 
         let parse_fn: Option<&ParserFn> = match format {
+            FileFormat::Csv => parsers.csv.as_ref(),
             FileFormat::MX2 => None,
             FileFormat::Html => parsers.html.as_ref(),
+            FileFormat::Json => parsers.json.as_ref(),
             FileFormat::Txt => parsers.txt.as_ref(),
             FileFormat::Xml => parsers.xml.as_ref(),
             FileFormat::Yaml => parsers.yaml.as_ref(),
@@ -309,4 +313,38 @@ pub(super) fn urls_to_image_object(urls: Vec<String>) -> Vec<RecipeImageFieldEnu
             }))
         })
         .collect()
+}
+
+/// Parses the recipes with images in an archive.
+pub fn parse_archive_helper<R>(r: R, parsers: &Parsers) -> Result<Vec<Recipe>>
+where
+    R: Read + Seek,
+{
+    let archive = ZipArchive::new(r)?;
+
+    let (mut recipes, images) = extract_archive_contents(archive, parsers)?;
+
+    for recipe in &mut recipes {
+        for image in &mut recipe.image {
+            if let RecipeImageFieldEnum::URL(u) = image
+                && let Some(file_name) = Path::new(u.as_str()).file_name()
+                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
+            {
+                *u = path.to_string_lossy().into_owned();
+            }
+        }
+    }
+
+    update_recipe_image_paths(&mut recipes, &images);
+    Ok(recipes)
+}
+
+/// Parses the recipes without images in an archive.
+pub fn parse_archive_helper_no_images<R>(r: R, parsers: &Parsers) -> Result<Vec<Recipe>>
+where
+    R: Read + Seek,
+{
+    let archive = ZipArchive::new(r)?;
+    let (recipes, _) = extract_archive_contents(archive, parsers)?;
+    Ok(recipes)
 }

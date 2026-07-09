@@ -7,5 +7,6 @@ WHERE
     'cookbook',
     'home cookin',
     'recipe keeper',
-    'le collectionneur de recettes'
+    'le collectionneur de recettes',
+    'mr. cook'
   );

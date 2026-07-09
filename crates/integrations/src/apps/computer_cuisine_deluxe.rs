@@ -303,8 +303,6 @@ mod tests {
 
     use super::*;
 
-    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
     #[test]
     #[allow(clippy::too_many_lines)]
     fn test_ccd_recipes_csv_ok() -> Result<()> {

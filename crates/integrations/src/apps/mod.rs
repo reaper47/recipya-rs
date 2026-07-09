@@ -16,6 +16,7 @@ pub mod kalorio;
 pub mod lecollectionneurderecettes;
 pub mod mastercook;
 pub mod mealmaster;
+pub mod mrcook;
 pub mod paprika;
 pub mod recipekeeper;
 pub mod recipemd;

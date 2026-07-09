@@ -1,7 +1,6 @@
 use std::{
     borrow::Cow,
     io::{Read, Seek},
-    path::Path,
 };
 
 use itertools::Itertools;
@@ -12,7 +11,6 @@ use winnow::{
     combinator::{alt, delimited, eof, not, opt, peek, repeat, repeat_till, seq, terminated},
     token::{literal, take_until},
 };
-use zip::ZipArchive;
 
 use schema_org::{
     DurationOrText, Recipe,
@@ -25,8 +23,7 @@ use schema_org::{
 use crate::{
     Error, Result,
     apps::helpers::{
-        Ingredient, Instruction, Parsers, ToSections, extract_archive_contents, read_file,
-        update_recipe_image_paths,
+        Ingredient, Instruction, Parsers, ToSections, parse_archive_helper, read_file,
     },
 };
 
@@ -80,30 +77,14 @@ pub fn parse_archive<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let archive = ZipArchive::new(r)?;
-
-    let (mut recipes, images) = extract_archive_contents(
-        archive,
+    parse_archive_helper(
+        r,
         &Parsers {
             html: Some(parse_html),
             txt: Some(parse_txt),
             ..Default::default()
         },
-    )?;
-
-    for recipe in &mut recipes {
-        for image in &mut recipe.image {
-            if let RecipeImageFieldEnum::URL(u) = image
-                && let Some(file_name) = Path::new(u.as_str()).file_name()
-                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
-            {
-                *u = path.to_string_lossy().into_owned();
-            }
-        }
-    }
-
-    update_recipe_image_paths(&mut recipes, &images);
-    Ok(recipes)
+    )
 }
 
 /// Parses an `Le Collectionneur de Recettes` HTML file.

@@ -9,7 +9,6 @@ use winnow::{
     combinator::{delimited, repeat, seq, terminated},
     token::{literal, take_until},
 };
-use zip::ZipArchive;
 
 use schema_org::{AtType, Recipe};
 
@@ -17,7 +16,7 @@ use crate::{
     Error, Result,
     apps::{
         helpers::{
-            Ingredient, Instruction, Parsers, ToSections, extract_archive_contents, read_file,
+            Ingredient, Instruction, Parsers, ToSections, parse_archive_helper_no_images, read_file,
         },
         recipya::at_context,
     },
@@ -48,17 +47,13 @@ pub fn parse_archive<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let archive = ZipArchive::new(r)?;
-
-    let (recipes, _) = extract_archive_contents(
-        archive,
+    parse_archive_helper_no_images(
+        r,
         &Parsers {
             txt: Some(parse_txt),
             ..Default::default()
         },
-    )?;
-
-    Ok(recipes)
+    )
 }
 
 /// Parses a `CookBook` text file.

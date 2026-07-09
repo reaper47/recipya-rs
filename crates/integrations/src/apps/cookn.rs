@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
-use std::path::Path;
 
 use scraper::{Html, Selector};
 use winnow::Result as WResult;
@@ -9,7 +8,6 @@ use winnow::combinator::{alt, delimited, eof, not, opt, peek, seq, terminated};
 use winnow::stream::AsChar;
 use winnow::token::literal;
 use winnow::{Parser, combinator::repeat};
-use zip::ZipArchive;
 
 use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
@@ -17,9 +15,7 @@ use schema_org::field::{
 };
 use schema_org::{AtType, Comment, DurationOrText, Recipe, at_context};
 
-use crate::apps::helpers::{
-    Ingredient, Parsers, ToSections, extract_archive_contents, read_file, update_recipe_image_paths,
-};
+use crate::apps::helpers::{Ingredient, Parsers, ToSections, parse_archive_helper, read_file};
 use crate::{Error, Result};
 
 enum Instruction<'a> {
@@ -302,29 +298,13 @@ pub fn parse_archive<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
-    let archive = ZipArchive::new(r)?;
-
-    let (mut recipes, images) = extract_archive_contents(
-        archive,
+    parse_archive_helper(
+        r,
         &Parsers {
             html: Some(parse_html),
             ..Default::default()
         },
-    )?;
-
-    for recipe in &mut recipes {
-        for image in &mut recipe.image {
-            if let RecipeImageFieldEnum::URL(u) = image
-                && let Some(file_name) = Path::new(u.as_str()).file_name()
-                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
-            {
-                *u = path.to_string_lossy().into_owned();
-            }
-        }
-    }
-
-    update_recipe_image_paths(&mut recipes, &images);
-    Ok(recipes)
+    )
 }
 
 #[allow(clippy::too_many_lines)]

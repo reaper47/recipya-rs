@@ -66,6 +66,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             vec![".mx2", ".mxp", ".mz2", ".txt"],
         ),
         (
+            "Mr. Cook",
+            "https://www.mrcook.app/en",
+            vec![".csv", ".zip"],
+        ),
+        (
             "Paprika",
             "https://www.paprikaapp.com",
             vec![".paprikarecipes"],
