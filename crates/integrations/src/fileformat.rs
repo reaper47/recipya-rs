@@ -15,7 +15,9 @@ pub enum FileFormat {
     MXP,
     MZ2,
     MealMaster,
+    Png,
     Rezkonv,
+    Rtk,
     Txt,
     Xml,
     Yaml,
@@ -53,6 +55,8 @@ impl FileFormat {
             "mxp" => Self::MXP,
             "mz2" => Self::MZ2,
             "mm" | "mmf" => Self::MealMaster,
+            "png" => Self::Png,
+            "rtk" => Self::Rtk,
             "rzk" | "rk" => Self::Rezkonv,
             "txt" => Self::Txt,
             "xml" => Self::Xml,
@@ -73,7 +77,7 @@ impl FileFormat {
             ".csv",
             ".hc",
             ".html",
-            // Omit: jpg - apps usually don't export recipes as jpg
+            // Omit: jpg,png - apps usually don't export recipes as jpg
             ".json",
             ".mcb",
             ".md",
@@ -84,8 +88,9 @@ impl FileFormat {
             ".mm",
             ".mmf",
             ".paprikarecipes",
-            ".rzk",
             ".rk",
+            ".rtk",
+            ".rzk",
             ".rzk",
             ".txt",
             ".xml",
@@ -208,6 +213,14 @@ mod tests {
         }
 
         #[test]
+        fn test_png_format() {
+            assert_format!(
+                "test.png" => FileFormat::Png,
+                "data.PnG" => FileFormat::Png,
+            );
+        }
+
+        #[test]
         fn test_rezkonv_format() {
             assert_format!(
                 "recipe.rzk" => FileFormat::Rezkonv,
@@ -216,6 +229,14 @@ mod tests {
                 "recipe.RK" => FileFormat::Rezkonv,
                 "data.Rzk" => FileFormat::Rezkonv,
                 "file.Rk" => FileFormat::Rezkonv,
+            );
+        }
+
+        #[test]
+        fn test_rtk_format() {
+            assert_format!(
+                "recipe.rtk" => FileFormat::Rtk,
+                "data.RTk" => FileFormat::Rtk,
             );
         }
 

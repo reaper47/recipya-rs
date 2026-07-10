@@ -52,6 +52,7 @@ enum TertiaryInner {
     MasterCook,
     MealMaster,
     MrCook,
+    MyRecipeBox,
     Paprika,
     RecipeKeeper,
     RecipeMD,
@@ -294,6 +295,11 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::MrCook)
     }
 
+    /// Creates a new tertiary report type for the `My Recipe Box` software.
+    pub const fn myrecipebox() -> Self {
+        Self::new(TertiaryInner::MyRecipeBox)
+    }
+
     /// Creates a new tertiary report type for the `Parpika` software.
     pub const fn paprika() -> Self {
         Self::new(TertiaryInner::Paprika)
@@ -360,6 +366,7 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::RecipeKeeper => 25,
             TertiaryInner::LeCollectionneurDeRecettes => 26,
             TertiaryInner::MrCook => 27,
+            TertiaryInner::MyRecipeBox => 28,
         }
     }
 }

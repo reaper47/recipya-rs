@@ -71,6 +71,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             vec![".csv", ".zip"],
         ),
         (
+            "My Recipe Box",
+            "https://www.myrecipebox.app/en/",
+            vec![".csv", ".rtk", ".zip"],
+        ),
+        (
             "Paprika",
             "https://www.paprikaapp.com",
             vec![".paprikarecipes"],

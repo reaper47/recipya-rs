@@ -8,4 +8,5 @@ VALUES
   ('home cookin'),
   ('recipe keeper'),
   ('le collectionneur de recettes'),
-  ('mr. cook');
+  ('mr. cook'),
+  ('my recipe box');

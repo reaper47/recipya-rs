@@ -208,7 +208,7 @@ where
         let file_name = file.name().to_string();
         let format = FileFormat::from_filename(&file_name);
 
-        if format == FileFormat::Jpg {
+        if format == FileFormat::Jpg || format == FileFormat::Png {
             let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
             let mut tmp_file = File::create(tmp_path.clone())?;
             io::copy(&mut file, &mut tmp_file)?;

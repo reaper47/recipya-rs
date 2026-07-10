@@ -29,6 +29,8 @@ pub enum App {
     MealMaster,
     #[strum(to_string = "Mr. Cook")]
     MrCook,
+    #[strum(to_string = "My Recipe Box")]
+    MyRecipeBox,
     Paprika,
     #[strum(to_string = "Recipe Keeper")]
     RecipeKeeper,

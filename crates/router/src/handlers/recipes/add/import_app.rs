@@ -110,6 +110,9 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             integrations::App::MasterCook => ReportTypeFull::app(TertiaryReportType::mastercook()),
             integrations::App::MealMaster => ReportTypeFull::app(TertiaryReportType::mealmaster()),
             integrations::App::MrCook => ReportTypeFull::app(TertiaryReportType::mrcook()),
+            integrations::App::MyRecipeBox => {
+                ReportTypeFull::app(TertiaryReportType::myrecipebox())
+            }
             integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
             integrations::App::RecipeKeeper => {
                 ReportTypeFull::app(TertiaryReportType::recipekeeper())

@@ -233,8 +233,7 @@ mod tests {
 
         #[test]
         fn test_mrcook_csv_ok() -> Result<()> {
-            let file = files::csv();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(files::csv());
 
             let got = parse_csv(buf)?;
 
