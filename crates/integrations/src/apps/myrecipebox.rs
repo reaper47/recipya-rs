@@ -9,6 +9,11 @@ use std::{
 };
 
 use itertools::Itertools;
+use scraper::{Html, Node, Selector};
+use serde::Deserialize;
+use tracing::error;
+use zip::ZipArchive;
+
 use schema_org::{
     AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
     VideoObject,
@@ -17,10 +22,6 @@ use schema_org::{
         RecipeVideoFieldEnum, RecipeYieldFieldEnum,
     },
 };
-use scraper::{Html, Node, Selector};
-use serde::Deserialize;
-use tracing::error;
-use zip::ZipArchive;
 
 use crate::{
     Result,

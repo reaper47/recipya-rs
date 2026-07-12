@@ -114,6 +114,9 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
                 ReportTypeFull::app(TertiaryReportType::myrecipebox())
             }
             integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
+            integrations::App::Pepperplate => {
+                ReportTypeFull::app(TertiaryReportType::pepperplate())
+            }
             integrations::App::RecipeKeeper => {
                 ReportTypeFull::app(TertiaryReportType::recipekeeper())
             }

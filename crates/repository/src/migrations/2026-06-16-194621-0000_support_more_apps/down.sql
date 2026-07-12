@@ -9,5 +9,6 @@ WHERE
     'recipe keeper',
     'le collectionneur de recettes',
     'mr. cook',
-    'my recipe box'
+    'my recipe box',
+    'pepperplate'
   );

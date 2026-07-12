@@ -21,8 +21,8 @@ use crate::apps::cooklang::CookLang;
 use crate::apps::{
     accuchef, bigoven, cheftap, computer_cuisine_deluxe, cookbook, cookmate, cookml, cookn,
     copymethat, crouton, homecookin, kalorio, lecollectionneurderecettes, mastercook, mealmaster,
-    mrcook, myrecipebox, paprika, recipekeeper, recipemd, recipeml, recipesage, recipya, rezkonv,
-    saffron,
+    mrcook, myrecipebox, paprika, pepperplate, recipekeeper, recipemd, recipeml, recipesage,
+    recipya, rezkonv, saffron,
 };
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
@@ -108,6 +108,11 @@ where
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::Paprika => paprika::parse(r),
+        App::Pepperplate => match file_format {
+            FileFormat::Txt => pepperplate::parse_txt(r),
+            FileFormat::Zip => pepperplate::parse_archive(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
         App::RecipeKeeper => recipekeeper::parse_archive(r),
         App::RecipeMD => recipemd::parse(r),
         App::RecipeSage => match file_format {

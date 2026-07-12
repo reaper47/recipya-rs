@@ -54,6 +54,7 @@ enum TertiaryInner {
     MrCook,
     MyRecipeBox,
     Paprika,
+    Pepperplate,
     RecipeKeeper,
     RecipeMD,
     RecipeSage,
@@ -305,6 +306,11 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::Paprika)
     }
 
+    /// Creates a new tertiary report type for the `Pepperplate` software.
+    pub const fn pepperplate() -> Self {
+        Self::new(TertiaryInner::Pepperplate)
+    }
+
     /// Creates a new tertiary report type for the `Recipe Keeper` software.
     pub const fn recipekeeper() -> Self {
         Self::new(TertiaryInner::RecipeKeeper)
@@ -367,6 +373,7 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::LeCollectionneurDeRecettes => 26,
             TertiaryInner::MrCook => 27,
             TertiaryInner::MyRecipeBox => 28,
+            TertiaryInner::Pepperplate => 29,
         }
     }
 }

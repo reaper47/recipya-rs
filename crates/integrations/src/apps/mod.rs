@@ -19,6 +19,7 @@ pub mod mealmaster;
 pub mod mrcook;
 pub mod myrecipebox;
 pub mod paprika;
+pub mod pepperplate;
 pub mod recipekeeper;
 pub mod recipemd;
 pub mod recipeml;

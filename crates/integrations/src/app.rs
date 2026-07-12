@@ -32,6 +32,7 @@ pub enum App {
     #[strum(to_string = "My Recipe Box")]
     MyRecipeBox,
     Paprika,
+    Pepperplate,
     #[strum(to_string = "Recipe Keeper")]
     RecipeKeeper,
     RecipeMD,
