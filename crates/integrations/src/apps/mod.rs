@@ -27,3 +27,4 @@ pub mod recipesage;
 pub mod recipya;
 pub mod rezkonv;
 pub mod saffron;
+pub mod umami;

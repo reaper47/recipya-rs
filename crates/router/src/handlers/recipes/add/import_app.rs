@@ -125,6 +125,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             integrations::App::Recipya => ReportTypeFull::app(TertiaryReportType::recipya()),
             integrations::App::Rezkonv => ReportTypeFull::app(TertiaryReportType::rezkonv()),
             integrations::App::Saffron => ReportTypeFull::app(TertiaryReportType::saffron()),
+            integrations::App::Umami => ReportTypeFull::app(TertiaryReportType::umami()),
             integrations::App::Unknown => ReportTypeFull {
                 primary: PrimaryReportType::<Import>::new(),
                 secondary: None,

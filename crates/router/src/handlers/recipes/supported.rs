@@ -7,6 +7,7 @@ use recipya_scraper::{ToHtmlTable, Website};
 use crate::middleware::mw_auth::RequireAuth;
 
 /// Handles the supported applications endpoint.
+#[allow(clippy::too_many_lines)]
 pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
     let applications = [
         ("AccuChef", "https://www.accuchef.com", vec![]),
@@ -81,6 +82,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             vec![".paprikarecipes"],
         ),
         (
+            "Pepperplate",
+            "https://www.pepperplate.com/",
+            vec![".txt", ".zip"],
+        ),
+        (
             "Recipe Keeper",
             "https://recipekeeperonline.com",
             vec![".zip"],
@@ -93,6 +99,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
         ),
         ("Rezkonv", "https://www.rezkonv.de/", vec![".rk"]),
         ("Saffron", "https://www.mysaffronapp.com", vec![".txt"]),
+        (
+            "Umami",
+            "https://www.umami.recipes/",
+            vec![".json", ".html", ".md", ".txt", ".zip"],
+        ),
     ];
 
     let mut html = String::new();

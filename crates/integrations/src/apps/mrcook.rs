@@ -244,8 +244,7 @@ mod tests {
 
         #[test]
         fn test_mrcook_json_ok() -> Result<()> {
-            let file = files::json();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(files::json());
 
             let mut got = parse_json(buf)?;
 

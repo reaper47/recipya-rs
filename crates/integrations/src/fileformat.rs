@@ -11,6 +11,7 @@ pub enum FileFormat {
     Jpg,
     Json,
     MCB,
+    Md,
     MX2,
     MXP,
     MZ2,
@@ -51,6 +52,7 @@ impl FileFormat {
             "jpg" => Self::Jpg,
             "json" => Self::Json,
             "mcb" => Self::MCB,
+            "md" => Self::Md,
             "mx2" => Self::MX2,
             "mxp" => Self::MXP,
             "mz2" => Self::MZ2,
@@ -170,6 +172,14 @@ mod tests {
                 "recipe.mcb" => FileFormat::MCB,
                 "data.MCB" => FileFormat::MCB,
                 "file.Mcb" => FileFormat::MCB,
+            );
+        }
+
+        #[test]
+        fn test_md_format() {
+            assert_format!(
+                "recipe.md" => FileFormat::Md,
+                "data.MD" => FileFormat::Md,
             );
         }
 

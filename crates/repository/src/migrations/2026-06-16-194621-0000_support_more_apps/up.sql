@@ -10,4 +10,5 @@ VALUES
   ('le collectionneur de recettes'),
   ('mr. cook'),
   ('my recipe box'),
-  ('pepperplate');
+  ('pepperplate'),
+  ('umami');

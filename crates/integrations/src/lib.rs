@@ -22,10 +22,11 @@ use crate::apps::{
     accuchef, bigoven, cheftap, computer_cuisine_deluxe, cookbook, cookmate, cookml, cookn,
     copymethat, crouton, homecookin, kalorio, lecollectionneurderecettes, mastercook, mealmaster,
     mrcook, myrecipebox, paprika, pepperplate, recipekeeper, recipemd, recipeml, recipesage,
-    recipya, rezkonv, saffron,
+    recipya, rezkonv, saffron, umami,
 };
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
+#[allow(clippy::too_many_lines)]
 pub fn parse_recipe<R>(
     r: &mut R,
     app: &App,
@@ -127,6 +128,14 @@ where
         },
         App::Rezkonv => rezkonv::parse(r),
         App::Saffron => saffron::parse(r),
+        App::Umami => match file_format {
+            FileFormat::Html => umami::parse_html(r),
+            FileFormat::Json => umami::parse_json(r),
+            FileFormat::Md => umami::parse_md(r),
+            FileFormat::Txt => umami::parse_txt(r),
+            FileFormat::Zip => umami::parse_archive(r),
+            _ => Err(Error::UnsupportedApp),
+        },
         App::Unknown => Err(Error::UnsupportedApp),
     }
 }
