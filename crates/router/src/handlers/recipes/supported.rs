@@ -10,7 +10,11 @@ use crate::middleware::mw_auth::RequireAuth;
 #[allow(clippy::too_many_lines)]
 pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl IntoResponse {
     let applications = [
-        ("AccuChef", "https://www.accuchef.com", vec![]),
+        (
+            "AccuChef",
+            "https://www.accuchef.com",
+            vec![".html", ".txt", ".zip"],
+        ),
         ("BigOven", "https://www.bigoven.com", vec![".txt"]),
         (
             "ChefTap",

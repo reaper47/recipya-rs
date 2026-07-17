@@ -37,7 +37,12 @@ where
     R: Read + Seek,
 {
     match app {
-        App::AccuChef => accuchef::parse(r),
+        App::AccuChef => match file_format {
+            FileFormat::Html => accuchef::parse_html(r),
+            FileFormat::Txt => accuchef::parse_txt(r),
+            FileFormat::Zip => accuchef::parse_archive(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
         App::BigOven => bigoven::parse(r),
         App::ChefTap => match file_format {
             FileFormat::Html => cheftap::parse_html(r),

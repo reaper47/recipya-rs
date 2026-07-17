@@ -1,4 +1,5 @@
 /// Represents the preparation and cooking times of a recipe.
+#[derive(Default)]
 pub struct Times {
     pub prep_seconds: i32,
     pub cook_seconds: i32,
