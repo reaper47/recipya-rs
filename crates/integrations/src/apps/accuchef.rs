@@ -5,10 +5,10 @@ use itertools::Itertools;
 use scraper::{Html, Node, Selector};
 use tracing::error;
 use winnow::Result as WResult;
-use winnow::ascii::{digit1, line_ending, multispace0, space0, till_line_ending};
-use winnow::combinator::{alt, delimited, opt, preceded, repeat, seq, terminated};
+use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space0, till_line_ending};
+use winnow::combinator::{alt, delimited, opt, peek, preceded, repeat, seq, terminated};
 use winnow::prelude::*;
-use winnow::token::{literal, one_of};
+use winnow::token::{literal, one_of, rest, take_until};
 
 use schema_org::field::{
     ItemListItemListElementFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
@@ -63,7 +63,11 @@ impl From<AccuChefRecipe> for Recipe {
                 }]
             }),
             cook_time: seconds_to_duration(r.times.cook_seconds),
-            is_based_on: to_is_based_on(&r.source),
+            is_based_on: to_is_based_on(if r.source.is_empty() {
+                "AccuChef Import File"
+            } else {
+                &r.source
+            }),
             keywords: r
                 .keywords
                 .into_iter()
@@ -280,50 +284,7 @@ where
             ingredients,
             instructions,
             source: "AccuChef Import File".into(),
-            nutrition: blocks.first().map(|block| {
-                let parts = block
-                    .trim()
-                    .split(';')
-                    .map(str::trim)
-                    .map(|s| s.replace("Main Page", ""))
-                    .collect_vec();
-
-                let extract_mass = |suffix: &str| {
-                    parts
-                        .iter()
-                        .find(|s| s.trim().ends_with(suffix))
-                        .cloned()
-                        .map_or(Vec::new(), |s| {
-                            vec![Mass::new(s.trim().trim_end_matches(suffix).trim())]
-                        })
-                };
-
-                NutritionInformation {
-                    calories: parts
-                        .iter()
-                        .find(|s| s.starts_with("Per Serving:"))
-                        .cloned()
-                        .map_or(Vec::new(), |s| {
-                            vec![Energy::new({
-                                let s = s.trim_start_matches("Per Serving:");
-                                s.split_once('(').map_or(s, |(s, _)| s.trim())
-                            })]
-                        }),
-                    carbohydrate_content: extract_mass("Carb"),
-                    cholesterol_content: extract_mass("Cholesterol"),
-                    context: at_context(),
-                    fat_content: extract_mass("Tot Fat"),
-                    fiber_content: extract_mass("Fiber"),
-                    protein_content: extract_mass("Protein"),
-                    saturated_fat_content: extract_mass("Sat Fat"),
-                    serving_size: vec![],
-                    sodium_content: extract_mass("Sodium"),
-                    sugar_content: extract_mass("Sugar"),
-                    r#type: AtType::NutritionInformation.to_opt(),
-                    trans_fat_content: extract_mass("Trans Fat"),
-                    unsaturated_fat_content: extract_mass("Mono Fat"),
-                }
-            }),
+            nutrition: blocks.first().map(|block| parse_nutrition(block.as_str())),
             ..Default::default()
         }
         .into(),
@@ -336,12 +297,15 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    let recipe = parse_accuchef_recipe(&mut content.as_str())?;
+    let recipe = match parse_accuchef_recipe(&mut content.as_str()) {
+        Ok(r) => r,
+        Err(_) => parse_txt_basic(&mut content.as_str())?,
+    };
     Ok(recipe.into_iter().map(Recipe::from).collect())
 }
 
 fn parse_accuchef_recipe(input: &mut &str) -> Result<Vec<AccuChefRecipe>> {
-    repeat(0.., recipe.map(|r| Some(AccuChefRecipe::from(r))))
+    repeat(1.., recipe.map(|r| Some(AccuChefRecipe::from(r))))
         .parse_next(input)
         .map(|recipes: Vec<_>| recipes.into_iter().flatten().collect())
         .map_err(|err| Error::Parse(err.to_string()))
@@ -438,6 +402,115 @@ fn parse_eol<'s>(input: &mut &'s str) -> WResult<&'s str> {
     terminated(alt((literal("\r\n"), literal("\n"))), multispace0).parse_next(input)
 }
 
+fn parse_txt_basic(input: &mut &str) -> Result<Vec<AccuChefRecipe>> {
+    parse_txt_basic_recipe
+        .parse_next(input)
+        .map(|recipe| vec![recipe])
+        .map_err(|err| Error::Parse(err.to_string()))
+}
+
+fn parse_txt_basic_recipe(input: &mut &str) -> WResult<AccuChefRecipe> {
+    seq! {AccuChefRecipe {
+        title: parse_txt_basic_title.map(String::from),
+        r#yield: opt(parse_txt_basic_yield),
+        notes: opt(parse_txt_basic_notes.map(String::from)),
+        ingredients: parse_txt_basic_ingredients,
+        instructions: parse_txt_basic_instructions,
+        nutrition: opt(parse_txt_basic_nutrition),
+        ..Default::default()
+    }}
+    .parse_next(input)
+}
+
+fn parse_txt_basic_title<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    terminated(till_line_ending, multispace1).parse_next(input)
+}
+
+fn parse_txt_basic_yield(input: &mut &str) -> WResult<i16> {
+    terminated(digit1, (literal("      "), till_line_ending, multispace1))
+        .parse_to()
+        .parse_next(input)
+}
+
+fn parse_txt_basic_notes<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(literal("NOTES : "), till_line_ending, multispace1).parse_next(input)
+}
+
+fn parse_txt_basic_ingredients(input: &mut &str) -> WResult<Vec<RecipeRecipeIngredientFieldEnum>> {
+    terminated(take_until(1.., "\n\n"), (line_ending, line_ending))
+        .map(|block: &str| {
+            block
+                .lines()
+                .map(|s| RecipeRecipeIngredientFieldEnum::Text(s.trim().into()))
+                .collect_vec()
+        })
+        .parse_next(input)
+}
+
+fn parse_txt_basic_instructions(
+    input: &mut &str,
+) -> WResult<Vec<RecipeRecipeInstructionsFieldEnum>> {
+    terminated(take_until(1.., "\n\n"), multispace1)
+        .map(|block: &str| {
+            block
+                .lines()
+                .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().into()))
+                .collect_vec()
+        })
+        .parse_next(input)
+}
+
+fn parse_txt_basic_nutrition(input: &mut &str) -> WResult<NutritionInformation> {
+    preceded(peek(literal("Per Serving: ")), rest)
+        .map(parse_nutrition)
+        .parse_next(input)
+}
+
+fn parse_nutrition(block: &str) -> NutritionInformation {
+    let parts = block
+        .trim()
+        .split(';')
+        .map(str::trim)
+        .map(|s| s.replace("Main Page", ""))
+        .collect_vec();
+
+    let extract_mass = |suffix: &str| {
+        parts
+            .iter()
+            .find(|s| s.trim().ends_with(suffix))
+            .cloned()
+            .map_or(Vec::new(), |s| {
+                vec![Mass::new(s.trim().trim_end_matches(suffix).trim())]
+            })
+    };
+
+    NutritionInformation {
+        calories: parts
+            .iter()
+            .find(|s| s.starts_with("Per Serving:"))
+            .cloned()
+            .map_or(Vec::new(), |s| {
+                vec![Energy::new({
+                    let s = s.trim_start_matches("Per Serving:");
+                    s.split_once('(').map_or(s, |(s, _)| s.trim())
+                })]
+            }),
+        carbohydrate_content: extract_mass("Carb"),
+        cholesterol_content: extract_mass("Cholesterol"),
+        context: at_context(),
+        fat_content: extract_mass("Tot Fat"),
+        fiber_content: extract_mass("Fiber"),
+        protein_content: extract_mass("Protein"),
+        saturated_fat_content: extract_mass("Sat Fat"),
+        serving_size: vec![],
+        sodium_content: extract_mass("Sodium"),
+        sugar_content: extract_mass("Sugar"),
+        r#type: AtType::NutritionInformation.to_opt(),
+        trans_fat_content: extract_mass("Trans Fat"),
+        unsaturated_fat_content: extract_mass("Mono Fat"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::default::Default;
@@ -457,8 +530,7 @@ mod tests {
 
         #[test]
         fn test_accuchef_native_ok() -> Result<()> {
-            let file = files::txt();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(files::txt());
 
             let got = parse_txt(buf)?;
 
@@ -468,12 +540,21 @@ mod tests {
 
         #[test]
         fn test_accuchef_html_ok() -> Result<()> {
-            let file = files::html();
-            let buf = Cursor::new(file);
+            let buf = Cursor::new(files::html());
 
             let got = parse_html(buf)?;
 
-            pretty_assertions::assert_eq!(got, vec![results::html()]);
+            pretty_assertions::assert_eq!(got, vec![results::antipasto()]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_accuchef_basic_txt_ok() -> Result<()> {
+            let buf = Cursor::new(files::txt_basic());
+
+            let got = parse_txt(buf)?;
+
+            pretty_assertions::assert_eq!(got, vec![results::antipasto()]);
             Ok(())
         }
     }
@@ -508,6 +589,31 @@ mod tests {
             </body>
             </html>
 "#
+        }
+
+        pub fn txt_basic<'a>() -> &'a str {
+            r"Antipasto
+
+            12      Servings
+
+            NOTES : From the Bull Cook and Authentic Historical Recipes and Practices cookbook by George Leonard Herter.  This book is out of print (it was barely in print) but is  filled with truths about the world (as George saw it anyway).
+
+            1 Cup White Vinegar
+            2/3 Cup Olive Oil
+            1 Can Tomato Paste (12 Oz)
+            1 Can Pimentos (4 Oz)
+            1 Can Green Beans (8 Oz)
+            1 Can Wax Beans (8 Oz)
+            1 Jar Stuffed Green Olives (2 Oz)
+            1 Can Sliced Carrots (4 Oz)
+            1 Can Mushrooms (4 Oz)
+            3 Dill Pickles, Chopped
+            1 Can Tuna (6 Oz)
+
+            Combine vinegar, olive oil and tomato paste in a large pot and heat over medium until hot, remove and let cool. Cut vegetables into small pieces (if necessary) and add to the cooled mixture along with any juices in the cans. Add salt and pepper to taste. Divided into plastic storage bags for freezing.
+
+            Per Serving: 199 Cal (58% from Fat, 13% from Protein, 29% from Carb); 7 g Protein; 13 g Tot Fat; 2 g Sat Fat; 9 g Mono Fat; 15 g Carb; 5 g Fiber; 40 mg Calcium; 2 mg Iron; 483 mg Sodium; 6 mg Cholesterol
+"
         }
 
         #[allow(clippy::too_many_lines)]
@@ -622,7 +728,7 @@ mod tests {
     mod results {
         use super::*;
 
-        pub fn html() -> Recipe {
+        pub fn antipasto() -> Recipe {
             Recipe {
                 r#type: AtType::Recipe.to_opt(),
                 context: at_context(),
