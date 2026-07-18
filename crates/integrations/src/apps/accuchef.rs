@@ -1,9 +1,9 @@
-use std::io::{Read, Seek};
+use std::io::{Cursor, Read, Seek};
 
 use humantime::parse_duration;
 use itertools::Itertools;
 use scraper::{Html, Node, Selector};
-use tracing::error;
+use tracing::{error, warn};
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space0, till_line_ending};
 use winnow::combinator::{alt, delimited, opt, peek, preceded, repeat, seq, terminated};
@@ -18,6 +18,7 @@ use schema_org::{AtType, Comment, Energy, Mass, NutritionInformation, Recipe, at
 
 use super::helpers::read_file;
 use crate::apps::helpers::{Parsers, parse_archive_helper};
+use crate::apps::mastercook;
 use crate::common::Times;
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 use crate::{Error, Result};
@@ -297,11 +298,24 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    let recipe = match parse_accuchef_recipe(&mut content.as_str()) {
-        Ok(r) => r,
-        Err(_) => parse_txt_basic(&mut content.as_str())?,
-    };
-    Ok(recipe.into_iter().map(Recipe::from).collect())
+    let content = content.replace('\0', "");
+
+    Ok(match parse_accuchef_recipe(&mut content.as_str()) {
+        Ok(r) => r.into_iter().map(Recipe::from).collect(),
+        Err(_) => match mastercook::parse_mxp(Cursor::new(content.clone())) {
+            Ok(r) => r,
+            Err(err) => {
+                warn!(
+                    "Failed to parse AccuChef recipes with mastercook::parse_mxp, trying mastercook::mxp: {err}"
+                );
+
+                parse_txt_basic(&mut content.as_str())?
+                    .into_iter()
+                    .map(Recipe::from)
+                    .collect()
+            }
+        },
+    })
 }
 
 fn parse_accuchef_recipe(input: &mut &str) -> Result<Vec<AccuChefRecipe>> {
@@ -557,6 +571,18 @@ mod tests {
             pretty_assertions::assert_eq!(got, vec![results::antipasto()]);
             Ok(())
         }
+
+        #[test]
+        fn test_accuchef_txt_mastercook_ok() -> Result<()> {
+            let buf = Cursor::new(files::txt_mastercook());
+
+            let got = parse_txt(buf)?;
+
+            let expected = results::mastercook();
+            pretty_assertions::assert_eq!(got.len(), expected.len());
+            pretty_assertions::assert_eq!(got, expected);
+            Ok(())
+        }
     }
 
     mod files {
@@ -723,9 +749,101 @@ mod tests {
     Jorange sherbet on top.
     Z.....End of recipe definition"
         }
+
+        pub fn txt_mastercook<'a>() -> &'a str {
+            r"
+                              *  Exported from MasterCook  *  (actually AccuChef-www.AccuChef.com)
+
+                                  15 Minute Pasta Sauce
+
+         Recipe By     :
+         Serving Size  : 4    Preparation Time :  :
+         Categories    : Sauce/Gravy
+
+           Amount  Measure       Ingredient -- Preparation Method
+         --------  ------------  --------------------------------
+            2      tablespoon    Olive Oil
+            2                    Garlic Cloves -- Minced
+            4      pinches       Pepper -- Fresh Ground
+              1/2  cup           Onion -- Finely Chopped
+            1      can           Crushed Tomatoes (28 Oz)
+
+         Place a large heavy pan over moderate heat. Add the oil, garlic, pepper and onion. Cook for 5 minutes, or until fragrant. Add crushed tomatoes. Reduce heat and simmer, stirring occasionally for 10 minutes. Season with salt and your favorite chopped fresh herb (basil, fresh oregano, or fresh coriander). Fresh herbs make a big difference in quality and flavor. Serve over pasta with garlic bread and a salad on the side.
+
+         Per serving: 223 cal (55% from fat, 7% from protein, 38% from carb); 4 g protein; 15 g tot fat; 2 g sat fat; 10 g mono fat; 23 g carb; 5 g fiber; 34 mg calcium; 2 mg iron; 38 mg sodium; 0 mg cholesterol; accupoints = 4.9 
+
+                            - - - - - - - - - - - - - - - - - -
+
+         NOTES : Note: you can make a large batch and freeze sauce in portion sizes in plastic bags.
+         If you freeze the  sauce right after you make it, you will capture the flavor...
+
+
+                              *  Exported from MasterCook  *  (actually AccuChef-www.AccuChef.com)
+
+                                  1950's Kitchen Bread
+
+         Recipe By     :
+         Serving Size  : 1    Preparation Time :  :
+         Categories    : Bread
+
+           Amount  Measure       Ingredient -- Preparation Method
+         --------  ------------  --------------------------------
+              7/8  cup           Buttermilk
+            2      tablespoon    Butter (Or Margarine)
+              1/3  cup           American Cheese -- Shredded
+              1/4  cup           Onion -- Coarsely Chopped
+            1      teaspoon      Salt
+              1/4  teaspoon      Garlic Powder
+            2      cup           Bread Flour
+            1      tablespoon    Sugar
+            2      teaspoon      Yeast
+
+         Add the ingredients to your machine according to the manufacturer's instructions. Use a regular, light, or rapid bread cycle.
+
+
+          
+
+                            - - - - - - - - - - - - - - - - - -
+
+         NOTES : Bread machine recipe
+
+
+                              *  Exported from MasterCook  *  (actually AccuChef-www.AccuChef.com)
+
+                                    7-Layer Taco Dip
+
+         Recipe By     :
+         Serving Size  : 6    Preparation Time :00:15
+         Categories    : Appetizer                        Mexican
+
+           Amount  Measure       Ingredient -- Preparation Method
+         --------  ------------  --------------------------------
+            1      package       Taco Seasoning
+            8      ounce         Sour Cream
+            1      can           Bean Dip (16 Oz/Or Refried Beans)
+            2                    Ripe Avocados -- Mashed With Lemon
+            1      cup           Jack Cheese -- Shredded
+            1      cup           Cheddar Cheese -- Shredded
+            3                    Tomatoes -- Chopped Fine
+              1/2  cup           Green Onion -- Sliced
+            1      can           Black Olives (15 Oz) -- Chopped
+
+         Mix the taco seasoning into the sour cream (maybe less then one package, depending on taste). Layer in a 5 x 9 oblong casserole dish in the following order: Bean dip, avocados, sour cream mixture, jack cheese, cheddar cheese, tomatoes, green onions and black olives. Serve with tortilla chips.
+
+         Per Serving: 548 Cal (65% from Fat, 14% from Protein, 21% from Carb); 19 g Protein; 41 g Tot Fat; 17 g Sat Fat; 19 g Mono Fat; 30 g Carb; 11 g Fiber; 473 mg Calcium; 5 mg Iron; 1565 mg Sodium; 65 mg Cholesterol;  AccuPoints = 13.5 
+
+                            - - - - - - - - - - - - - - - - - -
+
+         NOTES : This is really eight layers if you count both types of cheese. Cost total recipe = $9.85 Cost per serving = $1.64
+
+
+"
+        }
     }
 
     mod results {
+        use schema_org::DurationOrText;
+
         use super::*;
 
         pub fn antipasto() -> Recipe {
@@ -886,6 +1004,137 @@ mod tests {
                         RecipeRecipeInstructionsFieldEnum::Text("Mix all together about 2 hours before serving. Serve a with a scoop of".into()),
                         RecipeRecipeInstructionsFieldEnum::Text("orange sherbet on top.".into()),
                     ],
+                    ..Default::default()
+                }
+            ]
+        }
+
+        #[allow(clippy::too_many_lines)]
+        pub fn mastercook() -> Vec<Recipe> {
+            vec![
+                Recipe {
+                    r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
+                    comment: vec![Comment {
+                        text: vec!["Note: you can make a large batch and freeze sauce in portion sizes in plastic bags.".into()],
+                        ..Default::default()
+                    },
+                    Comment {
+                        text: vec!["If you freeze the  sauce right after you make it, you will capture the flavor...".into()],
+                        ..Default::default()
+                    }],
+                    comment_count: vec![2],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "Exported from MasterCook",
+                    )],
+                    name: vec!["15 Minute Pasta Sauce".into()],
+                    nutrition: vec![NutritionInformation {
+                        calories: vec![Energy::new("223 cal")],
+                        carbohydrate_content: vec![Mass::new("23 g")],
+                        context: at_context(),
+                        fat_content: vec![Mass::new("15 g")],
+                        fiber_content: vec![Mass::new("5 g")],
+                        protein_content: vec![Mass::new("4 g")],
+                        saturated_fat_content: vec![Mass::new("2 g")],
+                        sodium_content: vec![Mass::new("38 mg")],
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        unsaturated_fat_content: vec![Mass::new("10 g")],
+                        ..Default::default()
+                    }],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("2 tablespoon Olive Oil".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Garlic Cloves, Minced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 pinches Pepper, Fresh Ground".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 cup Onion, Finely Chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 can Crushed Tomatoes (28 Oz)".into()),
+                    ],
+                    recipe_category: vec!["Sauce/Gravy".into()],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Place a large heavy pan over moderate heat. Add the oil, garlic, pepper and onion. Cook for 5 minutes, or until fragrant. Add crushed tomatoes. Reduce heat and simmer, stirring occasionally for 10 minutes. Season with salt and your favorite chopped fresh herb (basil, fresh oregano, or fresh coriander). Fresh herbs make a big difference in quality and flavor. Serve over pasta with garlic bread and a salad on the side.".into(),
+                        ),
+                    ],
+                    recipe_yield: to_yield(4),
+                    ..Default::default()
+                },
+                Recipe {
+                    r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
+                    comment: vec![Comment {
+                        text: vec!["Bread machine recipe".into()],
+                        ..Default::default()
+                    }],
+                    comment_count: vec![1],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "Exported from MasterCook",
+                    )],
+                    name: vec!["1950's Kitchen Bread".into()],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("7/8 cup Buttermilk".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 tablespoon Butter (Or Margarine)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/3 cup American Cheese, Shredded".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 cup Onion, Coarsely Chopped".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 teaspoon Salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 teaspoon Garlic Powder".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 cup Bread Flour".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 tablespoon Sugar".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 teaspoon Yeast".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Add the ingredients to your machine according to the manufacturer's instructions. Use a regular, light, or rapid bread cycle.".into(),
+                        ),
+                    ],
+                    recipe_category: vec!["Bread".into()],
+                    recipe_yield: to_yield(1),
+                    ..Default::default()
+                },
+                Recipe {
+                    r#type: AtType::Recipe.to_opt(),
+                    context: at_context(),
+                    comment: vec![Comment {
+                        text: vec!["This is really eight layers if you count both types of cheese. Cost total recipe = $9.85 Cost per serving = $1.64".into()],
+                        ..Default::default()
+                    }],
+                    comment_count: vec![1],
+                    is_based_on: vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(
+                        "Exported from MasterCook",
+                    )],
+                    name: vec!["7-Layer Taco Dip".into()],
+                    nutrition: vec![NutritionInformation {
+                        calories: vec![Energy::new("548 cal")],
+                        carbohydrate_content: vec![Mass::new("30 g")],
+                        cholesterol_content: vec![Mass::new("65 mg")],
+                        context: at_context(),
+                        fat_content: vec![Mass::new("41 g")],
+                        fiber_content: vec![Mass::new("11 g")],
+                        protein_content: vec![Mass::new("19 g")],
+                        saturated_fat_content: vec![Mass::new("17 g")],
+                        sodium_content: vec![Mass::new("1565 mg")],
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        unsaturated_fat_content: vec![Mass::new("19 g")],
+                        ..Default::default()
+                    }],
+                    prep_time: vec![DurationOrText::Text("PT900S".into())],
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 package Taco Seasoning".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("8 ounce Sour Cream".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 can Bean Dip (16 Oz/Or Refried Beans)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 Ripe Avocados, Mashed With Lemon".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 cup Jack Cheese, Shredded".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 cup Cheddar Cheese, Shredded".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 Tomatoes, Chopped Fine".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/2 cup Green Onion, Sliced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 can Black Olives (15 Oz), Chopped".into()),
+                    ],
+                    recipe_instructions: vec![
+                        RecipeRecipeInstructionsFieldEnum::Text(
+                            "Mix the taco seasoning into the sour cream (maybe less then one package, depending on taste). Layer in a 5 x 9 oblong casserole dish in the following order: Bean dip, avocados, sour cream mixture, jack cheese, cheddar cheese, tomatoes, green onions and black olives. Serve with tortilla chips.".into(),
+                        ),
+                    ],
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Mexican".into())],
+                    recipe_category: vec!["Appetizer".into()],
+                    recipe_yield: to_yield(6),
                     ..Default::default()
                 }
             ]

@@ -169,7 +169,6 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
         let client = reqwest::Client::new();
         match client.get(url).send().await {
             Ok(res) => {
-                dbg!(&path);
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes().await?)
