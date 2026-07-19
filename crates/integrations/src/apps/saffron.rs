@@ -14,7 +14,7 @@ use schema_org::field::{
 };
 use support::time::parse_hours_minutes;
 
-use crate::apps::helpers::{read_file, urls_to_image_object};
+use crate::apps::helpers::{Parsers, parse_archive_helper, read_file, urls_to_image_object};
 use crate::error::{Error, Result};
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 
@@ -106,8 +106,22 @@ impl From<SaffronRecipe> for Recipe {
     }
 }
 
-/// Parses a Saffron recipe from the file's content.
-pub fn parse<R>(r: R) -> Result<Vec<Recipe>>
+/// Parses a `Saffron` zip archive.
+pub fn parse_archive<R>(r: R) -> Result<Vec<Recipe>>
+where
+    R: Read + Seek,
+{
+    parse_archive_helper(
+        r,
+        &Parsers {
+            txt: Some(parse_txt),
+            ..Default::default()
+        },
+    )
+}
+
+/// Parses a `Saffron` text file.
+pub fn parse_txt<R>(r: R) -> Result<Vec<Recipe>>
 where
     R: Read + Seek,
 {
@@ -202,11 +216,19 @@ fn parse_image<'s>(input: &mut &'s str) -> WResult<Option<&'s str>> {
 }
 
 fn parse_ingredients<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
-    preceded(("Ingredients:", line_ending), repeat(1.., tabbed_line)).parse_next(input)
+    preceded(
+        ("Ingredients:", space0, line_ending),
+        repeat(1.., tabbed_line),
+    )
+    .parse_next(input)
 }
 
 fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
-    preceded(("Instructions:", line_ending), repeat(1.., tabbed_line)).parse_next(input)
+    preceded(
+        ("Instructions:", space0, line_ending),
+        repeat(1.., tabbed_line),
+    )
+    .parse_next(input)
 }
 
 fn tabbed_line<'s>(input: &mut &'s str) -> WResult<&'s str> {
@@ -234,19 +256,15 @@ fn parse_metadata_opt<'s>(text: &str) -> impl Parser<&'s str, Option<&'s str>, C
 mod tests {
     use std::io::Cursor;
 
-    use files::*;
     use schema_org::Recipe;
 
     use super::*;
 
-    type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
-
     #[test]
     fn test_recipe1_ok() -> Result<()> {
-        let file = recipe1_file();
-        let buf = Cursor::new(file);
+        let buf = Cursor::new(files::recipe1());
 
-        let got = parse(buf)?;
+        let got = parse_txt(buf)?;
 
         pretty_assertions::assert_eq!(got, vec![Recipe {
             cook_time: seconds_to_duration(1800),
@@ -282,10 +300,9 @@ mod tests {
 
     #[test]
     fn test_recipe2_ok() -> Result<()> {
-        let file = recipe2_file();
-        let buf = Cursor::new(file);
+        let buf = Cursor::new(files::recipe2());
 
-        let got = parse(buf)?;
+        let got = parse_txt(buf)?;
 
         pretty_assertions::assert_eq!(
             got,
@@ -311,8 +328,58 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn test_recipe3_ok() -> Result<()> {
+        let buf = Cursor::new(files::recipe3());
+
+        let got = parse_txt(buf)?;
+
+        pretty_assertions::assert_eq!(
+            got,
+            vec![Recipe {
+                cook_time: seconds_to_duration(35 * 60),
+                description: vec![RecipeDescriptionFieldEnum::Text(
+                    "This Cheesy Potato Casserole is the perfect side dish when serving a crowd!"
+                        .into()
+                )],
+                headline: vec!["First Cookbook".into()],
+                name: vec!["Cheesy Potato Casserole".into()],
+                prep_time: seconds_to_duration(15 * 60),
+                recipe_ingredient: vec![
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "32 ounces shredded potatoes (defrosted if frozen)".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "10 1/2 ounces condensed cheddar cheese soup (or cream of mushroom soup)"
+                            .into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text(
+                        "1 cup shredded sharp cheddar cheese".into()
+                    ),
+                    RecipeRecipeIngredientFieldEnum::Text("2/3 cup sour cream".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1/4 cup butter (melted)".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1/4 cup milk".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1/2 teaspoon garlic powder".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1/2 teaspoon onion powder".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("1 cup cornflakes".into()),
+                    RecipeRecipeIngredientFieldEnum::Text("2 tablespoons melted butter".into()),
+                ],
+                recipe_instructions: vec![
+                    RecipeRecipeInstructionsFieldEnum::Text("Preheat oven to 350°F.".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Combine all ingredients (except toppings) in a casserole dish and mix well.".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Gently break up cornflake crumbs and toss with melted butter.".into()),
+                    RecipeRecipeInstructionsFieldEnum::Text("Sprinkle topping over casserole and bake uncovered for 35-40 minutes or bubbly and topping is golden.".into()),
+                ],
+                recipe_yield: to_yield(6),
+                url: vec!["https://www.spendwithpennies.com/company-potatoes/".into()],
+                ..Default::default()
+            }]
+        );
+        Ok(())
+    }
+
     mod files {
-        pub fn recipe1_file<'a>() -> &'a str {
+        pub fn recipe1<'a>() -> &'a str {
             r"Title: Apple Puff Pancake
 Description: Apples are baked into an oven-puffed pancake for breakfast. This is so delicious that you don't need to add any syrup. A great alternative to regular pancakes.
 Source: KMKIDMAN5
@@ -342,7 +409,7 @@ Instructions:
 	Bake in the preheated oven until puffed and lightly browned, about 20 minutes."
         }
 
-        pub fn recipe2_file<'a>() -> &'a str {
+        pub fn recipe2<'a>() -> &'a str {
             r"Title: Yay
 Description:
 Source: Mom
@@ -359,6 +426,10 @@ Instructions:
 	Mix stuff
 	Eat a melon
 	Profit"
+        }
+
+        pub fn recipe3<'a>() -> &'a str {
+            "Title: Cheesy Potato Casserole\nDescription: This Cheesy Potato Casserole is the perfect side dish when serving a crowd!\nSource: \nOriginal URL: https://www.spendwithpennies.com/company-potatoes/\nYield: 6\nPrep: 15 minutes\nCook: 35 minutes\nTotal: 50 minutes\nCookbook: First Cookbook\nSection: First Section\nImage: \nIngredients: \n\t32 ounces shredded potatoes (defrosted if frozen)\n\t10 1/2 ounces condensed cheddar cheese soup (or cream of mushroom soup)\n\t1 cup shredded sharp cheddar cheese\n\t2/3 cup sour cream\n\t1/4 cup butter (melted)\n\t1/4 cup milk\n\t1/2 teaspoon garlic powder\n\t1/2 teaspoon onion powder\n\t1 cup cornflakes\n\t2 tablespoons melted butter\nInstructions: \n\tPreheat oven to 350°F.\n\tCombine all ingredients (except toppings) in a casserole dish and mix well.\n\tGently break up cornflake crumbs and toss with melted butter.\n\tSprinkle topping over casserole and bake uncovered for 35-40 minutes or bubbly and topping is golden."
         }
     }
 }

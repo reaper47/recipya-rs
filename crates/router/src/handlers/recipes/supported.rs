@@ -102,7 +102,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             vec![".json", ".txt", ".xml"],
         ),
         ("Rezkonv", "https://www.rezkonv.de/", vec![".rk"]),
-        ("Saffron", "https://www.mysaffronapp.com", vec![".txt"]),
+        (
+            "Saffron",
+            "https://www.mysaffronapp.com",
+            vec![".txt", ".zip"],
+        ),
         (
             "Umami",
             "https://www.umami.recipes/",

@@ -132,7 +132,11 @@ where
             _ => Err(Error::UnsupportedFileFormat),
         },
         App::Rezkonv => rezkonv::parse(r),
-        App::Saffron => saffron::parse(r),
+        App::Saffron => match file_format {
+            FileFormat::Txt => saffron::parse_txt(r),
+            FileFormat::Zip => saffron::parse_archive(r),
+            _ => Err(Error::UnsupportedFileFormat),
+        },
         App::Umami => match file_format {
             FileFormat::Html => umami::parse_html(r),
             FileFormat::Json => umami::parse_json(r),
