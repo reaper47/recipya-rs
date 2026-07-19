@@ -18,7 +18,7 @@ use schema_org::{AtType, Comment, Energy, Mass, NutritionInformation, Recipe, at
 
 use super::helpers::read_file;
 use crate::apps::helpers::{Parsers, parse_archive_helper};
-use crate::apps::mastercook;
+use crate::apps::{mastercook, mealmaster};
 use crate::common::Times;
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 use crate::{Error, Result};
@@ -299,20 +299,23 @@ where
 {
     let content = read_file(r)?;
     let content = content.replace('\0', "");
+    let buf = Cursor::new(content.clone());
 
     Ok(match parse_accuchef_recipe(&mut content.as_str()) {
         Ok(r) => r.into_iter().map(Recipe::from).collect(),
-        Err(_) => match mastercook::parse_mxp(Cursor::new(content.clone())) {
+        Err(_) => match mastercook::parse_mxp(buf.clone()) {
             Ok(r) => r,
             Err(err) => {
                 warn!(
-                    "Failed to parse AccuChef recipes with mastercook::parse_mxp, trying mastercook::mxp: {err}"
+                    "Failed to parse AccuChef recipes with mastercook::parse_mxp, trying mealmaster::mxp: {err}"
                 );
-
-                parse_txt_basic(&mut content.as_str())?
-                    .into_iter()
-                    .map(Recipe::from)
-                    .collect()
+                match mealmaster::parse(buf) {
+                    Ok(r) if !r.is_empty() => r,
+                    _ => parse_txt_basic(&mut content.as_str())?
+                        .into_iter()
+                        .map(Recipe::from)
+                        .collect(),
+                }
             }
         },
     })

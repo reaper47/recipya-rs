@@ -81,7 +81,10 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         }
                     }
                     Ingredient::Section(section) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(section, &[]));
+                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
+                            section.trim(),
+                            &[],
+                        ));
                     }
                 }
                 acc
@@ -117,7 +120,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         .collect::<Vec<_>>();
 
                     RecipeRecipeIngredientFieldEnum::new_section(
-                        &list.name[0],
+                        list.name[0].trim(),
                         merged
                             .iter()
                             .map(String::as_str)
@@ -144,7 +147,7 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
             match ins {
                 Instruction::Section(section) => {
                     acc.push(RecipeRecipeInstructionsFieldEnum::new_section::<String>(
-                        section,
+                        section.trim(),
                         vec![],
                     ));
                 }
