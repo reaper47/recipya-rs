@@ -13,10 +13,6 @@ use schema_org::Recipe;
 
 use crate::{Error, Result};
 
-pub fn at_context() -> Option<String> {
-    Some(String::from("https://schema.org"))
-}
-
 /// Parses a Recipya ZIP archive to extract the recipes.
 pub fn parse_zip<R>(r: R) -> Result<Vec<Recipe>>
 where
@@ -251,6 +247,8 @@ mod tests {
     }
 
     mod results {
+        use schema_org::at_context;
+
         use super::*;
 
         pub fn recipes() -> Vec<Recipe> {

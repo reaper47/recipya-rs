@@ -10,15 +10,12 @@ use winnow::{
     token::{literal, take_until},
 };
 
-use schema_org::{AtType, Recipe};
+use schema_org::{AtType, Recipe, at_context};
 
 use crate::{
     Error, Result,
-    apps::{
-        helpers::{
-            Ingredient, Instruction, Parsers, ToSections, parse_archive_helper_no_images, read_file,
-        },
-        recipya::at_context,
+    apps::helpers::{
+        Ingredient, Instruction, Parsers, ToSections, parse_archive_helper_no_images, read_file,
     },
 };
 
@@ -155,8 +152,6 @@ mod tests {
             AtType,
             field::{RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum},
         };
-
-        use crate::apps::recipya::at_context;
 
         use super::*;
 

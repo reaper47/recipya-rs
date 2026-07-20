@@ -7,15 +7,13 @@ use scraper::{Html, Selector};
 
 use schema_org::{
     AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
+    at_context,
     field::{RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeYieldFieldEnum},
 };
 
 use crate::{
     Result,
-    apps::{
-        helpers::{Ingredient, Instruction, Parsers, ToSections, parse_archive_helper},
-        recipya::at_context,
-    },
+    apps::helpers::{Ingredient, Instruction, Parsers, ToSections, parse_archive_helper},
     helpers::to_is_based_on,
 };
 

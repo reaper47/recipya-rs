@@ -16,6 +16,7 @@ use schema_org::field::{
 };
 use schema_org::{
     AggregateRating, AtType, Comment, Energy, ImageObject, Mass, NutritionInformation, Recipe,
+    at_context,
 };
 use serde::Deserialize;
 
@@ -24,7 +25,6 @@ use crate::apps::helpers::{
     Ingredient, Instruction, Parsers, extract_archive_contents, read_file,
     update_recipe_image_paths,
 };
-use crate::apps::recipya::at_context;
 use crate::helpers::{seconds_to_duration, to_yield};
 use crate::{Error, Result};
 

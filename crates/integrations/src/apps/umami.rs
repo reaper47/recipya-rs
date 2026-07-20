@@ -14,15 +14,14 @@ use winnow::{
 };
 
 use schema_org::{
-    AtType, Comment, DurationOrText, Recipe,
+    AtType, Comment, DurationOrText, Recipe, at_context,
     field::{RecipeImageFieldEnum, RecipeYieldFieldEnum},
 };
 
 use crate::{
     Error, Result,
-    apps::{
-        helpers::{Ingredient, Instruction, Parsers, ToSections, parse_archive_helper, read_file},
-        recipya::at_context,
+    apps::helpers::{
+        Ingredient, Instruction, Parsers, ToSections, parse_archive_helper, read_file,
     },
 };
 
@@ -652,8 +651,6 @@ mod tests {
                 RecipeRecipeInstructionsFieldEnum,
             },
         };
-
-        use crate::apps::recipya::at_context;
 
         use super::*;
 

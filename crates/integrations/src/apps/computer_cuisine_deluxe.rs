@@ -8,17 +8,14 @@ use tracing::error;
 
 use schema_org::{
     AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
-    VideoObject,
+    VideoObject, at_context,
     field::{
         RecipeAuthorFieldEnum, RecipeIsBasedOnUrlFieldEnum, RecipeRecipeIngredientFieldEnum,
         RecipeRecipeInstructionsFieldEnum, RecipeRecipeYieldFieldEnum, RecipeVideoFieldEnum,
     },
 };
 
-use crate::{
-    Result,
-    apps::{helpers::read_file, recipya::at_context},
-};
+use crate::{Result, apps::helpers::read_file};
 
 pub type Recipes<'a> = Vec<CuisineRecipe<'a>>;
 

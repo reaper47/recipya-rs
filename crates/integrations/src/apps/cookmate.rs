@@ -17,12 +17,12 @@ use schema_org::field::{
 };
 use schema_org::{
     AggregateRating, AtType, Comment, Energy, Mass, NutritionInformation, Recipe, VideoObject,
+    at_context,
 };
 use support::strings::extract_number;
 
 use super::helpers::{extract_archive_contents, update_recipe_image_paths};
 use crate::apps::helpers::Parsers;
-use crate::apps::recipya::at_context;
 use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
 use crate::{Error, Result};
 
@@ -524,7 +524,7 @@ mod tests {
 
         use super::*;
 
-        use crate::{apps::recipya::at_context, helpers::to_yield};
+        use crate::helpers::to_yield;
 
         #[allow(clippy::too_many_lines)]
         pub fn xml_recipes() -> Vec<Recipe> {

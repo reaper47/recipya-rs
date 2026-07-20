@@ -36,10 +36,9 @@ use schema_org::field::{
     RecipeAuthorFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum,
     RecipeRecipeInstructionsFieldEnum,
 };
-use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};
+use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe, at_context};
 
 use super::helpers::{Ingredient, Instruction, ToSections, is_vchar_or_space, read_file};
-use crate::apps::recipya::at_context;
 use crate::helpers::{to_is_based_on, to_yield};
 use crate::{Error, Result};
 
@@ -2287,8 +2286,6 @@ SOURCE: Gourmet, December 1992
     }
 
     mod results {
-        use crate::apps::recipya::at_context;
-
         use super::*;
 
         use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};

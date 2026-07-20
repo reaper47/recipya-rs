@@ -9,7 +9,7 @@ use tracing::error;
 
 use schema_org::{
     AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
-    VideoObject,
+    VideoObject, at_context,
     field::{
         RecipeImageFieldEnum, RecipeIsBasedOnUrlFieldEnum, RecipeVideoFieldEnum,
         RecipeYieldFieldEnum,
@@ -18,9 +18,8 @@ use schema_org::{
 
 use crate::{
     Result,
-    apps::{
-        helpers::{Ingredient, Instruction, Parsers, ToSections, parse_archive_helper, read_file},
-        recipya::at_context,
+    apps::helpers::{
+        Ingredient, Instruction, Parsers, ToSections, parse_archive_helper, read_file,
     },
 };
 

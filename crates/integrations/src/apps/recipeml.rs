@@ -2,6 +2,7 @@ use std::fmt::Write;
 use std::io::{Cursor, Read, Seek};
 
 use itertools::Itertools;
+use schema_org::at_context;
 use serde::{Deserialize, Serialize};
 
 use schema_org::field::RecipeRecipeInstructionsFieldEnum;
@@ -11,7 +12,7 @@ use schema_org::{
 };
 
 use crate::helpers::to_yield;
-use crate::{Error, Result, apps::recipya::at_context};
+use crate::{Error, Result};
 
 #[derive(Serialize, Deserialize)]
 pub struct RecipeML {

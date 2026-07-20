@@ -8,7 +8,7 @@ use winnow::token::{any, literal, take_until, take_while};
 use winnow::{Parser, Result as WResult};
 
 use schema_org::field::RecipeImageFieldEnum;
-use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};
+use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe, at_context};
 
 use crate::apps::helpers::ToSections;
 use crate::helpers::{to_is_based_on, to_yield};
@@ -17,7 +17,6 @@ use crate::{
     apps::{
         helpers::{Ingredient, Instruction, read_file},
         mealmaster,
-        recipya::at_context,
     },
 };
 

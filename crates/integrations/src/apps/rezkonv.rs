@@ -16,10 +16,9 @@ use winnow::prelude::*;
 use winnow::token::{literal, take_till, take_until, take_while};
 
 use schema_org::field::{RecipeAuthorFieldEnum, RecipeKeywordsFieldEnum};
-use schema_org::{AtType, DurationOrText, Energy, Mass, NutritionInformation, Recipe};
+use schema_org::{AtType, DurationOrText, Energy, Mass, NutritionInformation, Recipe, at_context};
 
 use crate::apps::helpers::{Ingredient, Instruction, ToSections, read_file};
-use crate::apps::recipya::at_context;
 use crate::helpers::{to_is_based_on, to_yield};
 use crate::{Error, Result};
 
