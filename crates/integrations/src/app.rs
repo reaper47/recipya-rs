@@ -40,6 +40,7 @@ pub enum App {
     Recipya,
     Rezkonv,
     Saffron,
+    ShopNCook,
     Umami,
     #[default]
     Unknown,

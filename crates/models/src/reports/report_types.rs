@@ -61,6 +61,7 @@ enum TertiaryInner {
     Recipya,
     Rezkonv,
     Saffron,
+    ShopNCook,
     Umami,
 }
 
@@ -342,6 +343,11 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::Saffron)
     }
 
+    /// Creates a new tertiary report type for the `ShopNCook` software.
+    pub const fn shopncook() -> Self {
+        Self::new(TertiaryInner::ShopNCook)
+    }
+
     /// Creates a new tertiary report type for the `Umami` software.
     pub const fn umami() -> Self {
         Self::new(TertiaryInner::Umami)
@@ -381,6 +387,7 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::MyRecipeBox => 28,
             TertiaryInner::Pepperplate => 29,
             TertiaryInner::Umami => 30,
+            TertiaryInner::ShopNCook => 31,
         }
     }
 }

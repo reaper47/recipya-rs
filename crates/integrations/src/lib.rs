@@ -22,7 +22,7 @@ use crate::apps::{
     accuchef, bigoven, cheftap, computer_cuisine_deluxe, cookbook, cookmate, cookml, cookn,
     copymethat, crouton, homecookin, kalorio, lecollectionneurderecettes, mastercook, mealmaster,
     mrcook, myrecipebox, paprika, pepperplate, recipekeeper, recipemd, recipeml, recipesage,
-    recipya, rezkonv, saffron, umami,
+    recipya, rezkonv, saffron, shopncook, umami,
 };
 
 /// Parses a recipe from the given input source and returns a vector of `IntegrationRecipe` objects.
@@ -136,6 +136,14 @@ where
             FileFormat::Txt => saffron::parse_txt(r),
             FileFormat::Zip => saffron::parse_archive(r),
             _ => Err(Error::UnsupportedFileFormat),
+        },
+        App::ShopNCook => match file_format {
+            FileFormat::Html => shopncook::parse_html(r),
+            FileFormat::MealMaster => mealmaster::parse(r),
+            FileFormat::Scx => shopncook::parse_scx(r),
+            FileFormat::Txt => shopncook::parse_txt(r),
+            FileFormat::Zip => shopncook::parse_archive(r),
+            _ => Err(Error::UnsupportedApp),
         },
         App::Umami => match file_format {
             FileFormat::Html => umami::parse_html(r),

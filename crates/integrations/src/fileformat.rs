@@ -19,6 +19,7 @@ pub enum FileFormat {
     Png,
     Rezkonv,
     Rtk,
+    Scx,
     Txt,
     Xml,
     Yaml,
@@ -60,6 +61,7 @@ impl FileFormat {
             "png" => Self::Png,
             "rtk" => Self::Rtk,
             "rzk" | "rk" => Self::Rezkonv,
+            "scx" => Self::Scx,
             "txt" => Self::Txt,
             "xml" => Self::Xml,
             "yml" | "yaml" => Self::Yaml,
@@ -94,6 +96,7 @@ impl FileFormat {
             ".rtk",
             ".rzk",
             ".rzk",
+            ".scx",
             ".txt",
             ".xml",
             ".yml",
@@ -247,6 +250,14 @@ mod tests {
             assert_format!(
                 "recipe.rtk" => FileFormat::Rtk,
                 "data.RTk" => FileFormat::Rtk,
+            );
+        }
+
+        #[test]
+        fn test_scx_format() {
+            assert_format!(
+                "recipe.scx" => FileFormat::Scx,
+                "data.ScX" => FileFormat::Scx,
             );
         }
 

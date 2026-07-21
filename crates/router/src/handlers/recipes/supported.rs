@@ -108,6 +108,11 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
             vec![".txt", ".zip"],
         ),
         (
+            "Shop'NCook",
+            "https://www.shopncook.com/",
+            vec![".html", ".mmf", ".scx", ".txt", ".zip"],
+        ),
+        (
             "Umami",
             "https://www.umami.recipes/",
             vec![".json", ".html", ".md", ".txt", ".zip"],

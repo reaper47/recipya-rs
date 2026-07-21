@@ -11,5 +11,6 @@ WHERE
     'mr. cook',
     'my recipe box',
     'pepperplate',
-    'umami'
+    'umami',
+    'shopncook'
   );
