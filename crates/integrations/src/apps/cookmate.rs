@@ -1,6 +1,6 @@
 use core::fmt;
 use std::borrow::Cow;
-use std::io::{Cursor, Read, Seek};
+use std::io::{BufRead, Read, Seek};
 use std::path::Path;
 
 use humantime::parse_duration;
@@ -301,15 +301,12 @@ where
 /// # Panics
 ///
 /// Panics if the file cannot be read or parsed.
-pub fn parse_xml<R>(mut r: R) -> Result<Vec<Recipe>>
+pub fn parse_xml<R>(r: R) -> Result<Vec<Recipe>>
 where
-    R: Read,
+    R: Read + BufRead,
 {
-    let mut buf = Vec::new();
-    r.read_to_end(&mut buf)?;
-
-    let root: CookbookXML = quick_xml::de::from_reader(Cursor::new(buf))
-        .map_err(|err| Error::Parse(err.to_string()))?;
+    let root: CookbookXML =
+        quick_xml::de::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
 
     Ok(root.recipes.into_iter().map(Recipe::from).collect())
 }

@@ -1,12 +1,13 @@
 use std::{
     borrow::Cow,
     fmt::Write,
-    io::{Read, Seek},
+    io::{BufRead, Read, Seek},
     result,
 };
 
 use itertools::Itertools;
 use scraper::{ElementRef, Html, Node, Selector};
+use serde::Deserialize;
 use winnow::ModalResult;
 
 use schema_org::{
@@ -22,6 +23,142 @@ use crate::{
     },
     helpers::to_is_based_on,
 };
+
+#[derive(Deserialize)]
+pub struct ShopNcook<'a> {
+    #[serde(rename = "RecipeList")]
+    pub recipe_list: RecipeList<'a>,
+}
+
+#[derive(Deserialize)]
+pub struct RecipeList<'a> {
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+    #[serde(rename = "Recipe")]
+    pub recipe: Vec<RecipeXML<'a>>,
+}
+
+#[derive(Deserialize)]
+pub struct RecipeXML<'a> {
+    #[serde(rename = "@recipeId")]
+    pub recipe_id: Cow<'a, str>,
+    #[serde(rename = "@locale")]
+    pub locale: Cow<'a, str>,
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+    #[serde(rename = "RecipeHeader")]
+    pub recipe_header: RecipeHeader<'a>,
+    #[serde(rename = "IngredientList")]
+    pub ingredient_list: IngredientList<'a>,
+    #[serde(rename = "RecipeText")]
+    pub recipe_text: Cow<'a, str>,
+    #[serde(rename = "Image")]
+    pub image: Option<Cow<'a, str>>,
+}
+
+#[derive(Deserialize)]
+pub struct RecipeHeader<'a> {
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+    #[serde(rename = "RecipeTitle")]
+    pub recipe_title: Cow<'a, str>,
+    #[serde(rename = "Category")]
+    pub category: Cow<'a, str>,
+    #[serde(rename = "NbPersons")]
+    pub nb_persons: Cow<'a, str>,
+    #[serde(rename = "PortionYield")]
+    pub portion_yield: PortionYield<'a>,
+    #[serde(rename = "PrepTime")]
+    pub prep_time: PrepTime<'a>,
+    #[serde(rename = "TotalTime")]
+    pub total_time: TotalTime<'a>,
+    #[serde(rename = "Source")]
+    pub source: Cow<'a, str>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PortionYield<'a> {
+    #[serde(rename = "@quantity")]
+    pub quantity: Cow<'a, str>,
+    #[serde(rename = "@unit")]
+    pub unit: Cow<'a, str>,
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+}
+
+#[derive(Deserialize)]
+pub struct PrepTime<'a> {
+    #[serde(rename = "@hours")]
+    pub hours: Cow<'a, str>,
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+}
+
+#[derive(Deserialize)]
+pub struct TotalTime<'a> {
+    #[serde(rename = "@hours")]
+    pub hours: Cow<'a, str>,
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct IngredientList<'a> {
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+    #[serde(rename = "$value", default = "Vec::new")]
+    pub items: Vec<IngredientListItem<'a>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum IngredientListItem<'a> {
+    IngredientText(Cow<'a, str>),
+    Ingredient(Box<IngredientXML<'a>>),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct IngredientXML<'a> {
+    #[serde(rename = "@id")]
+    pub id: Cow<'a, str>,
+    #[serde(rename = "@quantity")]
+    pub quantity: Cow<'a, str>,
+    #[serde(rename = "@unit")]
+    pub unit: Cow<'a, str>,
+    #[serde(rename = "@comment")]
+    pub comment: Cow<'a, str>,
+    #[serde(rename = "@defaultState")]
+    pub default_state: Cow<'a, str>,
+    #[serde(rename = "@weightGram")]
+    pub weight_gram: Cow<'a, str>,
+    #[serde(rename = "@included")]
+    pub included: Cow<'a, str>,
+    #[serde(rename = "@cooked")]
+    pub cooked: Cow<'a, str>,
+    #[serde(rename = "@isAutoId")]
+    pub is_auto_id: Cow<'a, str>,
+    #[serde(rename = "@isAutoWeight")]
+    pub is_auto_weight: Cow<'a, str>,
+    #[serde(rename = "@isAutoUnit")]
+    pub is_auto_unit: Cow<'a, str>,
+    #[serde(rename = "$text")]
+    pub text: Option<String>,
+    #[serde(rename = "IngredientQuantity")]
+    pub ingredient_quantity: IngredientQuantity<'a>,
+    #[serde(rename = "IngredientItem")]
+    pub ingredient_item: Cow<'a, str>,
+    #[serde(rename = "IngredientComment")]
+    pub ingredient_comment: Cow<'a, str>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct IngredientQuantity<'a> {
+    #[serde(rename = "@quantity")]
+    pub quantity: Cow<'a, str>,
+    #[serde(rename = "@unit")]
+    pub unit: Cow<'a, str>,
+    #[serde(rename = "$text")]
+    pub text: Option<Cow<'a, str>>,
+}
 
 #[derive(Default)]
 struct RecipeComponents<'a> {
@@ -74,6 +211,131 @@ impl From<NutritionComponents<'_>> for NutritionInformation {
             trans_fat_content: to_mass(n.trans_fat),
             ..Default::default()
         }
+    }
+}
+
+impl TryFrom<RecipeXML<'_>> for Recipe {
+    type Error = String;
+
+    #[allow(clippy::too_many_lines)]
+    fn try_from(r: RecipeXML<'_>) -> result::Result<Self, Self::Error> {
+        let items = r.ingredient_list.items;
+
+        if items.is_empty() {
+            return Err("ingredients are empty".to_string());
+        }
+
+        let categories = r.recipe_header.category.split('|').collect_vec();
+        let (cat, keywords) = match categories.as_slice() {
+            [first, rest @ ..] => (Some(first).filter(|s| !s.trim().is_empty()), rest.to_vec()),
+            [] => (None, vec![]),
+        };
+
+        let r#yield = r
+            .recipe_header
+            .portion_yield
+            .text
+            .unwrap_or(r.recipe_header.portion_yield.quantity);
+
+        let mut ingredients = Vec::new();
+        let mut instructions = Vec::new();
+
+        for item in items {
+            match item {
+                IngredientListItem::IngredientText(text) => {
+                    let text = text.trim();
+                    if text.is_empty() {
+                        continue;
+                    }
+
+                    let mut parts = text.lines().map(str::trim).collect_vec();
+                    if parts.len() > 1 {
+                        let last = parts.pop().unwrap_or_default();
+                        for part in &parts {
+                            instructions.push(Instruction::Line(Cow::Owned(part.to_string())));
+                        }
+                        ingredients.push(Ingredient::Section(Cow::Owned(
+                            last.trim_end_matches(':').split_whitespace().join(" "),
+                        )));
+                    } else if text.chars().count() > 30 {
+                        instructions.push(Instruction::Line(Cow::Owned(text.to_string())));
+                    } else {
+                        ingredients.push(Ingredient::Section(Cow::Owned(
+                            text.trim_end_matches(':').split_whitespace().join(" "),
+                        )));
+                    }
+                }
+                IngredientListItem::Ingredient(ing) => {
+                    let mut s = String::new();
+
+                    let quant = ing
+                        .ingredient_quantity
+                        .text
+                        .as_deref()
+                        .unwrap_or_default()
+                        .trim();
+                    let name = ing.ingredient_item.trim();
+                    let comment = ing.ingredient_comment.trim();
+
+                    if quant.is_empty() {
+                        write!(s, "{name}").unwrap();
+                    } else {
+                        write!(s, "{quant} {name}").unwrap();
+                    }
+
+                    if !comment.is_empty() {
+                        write!(s, ", {comment}").unwrap();
+                    }
+
+                    ingredients.push(Ingredient::Line(Cow::Owned(s)));
+                }
+            }
+        }
+
+        for line in r.recipe_text.lines() {
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            if line.ends_with(':') {
+                instructions.push(Instruction::Section(Cow::Borrowed(
+                    line.trim_end_matches(':').trim(),
+                )));
+            } else {
+                instructions.push(Instruction::Line(Cow::Owned(line.to_string())));
+            }
+        }
+
+        Ok(Self {
+            name: vec![r.recipe_header.recipe_title.to_string()],
+            image: r.image.map_or(Vec::new(), |s| {
+                vec![RecipeImageFieldEnum::URL(s.to_string())]
+            }),
+            is_based_on: to_is_based_on(&r.recipe_header.source),
+            recipe_category: cat.map(ToString::to_string).into_iter().collect(),
+            keywords: keywords
+                .into_iter()
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into()))
+                .collect(),
+            prep_time: r
+                .recipe_header
+                .prep_time
+                .text
+                .map_or(Vec::new(), |s| vec![DurationOrText::Text(s.into())]),
+            total_time: r
+                .recipe_header
+                .total_time
+                .text
+                .map_or(Vec::new(), |s| vec![DurationOrText::Text(s.into())]),
+            recipe_yield: if r#yield.is_empty() {
+                vec![]
+            } else {
+                vec![RecipeYieldFieldEnum::Text(r#yield.to_string())]
+            },
+            recipe_ingredient: ingredients.to_sections(),
+            recipe_instructions: instructions.to_sections(),
+            ..Default::default()
+        })
     }
 }
 
@@ -165,6 +427,10 @@ fn parse_txt_helper<'s>(input: &mut &'s str) -> ModalResult<RecipeComponents<'s>
 }
 
 /// Parses an HTML `ShopNCook` recipe file.
+///
+/// # Panics
+///
+/// Panics if the HTML is not valid.
 #[allow(clippy::too_many_lines)]
 pub fn parse_html<R>(r: R) -> Result<Vec<Recipe>>
 where
@@ -207,8 +473,8 @@ where
 
                     if prompt_text.is_some_and(|s| s.starts_with("Category:")) {
                         let parts = data_text.split('|').collect_vec();
-                        category = parts.first().cloned().unwrap_or_default().into();
-                        keywords = parts.iter().skip(1).cloned().collect();
+                        category = parts.first().copied().unwrap_or_default().into();
+                        keywords = parts.iter().skip(1).copied().collect();
                     }
 
                     if prompt_text.is_some_and(|s| s.starts_with("Yield:")) {
@@ -267,17 +533,14 @@ where
 
                     if let Some(q) = quant {
                         write!(s, "{q} {name}").unwrap();
-                        if let Some(c) = comment {
-                            write!(s, ", {c}").unwrap();
-                        }
-                        ingredients.push(Ingredient::Line(Cow::Owned(s)));
                     } else {
                         write!(s, "{name}").unwrap();
-                        if let Some(c) = comment {
-                            write!(s, ", {c}").unwrap();
-                        }
-                        ingredients.push(Ingredient::Line(Cow::Owned(s)));
                     }
+
+                    if let Some(c) = comment {
+                        write!(s, ", {c}").unwrap();
+                    }
+                    ingredients.push(Ingredient::Line(Cow::Owned(s)));
                 }
             }
 
@@ -336,7 +599,7 @@ where
                             subparts
                                 .first()
                                 .filter(|s| **s != "0g" && **s != "0mg")
-                                .cloned()
+                                .copied()
                                 .map(|s| s.trim().to_string())
                                 .unwrap_or_default()
                         })
@@ -354,7 +617,6 @@ where
                         trans_fat: extract_nut("Trans fat").map(Cow::Owned),
                     }
                 }),
-                ..Default::default()
             }
         })
         .filter_map(|r| Recipe::try_from(r).ok())
@@ -384,11 +646,19 @@ fn split_by_br(container: ElementRef) -> Vec<String> {
 }
 
 /// Parses a SCX `ShopNCook` recipe file.
-pub fn parse_scx<R>(mut r: R) -> Result<Vec<Recipe>>
+pub fn parse_scx<R>(r: R) -> Result<Vec<Recipe>>
 where
-    R: Read,
+    R: Read + BufRead,
 {
-    todo!()
+    let root: ShopNcook =
+        quick_xml::de::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
+
+    Ok(root
+        .recipe_list
+        .recipe
+        .into_iter()
+        .filter_map(|r| r.try_into().ok())
+        .collect())
 }
 
 #[cfg(test)]
@@ -406,14 +676,37 @@ mod tests {
 
             let got = parse_html(buf)?;
 
-            pretty_assertions::assert_eq!(got.len(), results::all_recipes().len());
-            pretty_assertions::assert_eq!(got, results::all_recipes());
+            let expected = results::all_recipes();
+            pretty_assertions::assert_eq!(got.len(), expected.len());
+            pretty_assertions::assert_eq!(got, expected);
             Ok(())
         }
 
         #[test]
         fn test_scx_ok() -> Result<()> {
-            todo!()
+            let buf = Cursor::new(files::scx());
+
+            let got = parse_scx(buf)?;
+
+            let mut expected = results::all_recipes();
+            for r in &mut expected {
+                r.nutrition.clear();
+            }
+            expected[0].image = vec![RecipeImageFieldEnum::URL("/9j/4AAQS5//9k=".into())];
+            expected[1].image = vec![RecipeImageFieldEnum::URL("/9j/4AAQSkKQH/9k=".into())];
+            expected[2].image = vec![RecipeImageFieldEnum::URL("/9j/4AAQSkZ/9k=".into())];
+            expected[3].image = vec![RecipeImageFieldEnum::URL("/9j/4AAQSkZJRg/2Q==".into())];
+            expected[4].image = vec![RecipeImageFieldEnum::URL("/9j/4AAQS/9k=".into())];
+            expected[5].image = vec![RecipeImageFieldEnum::URL("/9j/4AAQSkZJ//Z".into())];
+            expected[0].recipe_yield = vec![RecipeYieldFieldEnum::Text("4".into())];
+            expected[1].recipe_yield = vec![RecipeYieldFieldEnum::Text("12 cups".into())];
+            expected[2].recipe_yield = vec![RecipeYieldFieldEnum::Text("1.0".into())];
+            expected[3].recipe_yield = vec![RecipeYieldFieldEnum::Text("1.0".into())];
+            expected[4].recipe_yield = vec![RecipeYieldFieldEnum::Text("675 ml".into())];
+            expected[5].recipe_yield = vec![RecipeYieldFieldEnum::Text("about 200 g".into())];
+            pretty_assertions::assert_eq!(got.len(), expected.len());
+            pretty_assertions::assert_eq!(got, expected);
+            Ok(())
         }
 
         #[test]
@@ -433,7 +726,503 @@ mod tests {
         }
 
         pub fn scx<'a>() -> &'a str {
-            todo!()
+            r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <!--
+             Shop'NCook recipe exchange format
+             Generated by Shop'NCook Pro 4.0 (http://www.shopncook.com/)
+             DTD: http://www.rufenacht.com/shopncook.dtd
+        -->
+        <!DOCTYPE ShopNCook>
+        <?xml-stylesheet href="shopncook1.css" type="text/css"?>
+        <ShopNCook version="1.0" generator="Shop&apos;NCook Pro 4.0" xml:lang="en">
+        <RecipeList>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle>  Welcome</RecipeTitle>
+        <Category></Category>
+        <NbPersons>0</NbPersons>
+        <PortionYield quantity="1.0" unit=""></PortionYield>
+        <PrepTime hours="0.0"></PrepTime>
+        <TotalTime hours="0.0"></TotalTime>
+        <Source></Source>
+        </RecipeHeader>
+        <IngredientList>
+        </IngredientList>
+        <RecipeText>Welcome to Shop&apos;NCook software!
+
+        I created Shop&apos;NCook to solve once for all the problem of planning for meals and organizing the grocery shopping. Shop&apos;NCook comes in three flavors:
+        - Shop&apos;NCook Home - recipe management, grocery shopping, nutritional analysis;
+        - Shop&apos;NCook Menu - all of the Home edition plus a meal planner and a menu library;
+        - Shop&apos;NCook Pro - all of the Menu edition plus recipe and menu costing features.
+
+        Click on &quot;Overview&quot; on the left for a summary of the main features. You can also find a tutorial at http://www.shopncook.com/slideShow.html . To know more on specific topics and to keep up-to-date with the latest news, visit the blog at http://www.shopncook.com/blog/ .
+
+        To contact me, write to customerservice@rufenacht.com .
+
+        I wish you a lot of fun with Shop&apos;NCook!
+
+        Mathilde Rufenacht
+        Author of Shop&apos;NCook</RecipeText>
+        <Image>/9j/4AAQSkZJRD//2Q==</Image>
+        </Recipe>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle> Overview</RecipeTitle>
+        <Category></Category>
+        <NbPersons>0</NbPersons>
+        <PortionYield quantity="1.0" unit=""></PortionYield>
+        <PrepTime hours="0.0"></PrepTime>
+        <TotalTime hours="0.0"></TotalTime>
+        <Source></Source>
+        </RecipeHeader>
+        <IngredientList>
+        </IngredientList>
+        <RecipeText>TIP: Double-click on Overview on the left to open it in a separate window and refer to it while learning your way with Shop&apos;NCook. You can also access a detailed user manual in the Help menu.
+
+        VISUALIZE A RECIPE
+        Select a cookbook on the navigation panel. Click on a recipe title to view it. The ingredients that are underlined are links that refer to another recipe. Click on the link to view the linked recipe. Click on the picture to see it full size. Display the &quot;Shopping items&quot; tab to see the list of the ingredients. Double-click on a recipe title to open it in a different window.
+
+        RESIZE A RECIPE
+        Input a new serving size or yield and click on Calculate to resize the recipe.
+
+        FIND A RECIPE
+        Click the search button of the mini-toolbar (bottom left) to search your recipes. Click &quot;Select All&quot; to search all the cookbooks.
+
+        Search for a recipe on the Internet by clicking on the Get Recipe button of the mini-toolbar.
+
+        ADD A RECIPE
+        Select an unlocked cookbook in the Cookbooks section, click the New button and type the recipe in the wizard. It will recognize and format automatically the ingredients for you.
+
+        To add a recipe from a file or from internet, select it with the mouse and drag &amp; drop it on the recipe-display panel to add it to Shop&apos;NCook. You can add a picture in the same way.
+
+        If you have your own collection of recipes in text format, you can easily add it to the software in the following way:
+        1. Separate each recipe by a line of seven hyphens or more (-------).
+        2. Copy the text of the file to the clipboard
+        3. Select &quot;Import recipes from clipboard&quot; in the File menu.
+
+        There are also many cookbooks that you can import with a single click from the Browser tab.
+
+        PLAN YOUR MENUS (Menu and Pro editions)
+        To plan your meals, drag your recipes to the calendar on the left and organize them in menu. By clicking on the Edit button, you can set the number of servings of a menu to adjust automatically the size of its recipes. You will find examples of menus in the Library tab of the Calendar.
+
+        To display your menus, select the Menus section in the main window. You can set in the toolbar the number of days of menus you want to display.
+
+        MAKE YOUR GROCERY LIST
+        Use the Add button of the toolbar to add to the shopping list the ingredients of a recipe, of a menu or of your whole meal planning period. To have a greater control on what gets added to the shopping list, display the &quot;Shopping items&quot; tab of the Cookbooks or Menus sections.
+
+        Shop&apos;NCook gives a lot of flexibility for the format of your shopping lists. You can modify your options in the Preferences. See also the help for more information.
+
+        AISLE-ORDER YOUR SHOPPING LISTS (Menu and Pro editions)
+        Use the + button of the mini-toolbar to create a supermarket. Edit the supermarket and change the order of the aisles to match your store. You can also input the brand of the article, size or selling unit, or look them up in the barcode database for fast input. In the shopping list view, assign your articles to the supermarket of your choice to get an aisle-ordered list.
+
+        NUTRITIONAL ANALYSIS
+        The nutritional analysis is automatically calculated and displayed at the bottom of your recipes and menus. Click the Nutrition tab of the Cookbooks or Menus sections too see the break-down by ingredients. You can select in the Preferences the nutrients you want displayed. Only the ingredients displayed in black are included. The meaning of the colors is as follows:
+
+        - Red: the ingredients is not in the database or has not been recognized;
+        - Blue: the quantity  is not specified or unknow of the program for the given ingredient;
+        - Green: no nutritional information is associated to the ingredient.
+
+        To turn an ingredient black, click the magic wand button and the software will guide you.
+
+        COSTING (Pro edition only)
+        Click the Costing tab of the Recipe or Menu managers to display the cost break-down per ingredient. The ingredients in color are not included in the costing, similarly to the nutritional analysis above. Click the magic wands to get help turning the ingredients black.
+
+        Food cost data is entered by editing the main database and the supermarkets in the Supermarkets section. You can also import one of the predefined cost database by selecting &quot;Import Cost Data&quot; in the Costing menu.
+
+        Get the best price for your shopping list by clicking on the supermarket button in the Shopping list view and selecting Best Value.
+
+        SHARING
+        Shop&apos;NCook offers several functions to make your recipes et shopping list easily accessible:
+        1. The Send button to send your recipes, menus and shopping lists by e-mail. It allows you also to transfer them practically to your mobile phone.
+        2. Uploading your recipes to the Internet with the button Share of the Recipe manager. The uploaded recipes are accessibles to every Shop&apos;NCook user from the Direct Access section, from Shop&apos;NCook iPhone application, as well as on our online database at http://www.DirectAccessRecipes.com/ .
+        3. The free software Shop&apos;NCook Reader to share your cookbooks with family and friends.
+
+        SYNCHRONIZATION (requires a synchronization account)
+        Click the synchronization button of the mini-toolbar to synchronize your recipes and shopping list between all your computers and devices (iPhone, iPad, iPod) and access them from anywhere.
+
+        NEED MORE?
+        Shop&apos;NCook offers much more. For more information on any of above topics, click on the Help button of the mini-toolbar.</RecipeText>
+        </Recipe>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle>California rolls</RecipeTitle>
+        <Category>Japanese|Rice|Main dishes|Appetizers|Shop&apos;NCook</Category>
+        <NbPersons>6</NbPersons>
+        <PortionYield quantity="4.0" unit="">4</PortionYield>
+        <PrepTime hours="0.4166666567325592">25 minutes</PrepTime>
+        <TotalTime hours="0.6666666865348816">40 minutes</TotalTime>
+        <Source>An Introduction to Japanese Home Cooking by Mathilde Rufenacht</Source>
+        </RecipeHeader>
+        <IngredientList>
+        <IngredientText>      Strictly speaking, California rolls are not Japanese - you would be hard pressed to find them in Japan, - but they are a marvelous example how cooking techniques can be deliciously adapted to local ingredients. I give this recipe here as a beacon for all experimental cooks:</IngredientText>
+        <Ingredient id="-1" quantity="12.0" unit="cup" comment="" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="12.0" unit="cups">12 cups</IngredientQuantity>
+        <IngredientItem>cooked sushi rice</IngredientItem>
+        <IngredientComment>see separate recipe</IngredientComment>
+        </Ingredient>
+        <Ingredient id="853" quantity="6.0" unit="sheets" comment="" defaultState="true" weightGram="2.6" included="true" cooked="false" isAutoId="false" isAutoWeight="true" isAutoUnit="false">
+        <IngredientQuantity quantity="6.0" unit="sheets">6 sheets</IngredientQuantity>
+        <IngredientItem>nori</IngredientItem>
+        <IngredientComment>seaweed</IngredientComment>
+        </Ingredient>
+        <IngredientText>      Filling:</IngredientText>
+        <Ingredient id="1110" quantity="1.0" unit="medium" comment="" defaultState="true" weightGram="301.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="1.0" unit="medium">1 medium</IngredientQuantity>
+        <IngredientItem>cucumber</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.0" unit="" comment="" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.0" unit="">1</IngredientQuantity>
+        <IngredientItem>avocado</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="0.5" unit="tbsp" comment="" defaultState="true" weightGram="15.25" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.5" unit="tbsp">1/2 tbsp</IngredientQuantity>
+        <IngredientItem>lemon juice</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="1963" quantity="9.0" unit="" comment="or cooked snow crab meat" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="false" isAutoWeight="true" isAutoUnit="false">
+        <IngredientQuantity quantity="9.0" unit="">9</IngredientQuantity>
+        <IngredientItem>imitation crab stick</IngredientItem>
+        <IngredientComment>or cooked snow crab meat</IngredientComment>
+        </Ingredient>
+        <IngredientText>      Sides:</IngredientText>
+        <Ingredient id="-1" quantity="0.0" unit="" comment="" defaultState="true" weightGram="169.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.0" unit=""></IngredientQuantity>
+        <IngredientItem>wasabi</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="0.0" unit="" comment="" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.0" unit=""></IngredientQuantity>
+        <IngredientItem>soy sauce</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="0.0" unit="" comment="" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.0" unit=""></IngredientQuantity>
+        <IngredientItem>gari</IngredientItem>
+        <IngredientComment>pickled ginger, see separated recipe</IngredientComment>
+        </Ingredient>
+        </IngredientList>
+        <RecipeText>      Prepare the sushi rice according to above recipe using 2 cups of Japanese rice.
+
+
+        Preparation of the filling:
+
+              Wash and peel the cucumber. Seed it and cut it in thin long strips. Cut the avocado in two, remove the pit and peel, and cut it likewise. Sprinkle a few drops of lemon on it to keep it from darkening. Cut the crab sticks in two lengthwise.
+
+
+        Rolling:
+
+              Put a nori sheet in the center of a dry bamboo rolling mat. Take about one sixth of the rice and spread it evenly on the nori leaving one inch at the far end of the nori sheet, in order to have a quarter inch-thick layer of rice on the sheet. To handle the rice, wet your fingers with water mixed with a little bit of vinegar. Dispose one sixth of the cucumber and avocado strips on a two-inch strip in the center of the rice. Arrange the crab sticks on top. Start rolling by taking the end of the rolling mat nearest to you and bringing it over the end of the layer of rice. Press to make a tight roll while pulling back the end of the bamboo mat as neccessary. With a wet towel, push softly on the sides of the roll to arrange the filling. If necessary, wet a little the end of the nori sheet to help closing the roll. Remove the rolling mat. Cut 1 inch-thick slices with a  wet knife. Repeat for the other nori sheets.
+
+              Serve with wasabi, soy sauce and gari at the side. The soy sauce is poured in small individual plates and a little bit of wasabi is dissolved in it. Dip the sushi in it as you eat.
+
+              California rolls can be served as appetizer or as main dish. Many variations of filling are possible. Try for example cooked shrimps, raw tuna, shiitake nimono, meat for gyuudon (see separate recipes).
+
+        </RecipeText>
+        <Image>/9j/4AAQS5//9k=</Image>
+        </Recipe>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle>Cooked sushi rice</RecipeTitle>
+        <Category>Side dishes|Rice|Japanese|Shop&apos;NCook</Category>
+        <NbPersons>0</NbPersons>
+        <PortionYield quantity="12.0" unit="cups">12 cups</PortionYield>
+        <PrepTime hours="0.0"></PrepTime>
+        <TotalTime hours="0.0"></TotalTime>
+        <Source>An Introduction to Japanese Home Cooking by Mathilde Rufenacht</Source>
+        </RecipeHeader>
+        <IngredientList>
+        <IngredientText>This rice is used as base for sushi and sushi rolls.
+        Cook:</IngredientText>
+        <Ingredient id="-1" quantity="3.0" unit="cup" comment="" defaultState="true" weightGram="185.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="3.0" unit="cups">3 cups</IngredientQuantity>
+        <IngredientItem>Japanese rice</IngredientItem>
+        <IngredientComment>but use 10% less water than usual.</IngredientComment>
+        </Ingredient>
+        <IngredientText>Add:</IngredientText>
+        <Ingredient id="-1" quantity="0.625" unit="cup" comment="" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.625" unit="cup">about 1/2 cup + 2 tbsp</IngredientQuantity>
+        <IngredientItem>sushi vinegar</IngredientItem>
+        <IngredientComment>see separate recipe</IngredientComment>
+        </Ingredient>
+        </IngredientList>
+        <RecipeText>Mix well with a cutting and folding movement.
+        </RecipeText>
+        <Image>/9j/4AAQSkKQH/9k=</Image>
+        </Recipe>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle>Crab or shrimp Louis salad</RecipeTitle>
+        <Category>Seafood|Salads|Shop&apos;NCook</Category>
+        <NbPersons>4</NbPersons>
+        <PortionYield quantity="1.0" unit=""></PortionYield>
+        <PrepTime hours="0.0"></PrepTime>
+        <TotalTime hours="0.0"></TotalTime>
+        <Source></Source>
+        </RecipeHeader>
+        <IngredientList>
+        <IngredientText>SALAD:</IngredientText>
+        <Ingredient id="-1" quantity="1.0" unit="" comment="" defaultState="true" weightGram="360.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.0" unit="">1</IngredientQuantity>
+        <IngredientItem>lettuce</IngredientItem>
+        <IngredientComment>torn</IngredientComment>
+        </Ingredient>
+        <Ingredient id="653" quantity="2.0" unit="cup" comment=" or shrimp meat" defaultState="true" weightGram="135.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="2.0" unit="c.">2 c.</IngredientQuantity>
+        <IngredientItem>crab or shrimp meat</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="1146" quantity="2.0" unit="" comment="" defaultState="true" weightGram="123.0" included="true" cooked="false" isAutoId="false" isAutoWeight="true" isAutoUnit="false">
+        <IngredientQuantity quantity="2.0" unit="">2</IngredientQuantity>
+        <IngredientItem>Tomato</IngredientItem>
+        <IngredientComment>cut in wedges</IngredientComment>
+        </Ingredient>
+        <Ingredient id="313" quantity="2.0" unit="" comment="" defaultState="true" weightGram="44.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="2.0" unit="">2</IngredientQuantity>
+        <IngredientItem>Egg</IngredientItem>
+        <IngredientComment>cut in wedges</IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.0" unit="can" comment="" defaultState="true" weightGram="248.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.0" unit="can">1 can</IngredientQuantity>
+        <IngredientItem>Asparagus</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="994" quantity="1.0" unit="" comment="" defaultState="true" weightGram="201.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="1.0" unit="">1</IngredientQuantity>
+        <IngredientItem>Avocado</IngredientItem>
+        <IngredientComment>sliced</IngredientComment>
+        </Ingredient>
+        <IngredientText>LOUIS  DRESSING:</IngredientText>
+        <Ingredient id="516" quantity="0.5" unit="cup" comment="" defaultState="true" weightGram="249.99998" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="0.5" unit="c.">1/2 c.</IngredientQuantity>
+        <IngredientItem>refrigerated style French dressing</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="703" quantity="0.333" unit="cup" comment="or chile sauce" defaultState="true" weightGram="240.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="0.3333333333333333" unit="c.">1/3 c.</IngredientQuantity>
+        <IngredientItem>bottled chile sauce or catsup</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="2.0" unit="tbsp" comment="" defaultState="true" weightGram="13.8" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="2.0" unit="tbsp.">2 tbsp.</IngredientQuantity>
+        <IngredientItem>mayonnaise</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="0.5" unit="tsp" comment="" defaultState="true" weightGram="5.6666665" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.5" unit="tsp.">1/2 tsp.</IngredientQuantity>
+        <IngredientItem>Worcestershire sauce</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.0" unit="tbsp" comment="" defaultState="true" weightGram="15.25" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.0" unit="tbsp.">1 tbsp.</IngredientQuantity>
+        <IngredientItem>lemon juice</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="1973" quantity="0.25" unit="tsp" comment="" defaultState="true" weightGram="2.3" included="true" cooked="false" isAutoId="false" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.25" unit="tsp.">1/4 tsp.</IngredientQuantity>
+        <IngredientItem>black pepper</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        </IngredientList>
+        <RecipeText>Prepare and chill dressing by mixing all the ingredients.   On serving plate arrange salad greens, mount seafood in center and garnish with vegetables.  Serve with Louis dressing.
+
+        </RecipeText>
+        <Image>/9j/4AAQSkZ/9k=</Image>
+        </Recipe>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle>Mabodofu</RecipeTitle>
+        <Category>Main dishes|Meat|Chinese|Tofu|Shop&apos;NCook</Category>
+        <NbPersons>2</NbPersons>
+        <PortionYield quantity="1.0" unit=""></PortionYield>
+        <PrepTime hours="0.0"></PrepTime>
+        <TotalTime hours="0.0"></TotalTime>
+        <Source>Otoko no tame no ryouri no ki sou</Source>
+        </RecipeHeader>
+        <IngredientList>
+        <Ingredient id="-1" quantity="400.0" unit="g" comment="" defaultState="true" weightGram="1.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="400.0" unit="g">400 g</IngredientQuantity>
+        <IngredientItem>tofu</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="200.0" unit="g" comment="" defaultState="true" weightGram="1.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="200.0" unit="g">200 g</IngredientQuantity>
+        <IngredientItem>ground pork</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="696" quantity="1.0" unit="heaped tbsp" comment="" defaultState="true" weightGram="21.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="1.0" unit="tbsp">1 heaped tbsp</IngredientQuantity>
+        <IngredientItem>salad oil</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="1948" quantity="1.5" unit="tsp" comment="" defaultState="true" weightGram="10.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="1.5" unit="tsp">1 - 1 1/2 tsp</IngredientQuantity>
+        <IngredientItem>toban djan</IngredientItem>
+        <IngredientComment>(chili bean paste, can be replaced by crushed chili pepper)</IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.0" unit="tsp" comment="" defaultState="true" weightGram="2.8333333" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.0" unit="tsp">1 tsp</IngredientQuantity>
+        <IngredientItem>finely chopped garlic</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.0" unit="tsp" comment="" defaultState="true" weightGram="2.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.0" unit="tsp">1 tsp</IngredientQuantity>
+        <IngredientItem>finely chopped ginger root</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="3.0" unit="tbsp" comment="" defaultState="true" weightGram="6.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="3.0" unit="tbsp">3 tbsp</IngredientQuantity>
+        <IngredientItem>chopped green onion</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.0" unit="tsp" comment="" defaultState="true" weightGram="4.5333333" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.0" unit="tsp">1 tsp</IngredientQuantity>
+        <IngredientItem>sesame oil</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <IngredientText>A:</IngredientText>
+        <Ingredient id="-1" quantity="2.5" unit="tbsp" comment="" defaultState="true" weightGram="17.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="2.5" unit="tbsp">2 - 2 1/2 tbsp</IngredientQuantity>
+        <IngredientItem>miso</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.5" unit="tbsp" comment="" defaultState="true" weightGram="16.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.5" unit="tbsp">1 1/2 tbsp</IngredientQuantity>
+        <IngredientItem>soy sauce</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="2.0" unit="tbsp" comment="" defaultState="true" weightGram="14.55" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="2.0" unit="tbsp">2 tbsp</IngredientQuantity>
+        <IngredientItem>sake</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="1.5" unit="tbsp" comment="" defaultState="true" weightGram="12.599999" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="1.5" unit="tbsp">1 - 1 1/2 tbsp</IngredientQuantity>
+        <IngredientItem>sugar</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="0.6666666666666666" unit="cup" comment="" defaultState="true" weightGram="236.8" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.6666666666666666" unit="cup">2/3 cup</IngredientQuantity>
+        <IngredientItem>water</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="776" quantity="0.0" unit="a little" comment="" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="false" isAutoWeight="true" isAutoUnit="false">
+        <IngredientQuantity quantity="0.0" unit="a little">a little</IngredientQuantity>
+        <IngredientItem>gara soup no moto</IngredientItem>
+        <IngredientComment>(Chinese chicken bouillon)</IngredientComment>
+        </Ingredient>
+        <IngredientText>Diluted maizena:</IngredientText>
+        <Ingredient id="803" quantity="1.0" unit="tbsp" comment="" defaultState="true" weightGram="8.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="1.0" unit="tbsp">1 tbsp</IngredientQuantity>
+        <IngredientItem>maizena</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="2.0" unit="tbsp" comment="" defaultState="true" weightGram="14.8" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="2.0" unit="tbsp">2 tbsp</IngredientQuantity>
+        <IngredientItem>water</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        </IngredientList>
+        <RecipeText>1. Wrap the tofu in paper towel and heat in microwave oven 3 min. 30 s to remove some of the water. Cool. Cut in 2cm cubes.
+        2. Mix ingredients A.
+        3. Cook over medium heat in a little oil the toubanjan, add garlic and ginger, without letting them burn.
+        4. Over high heat, add the minced meat and separate it with the back of a laddle. When hard to separate, add a little bit of sake.
+        5. When the meat is cooked, add the green onion and cook. Add ingredients A. Mix well over high heat.
+        6. When it starts boiling, add the tofu.
+        7. When it boils again, tilt the skillet and add in two to three times the diluted maizena in the soup.
+        8. To finish, add the sesame oil and serve with Japanese rice.
+        </RecipeText>
+        <Image>/9j/4AAQSkZJRg/2Q==</Image>
+        </Recipe>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle>Sushi vinegar</RecipeTitle>
+        <Category>Sauces &amp; dressings|Japanese|Shop&apos;NCook</Category>
+        <NbPersons>0</NbPersons>
+        <PortionYield quantity="675.0" unit="ml">675 ml</PortionYield>
+        <PrepTime hours="0.1666666716337204">10 min</PrepTime>
+        <TotalTime hours="0.1666666716337204">10 min</TotalTime>
+        <Source>An Introduction to Japanese Home Cooking by Mathilde Rufenacht</Source>
+        </RecipeHeader>
+        <IngredientList>
+        <IngredientText>Prepare a bottle in advance to use when making sushi rice.</IngredientText>
+        <Ingredient id="835" quantity="450.0" unit="ml" comment="" defaultState="true" weightGram="1.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="450.0" unit="ml">450 ml</IngredientQuantity>
+        <IngredientItem>rice vinegar</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="300.0" unit="g" comment="" defaultState="true" weightGram="1.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="300.0" unit="g">300 g</IngredientQuantity>
+        <IngredientItem>sugar</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="75.0" unit="g" comment="" defaultState="true" weightGram="1.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="75.0" unit="g">75 g</IngredientQuantity>
+        <IngredientItem>salt</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        </IngredientList>
+        <RecipeText>Mix in a skillet over low to medium heat until the sugar and salt are diluted. Do not boil. Put back in the original vinegar bottle, close the lid and put at once in cold water to cool as fast as possible in order to keep the flavor of the vinegar. To not mix it with usual rice vinegar, donät forget to put a label with &quot;Sushi vinegar&quot; and the date on it.
+        </RecipeText>
+        <Image>/9j/4AAQS/9k=</Image>
+        </Recipe>
+        <Recipe recipeId="-1" locale="en">
+        <RecipeHeader>
+        <RecipeTitle>Tiramisu</RecipeTitle>
+        <Category>Desserts|Italian|Shop&apos;NCook</Category>
+        <NbPersons>4</NbPersons>
+        <PortionYield quantity="200.0" unit="g">about 200 g</PortionYield>
+        <PrepTime hours="0.25">15 minutes</PrepTime>
+        <TotalTime hours="2.0">2 hours</TotalTime>
+        <Source>Anna</Source>
+        </RecipeHeader>
+        <IngredientList>
+        <Ingredient id="-1" quantity="500.0" unit="g" comment="" defaultState="true" weightGram="1.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="500.0" unit="g">500 g</IngredientQuantity>
+        <IngredientItem>mascarpone</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="5.0" unit="" comment="" defaultState="true" weightGram="50.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="5.0" unit="">5</IngredientQuantity>
+        <IngredientItem>eggs</IngredientItem>
+        <IngredientComment>(Anna uses 5 yolks and 3 whites)</IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="5.0" unit="tbsp" comment="" defaultState="true" weightGram="12.599999" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="5.0" unit="tbsp">5 tbsp</IngredientQuantity>
+        <IngredientItem>sugar</IngredientItem>
+        <IngredientComment>(Anna uses 3 tbsp)</IngredientComment>
+        </Ingredient>
+        <Ingredient id="-1" quantity="20.0" unit="" comment="" defaultState="true" weightGram="11.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="20.0" unit="">about 20</IngredientQuantity>
+        <IngredientItem>ladyfingers</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <IngredientText>Beat the egg yolks, cream with the sugar. Mix well with the mascarpone. Whip the egg whites until stiff (but not dry). Incorporate delicately to the mascarpone mass.
+        Prepare:</IngredientText>
+        <Ingredient id="137" quantity="10.0" unit="g" comment="" defaultState="true" weightGram="1.0" included="true" cooked="false" isAutoId="false" isAutoWeight="false" isAutoUnit="false">
+        <IngredientQuantity quantity="0.5" unit="cup">1/2 cup</IngredientQuantity>
+        <IngredientItem>strong coffee</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <IngredientText>Mix in:</IngredientText>
+        <Ingredient id="-1" quantity="0.0" unit="" comment=" or some other alcool, replace by orange juice when preparing for children" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="true" isAutoWeight="true" isAutoUnit="true">
+        <IngredientQuantity quantity="0.0" unit=""></IngredientQuantity>
+        <IngredientItem>cognac or some other alcool, replace by orange juice when preparing for children</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        <IngredientText>Line the serving dish with a layer of savoyar that you have shortly dipped in the coffee mix. Top with a layer of mascarpone mix. Repeat one or two times until you have used all the mascarpone. To finish, dust with:</IngredientText>
+        <Ingredient id="782" quantity="0.0" unit="" comment="" defaultState="true" weightGram="0.0" included="true" cooked="false" isAutoId="false" isAutoWeight="true" isAutoUnit="false">
+        <IngredientQuantity quantity="0.0" unit=""></IngredientQuantity>
+        <IngredientItem>cocoa powder</IngredientItem>
+        <IngredientComment></IngredientComment>
+        </Ingredient>
+        </IngredientList>
+        <RecipeText>Cool in the fridge 2 hours.</RecipeText>
+        <Image>/9j/4AAQSkZJ//Z</Image>
+        </Recipe>
+        </RecipeList>
+        </ShopNCook>"#
         }
 
         pub fn txt1<'a>() -> &'a str {
@@ -793,22 +1582,6 @@ mod tests {
                     ..Default::default()
                 },
             ]
-        }
-
-        pub fn html() -> Vec<Recipe> {
-            todo!()
-        }
-
-        pub fn scx() -> Vec<Recipe> {
-            todo!()
-        }
-
-        pub fn txt1() -> Vec<Recipe> {
-            todo!()
-        }
-
-        pub fn txt2() -> Vec<Recipe> {
-            todo!()
         }
     }
 }

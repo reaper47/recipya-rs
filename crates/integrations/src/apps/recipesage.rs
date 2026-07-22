@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::io::{Cursor, Read, Seek};
+use std::io::{BufRead, Read, Seek};
 use std::str::FromStr;
 
 use iso8601::DateTime;
@@ -528,14 +528,11 @@ where
 }
 
 /// Parses a `RecipeSage` recipes XML file.
-pub fn parse_xml<R>(mut r: R) -> Result<Vec<Recipe>>
+pub fn parse_xml<R>(r: R) -> Result<Vec<Recipe>>
 where
-    R: Read,
+    R: Read + BufRead,
 {
-    let mut buf = Vec::new();
-    r.read_to_end(&mut buf)?;
-
-    let root: RecipeSageXMLData = quick_xml::de::from_reader(Cursor::new(buf)).map_err(|err| {
+    let root: RecipeSageXMLData = quick_xml::de::from_reader(r).map_err(|err| {
         error!("Failed to read RecipeSage XML file: {err}");
         Error::Parse(err.to_string())
     })?;
@@ -554,13 +551,14 @@ where
 
     match serde_json::from_str::<Vec<Recipe>>(&buf) {
         Ok(res) => Ok(res),
-        Err(err) => match serde_json::from_str::<JsonRoot>(&buf) {
-            Ok(root) => Ok(root.recipes.into()),
-            Err(_) => {
+        Err(err) => {
+            if let Ok(root) = serde_json::from_str::<JsonRoot>(&buf) {
+                Ok(root.recipes)
+            } else {
                 error!("Failed to read RecipeSage JSON file: {err}");
                 Err(Error::Parse(err.to_string()))
             }
-        },
+        }
     }
 }
 

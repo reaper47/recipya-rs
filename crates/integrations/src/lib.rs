@@ -13,7 +13,7 @@ pub use app::{App, all_apps};
 pub use error::{Error, Result};
 pub use fileformat::FileFormat;
 
-use std::io::{Read, Seek};
+use std::io::{BufRead, Read, Seek};
 
 use schema_org::Recipe;
 
@@ -34,7 +34,7 @@ pub fn parse_recipe<R>(
     file_format: &FileFormat,
 ) -> Result<Vec<Recipe>>
 where
-    R: Read + Seek,
+    R: Read + Seek + BufRead,
 {
     match app {
         App::AccuChef => match file_format {

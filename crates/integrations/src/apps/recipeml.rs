@@ -1,5 +1,5 @@
 use std::fmt::Write;
-use std::io::{Cursor, Read, Seek};
+use std::io::{BufRead, Read};
 
 use itertools::Itertools;
 use schema_org::at_context;
@@ -170,15 +170,12 @@ impl From<RecipeXML> for Recipe {
 }
 
 /// Parses a `RecipeML` XML file.
-pub fn parse_xml<R>(mut r: R) -> Result<Vec<Recipe>>
+pub fn parse_xml<R>(r: R) -> Result<Vec<Recipe>>
 where
-    R: Read + Seek,
+    R: Read + BufRead,
 {
-    let mut buf = Vec::new();
-    r.read_to_end(&mut buf)?;
-
-    let root: RecipeML = quick_xml::de::from_reader(Cursor::new(buf))
-        .map_err(|err| Error::Parse(err.to_string()))?;
+    let root: RecipeML =
+        quick_xml::de::from_reader(r).map_err(|err| Error::Parse(err.to_string()))?;
 
     Ok(root
         .recipe
@@ -193,6 +190,8 @@ mod tests {
     use super::*;
 
     mod tests_recipes {
+        use std::io::Cursor;
+
         use super::*;
 
         #[test]

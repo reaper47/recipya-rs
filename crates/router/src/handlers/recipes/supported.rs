@@ -110,7 +110,7 @@ pub async fn supported_applications_handler(RequireAuth(_): RequireAuth) -> impl
         (
             "Shop'NCook",
             "https://www.shopncook.com/",
-            vec![".html", ".mmf", ".scx", ".txt", ".zip"],
+            vec![".html", ".scx", ".txt", ".zip"],
         ),
         (
             "Umami",
