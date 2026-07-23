@@ -1690,6 +1690,7 @@ Posted by Fred Peters</instructions>
             ]
         }
 
+        #[allow(clippy::too_many_lines)]
         pub fn other_recipes() -> Vec<Recipe> {
             vec![
                 Recipe {

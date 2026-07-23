@@ -153,15 +153,19 @@ async fn upload_images(state: &AppState, recipes: &mut [schema_org::Recipe]) {
         for (idx_img, image) in recipe.image.iter().enumerate() {
             match image {
                 schema_org::field::FieldEnum22::URL(s) if s.starts_with('/') => {
-                    if let Ok(bytes) = general_purpose::STANDARD.decode(s.as_bytes()) {
-                        let fs_support = state.fs_support.clone();
-                        set.spawn(async move {
-                            (
-                                idx_recipe,
-                                idx_img,
-                                fs_support.upload_to_temp(bytes::Bytes::from(bytes)).await,
-                            )
-                        });
+                    let cleaned_s = s.chars().filter(|c| !c.is_whitespace()).collect::<String>();
+                    match general_purpose::STANDARD.decode(cleaned_s.as_bytes()) {
+                        Ok(bytes) => {
+                            let fs_support = state.fs_support.clone();
+                            set.spawn(async move {
+                                (
+                                    idx_recipe,
+                                    idx_img,
+                                    fs_support.upload_to_temp(bytes::Bytes::from(bytes)).await,
+                                )
+                            });
+                        }
+                        Err(err) => warn!("Failed to decode image bytes: {err}"),
                     }
                 }
                 _ => (),
