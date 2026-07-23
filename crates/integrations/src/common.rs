@@ -1,13 +1,17 @@
+/// Represents the preparation and cooking times of a recipe.
+#[derive(Default)]
 pub struct Times {
     pub prep_seconds: i32,
     pub cook_seconds: i32,
 }
 
+/// Represents a tool used in a recipe.
 pub struct Tool {
     pub name: String,
     pub quantity: i16,
 }
 
+/// Represents the nutrition information of a recipe.
 #[derive(Default)]
 pub struct Nutrition {
     pub calories_kcal: Option<i16>,

@@ -238,7 +238,7 @@ fn import_recipes_dialog() -> Markup {
                                     select #app-select name="app" .select.block {
                                         option disabled selected { "Pick an application" }
                                         @for app in all_apps() {
-                                            option value=(app.to_string()) { (format!("{app:?}")) }
+                                            option value=(app) { (app) }
                                         }
                                     }
                                 }

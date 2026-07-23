@@ -39,18 +39,30 @@ enum TertiaryInner {
     AccuChef,
     BigOven,
     ChefTap,
+    ComputerCuisineDeluxe,
+    CookBook,
     Cooklang,
     CookMate,
+    Cookn,
+    CopyMeThat,
     Crouton,
+    HomeCookin,
     Kalorio,
+    LeCollectionneurDeRecettes,
     MasterCook,
     MealMaster,
+    MrCook,
+    MyRecipeBox,
     Paprika,
+    Pepperplate,
+    RecipeKeeper,
     RecipeMD,
     RecipeSage,
     Recipya,
     Rezkonv,
     Saffron,
+    ShopNCook,
+    Umami,
 }
 
 /// A primary report type of primary report type `P`.
@@ -221,6 +233,16 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::ChefTap)
     }
 
+    /// Creates a new tertiary report type for the `ComputerCuisineDeluxe` software.
+    pub const fn computer_cuisine_deluxe() -> Self {
+        Self::new(TertiaryInner::ComputerCuisineDeluxe)
+    }
+
+    /// Creates a new tertiary report type for the `CookBook` software.
+    pub const fn cookbook() -> Self {
+        Self::new(TertiaryInner::CookBook)
+    }
+
     /// Creates a new tertiary report type for the `Cooklang` software.
     pub const fn cooklang() -> Self {
         Self::new(TertiaryInner::Cooklang)
@@ -231,14 +253,34 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::CookMate)
     }
 
+    /// Creates a new tertiary report type for the `Cook'n` software.
+    pub const fn cookn() -> Self {
+        Self::new(TertiaryInner::Cookn)
+    }
+
+    /// Creates a new tertiary report type for the `Copy Me That` software.
+    pub const fn copymethat() -> Self {
+        Self::new(TertiaryInner::CopyMeThat)
+    }
+
     /// Creates a new tertiary report type for the `Crouton` software.
     pub const fn crouton() -> Self {
         Self::new(TertiaryInner::Crouton)
     }
 
+    /// Creates a new tertiary report type for the `Home Cookin` software.
+    pub const fn home_cookin() -> Self {
+        Self::new(TertiaryInner::HomeCookin)
+    }
+
     /// Creates a new tertiary report type for the `Kalorio` software.
     pub const fn kalorio() -> Self {
         Self::new(TertiaryInner::Kalorio)
+    }
+
+    /// Creates a new tertiary report type for the `Le Collectionneur de Recettes` software.
+    pub const fn lecollectionneurderecettes() -> Self {
+        Self::new(TertiaryInner::LeCollectionneurDeRecettes)
     }
 
     /// Creates a new tertiary report type for the `MasterCook` software.
@@ -251,9 +293,29 @@ impl TertiaryReportType<Import, Software> {
         Self::new(TertiaryInner::MealMaster)
     }
 
+    /// Creates a new tertiary report type for the `Mr. Cook` software.
+    pub const fn mrcook() -> Self {
+        Self::new(TertiaryInner::MrCook)
+    }
+
+    /// Creates a new tertiary report type for the `My Recipe Box` software.
+    pub const fn myrecipebox() -> Self {
+        Self::new(TertiaryInner::MyRecipeBox)
+    }
+
     /// Creates a new tertiary report type for the `Parpika` software.
     pub const fn paprika() -> Self {
         Self::new(TertiaryInner::Paprika)
+    }
+
+    /// Creates a new tertiary report type for the `Pepperplate` software.
+    pub const fn pepperplate() -> Self {
+        Self::new(TertiaryInner::Pepperplate)
+    }
+
+    /// Creates a new tertiary report type for the `Recipe Keeper` software.
+    pub const fn recipekeeper() -> Self {
+        Self::new(TertiaryInner::RecipeKeeper)
     }
 
     /// Creates a new tertiary report type for the `RecipeMD` software.
@@ -280,6 +342,16 @@ impl TertiaryReportType<Import, Software> {
     pub const fn saffron() -> Self {
         Self::new(TertiaryInner::Saffron)
     }
+
+    /// Creates a new tertiary report type for the `ShopNCook` software.
+    pub const fn shopncook() -> Self {
+        Self::new(TertiaryInner::ShopNCook)
+    }
+
+    /// Creates a new tertiary report type for the `Umami` software.
+    pub const fn umami() -> Self {
+        Self::new(TertiaryInner::Umami)
+    }
 }
 
 impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
@@ -304,6 +376,18 @@ impl<P, S> ReportTypeId for TertiaryReportType<P, S> {
             TertiaryInner::Rezkonv => 17,
             TertiaryInner::Saffron => 18,
             TertiaryInner::Recipya => 19,
+            TertiaryInner::ComputerCuisineDeluxe => 20,
+            TertiaryInner::Cookn => 21,
+            TertiaryInner::CopyMeThat => 22,
+            TertiaryInner::CookBook => 23,
+            TertiaryInner::HomeCookin => 24,
+            TertiaryInner::RecipeKeeper => 25,
+            TertiaryInner::LeCollectionneurDeRecettes => 26,
+            TertiaryInner::MrCook => 27,
+            TertiaryInner::MyRecipeBox => 28,
+            TertiaryInner::Pepperplate => 29,
+            TertiaryInner::Umami => 30,
+            TertiaryInner::ShopNCook => 31,
         }
     }
 }
