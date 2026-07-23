@@ -189,6 +189,8 @@ mod tests {
     }
 
     mod results {
+        use schema_org::DurationOrText;
+
         use super::*;
 
         pub fn example1() -> Vec<schema_org::Recipe> {
@@ -226,6 +228,7 @@ mod tests {
                     RecipeRecipeInstructionsFieldEnum::new_section("Notes", vec!["Nothing special"])
                 ],
                 recipe_yield: to_yield(12),
+                total_time: vec![DurationOrText::Text("PT4800S".into())],
                 ..Default::default()
             }, schema_org::Recipe {
                 cook_time: seconds_to_duration(2700),
@@ -265,6 +268,7 @@ mod tests {
                     ]),
                 ],
                 recipe_yield: to_yield(16),
+                total_time: vec![DurationOrText::Text("PT4500S".into())],
                 ..Default::default()
             }]
         }

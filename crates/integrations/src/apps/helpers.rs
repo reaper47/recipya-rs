@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env::temp_dir;
 use std::fs::File;
-use std::io;
+use std::io::{self, Cursor};
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 
@@ -18,10 +18,10 @@ use schema_org::field::{
 use schema_org::{ImageObject, Recipe};
 use support::strings::auto_convert_to_utf8;
 
-use crate::Result;
-use crate::apps::{cookmate, mastercook::parse_mx2};
+use crate::apps::mastercook::parse_mx2;
+use crate::{FileFormat, Result};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) enum Instruction<'a> {
     Line(Cow<'a, str>),
     Section(Cow<'a, str>),
@@ -81,7 +81,10 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         }
                     }
                     Ingredient::Section(section) => {
-                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(section, &[]));
+                        acc.push(RecipeRecipeIngredientFieldEnum::new_section(
+                            section.trim(),
+                            &[],
+                        ));
                     }
                 }
                 acc
@@ -117,7 +120,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                         .collect::<Vec<_>>();
 
                     RecipeRecipeIngredientFieldEnum::new_section(
-                        &list.name[0],
+                        list.name[0].trim(),
                         merged
                             .iter()
                             .map(String::as_str)
@@ -140,40 +143,40 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
     type Section = RecipeRecipeInstructionsFieldEnum;
 
     fn to_sections(&self) -> Vec<RecipeRecipeInstructionsFieldEnum> {
-        self.iter()
-            .fold(Vec::new(), |mut acc, ins| {
-                match ins {
-                    Instruction::Section(section) => {
-                        acc.push(RecipeRecipeInstructionsFieldEnum::new_section::<String>(
-                            section,
-                            vec![],
-                        ));
-                    }
-                    Instruction::Line(line) => {
-                        let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
+        self.iter().fold(Vec::new(), |mut acc, ins| {
+            match ins {
+                Instruction::Section(section) => {
+                    acc.push(RecipeRecipeInstructionsFieldEnum::new_section::<String>(
+                        section.trim(),
+                        vec![],
+                    ));
+                }
+                Instruction::Line(line) => {
+                    let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
 
-                        let line = match line.trim().find('.') {
-                            Some(i) if i < 3 => line[i + 1..].trim().to_string(),
-                            _ => line,
-                        };
+                    let line = match line.trim().find('.') {
+                        Some(i) if i < 3 => line[i + 1..].trim().to_string(),
+                        _ => line,
+                    };
 
-                        if !line.is_empty() {
-                            if let Some(schema_org::field::FieldEnum141::ItemList(list)) =
-                                acc.last_mut()
-                            {
-                                list.item_list_element
-                                    .push(ItemListItemListElementFieldEnum::Text(line));
-                                list.number_of_items.get_mut(0).map(|i| *i + 1);
-                            } else {
-                                acc.push(RecipeRecipeInstructionsFieldEnum::Text(line));
+                    if !line.is_empty() {
+                        if let Some(schema_org::field::FieldEnum141::ItemList(list)) =
+                            acc.last_mut()
+                        {
+                            list.item_list_element
+                                .push(ItemListItemListElementFieldEnum::Text(line));
+
+                            if let Some(i) = list.number_of_items.first_mut() {
+                                *i += 1;
                             }
+                        } else {
+                            acc.push(RecipeRecipeInstructionsFieldEnum::Text(line));
                         }
                     }
                 }
-                acc
-            })
-            .into_iter()
-            .collect()
+            }
+            acc
+        })
     }
 }
 
@@ -181,8 +184,24 @@ pub(super) fn is_vchar_or_space(c: char) -> bool {
     !c.is_control() && (c != '\n' && c != '\r')
 }
 
+type ParserFn = fn(Cursor<Vec<u8>>) -> Result<Vec<Recipe>>;
+
+#[derive(Default)]
+pub(super) struct Parsers {
+    pub csv: Option<ParserFn>,
+    pub html: Option<ParserFn>,
+    pub json: Option<ParserFn>,
+    pub md: Option<ParserFn>,
+    pub mealmaster: Option<ParserFn>,
+    pub scx: Option<ParserFn>,
+    pub txt: Option<ParserFn>,
+    pub xml: Option<ParserFn>,
+    pub yaml: Option<ParserFn>,
+}
+
 pub(super) fn extract_archive_contents<R>(
     mut archive: ZipArchive<R>,
+    parsers: &Parsers,
 ) -> Result<(Vec<Recipe>, HashMap<String, PathBuf>)>
 where
     R: Read + Seek,
@@ -193,38 +212,58 @@ where
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
         let file_name = file.name().to_string();
-        let ext = Path::new(&file_name)
-            .extension()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default();
+        let format = FileFormat::from_filename(&file_name);
 
-        match ext.to_lowercase().as_str() {
-            "mx2" => {
-                let mut buffer = Vec::new();
-                file.read_to_end(&mut buffer)?;
+        if format == FileFormat::Jpg || format == FileFormat::Png {
+            let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
+            let mut tmp_file = File::create(tmp_path.clone())?;
+            io::copy(&mut file, &mut tmp_file)?;
 
-                let cursor = io::Cursor::new(buffer);
-                let r = parse_mx2(cursor)?;
-                recipes.extend(r);
+            if let Some(name) = Path::new(&file_name).file_name().and_then(|s| s.to_str()) {
+                images.insert(name.to_string(), tmp_path);
+            } else {
+                warn!("Could not get file name from: {file_name}");
             }
-            "jpg" => {
-                let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
-                let mut tmp_file = File::create(tmp_path.clone())?;
-                io::copy(&mut file, &mut tmp_file)?;
 
-                if let Some(name) = Path::new(&file_name).file_name().and_then(|s| s.to_str()) {
-                    images.insert(name.to_string(), tmp_path);
-                } else {
-                    warn!("Could not get file name from: {file_name}");
-                }
-            }
-            "xml" => {
-                let r = cookmate::parse(file)?;
-                recipes.extend(r);
-            }
+            continue;
+        }
+
+        let parse_fn: Option<&ParserFn> = match format {
+            FileFormat::Csv => parsers.csv.as_ref(),
+            FileFormat::MX2 => None,
+            FileFormat::Html => parsers.html.as_ref(),
+            FileFormat::Json => parsers.json.as_ref(),
+            FileFormat::Md => parsers.md.as_ref(),
+            FileFormat::MealMaster => parsers.mealmaster.as_ref(),
+            FileFormat::Scx => parsers.scx.as_ref(),
+            FileFormat::Txt => parsers.txt.as_ref(),
+            FileFormat::Xml => parsers.xml.as_ref(),
+            FileFormat::Yaml => parsers.yaml.as_ref(),
             _ => {
-                warn!("Unzip .mcb archive, skipping file: {file_name}");
+                warn!("Unzip archive, skipping file: {file_name}");
+                continue;
+            }
+        };
+
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf)?;
+        let cursor = Cursor::new(buf);
+
+        if format == FileFormat::MX2 {
+            recipes.extend(parse_mx2(cursor)?);
+            continue;
+        }
+
+        let Some(parse) = parse_fn else {
+            continue;
+        };
+
+        match parse(cursor) {
+            Ok(r) => {
+                recipes.extend(r);
+            }
+            Err(err) => {
+                warn!("Failed to parse {file_name}: {err}");
             }
         }
     }
@@ -244,16 +283,18 @@ pub(super) fn update_recipe_image_paths(recipes: &mut [Recipe], images: &HashMap
 fn rewrite_image_id(img: &mut RecipeImageFieldEnum, images: &HashMap<String, PathBuf>) {
     match img {
         RecipeImageFieldEnum::ImageObject(obj) => {
-            obj.image.iter().for_each(|img| match img {
+            obj.image.iter_mut().for_each(|img| match img {
                 ImageObjectImageFieldEnum::ImageObject(_) => {}
                 ImageObjectImageFieldEnum::URL(path) => {
                     let Some(name) = Path::new(path).file_name().and_then(|s| s.to_str()) else {
                         return;
                     };
 
-                    let Some(_) = images.get(name) else {
+                    let Some(new_img) = images.get(name) else {
                         return;
                     };
+
+                    *img = ImageObjectImageFieldEnum::URL(new_img.to_string_lossy().to_string());
                 }
             });
         }
@@ -262,9 +303,11 @@ fn rewrite_image_id(img: &mut RecipeImageFieldEnum, images: &HashMap<String, Pat
                 return;
             };
 
-            let Some(_) = images.get(name) else {
+            let Some(new_img) = images.get(name) else {
                 return;
             };
+
+            *path = new_img.to_string_lossy().to_string();
         }
     }
 }
@@ -279,4 +322,38 @@ pub(super) fn urls_to_image_object(urls: Vec<String>) -> Vec<RecipeImageFieldEnu
             }))
         })
         .collect()
+}
+
+/// Parses the recipes with images in an archive.
+pub fn parse_archive_helper<R>(r: R, parsers: &Parsers) -> Result<Vec<Recipe>>
+where
+    R: Read + Seek,
+{
+    let archive = ZipArchive::new(r)?;
+
+    let (mut recipes, images) = extract_archive_contents(archive, parsers)?;
+
+    for recipe in &mut recipes {
+        for image in &mut recipe.image {
+            if let RecipeImageFieldEnum::URL(u) = image
+                && let Some(file_name) = Path::new(u.as_str()).file_name()
+                && let Some(path) = images.get(file_name.to_string_lossy().as_ref() as &str)
+            {
+                *u = path.to_string_lossy().into_owned();
+            }
+        }
+    }
+
+    update_recipe_image_paths(&mut recipes, &images);
+    Ok(recipes)
+}
+
+/// Parses the recipes without images in an archive.
+pub fn parse_archive_helper_no_images<R>(r: R, parsers: &Parsers) -> Result<Vec<Recipe>>
+where
+    R: Read + Seek,
+{
+    let archive = ZipArchive::new(r)?;
+    let (recipes, _) = extract_archive_contents(archive, parsers)?;
+    Ok(recipes)
 }

@@ -96,7 +96,13 @@ pub async fn assert_ws_messages_any_order(server: &mut TestWebSocket, wants: &[&
 ///
 /// Panics if the file does not exist or cannot be read.
 pub fn open_test_file(filename: &str) -> Cursor<Vec<u8>> {
-    let path = format!("./tests/data/{filename}");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("integrations")
+        .join("tests")
+        .join("data")
+        .join(filename);
+
     let mut file = File::open(path).expect("File to exist");
     let mut buf = Vec::new();
     file.read_to_end(&mut buf).expect("Failed to read file");

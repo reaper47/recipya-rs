@@ -8,15 +8,15 @@ use std::borrow::Cow;
 use std::io::{Read, Seek};
 
 use winnow::Result as WResult;
-use winnow::ascii::{alphanumeric1, dec_int, line_ending, space0, space1};
+use winnow::ascii::{alphanumeric1, dec_int, line_ending, multispace0, space0, space1};
 use winnow::combinator::{
     alt, delimited, opt, peek, preceded, repeat, repeat_till, separated, seq, terminated,
 };
 use winnow::prelude::*;
 use winnow::token::{literal, take_till, take_until, take_while};
 
-use schema_org::Recipe;
 use schema_org::field::{RecipeAuthorFieldEnum, RecipeKeywordsFieldEnum};
+use schema_org::{AtType, DurationOrText, Energy, Mass, NutritionInformation, Recipe, at_context};
 
 use crate::apps::helpers::{Ingredient, Instruction, ToSections, read_file};
 use crate::helpers::{to_is_based_on, to_yield};
@@ -30,10 +30,74 @@ struct RecipeComponents<'a> {
     r#yield: i16,
     ingredients: Vec<Ingredient<'a>>,
     instructions: Vec<Instruction<'a>>,
+    prep_time: Option<&'a str>,
+    nutrition: Option<NutritionComponents<'a>>,
     keywords: Vec<&'a str>,
     author: Option<&'a str>,
     #[allow(unused)]
     erfasst: Option<&'a str>,
+}
+
+struct NutritionComponents<'a> {
+    calories: Option<&'a str>,
+    carbohydrate_content: Option<&'a str>,
+    cholesterol_content: Option<&'a str>,
+    fat_content: Option<&'a str>,
+    fiber_content: Option<&'a str>,
+    protein_content: Option<&'a str>,
+    saturated_fat_content: Option<&'a str>,
+    sodium_content: Option<&'a str>,
+    sugar_content: Option<&'a str>,
+    trans_fat_content: Option<&'a str>,
+    unsaturated_fat_content: Option<&'a str>,
+}
+
+impl NutritionComponents<'_> {
+    const fn is_empty(&self) -> bool {
+        self.calories.is_none()
+            && self.carbohydrate_content.is_none()
+            && self.cholesterol_content.is_none()
+            && self.fat_content.is_none()
+            && self.fiber_content.is_none()
+            && self.protein_content.is_none()
+            && self.saturated_fat_content.is_none()
+            && self.sodium_content.is_none()
+            && self.sugar_content.is_none()
+            && self.trans_fat_content.is_none()
+            && self.unsaturated_fat_content.is_none()
+    }
+}
+
+impl From<NutritionComponents<'_>> for NutritionInformation {
+    fn from(n: NutritionComponents<'_>) -> Self {
+        let to_mass = |opt: Option<&str>| {
+            opt.map(|s| {
+                if s == "0 g" {
+                    vec![]
+                } else {
+                    vec![Mass::new(s)]
+                }
+            })
+            .unwrap_or_default()
+        };
+
+        Self {
+            calories: n.calories.map(|s| vec![Energy::new(s)]).unwrap_or_default(),
+            carbohydrate_content: to_mass(n.carbohydrate_content),
+            cholesterol_content: to_mass(n.cholesterol_content),
+            context: at_context(),
+            fat_content: to_mass(n.fat_content),
+            fiber_content: to_mass(n.fiber_content),
+            protein_content: to_mass(n.protein_content),
+            saturated_fat_content: to_mass(n.saturated_fat_content),
+            serving_size: vec![],
+            sodium_content: to_mass(n.sodium_content),
+            sugar_content: to_mass(n.sugar_content),
+            r#type: AtType::NutritionInformation.to_opt(),
+            trans_fat_content: to_mass(n.trans_fat_content),
+            unsaturated_fat_content: to_mass(n.unsaturated_fat_content),
+        }
+    }
 }
 
 impl From<RecipeComponents<'_>> for Recipe {
@@ -75,7 +139,19 @@ impl From<RecipeComponents<'_>> for Recipe {
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
             name: vec![r.title.into()],
-            recipe_category: vec![category],
+            nutrition: r
+                .nutrition
+                .map(|n| if n.is_empty() { vec![] } else { vec![n.into()] })
+                .unwrap_or_default(),
+            prep_time: r
+                .prep_time
+                .map(|t| vec![DurationOrText::Text(t.into())])
+                .unwrap_or_default(),
+            recipe_category: if category.is_empty() {
+                vec![]
+            } else {
+                vec![category]
+            },
             recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions: r.instructions.to_sections(),
             recipe_yield: to_yield(i64::from(r.r#yield)),
@@ -112,11 +188,13 @@ fn parse_recipe<'s>(input: &mut &'s str) -> WResult<RecipeComponents<'s>> {
         ingredients: parse_ingredients,
         _: parse_quelle,
         instructions: parse_instructions,
+        prep_time: opt(parse_prep_time),
+        nutrition: opt(terminated(parse_nutrition, multispace0)),
         keywords: parse_keywords,
         author: parse_author,
         _: parse_erfasst,
-        _: repeat::<_, _, (), _, _>(1.., line_ending),
-        _: "=====",
+        _: repeat::<_, _, (), _, _>(0.., line_ending),
+        _: (literal("====="), multispace0),
         _: repeat::<_, _, (), _, _>(0.., line_ending),
         ..Default::default()
     }}
@@ -299,15 +377,56 @@ fn parse_instructions<'s>(input: &mut &'s str) -> WResult<Vec<Instruction<'s>>> 
             })
             .parse_next(input)
     } else {
-        separated(1.., take_until(1.., "\n\n"), "\n\n")
-            .map(|blocks: Vec<&str>| {
+        alt((
+            take_until(1.., "\n\n\n").map(|s: &str| {
+                s.split("\n\n")
+                    .filter_map(|l| {
+                        let s = l.trim();
+                        if s.is_empty() {
+                            None
+                        } else {
+                            Some(Instruction::Line(Cow::Borrowed(s)))
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            }),
+            separated(1.., take_until(1.., "\n\n"), "\n\n").map(|blocks: Vec<&str>| {
                 blocks
                     .into_iter()
                     .map(|s| Instruction::Line(Cow::Borrowed(s.trim())))
                     .collect::<Vec<_>>()
-            })
-            .parse_next(input)
+            }),
+        ))
+        .parse_next(input)
     }
+}
+
+fn parse_prep_time<'s>(input: &mut &'s str) -> WResult<&'s str> {
+    delimited(
+        (line_ending, line_ending, line_ending, space0),
+        take_while(2..=4, |c: char| {
+            c.is_ascii_digit() || c.is_ascii_alphabetic()
+        }),
+        line_ending,
+    )
+    .parse_next(input)
+}
+
+fn parse_nutrition<'s>(input: &mut &'s str) -> WResult<NutritionComponents<'s>> {
+    seq! {NutritionComponents {
+        calories: opt(delimited((space0, "calories : "), take_while(1.., |c| c != '\n'), line_ending)),
+        carbohydrate_content: opt(delimited((space0, "carbohydrateContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        cholesterol_content: opt(delimited((space0, "cholesterolContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        fat_content: opt(delimited((space0, "fatContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        fiber_content: opt(delimited((space0, "fiberContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        protein_content: opt(delimited((space0, "proteinContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        saturated_fat_content: opt(delimited((space0, "saturatedFatContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        sodium_content: opt(delimited((space0, "sodiumContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        sugar_content: opt(delimited((space0, "sugarContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        trans_fat_content: opt(delimited((space0, "transFatContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+        unsaturated_fat_content: opt(delimited((space0, "unsaturatedFatContent : "), take_while(1.., |c| c != '\n'), line_ending)),
+    }}
+    .parse_next(input)
 }
 
 fn parse_keywords<'s>(input: &mut &'s str) -> WResult<Vec<&'s str>> {
@@ -357,6 +476,17 @@ mod tests {
             let got = parse(buf)?;
 
             pretty_assertions::assert_eq!(got, results::cookmate());
+            Ok(())
+        }
+
+        #[test]
+        fn test_cookmate2() -> Result<()> {
+            let file = files::cookmate2();
+            let buf = Cursor::new(file);
+
+            let got = parse(buf)?;
+
+            pretty_assertions::assert_eq!(got, results::cookmate2());
             Ok(())
         }
 
@@ -563,6 +693,135 @@ minutes of baking.
 
 
 =====
+
+"
+        }
+
+        pub fn cookmate2<'a>() -> &'a str {
+            r"===== Recipe via Cookmate [REZKONV Export Format] =====
+
+                  Titel: Simple White Cake
+            Kategorien:
+                  Menge: 12
+
+                  1 c  white sugar
+                0.5 c  unsalted butter
+                  2    large eggs
+                  2 ts vanilla extract
+                1.5 c  all-purpose flour
+               1.75 ts baking powder
+                1/4 ts table salt
+                0.5 c  milk
+
+
+            Gather all ingredients. Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square cake pan.
+            Beat sugar and butter together in a mixing bowl with an electric mixer until lighter in color and fluffy, 3 to 4 minutes. Add eggs, one at a time, beating briefly after each addition, 30 seconds total. Mix in vanilla, about 15 seconds.
+            Whisk flour, baking powder, and salt in a separate bowl. With mixer on low speed, add flour mixture to butter mixture in 3 batches, alternating with milk, beginning and ending with flour. Mix just until combined stopping to scrape down sides if needed, about 2 minutes.
+            Spread cake batter into the prepared pan.
+            Bake cake in the preheated oven until a toothpick inserted into the center comes out clean, about 30 minutes.
+            Remove cake from the oven and let cool in pan on a wire rack for 10 minutes. Invert cake onto wire rack; remove pan and let cake cool completely before frosting. Enjoy!
+
+
+            10m
+            calories : 209 kcal
+            carbohydrateContent : 29 g
+            cholesterolContent : 52 mg
+            fatContent : 9 g
+            fiberContent : 0 g
+            proteinContent : 3 g
+            saturatedFatContent : 5 g
+            sodiumContent : 142 mg
+            sugarContent : 17 g
+            unsaturatedFatContent : 0 g
+
+            =====
+
+            ===== Recipe via Cookmate [REZKONV Export Format] =====
+
+                  Titel: The Best Chicken Fried Steak
+            Kategorien: Starter, Main course
+                  Menge: 4
+
+                  4    (1/2 pound) beef cube
+                       -steaks
+               2.25 c  all-purpose flour, divided
+                  2 ts baking powder
+                  1 ts baking soda
+                  1 ts black pepper
+               0.75 ts salt
+                1.5 c  buttermilk
+                  1    large egg
+                  1 tb hot pepper sauce (e.g.
+                       -Tabasco?)
+                  2    cloves garlic, minced
+                  3 c  vegetable shortening for
+                       -frying
+                  4 c  milk
+                       kosher salt and ground
+
+
+
+            Place steaks between two sheets of heavy plastic on a solid, level surface; firmly pound with a meat mallet to a ¼-inch thickness.
+            Place 2 cups flour in a shallow bowl.
+            Combine baking powder, baking soda, 1 teaspoon pepper, and ¾ teaspoon salt in a separate shallow bowl; stir in buttermilk, egg, Tabasco, and garlic to combine.
+            Heat shortening in a deep cast-iron skillet to 325 degrees F (165 degrees C). Place a wire rack over a sheet of parchment paper.
+            Meanwhile, dredge 1 steak in flour to coat; shake off excess. Dip into buttermilk batter; lift up so excess batter drips back into the bowl. Dredge in flour again to coat both sides completely. Place breaded steak on the prepared wire rack. Repeat with remaining steaks.
+            Fry steaks, in batches if necessary, until evenly golden brown, 3 to 5 minutes per side. Transfer steaks to a paper towel-lined plate to drain. Cover with foil to keep warm.
+            Drain fat from the skillet, reserving ¼ cup and as much solid remnants as possible.
+            Place skillet over medium-low heat. Add reserved ¼ cup oil; whisk in remaining ¼ cup flour. Scrape the brown bits of food off the bottom of the skillet with a spatula.
+            Stir in milk; increase heat to medium and bring gravy to a simmer. Cook, stirring often, until thick, 6 to 7 minutes. Season gravy with salt and black pepper.
+            Transfer steaks to a platter; pour gravy over top.
+
+
+            20m
+            calories : 832 kcal
+            carbohydrateContent : 71 g
+            cholesterolContent : 206 mg
+            fatContent : 29 g
+            fiberContent : 2 g
+            proteinContent : 68 g
+            saturatedFatContent : 12 g
+            sodiumContent : 1273 mg
+            unsaturatedFatContent : 0 g
+
+            =====
+
+            ===== Recipe via Cookmate [REZKONV Export Format] =====
+
+                  Titel: To Die For Fettuccine Alfredo
+            Kategorien: Dessert
+                  Menge: 6
+
+                 24 oz dry fettuccine pasta
+                  1 c  butter
+               0.75 pt heavy cream
+                  1 ds garlic salt
+                       salt and pepper to taste
+               0.75 c  grated Romano cheese
+                0.5 c  grated Parmesan cheese
+
+
+            Gather all ingredients.
+            Fill a large pot with lightly salted water and bring to a rolling boil. Cook fettuccine at a boil until tender yet firm to the bite, about 8 minutes. Drain.
+            Heat butter and cream in a large saucepan over low heat until butter melted; add garlic salt, salt, and black pepper.
+            Increase the heat to medium; stir in Romano and Parmesan cheeses until melted and sauce has thickened.
+            Add cooked pasta to sauce; toss until thoroughly coated. Serve immediately.
+
+
+            15m
+            calories : 964 kcal
+            carbohydrateContent : 84 g
+            cholesterolContent : 184 mg
+            fatContent : 61 g
+            fiberContent : 4 g
+            proteinContent : 24 g
+            saturatedFatContent : 37 g
+            sodiumContent : 582 mg
+            sugarContent : 4 g
+            unsaturatedFatContent : 0 g
+
+            =====
+
 
 "
         }
@@ -885,6 +1144,119 @@ vorgeheizten Backofen bei 220 Grad 30 Minuten backen.
                         "This takes 2 days but is worth the wait. Makes 2 round loaves Starter Stir the yeast and malt into the water; let stand until foamy, about 10 minutes. Stir in the milk and beat in the flour with a rubber spatula or wooden spoon about 100 strokes until smooth. Cover with plastic wrap and let stand until bubbly, at least 4 hours but preferably overnight. Dough 2 cups water, at room temperature 6 1/4 cups (860 grams) unbleached all-purpose flour 1 T. salt Cornmeal Mix the starter and the water in a mixer until the starter is well broken up. Add the flour and salt and mix for 2 to 3 minutes at low speed. The dough will be smooth but won't pull away from the side of the bowl. Change to the dough hook and knead at medium speed, scraping down the side of the bowl as necessary, until the dough is elastic but slightly sticky, 3 to 4 minutes. Finish kneading by hand on a floured work surface. First rise Place in a well-oiled bowl, cover tightly with plastic wrap, and let rise until doubled, about 1 1/2 hours. The dough is ready when it is very bubbled and blistered. Shaping and second rise Cut the dough in half on a floured surface and shape into 2 round loaves. Place on an oiled cookie sheet sprinkled with cornmeal. Cover and let rise till doubled, about 1 hour. Baking Preheat oven to 400 degrees F. Bake about 1 hour and cool on racks. To get a really good crust spray the loaves with water 3 times in the first minutes of baking.".into(),
                     )],
                     recipe_yield: to_yield(2),
+                    ..Default::default()
+                },
+            ]
+        }
+
+        #[allow(clippy::too_many_lines)]
+        pub fn cookmate2() -> Vec<Recipe> {
+            vec![
+                Recipe {
+                    nutrition: vec![NutritionInformation {
+                        calories: vec![Energy::new("209 kcal")],
+                        carbohydrate_content: vec![Mass::new("29 g")],
+                        cholesterol_content: vec![Mass::new("52 mg")],
+                        context: at_context(),
+                        fat_content: vec![Mass::new("9 g")],
+                        protein_content: vec![Mass::new("3 g")],
+                        saturated_fat_content: vec![Mass::new("5 g")],
+                        sodium_content: vec![Mass::new("142 mg")],
+                        sugar_content: vec![Mass::new("17 g")],
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        ..Default::default()
+                    }],
+                    recipe_yield: to_yield(12),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("1 c white sugar".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.5 c unsalted butter".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 large eggs".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 ts vanilla extract".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1.5 c all-purpose flour".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1.75 ts baking powder".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1/4 ts table salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.5 c milk".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        "Gather all ingredients. Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square cake pan. Beat sugar and butter together in a mixing bowl with an electric mixer until lighter in color and fluffy, 3 to 4 minutes. Add eggs, one at a time, beating briefly after each addition, 30 seconds total. Mix in vanilla, about 15 seconds. Whisk flour, baking powder, and salt in a separate bowl. With mixer on low speed, add flour mixture to butter mixture in 3 batches, alternating with milk, beginning and ending with flour. Mix just until combined stopping to scrape down sides if needed, about 2 minutes. Spread cake batter into the prepared pan. Bake cake in the preheated oven until a toothpick inserted into the center comes out clean, about 30 minutes. Remove cake from the oven and let cool in pan on a wire rack for 10 minutes. Invert cake onto wire rack; remove pan and let cake cool completely before frosting. Enjoy!".into(),
+                    )],
+                    prep_time: vec![DurationOrText::Text("10m".into())],
+                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]"),
+                    name: vec!["Simple White Cake".into()],
+                    ..Default::default()
+                },
+                Recipe {
+                    nutrition: vec![NutritionInformation {
+                        calories: vec![Energy::new("832 kcal")],
+                        carbohydrate_content: vec![Mass::new("71 g")],
+                        cholesterol_content: vec![Mass::new("206 mg")],
+                        context: at_context(),
+                        fat_content: vec![Mass::new("29 g")],
+                        fiber_content: vec![Mass::new("2 g")],
+                        protein_content: vec![Mass::new("68 g")],
+                        saturated_fat_content: vec![Mass::new("12 g")],
+                        sodium_content: vec![Mass::new("1273 mg")],
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        ..Default::default()
+                    }],
+                    recipe_yield: to_yield(4),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("4 (1/2 pound) beef cube -steaks".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2.25 c all-purpose flour, divided".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 ts baking powder".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ts baking soda".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ts black pepper".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.75 ts salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1.5 c buttermilk".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 large egg".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 tb hot pepper sauce (e.g. -Tabasco?)".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("2 cloves garlic, minced".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("3 c vegetable shortening for -frying".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("4 c milk".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("kosher salt and ground".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        "Place steaks between two sheets of heavy plastic on a solid, level surface; firmly pound with a meat mallet to a ¼-inch thickness. Place 2 cups flour in a shallow bowl. Combine baking powder, baking soda, 1 teaspoon pepper, and ¾ teaspoon salt in a separate shallow bowl; stir in buttermilk, egg, Tabasco, and garlic to combine. Heat shortening in a deep cast-iron skillet to 325 degrees F (165 degrees C). Place a wire rack over a sheet of parchment paper. Meanwhile, dredge 1 steak in flour to coat; shake off excess. Dip into buttermilk batter; lift up so excess batter drips back into the bowl. Dredge in flour again to coat both sides completely. Place breaded steak on the prepared wire rack. Repeat with remaining steaks. Fry steaks, in batches if necessary, until evenly golden brown, 3 to 5 minutes per side. Transfer steaks to a paper towel-lined plate to drain. Cover with foil to keep warm. Drain fat from the skillet, reserving ¼ cup and as much solid remnants as possible. Place skillet over medium-low heat. Add reserved ¼ cup oil; whisk in remaining ¼ cup flour. Scrape the brown bits of food off the bottom of the skillet with a spatula. Stir in milk; increase heat to medium and bring gravy to a simmer. Cook, stirring often, until thick, 6 to 7 minutes. Season gravy with salt and black pepper. Transfer steaks to a platter; pour gravy over top.".into(),
+                    )],
+                    recipe_category: vec!["Starter".into()],
+                    prep_time: vec![DurationOrText::Text("20m".into())],
+                    keywords: vec![RecipeKeywordsFieldEnum::TextOrURL("Main course".into())],
+                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]"),
+                    name: vec!["The Best Chicken Fried Steak".into()],
+                    ..Default::default()
+                },
+                Recipe {
+                    nutrition: vec![NutritionInformation {
+                        calories: vec![Energy::new("964 kcal")],
+                        carbohydrate_content: vec![Mass::new("84 g")],
+                        cholesterol_content: vec![Mass::new("184 mg")],
+                        context: at_context(),
+                        fat_content: vec![Mass::new("61 g")],
+                        fiber_content: vec![Mass::new("4 g")],
+                        protein_content: vec![Mass::new("24 g")],
+                        saturated_fat_content: vec![Mass::new("37 g")],
+                        sodium_content: vec![Mass::new("582 mg")],
+                        sugar_content: vec![Mass::new("4 g")],
+                        r#type: AtType::NutritionInformation.to_opt(),
+                        ..Default::default()
+                    }],
+                    recipe_yield: to_yield(6),
+                    recipe_ingredient: vec![
+                        RecipeRecipeIngredientFieldEnum::Text("24 oz dry fettuccine pasta".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 c butter".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.75 pt heavy cream".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("1 ds garlic salt".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("salt and pepper to taste".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.75 c grated Romano cheese".into()),
+                        RecipeRecipeIngredientFieldEnum::Text("0.5 c grated Parmesan cheese".into()),
+                    ],
+                    recipe_instructions: vec![RecipeRecipeInstructionsFieldEnum::Text(
+                        "Gather all ingredients. Fill a large pot with lightly salted water and bring to a rolling boil. Cook fettuccine at a boil until tender yet firm to the bite, about 8 minutes. Drain. Heat butter and cream in a large saucepan over low heat until butter melted; add garlic salt, salt, and black pepper. Increase the heat to medium; stir in Romano and Parmesan cheeses until melted and sauce has thickened. Add cooked pasta to sauce; toss until thoroughly coated. Serve immediately.".into(),
+                    )],
+                    recipe_category: vec!["Dessert".into()],
+                    prep_time: vec![DurationOrText::Text("15m".into())],
+                    is_based_on: to_is_based_on("Cookmate [REZKONV Export Format]"),
+                    name: vec!["To Die For Fettuccine Alfredo".into()],
                     ..Default::default()
                 },
             ]

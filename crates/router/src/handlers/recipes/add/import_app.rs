@@ -3,12 +3,15 @@ use std::sync::atomic::AtomicI64;
 
 use axum::extract::State;
 use axum::response::IntoResponse;
+use base64::Engine;
+use base64::engine::general_purpose;
 use futures::StreamExt;
 use reqwest::StatusCode;
 use tokio::fs;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 use tokio::time::Instant;
+use tokio_util::bytes;
 use tracing::{error, warn};
 use uuid::Uuid;
 
@@ -50,7 +53,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
         let state = state.clone();
         let start_time = Arc::new(Instant::now());
 
-        let recipes = match parse_recipes(&state, form.clone(), user_id).await {
+        let mut recipes = match parse_recipes(&state, form.clone(), user_id).await {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
@@ -68,6 +71,8 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
                 return;
             }
         };
+
+        upload_images(&state, &mut recipes).await;
 
         let num_recipes = recipes
             .len()
@@ -88,18 +93,40 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
             integrations::App::BigOven => ReportTypeFull::app(TertiaryReportType::bigoven()),
             integrations::App::ChefTap => ReportTypeFull::app(TertiaryReportType::cheftap()),
+            integrations::App::ComputerCuisineDeluxe => {
+                ReportTypeFull::app(TertiaryReportType::computer_cuisine_deluxe())
+            }
+            integrations::App::CookBook => ReportTypeFull::app(TertiaryReportType::cookbook()),
             integrations::App::Cooklang => ReportTypeFull::app(TertiaryReportType::cooklang()),
             integrations::App::CookMate => ReportTypeFull::app(TertiaryReportType::cookmate()),
             integrations::App::Crouton => ReportTypeFull::app(TertiaryReportType::crouton()),
+            integrations::App::Cookn => ReportTypeFull::app(TertiaryReportType::cookn()),
+            integrations::App::CopyMeThat => ReportTypeFull::app(TertiaryReportType::copymethat()),
+            integrations::App::HomeCookin => ReportTypeFull::app(TertiaryReportType::home_cookin()),
             integrations::App::Kalorio => ReportTypeFull::app(TertiaryReportType::kalorio()),
+            integrations::App::LeCollectionneurDeRecettes => {
+                ReportTypeFull::app(TertiaryReportType::lecollectionneurderecettes())
+            }
             integrations::App::MasterCook => ReportTypeFull::app(TertiaryReportType::mastercook()),
             integrations::App::MealMaster => ReportTypeFull::app(TertiaryReportType::mealmaster()),
+            integrations::App::MrCook => ReportTypeFull::app(TertiaryReportType::mrcook()),
+            integrations::App::MyRecipeBox => {
+                ReportTypeFull::app(TertiaryReportType::myrecipebox())
+            }
             integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
+            integrations::App::Pepperplate => {
+                ReportTypeFull::app(TertiaryReportType::pepperplate())
+            }
+            integrations::App::RecipeKeeper => {
+                ReportTypeFull::app(TertiaryReportType::recipekeeper())
+            }
             integrations::App::RecipeMD => ReportTypeFull::app(TertiaryReportType::recipe_md()),
             integrations::App::RecipeSage => ReportTypeFull::app(TertiaryReportType::recipe_sage()),
             integrations::App::Recipya => ReportTypeFull::app(TertiaryReportType::recipya()),
             integrations::App::Rezkonv => ReportTypeFull::app(TertiaryReportType::rezkonv()),
             integrations::App::Saffron => ReportTypeFull::app(TertiaryReportType::saffron()),
+            integrations::App::ShopNCook => ReportTypeFull::app(TertiaryReportType::shopncook()),
+            integrations::App::Umami => ReportTypeFull::app(TertiaryReportType::umami()),
             integrations::App::Unknown => ReportTypeFull {
                 primary: PrimaryReportType::<Import>::new(),
                 secondary: None,
@@ -117,6 +144,43 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
         );
         broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
     });
+}
+
+async fn upload_images(state: &AppState, recipes: &mut [schema_org::Recipe]) {
+    let mut set = JoinSet::new();
+
+    for (idx_recipe, recipe) in recipes.iter().enumerate() {
+        for (idx_img, image) in recipe.image.iter().enumerate() {
+            match image {
+                schema_org::field::FieldEnum22::URL(s) if s.starts_with('/') => {
+                    let cleaned_s = s.chars().filter(|c| !c.is_whitespace()).collect::<String>();
+                    match general_purpose::STANDARD.decode(cleaned_s.as_bytes()) {
+                        Ok(bytes) => {
+                            let fs_support = state.fs_support.clone();
+                            set.spawn(async move {
+                                (
+                                    idx_recipe,
+                                    idx_img,
+                                    fs_support.upload_to_temp(bytes::Bytes::from(bytes)).await,
+                                )
+                            });
+                        }
+                        Err(err) => warn!("Failed to decode image bytes: {err}"),
+                    }
+                }
+                _ => (),
+            }
+        }
+    }
+
+    while let Some(res) = set.join_next().await {
+        if let Ok((idx_recipe, idx_image, Ok(path))) = res
+            && let schema_org::field::FieldEnum22::URL(s) =
+                &mut recipes[idx_recipe].image[idx_image]
+        {
+            *s = path.to_string_lossy().to_string();
+        }
+    }
 }
 
 async fn parse_recipes(
