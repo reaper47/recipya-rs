@@ -63,7 +63,7 @@ fn render_lists_index(data: &Data) -> Markup {
                 input #selected-shopping-list-id type="hidden" name="selected"
                       value=(shopping.selected_shopping_list.as_ref().map(|r| r.id).unwrap_or_default());
                 div #shopping-list-container .hidden.md:block {
-                    (render_shopping_lists_list(shopping, "shopping-lists"))
+                    (render_shopping_lists_list(shopping, true))
                 }
             }
             div class="hidden md:flex order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
@@ -111,34 +111,49 @@ fn render_lists_index(data: &Data) -> Markup {
         }
 
         @if data.is_hx_request {
-            (render_shopping_list_nav(shopping))
+            (render_shopping_list_mobile(shopping))
         }
     }
 }
 
-pub(super) fn render_shopping_list_nav(shopping: &ShoppingData) -> Markup {
+pub(super) fn render_shopping_list_mobile(shopping: &ShoppingData) -> Markup {
     html! {
         div #navbar-extra-content class="lg:hidden w-full p-2 bg-base-100 flex-1 min-h-0" hx-swap-oob="true" {
             div .divider.my-0 {}
-            (render_shopping_lists_list(shopping, "shopping-lists-nav"))
+            (render_shopping_lists_list(shopping, false))
             div .divider.my-0 {}
             @if let Some(list) = &shopping.selected_shopping_list {
-                @let list_id = list.id;
-                div .grid.gap-1 {
-                    (action_view_button(&shopping.selected_view_mode, list_id))
-                    (action_export_button())
-                    (action_print_button(list_id))
-                    (action_share_button(list_id))
-                    (action_delete_button(list_id))
-                }
+                (render_shopping_list_mobile_actions(&shopping.selected_view_mode, list.id, false))
             }
         }
     }
 }
 
-fn render_shopping_lists_list(shopping: &ShoppingData, container_id: &str) -> Markup {
+fn render_shopping_list_mobile_actions(
+    selected_view_mode: &ViewMode,
+    list_id: Uuid,
+    is_oob_swap: bool,
+) -> Markup {
+    html! {
+        div #shopping-list-actions-mobile .grid.gap-1 hx-swap-oob=[is_oob_swap.then_some("true")] {
+            (action_view_button(selected_view_mode, list_id))
+            (action_export_button())
+            (action_print_button(list_id))
+            (action_share_button(list_id))
+            (action_delete_button(list_id))
+        }
+    }
+}
+
+fn render_shopping_lists_list(shopping: &ShoppingData, is_mobile: bool) -> Markup {
     let shopping_lists = shopping.shopping_lists.as_slice();
     let selected = shopping.selected_shopping_list.as_ref();
+
+    let container_id = if is_mobile {
+        "shopping-lists"
+    } else {
+        "shopping-lists-mobile"
+    };
 
     html! {
         div class="grid grid-flow-col gap-2 place-items-center" {
@@ -149,9 +164,9 @@ fn render_shopping_lists_list(shopping: &ShoppingData, container_id: &str) -> Ma
                 class="btn btn-xs btn-square btn-ghost"
                 hx-post="/shopping/lists"
                 hx-prompt="Name of the new shopping list:"
-                hx-target=(format!("#{container_id}"))
+                hx-target="#shopping-lists"
                 hx-swap="afterbegin"
-                hx-on:htmx:after-request="Array.from(document.getElementById('shopping-lists').children).forEach((item) => item.classList.remove('bg-base-300')); document.getElementById('shopping-lists').firstElementChild.classList.add('bg-base-300')" {
+                hx-on:htmx:after-request="addNewShoppingList()" {
                 (icon_plus_circle())
             }
         }
@@ -160,15 +175,19 @@ fn render_shopping_lists_list(shopping: &ShoppingData, container_id: &str) -> Ma
             @if shopping_lists.len() < 10 { " md:h-full" }
         } {
             @for (idx, list) in shopping_lists.iter().enumerate() {
-                li id=(format!("shopping-list-sidebar-{}", list.id))
+                @let list_id = if is_mobile {
+                    format!("shopping-list-sidebar-{}", list.id)
+                } else {
+                    format!("shopping-list-sidebar-mobile-{}", list.id)
+                };
+
+                li id=(list_id)
                     class=[selected.as_ref().map_or(idx == 0, |l| l.id == list.id).then_some("bg-base-300")]
                     hx-get=(format!("/shopping/lists/{}", list.id))
                     hx-target="#shopping-list-view-pane"
                     hx-push-url="false"
                     hx-trigger="mousedown"
-                    hx-on:mousedown=(format!(
-                        "document.querySelectorAll('#shopping-lists li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{}';", list.id
-                    )) {
+                    hx-on:mousedown=(format!("switchShoppingList('{}')", list.id)) {
                     div class="flex justify-between items-center gap-2 w-full" {
                         div class="min-w-0" {
                             p class="font-bold text-sm" {
@@ -228,6 +247,7 @@ pub fn render_shopping_list_view_edit(list: &ShoppingListDetails, is_hx_request:
         }
         @if is_hx_request {
             (render_shopping_list_actions(true, &ViewMode::Edit, list.id))
+            (render_shopping_list_mobile_actions(&ViewMode::Edit, list.id, true))
         }
     }
 }
@@ -236,7 +256,7 @@ fn item_sections(list: &ShoppingListDetails) -> Markup {
     html! {
         div class="w-full max-w-[33rem] place-self-center" {
             @if list.items.is_empty() {
-                details open {
+                details .mt-4 open {
                     (render_label("No label", list.id, 1))
                     ol #shopping-list-items-container class="list bg-base-100 rounded-box shadow-md" {
                         (new_shopping_list_item(list.id, None))
@@ -259,27 +279,12 @@ pub fn render_new_shopping_list<T: AsRef<str>>(
     list_id: Uuid,
     title: T,
 ) -> Markup {
+    let title: &str = title.as_ref();
+
     html! {
-        li id=(format!("shopping-list-sidebar-{list_id}"))
-            class="bg-base-300"
-            hx-get=(&format!("/shopping/lists/{list_id}"))
-            hx-target="#shopping-list-view-pane"
-            hx-push-url="false"
-            hx-trigger="mousedown"
-            hx-on:mousedown=(format!(
-                "document.querySelectorAll('#shopping-lists li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{list_id}';"
-            )) {
-            div class="flex justify-between items-center gap-2 w-full" {
-                div class="min-w-0" {
-                    p class="font-bold text-sm" {
-                        (title.as_ref())
-                    }
-                }
-                div class="flex flex-col items-end gap-1 shrink-0" {
-                    (render_shopping_list_item_count(list_id, 0, false))
-                }
-            }
-        }
+        (new_shopping_list_element(list_id, title, true))
+        (new_shopping_list_element(list_id, title, false))
+
         div #shopping-list-view-pane hx-swap-oob="innerHTML" {
             div {
                 (shopping_list_title(list_id, title))
@@ -297,6 +302,45 @@ pub fn render_new_shopping_list<T: AsRef<str>>(
             }
         }
         (render_shopping_list_actions(true, selected_mode, list_id))
+    }
+}
+
+fn new_shopping_list_element(list_id: Uuid, title: &str, is_oob_swap: bool) -> Markup {
+    let element_id = if is_oob_swap {
+        format!("shopping-list-sidebar-mobile-{list_id}")
+    } else {
+        format!("shopping-list-sidebar-{list_id}")
+    };
+
+    let li = html! {
+        li id=(element_id)
+            class="bg-base-300"
+            hx-get=(&format!("/shopping/lists/{list_id}"))
+            hx-target="#shopping-list-view-pane"
+            hx-push-url="false"
+            hx-trigger="mousedown"
+            hx-on:mousedown=(format!("switchShoppingList('{list_id}')")) {
+            div class="flex justify-between items-center gap-2 w-full" {
+                div class="min-w-0" {
+                    p class="font-bold text-sm" {
+                        (title)
+                    }
+                }
+                div class="flex flex-col items-end gap-1 shrink-0" {
+                    (render_shopping_list_item_count(list_id, 0, false))
+                }
+            }
+        }
+    };
+
+    if is_oob_swap {
+        html! {
+            div hx-swap-oob="afterbegin:#shopping-lists-mobile" {
+                (li)
+            }
+        }
+    } else {
+        li
     }
 }
 
@@ -346,13 +390,13 @@ pub(super) fn render_shopping_list_actions(
                             hx-get=(format!("/shopping/lists/{list_id}/copy?format=text"))
                             hx-swap="none"
                             hx-on--after-request="copyHtmxResponseToClipboard(event)"
-                            _="on click call #shopping-list-copy-popover.hidePopover()" {
+                            _="on click call closeShoppingSidebarAndExportPopover()" {
                             (icon_clipboard_document())
                         }
                         form title="Download"
                             hx-get=(format!("/shopping/lists/{list_id}/export?format=text"))
                             hx-swap="none"
-                            hx-on:download-ready="document.getElementById('shopping-list-copy-popover').hidePopover(); window.location.href = event.detail.url;" {
+                            hx-on:download-ready="closeShoppingSidebarAndExportPopover(); window.location.href = event.detail.url;" {
                                 button title="Download" class="btn btn-square btn-ghost" {
                                     (icon_arrow_down_tray())
                                 }
@@ -368,13 +412,13 @@ pub(super) fn render_shopping_list_actions(
                             hx-get=(format!("/shopping/lists/{list_id}/copy?format=markdown"))
                             hx-swap="none"
                             hx-on--after-request="copyHtmxResponseToClipboard(event)"
-                            _="on click call #shopping-list-copy-popover.hidePopover()" {
+                            _="on click call closeShoppingSidebarAndExportPopover()" {
                             (icon_clipboard_document())
                         }
                         form title="Download"
                             hx-get=(format!("/shopping/lists/{list_id}/export?format=markdown"))
                             hx-swap="none"
-                            hx-on:download-ready="document.getElementById('shopping-list-copy-popover').hidePopover(); window.location.href = event.detail.url;" {
+                            hx-on:download-ready="closeShoppingSidebarAndExportPopover(); window.location.href = event.detail.url;" {
                                 button title="Download" class="btn btn-square btn-ghost" {
                                     (icon_arrow_down_tray())
                                 }
@@ -389,7 +433,7 @@ pub(super) fn render_shopping_list_actions(
                         form title="Download"
                             hx-get=(format!("/shopping/lists/{list_id}/export?format=pdf"))
                             hx-swap="none"
-                            hx-on:download-ready="document.getElementById('shopping-list-copy-popover').hidePopover(); window.location.href = event.detail.url;" {
+                            hx-on:download-ready="closeShoppingSidebarAndExportPopover(); window.location.href = event.detail.url;" {
                                 button title="Download" class="btn btn-square btn-ghost" {
                                     (icon_arrow_down_tray())
                                 }
@@ -415,6 +459,7 @@ fn action_view_button(selected_mode: &ViewMode, list_id: Uuid) -> Markup {
                 hx-target="#shopping-list-view-pane"
                 hx-trigger="change"
                 hx-swap="innerHTML transition:true"
+                hx-on--after-request="closeShoppingSidebar()"
                 onchange="setTimeout(() => document.activeElement.blur(), 25)" {
                 fieldset class="fieldset flex" {
                     label class="label cursor-pointer text-inherit w-full p-2" {
@@ -467,7 +512,8 @@ fn action_print_button(list_id: Uuid) -> Markup {
             title="Print list"
             class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
             href=(format!("/shopping/lists/{list_id}/print"))
-            target="_blank" {
+            target="_blank"
+            "hx-on:click"="closeShoppingSidebar()" {
             span .hidden.md:block {
                 (icon_printer())
             }
@@ -483,6 +529,7 @@ fn action_share_button(list_id: Uuid) -> Markup {
             hx-post=(format!("/shopping/lists/{list_id}/share"))
             hx-target="#share-dialog-result"
             hx-push-url="false"
+            hx-on--after-request="closeShoppingSidebar()"
             _="on htmx:afterRequest from me
                 if event.detail.successful
                     if navigator.canShare
@@ -618,9 +665,7 @@ pub fn render_shopping_list_title<T: AsRef<str>>(
             hx-target="#shopping-list-view-pane"
             hx-push-url="false"
             hx-trigger="mousedown"
-            hx-on:mousedown=(format!(
-                "document.querySelectorAll('#shopping-lists li').forEach((el) => el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-shopping-list-id').value = '{list_id}'"
-            )) {
+            hx-on:mousedown=(format!("switchShoppingList('{list_id}')")) {
             div class="flex justify-between items-center gap-2 w-full" {
                 div class="min-w-0" {
                     p class="font-bold text-sm" {
@@ -834,6 +879,7 @@ pub fn render_shopping_list_view_view(list: &ShoppingListDetails, is_hx_request:
         }
         @if is_hx_request {
             (render_shopping_list_actions(true, &ViewMode::View, list.id))
+            (render_shopping_list_mobile_actions(&ViewMode::View, list.id, true))
         }
     }
 }
