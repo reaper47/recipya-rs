@@ -9,7 +9,7 @@ use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
     icon_shopping_cart,
 };
-use crate::shopping::{render_shopping_list_actions, render_shopping_list_nav};
+use crate::shopping::{render_shopping_list_actions, render_shopping_list_mobile};
 use crate::templates::icons::icon_utensils;
 use crate::templates::pagination::pagination;
 
@@ -216,7 +216,7 @@ pub fn main(
                                 div class="flex flex-col items-start bg-base-200 flex-1 min-h-0 h-full" {
                                     (render_nav(path))
                                     @if let Some(shopping) = &data.shopping {
-                                        (render_shopping_list_nav(shopping))
+                                        (render_shopping_list_mobile(shopping))
                                     } @else {
                                        (render_empty_nav_extra_content())
                                     }

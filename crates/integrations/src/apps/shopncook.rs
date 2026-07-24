@@ -374,7 +374,7 @@ impl TryFrom<RecipeXML<'_>> for Recipe {
             recipe_category: cat.map(ToString::to_string).into_iter().collect(),
             keywords: keywords
                 .into_iter()
-                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.into()))
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.replace('\'', "")))
                 .collect(),
             prep_time: r
                 .recipe_header
@@ -422,7 +422,7 @@ impl TryFrom<RecipeComponents<'_>> for Recipe {
             recipe_category: cat.map_or(Vec::new(), |s| vec![s.to_string()]),
             keywords: kw
                 .into_iter()
-                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.replace('\'', "")))
                 .collect(),
             recipe_yield: r.r#yield.map_or(Vec::new(), |s| {
                 vec![RecipeYieldFieldEnum::Text(s.to_string())]
@@ -2342,7 +2342,7 @@ Nutritional facts per serving (daily value): Calories 777.477kcal; Protein 21.09
                         RecipeKeywordsFieldEnum::TextOrURL("Rice".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Main dishes".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Appetizers".into()),
-                        RecipeKeywordsFieldEnum::TextOrURL("Shop'NCook".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("ShopNCook".into()),
                     ],
                     recipe_yield: vec![RecipeYieldFieldEnum::Text("6 servings of 4".into())],
                     prep_time: vec![DurationOrText::Text("25 minutes".into())],
@@ -2398,7 +2398,7 @@ Nutritional facts per serving (daily value): Calories 777.477kcal; Protein 21.09
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Rice".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Japanese".into()),
-                        RecipeKeywordsFieldEnum::TextOrURL("Shop'NCook".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("ShopNCook".into()),
                     ],
                     recipe_yield: vec![RecipeYieldFieldEnum::Text("12 cups".into())],
                     is_based_on: to_is_based_on(
@@ -2434,7 +2434,7 @@ Nutritional facts per serving (daily value): Calories 777.477kcal; Protein 21.09
                     recipe_category: vec!["Seafood".into()],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Salads".into()),
-                        RecipeKeywordsFieldEnum::TextOrURL("Shop'NCook".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("ShopNCook".into()),
                     ],
                     recipe_yield: vec![RecipeYieldFieldEnum::Text("4 servings".into())],
                     recipe_ingredient: vec![
@@ -2484,7 +2484,7 @@ Nutritional facts per serving (daily value): Calories 777.477kcal; Protein 21.09
                         RecipeKeywordsFieldEnum::TextOrURL("Meat".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Chinese".into()),
                         RecipeKeywordsFieldEnum::TextOrURL("Tofu".into()),
-                        RecipeKeywordsFieldEnum::TextOrURL("Shop'NCook".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("ShopNCook".into()),
                     ],
                     recipe_yield: vec![RecipeYieldFieldEnum::Text("2 servings".into())],
                     is_based_on: to_is_based_on(
@@ -2576,7 +2576,7 @@ Nutritional facts per serving (daily value): Calories 777.477kcal; Protein 21.09
                     recipe_category: vec!["Sauces & dressings".into()],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Japanese".into()),
-                        RecipeKeywordsFieldEnum::TextOrURL("Shop'NCook".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("ShopNCook".into()),
                     ],
                     recipe_yield: vec![RecipeYieldFieldEnum::Text("675 ml".into())],
                     prep_time: vec![DurationOrText::Text("10 min".into())],
@@ -2620,7 +2620,7 @@ Nutritional facts per serving (daily value): Calories 777.477kcal; Protein 21.09
                     recipe_category: vec!["Desserts".into()],
                     keywords: vec![
                         RecipeKeywordsFieldEnum::TextOrURL("Italian".into()),
-                        RecipeKeywordsFieldEnum::TextOrURL("Shop'NCook".into()),
+                        RecipeKeywordsFieldEnum::TextOrURL("ShopNCook".into()),
                     ],
                     recipe_yield: vec![RecipeYieldFieldEnum::Text("4 servings of about 200 g".into())],
                     prep_time: vec![DurationOrText::Text("15 minutes".into())],

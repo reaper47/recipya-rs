@@ -771,3 +771,27 @@ function focusListItemInput(li) {
   el.focus();
   el.select();
 }
+
+function switchShoppingList(list_id) {
+  document.querySelectorAll('#shopping-lists li, #shopping-lists-mobile li').forEach((el) => el.classList.remove('bg-base-300'));
+  document.getElementById(`shopping-list-sidebar-${list_id}`).classList.add('bg-base-300')
+  document.getElementById(`shopping-list-sidebar-mobile-${list_id}`).classList.add('bg-base-300')
+  document.getElementById('selected-shopping-list-id').value = `${list_id}`;
+  closeShoppingSidebar()
+}
+
+function addNewShoppingList() {
+  document.querySelectorAll("#shopping-lists, #shopping-lists-mobile").forEach((list) => {
+    Array.from(list.children).forEach((item) => item.classList.remove('bg-base-300'));
+    list.firstElementChild.classList.add('bg-base-300');
+  });
+}
+
+function closeShoppingSidebar() {
+  document.getElementById('side-drawer-nav').checked = false;
+}
+
+function closeShoppingSidebarAndExportPopover() {
+  document.getElementById("shopping-list-copy-popover").hidePopover();
+  closeShoppingSidebar();
+}
