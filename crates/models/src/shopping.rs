@@ -408,7 +408,7 @@ impl ShoppingListDetails {
 
         doc.set_metadata(
             Metadata::new()
-                .title(format!("Shopping List - {}", &self.name))
+                .title(format!("Shopping List - {}", self.name))
                 .creation_date({
                     let now = time::UtcDateTime::now();
                     DateTime::new(u16::try_from(now.year()).unwrap_or_default())
@@ -419,7 +419,7 @@ impl ShoppingListDetails {
                         .second(now.second())
                 })
                 .creator("Recipya".into())
-                .description(format!("PDF export of the '{}' shopping list", &self.name))
+                .description(format!("PDF export of the '{}' shopping list", self.name))
                 .page_layout(PageLayout::SinglePage)
                 .language("en".into()),
         );

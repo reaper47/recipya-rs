@@ -736,12 +736,14 @@ mod tests {
             res.assert_status_see_other();
             res.assert_header("hx-redirect", "/recipes/1");
             let got = Recipe::get(&state.mm, user_id, 1).await?;
-            assert_eq!(
+            pretty_assertions::assert_eq!(
                 got.instructions,
                 SectionComponents::Flat(
                     new_instructions
                         .into_iter()
-                        .map(Item::new)
+                        .enumerate()
+                        .map(|(idx, s)| Item::new(s)
+                            .with_id(i64::try_from(idx + 8).unwrap_or_default()))
                         .collect::<Vec<_>>()
                 )
             );
@@ -790,22 +792,22 @@ mod tests {
             res.assert_status_see_other();
             res.assert_header("hx-redirect", "/recipes/1");
             let got = Recipe::get(&state.mm, user_id, 1).await?;
-            assert_eq!(
+            pretty_assertions::assert_eq!(
                 got.instructions,
                 SectionComponents::Grouped(vec![
                     SectionItem {
                         title: "Marinade".into(),
                         items: vec![
-                            Item::new("Mix all marinade ingredients"),
-                            Item::new("Let soak overnight")
+                            Item::new("Mix all marinade ingredients").with_id(8),
+                            Item::new("Let soak overnight").with_id(9),
                         ],
                     },
                     SectionItem {
                         title: "Sides".into(),
                         items: vec![
-                            Item::new("Cut potatoes"),
-                            Item::new("Bake them in the oven"),
-                            Item::new("Mix marinade with baked potatoes")
+                            Item::new("Cut potatoes").with_id(10),
+                            Item::new("Bake them in the oven").with_id(11),
+                            Item::new("Mix marinade with baked potatoes").with_id(12),
                         ],
                     },
                 ])

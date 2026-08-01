@@ -171,7 +171,7 @@ where
                             .map(|s| Ingredient::Line(Cow::Owned(s)))
                             .collect_vec();
 
-                        section.extend_from_slice(ingredients.as_slice());
+                        section.extend(ingredients);
                         section
                     })
                     .collect_vec(),
@@ -203,7 +203,7 @@ where
                             .map(|s| Instruction::Line(Cow::Owned(s)))
                             .collect_vec();
 
-                        section.extend_from_slice(instructions.as_slice());
+                        section.extend(instructions);
                         section
                     })
                     .collect_vec(),

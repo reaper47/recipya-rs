@@ -142,6 +142,7 @@ mod tests {
             Ok(())
         }
 
+        #[tracing_test::traced_test]
         #[tokio::test]
         async fn test_post_valid_request() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;

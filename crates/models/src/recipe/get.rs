@@ -283,9 +283,14 @@ impl Recipe {
 
         Ok(sources
             .into_iter()
-            .map(|s| match Url::parse(&s) {
-                Ok(url) => url.host_str().map_or_else(|| s, ToString::to_string),
-                Err(_) => s,
+            .map(|s| {
+                Url::parse(&s).map_or_else(
+                    |_| s.clone(),
+                    |url| {
+                        url.host_str()
+                            .map_or_else(|| s.clone(), ToString::to_string)
+                    },
+                )
             })
             .collect())
     }
@@ -354,18 +359,13 @@ pub async fn fetch_recipe_details(
             .fold(
                 Vec::<SectionItem>::new(),
                 |mut acc, (ingredient, section, _, _)| {
+                    let item = Item::new(ingredient);
                     if let Some(existing) = acc.iter_mut().find(|s| s.title == section) {
-                        existing.items.push(Item {
-                            text: ingredient,
-                            duration_seconds: None,
-                        });
+                        existing.items.push(item);
                     } else {
                         acc.push(SectionItem {
                             title: section,
-                            items: vec![Item {
-                                text: ingredient,
-                                duration_seconds: None,
-                            }],
+                            items: vec![item],
                         });
                     }
                     acc
@@ -387,31 +387,30 @@ pub async fn fetch_recipe_details(
                 schema::instructions_recipes::item_order,
             ))
             .select((
+                schema::instructions::id,
                 schema::instructions::name,
                 schema::sections::name,
                 schema::instructions_recipes::section_order,
                 schema::instructions_recipes::item_order,
                 schema::instructions::duration_seconds,
             ))
-            .load::<(String, String, i16, i16, Option<i32>)>(conn)
+            .load::<(i64, String, String, i16, i16, Option<i32>)>(conn)
             .await?
             .into_iter()
-            .sorted_by_key(|(_, _, section_order, item_order, _)| (*section_order, *item_order))
+            .sorted_by_key(|(_, _, _, section_order, item_order, _)| (*section_order, *item_order))
             .fold(
                 Vec::<SectionItem>::new(),
-                |mut acc, (instruction, section, _, _, duration_seconds)| {
+                |mut acc, (id, instruction, section, _, _, duration_seconds)| {
+                    let item = Item::new(instruction)
+                        .with_id(id)
+                        .with_duration(duration_seconds.unwrap_or_default());
+
                     if let Some(existing) = acc.iter_mut().find(|s| s.title == section) {
-                        existing.items.push(Item {
-                            text: instruction,
-                            duration_seconds,
-                        });
+                        existing.items.push(item);
                     } else {
                         acc.push(SectionItem {
                             title: section,
-                            items: vec![Item {
-                                text: instruction,
-                                duration_seconds,
-                            }],
+                            items: vec![item],
                         });
                     }
                     acc
@@ -697,53 +696,31 @@ mod tests {
                 SectionItem {
                     title: "Sauce".into(),
                     items: vec![
-                        Item {
-                            text: "1 cup blue spinach".into(),
-                            duration_seconds: None,
-                        },
-                        Item {
-                            text: "1/2 tbsp cinnamon".into(),
-                            duration_seconds: None,
-                        },
+                        Item::new("1 cup blue spinach"),
+                        Item::new("1/2 tbsp cinnamon"),
                     ],
                 },
                 SectionItem {
                     title: "Main".into(),
                     items: vec![
-                        Item {
-                            text: "4 pounds top quality chicken filet".into(),
-                            duration_seconds: None,
-                        },
-                        Item {
-                            text: "1/8 cup lemon juice".into(),
-                            duration_seconds: None,
-                        },
+                        Item::new("4 pounds top quality chicken filet"),
+                        Item::new("1/8 cup lemon juice"),
                     ],
                 },
             ]),
             instructions: SectionComponents::Grouped(vec![
                 SectionItem {
                     title: "Sauce".into(),
-                    items: vec![Item {
-                        text: "Mix all these ingredients".into(),
-                        duration_seconds: None,
-                    }],
+                    items: vec![Item::new("Mix all these ingredients").with_id(1)],
                 },
                 SectionItem {
                     title: "Chicken".into(),
                     items: vec![
-                        Item {
-                            text: "Turn the oven at 300 F".into(),
-                            duration_seconds: None,
-                        },
-                        Item {
-                            text: "Soak the chicken in the lemon juice".into(),
-                            duration_seconds: None,
-                        },
-                        Item {
-                            text: "Bake for 35 minutes".into(),
-                            duration_seconds: Some(2100),
-                        },
+                        Item::new("Turn the oven at 300 F").with_id(2),
+                        Item::new("Soak the chicken in the lemon juice").with_id(3),
+                        Item::new("Bake for 35 minutes")
+                            .with_duration(2100)
+                            .with_id(4),
                     ],
                 },
             ]),

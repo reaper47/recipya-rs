@@ -481,7 +481,7 @@ impl RecipeForCreate {
         );
         changes.set(
             RecipeField::INSTRUCTIONS,
-            self.instructions != other.instructions,
+            self.instructions.items_as_text() != other.instructions.items_as_text(),
         );
         changes.set(RecipeField::KEYWORDS, self.keywords != other.keywords);
         changes.set(

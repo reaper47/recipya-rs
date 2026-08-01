@@ -61,7 +61,7 @@ impl From<CsvRecord<'_>> for Recipe {
 
         let tag = r.tags.unwrap_or_default();
         let mut tags = tag.split(';').collect_vec();
-        tags.extend_from_slice(keywords);
+        tags.extend(keywords);
         tags.sort_unstable();
 
         Self {
@@ -303,7 +303,7 @@ where
 
         if file_name.starts_with("recipes") {
             let recipes_de: Vec<RecipeRtk> = serde_json::from_reader(file)?;
-            recipes.extend_from_slice(recipes_de.as_slice());
+            recipes.extend(recipes_de);
         } else if std::path::Path::new(&file_name)
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))

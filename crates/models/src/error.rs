@@ -21,6 +21,7 @@ pub enum Error {
     NoFileInZip,
     NoNeedToUpdateNutrition,
     NoSearch,
+    Support(String),
     Time,
     ThemeNotFound,
     UnknownSource,

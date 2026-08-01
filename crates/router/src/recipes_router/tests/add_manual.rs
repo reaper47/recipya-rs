@@ -216,7 +216,10 @@ mod tests {
             );
             pretty_assertions::assert_eq!(
                 got.instructions,
-                SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")]),
+                SectionComponents::Flat(vec![
+                    Item::new("Mix the apples").with_id(1),
+                    Item::new("Eat").with_id(2),
+                ]),
             );
             pretty_assertions::assert_eq!(
                 got.tools,
@@ -275,9 +278,9 @@ mod tests {
                 }],
                 category: Some("dinner".into()),
                 instructions: SectionComponents::Flat(vec![
-                    Item::new("Mix the apples"),
-                    Item::new("Mix the blueberries"),
-                    Item::new("Add whip cream and whisk the fruits until smooth"),
+                    Item::new("Mix the apples").with_id(1),
+                    Item::new("Mix the blueberries").with_id(2),
+                    Item::new("Add whip cream and whisk the fruits until smooth").with_id(3),
                 ]),
                 keywords: vec!["fruits".into(), "strawberries".into(), "healthy".into()],
                 notes: Some("# Test\n\nSome notes".into()),
@@ -448,15 +451,15 @@ mod tests {
                     SectionItem::new(
                         "Prepare",
                         vec![
-                            Item::new("Mix the apples"),
-                            Item::new("Mix the blueberries"),
+                            Item::new("Mix the apples").with_id(1),
+                            Item::new("Mix the blueberries").with_id(2),
                         ],
                     ),
                     SectionItem::new(
                         "Execution",
-                        vec![Item::new(
-                            "Add whip cream and whisk the fruits until smooth",
-                        )],
+                        vec![
+                            Item::new("Add whip cream and whisk the fruits until smooth").with_id(3)
+                        ],
                     ),
                 ]),
                 ingredients: SectionComponents::Grouped(vec![

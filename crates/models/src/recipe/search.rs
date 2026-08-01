@@ -451,13 +451,23 @@ mod tests {
 
         use super::*;
 
-        fn to_recipe_details(id: i64, recipe_c: RecipeForCreate, user_id: Uuid) -> RecipeDetails {
+        fn to_recipe_details(
+            id: i64,
+            mut recipe_c: RecipeForCreate,
+            user_id: Uuid,
+        ) -> RecipeDetails {
             let mut keywords = recipe_c.keywords;
             keywords.sort();
 
             let times = recipe_c.times.unwrap_or_default();
             let prep_seconds = times.prep_seconds;
             let cook_seconds = times.cook_seconds;
+
+            recipe_c
+                .instructions
+                .iter_mut()
+                .enumerate()
+                .for_each(|(idx, item)| item.id = Some(i64::try_from(idx + 1).unwrap_or_default()));
 
             RecipeDetails {
                 recipe: Recipe {
@@ -775,13 +785,14 @@ mod tests {
                 RecipeSearch::new("ins:melt butter medium heat", 1, false, user.id)?;
             let results = recipe_search.search(&state.mm).await?;
 
-            pretty_assertions::assert_eq!(
-                results,
-                vec![adjust_recipe(
-                    to_recipe_details(2, recipe2, user.id),
-                    results[0].clone()
-                )]
-            );
+            let mut expected =
+                adjust_recipe(to_recipe_details(2, recipe2, user.id), results[0].clone());
+            expected
+                .instructions
+                .iter_mut()
+                .enumerate()
+                .for_each(|(idx, item)| item.id = Some(i64::try_from(idx + 5).unwrap_or_default()));
+            pretty_assertions::assert_eq!(results, vec![expected]);
             Ok(())
         }
 

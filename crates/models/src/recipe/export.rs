@@ -178,7 +178,7 @@ impl RecipeDetails {
         let equal = String::from("=");
 
         writeln!(&mut out, "{}", self.recipe.name)?;
-        writeln!(&mut out, "{}", &minus.repeat(self.recipe.name.len()))?;
+        writeln!(&mut out, "{}", minus.repeat(self.recipe.name.len()))?;
         writeln!(&mut out)?;
 
         if let Some(main_image) = self.recipe.image {
@@ -190,7 +190,7 @@ impl RecipeDetails {
         }
 
         writeln!(&mut out, "Metadata")?;
-        writeln!(&mut out, "{}", &equal.repeat(8))?;
+        writeln!(&mut out, "{}", equal.repeat(8))?;
         writeln!(&mut out)?;
         let formatted_times = FormattedTimes::from_times(&self.times).map_err(|_| Error::Time)?;
         writeln!(&mut out, "Prep time: {}", formatted_times.prep)?;
@@ -210,7 +210,7 @@ impl RecipeDetails {
         if let Some(description) = &self.recipe.description {
             let desc = String::from("Description");
             writeln!(&mut out, "{desc}")?;
-            writeln!(&mut out, "{}", &equal.repeat(desc.len()))?;
+            writeln!(&mut out, "{}", equal.repeat(desc.len()))?;
             writeln!(&mut out)?;
             writeln!(&mut out, "{description}")?;
             writeln!(&mut out)?;
@@ -219,7 +219,7 @@ impl RecipeDetails {
         if !self.tools.is_empty() {
             let tools = String::from("Tools");
             writeln!(&mut out, "{tools}")?;
-            writeln!(&mut out, "{}", &equal.repeat(tools.len()))?;
+            writeln!(&mut out, "{}", equal.repeat(tools.len()))?;
             writeln!(&mut out)?;
 
             for tool in &self.tools {
@@ -231,14 +231,14 @@ impl RecipeDetails {
         if !self.ingredients.is_empty() {
             let ingredients = String::from("Ingredients");
             writeln!(&mut out, "{ingredients}")?;
-            writeln!(&mut out, "{}", &equal.repeat(ingredients.len()))?;
+            writeln!(&mut out, "{}", equal.repeat(ingredients.len()))?;
             writeln!(&mut out)?;
 
             match &self.ingredients {
                 SectionComponents::Grouped(section_items) => {
                     for section in section_items {
                         writeln!(&mut out, "{}", section.title)?;
-                        writeln!(&mut out, "{}", &minus.repeat(section.title.len()))?;
+                        writeln!(&mut out, "{}", minus.repeat(section.title.len()))?;
                         writeln!(&mut out)?;
 
                         for item in &section.items {
@@ -259,14 +259,14 @@ impl RecipeDetails {
         if !self.instructions.is_empty() {
             let instructions = String::from("Instructions");
             writeln!(&mut out, "{instructions}")?;
-            writeln!(&mut out, "{}", &equal.repeat(instructions.len()))?;
+            writeln!(&mut out, "{}", equal.repeat(instructions.len()))?;
             writeln!(&mut out)?;
 
             match &self.instructions {
                 SectionComponents::Grouped(section_items) => {
                     for section in section_items {
                         writeln!(&mut out, "{}", section.title)?;
-                        writeln!(&mut out, "{}", &minus.repeat(section.title.len()))?;
+                        writeln!(&mut out, "{}", minus.repeat(section.title.len()))?;
                         writeln!(&mut out)?;
 
                         for (idx, item) in section.items.iter().enumerate() {
@@ -287,7 +287,7 @@ impl RecipeDetails {
         if let Some(nutrition) = &self.nutrition.per_100g {
             let nut = String::from("Nutrition Facts (per 100g)");
             writeln!(&mut out, "{nut}")?;
-            writeln!(&mut out, "{}", &equal.repeat(nut.len()))?;
+            writeln!(&mut out, "{}", equal.repeat(nut.len()))?;
             writeln!(&mut out)?;
             writeln!(&mut out, "|--------------------|----------|")?;
 

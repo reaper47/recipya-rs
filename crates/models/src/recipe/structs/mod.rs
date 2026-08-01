@@ -1,3 +1,4 @@
+pub mod bold;
 pub mod media;
 pub mod nutrition;
 pub mod recipe;
@@ -169,10 +170,7 @@ pub mod test_utils {
                         vec![
                             Item::new("Turn the oven at 300 F"),
                             Item::new("Soak the chicken in the lemon juice"),
-                            Item {
-                                text: "Bake for 35 minutes".into(),
-                                duration_seconds: Some(2100),
-                            },
+                            Item::new("Bake for 35 minutes").with_duration(2100),
                         ],
                     ),
                 ]),

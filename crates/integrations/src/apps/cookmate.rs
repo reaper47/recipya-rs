@@ -344,12 +344,11 @@ where
     let notes = doc
         .select(&Selector::parse("span[itemprop='note']").unwrap())
         .fold(List::new(), |mut acc, el| {
-            acc.items.extend_from_slice(
+            acc.items.extend(
                 el.text()
                     .map(str::trim)
                     .map(Cow::Borrowed)
-                    .collect::<Vec<_>>()
-                    .as_slice(),
+                    .collect::<Vec<_>>(),
             );
             acc
         });
@@ -378,12 +377,11 @@ where
         nutrition: doc
             .select(&Selector::parse("span[itemprop='nutrition']").unwrap())
             .fold(List::new(), |mut acc, el| {
-                acc.items.extend_from_slice(
+                acc.items.extend(
                     el.text()
                         .map(str::trim)
                         .map(Cow::Borrowed)
-                        .collect::<Vec<_>>()
-                        .as_slice(),
+                        .collect::<Vec<_>>(),
                 );
                 acc
             }),

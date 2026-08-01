@@ -120,6 +120,7 @@ mod tests {
             Ok(())
         }
 
+        #[tracing_test::traced_test]
         #[tokio::test]
         async fn test_recipe_no_media_ok() -> Result<()> {
             let config = Some(Config::default());

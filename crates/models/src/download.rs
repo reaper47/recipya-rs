@@ -67,11 +67,9 @@ impl DownloadForCreate {
 impl Download {
     /// Creates a new download item in the database.
     pub async fn create(mm: &ModelManager, dl_c: DownloadForCreate) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::insert_into(schema::downloads::table)
             .values(&DownloadForInsert::from(dl_c))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -79,12 +77,10 @@ impl Download {
 
     /// Finds a download item by its token.
     pub async fn find_by_token(mm: &ModelManager, token: Uuid) -> Result<Option<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         Ok(schema::downloads::table
             .filter(schema::downloads::token.eq(token))
             .select(Self::as_select())
-            .first(&mut conn)
+            .first(&mut mm.pool.get().await?)
             .await
             .optional()?)
     }
@@ -95,11 +91,9 @@ impl Download {
         token: Uuid,
         file_path: T,
     ) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::delete(schema::downloads::table)
             .filter(schema::downloads::token.eq(token))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         tokio::fs::remove_file(file_path.as_ref()).await?;

@@ -49,17 +49,15 @@ impl From<RecipeYaml> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: RecipeYaml) -> Self {
         let mut images = r.images.unwrap_or_default();
-        images.extend_from_slice(r.image.map(|s| vec![s]).unwrap_or_default().as_slice());
+        images.extend(r.image.map(|s| vec![s]).unwrap_or_default());
 
         let mut keywords = r.tags.unwrap_or_default();
-        keywords.extend_from_slice(
+        keywords.extend(
             r.keywords
                 .as_deref()
                 .unwrap_or_default()
                 .split(',')
-                .map(|s| s.trim().to_string())
-                .collect::<Vec<_>>()
-                .as_slice(),
+                .map(|s| s.trim().to_string()),
         );
         keywords = keywords.into_iter().unique().collect();
 

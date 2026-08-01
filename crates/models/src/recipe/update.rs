@@ -1,6 +1,7 @@
 use diesel::dsl::not;
 use diesel::prelude::*;
 use diesel_async::{AsyncConnection, RunQueryDsl};
+use itertools::Itertools;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -150,8 +151,20 @@ impl Recipe {
                     .execute(conn)
                     .await?;
 
-                    insert_instructions(conn, &sections_map, &new_recipe.instructions, recipe_id)
-                        .await?;
+                    let new_ingredients = new_recipe
+                        .ingredients
+                        .iter()
+                        .map(|ing| ing.text.clone())
+                        .collect_vec();
+
+                    insert_instructions(
+                        conn,
+                        &sections_map,
+                        &new_recipe.instructions,
+                        recipe_id,
+                        &new_ingredients,
+                    )
+                    .await?;
                 }
 
                 // Keywords

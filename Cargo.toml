@@ -20,9 +20,9 @@ app = { path = "./crates/app" }
 async-stream = "0.3.6"
 async-trait = "0.1.89"
 auth = { path = "./crates/auth", default-features = false }
-axum = { version = "0.8.8", features = ["macros", "multipart", "ws"] }
-axum-test = { version = "20.1.0", features = ["ws"] }
-base64 = "0.22.1"
+axum = { version = "0.8.9", features = ["macros", "multipart", "ws"] }
+axum-test = { version = "21.0.0", features = ["ws"] }
+base64 = "0.23.0"
 config = { path = "./crates/config" }
 derive_more = { version = "2.1.1", features = ["from", "display"] }
 diesel = { version = "2.3.8", features = ["postgres", "serde_json", "time", "uuid"] }
@@ -35,11 +35,11 @@ futures-core = "0.3.32"
 futures-util = "0.3.32"
 humantime = "2.3.0"
 indexmap = "2.13.0"
-infer = "0.19.0"
+infer = "0.22.0"
 integrations = { path = "./crates/integrations" }
 iso8601 = { version = "0.6.3", features = ["serde"] }
-itertools = "0.14.0"
-jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
+itertools = "0.15.0"
+jsonwebtoken = { version = "11.0.0", features = ["rust_crypto"] }
 krilla = "0.8.2"
 lru = "0.18.0"
 math = { path = "./crates/math" }
@@ -68,7 +68,7 @@ time-tz = { version = "2.0.0", features = ["db"] }
 tracing-test = "0.2.6"
 tokio = { version = "1.50.0", features = ["fs", "process", "signal"] }
 tower-cookies = "0.11.0"
-tower-http = { version = "0.6.8", features = ["fs"] }
+tower-http = { version = "0.7.0", features = ["fs"] }
 tracing = "0.1.44"
 url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.23.0", features = ["fast-rng", "serde", "v4"] }

@@ -107,7 +107,7 @@ pub async fn view_recipe_handler(
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let cache_key = (user.id, recipe_id);
-    let view_recipe = if let Some(recipe) = state.get_cached_recipe(cache_key).await {
+    let mut view_recipe = if let Some(recipe) = state.get_cached_recipe(cache_key).await {
         recipe
     } else {
         let Ok(recipe) = Recipe::get(&state.mm, user.id, recipe_id).await else {
@@ -126,6 +126,19 @@ pub async fn view_recipe_handler(
         state.cache_recipe(cache_key, &view_recipe).await;
         view_recipe
     };
+
+    if let Err(err) = view_recipe
+        .recipe_details
+        .bolden_instructions(&state.mm)
+        .await
+    {
+        error!(
+            recipe_id = recipe_id,
+            user_id = user.id.to_string(),
+            err = err.to_string(),
+            "Failed to bolden instructions"
+        );
+    }
 
     let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
     let is_autologin = state.config.read().await.is_autologin;
