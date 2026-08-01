@@ -372,7 +372,7 @@ mod tests {
             assert_html(
                 &res,
                 &[
-                    r##"Preheat the oven to 350 degrees F (175 degrees C). Beat <b>butter</b>, <b>white <b>sugar</b></b>, and <b>brown</b> <b>sugar</b> together in a large bowl with an electric mixer until smooth and creamy.</div>"##,
+                    r"Preheat the oven to 350 degrees F (175 degrees C). Beat <b>butter</b>, <b>white <b>sugar</b></b>, and <b>brown</b> <b>sugar</b> together in a large bowl with an electric mixer until smooth and creamy.</div>",
                 ],
             );
             Ok(())

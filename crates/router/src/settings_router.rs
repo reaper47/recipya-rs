@@ -428,7 +428,7 @@ mod tests {
 
             res.assert_status_ok();
             let got = UserSettingDetails::get(&state.mm, user_id).await?;
-            assert_eq!(got.is_bold_ingredients, true);
+            assert!(got.is_bold_ingredients);
             Ok(())
         }
 
@@ -448,7 +448,7 @@ mod tests {
 
             res.assert_status_ok();
             let got = UserSettingDetails::get(&state.mm, user_id).await?;
-            assert_eq!(got.is_bold_ingredients, false);
+            assert!(!got.is_bold_ingredients);
             Ok(())
         }
     }
