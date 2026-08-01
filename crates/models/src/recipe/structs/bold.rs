@@ -244,7 +244,6 @@ mod tests {
         Ok(())
     }
 
-    #[tracing_test::traced_test]
     #[tokio::test]
     async fn test_bolden_instructions_on_recipe_update_ok() -> Result<()> {
         let (_test_db, config) = TestDb::new(None).await?;
