@@ -4,9 +4,9 @@ use axum::{Router, middleware};
 use app::state::AppState;
 
 use crate::handlers::settings::{
-    export_data_handler, export_data_post_handler, set_default_theme_handler,
-    set_nutrition_source_handler, set_paper_size_handler, set_selected_theme_handler,
-    set_selected_timezone_handler, settings_handler,
+    export_data_handler, export_data_post_handler, set_bold_ingredients_handler,
+    set_default_theme_handler, set_nutrition_source_handler, set_paper_size_handler,
+    set_selected_theme_handler, set_selected_timezone_handler, settings_handler,
 };
 use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 
@@ -14,6 +14,7 @@ use crate::middleware::mw_auth::{mw_only_admin, mw_refresh_token};
 pub fn settings_routes(state: &AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(settings_handler))
+        .route("/bold-ingredients", post(set_bold_ingredients_handler))
         .route(
             "/export-data",
             get(export_data_handler).post(export_data_post_handler),
@@ -395,6 +396,59 @@ mod tests {
                 got.nutrition_source,
                 NutritionDataSource::USDAFoodDataCentral
             );
+            Ok(())
+        }
+    }
+
+    mod tests_bold_ingredients {
+        use crate::schemas::settings::BoldIngredientsPayload;
+
+        use super::*;
+
+        const BASE_URI: &str = "/settings/bold-ingredients";
+
+        #[tokio::test]
+        async fn test_bold_ing_must_be_logged_in_ok() -> Result<()> {
+            assert_must_be_logged_in(Method::POST, BASE_URI).await
+        }
+
+        #[tokio::test]
+        async fn test_update_bold_ingredients_for_user_on_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&BoldIngredientsPayload {
+                    is_bold_ingredients: Some("on".into()),
+                })
+                .await;
+
+            res.assert_status_ok();
+            let got = UserSettingDetails::get(&state.mm, user_id).await?;
+            assert_eq!(got.is_bold_ingredients, true);
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_update_bold_ingredients_for_user_off_ok() -> Result<()> {
+            let (_test_db, config) = TestDb::new(None).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config.clone()).await;
+            let user_id = User::all(&state.mm).await?[0].id;
+
+            let res = server
+                .post(BASE_URI)
+                .form(&BoldIngredientsPayload {
+                    is_bold_ingredients: None,
+                })
+                .await;
+
+            res.assert_status_ok();
+            let got = UserSettingDetails::get(&state.mm, user_id).await?;
+            assert_eq!(got.is_bold_ingredients, false);
             Ok(())
         }
     }

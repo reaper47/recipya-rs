@@ -345,6 +345,38 @@ mod tests {
             )?;
             Ok(())
         }
+
+        #[tokio::test]
+        async fn test_get_recipe_bold_enabled_ok() -> Result<()> {
+            let config = Some(Config::default());
+            let (_test_db, config) = TestDb::new(config).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let users = User::all(&state.mm).await?;
+            users[0].update_bold_ingredients(&state.mm, true).await?;
+            let settings = UserSettingDetails::get(&state.mm, users[0].id).await?;
+            let (mut recipe, _) = a_complete_recipe_for_create();
+            recipe.ingredients = SectionComponents::Flat(vec![
+                Item::new("1 cup butter, softened"),
+                Item::new("1 cup white sugar"),
+                Item::new("1 cup packed brown sugar"),
+            ]);
+            recipe.instructions = SectionComponents::Flat(vec![Item::new(
+                "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar together in a large bowl with an electric mixer until smooth and creamy.",
+            )]);
+            let _ = Recipe::create(&state.mm, users[0].id, &recipe, &settings).await?;
+
+            let res = server.get(&base_uri(1)).await;
+
+            res.assert_status_ok();
+            assert_html(
+                &res,
+                &[
+                    r##"Preheat the oven to 350 degrees F (175 degrees C). Beat <b>butter</b>, <b>white <b>sugar</b></b>, and <b>brown</b> <b>sugar</b> together in a large bowl with an electric mixer until smooth and creamy.</div>"##,
+                ],
+            );
+            Ok(())
+        }
     }
 
     mod tests_delete {

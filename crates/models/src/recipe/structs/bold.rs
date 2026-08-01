@@ -16,12 +16,12 @@ pub enum BoldFileType {
     Markdown,
 }
 
-/// Struct associated with the `bold_indices_instructions` SQL table.
+/// Struct associated with the `bold_indices_ingredients` SQL table.
 ///
 /// It stores the indices of text to be displayed in bold.
 #[derive(Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
 #[diesel(belongs_to(Recipe))]
-#[diesel(table_name = schema::bold_indices_instructions)]
+#[diesel(table_name = schema::bold_indices_ingredients)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct BoldInstructionIndex {
     id: i64,
@@ -34,9 +34,9 @@ pub struct BoldInstructionIndex {
 impl BoldInstructionIndex {
     /// Retrieves all bold instruction indices for the given instruction IDs.
     pub async fn get_all(mm: &ModelManager, recipe_id: i64, ids: &[i64]) -> Result<Vec<Self>> {
-        schema::bold_indices_instructions::table
-            .filter(schema::bold_indices_instructions::recipe_id.eq(recipe_id))
-            .filter(schema::bold_indices_instructions::instruction_id.eq_any(ids))
+        schema::bold_indices_ingredients::table
+            .filter(schema::bold_indices_ingredients::recipe_id.eq(recipe_id))
+            .filter(schema::bold_indices_ingredients::instruction_id.eq_any(ids))
             .select(Self::as_select())
             .load(&mut mm.pool.get().await?)
             .await
@@ -46,7 +46,7 @@ impl BoldInstructionIndex {
 
 #[derive(Debug, Associations, Insertable)]
 #[diesel(belongs_to(Recipe))]
-#[diesel(table_name = schema::bold_indices_instructions)]
+#[diesel(table_name = schema::bold_indices_ingredients)]
 struct BoldInstructionIndexForInsert {
     recipe_id: i64,
     instruction_id: i64,
@@ -68,8 +68,8 @@ impl BoldInstructionIndex {
     where
         C: AsyncConnection<Backend = diesel::pg::Pg>,
     {
-        diesel::delete(schema::bold_indices_instructions::table)
-            .filter(schema::bold_indices_instructions::recipe_id.eq(recipe_id))
+        diesel::delete(schema::bold_indices_ingredients::table)
+            .filter(schema::bold_indices_ingredients::recipe_id.eq(recipe_id))
             .execute(conn)
             .await
             .map_err(|err| Error::Support(err.to_string()))?;
@@ -113,7 +113,7 @@ impl BoldInstructionIndex {
             })
             .collect_vec();
 
-        diesel::insert_into(schema::bold_indices_instructions::table)
+        diesel::insert_into(schema::bold_indices_ingredients::table)
             .values(values)
             .execute(conn)
             .await?;
@@ -124,7 +124,7 @@ impl BoldInstructionIndex {
 
 impl RecipeDetails {
     /// Adds bold indicators to the instructions.
-    pub async fn bolden_instructions(&mut self, mm: &ModelManager) -> Result<()> {
+    pub async fn bold_ingredients_in_instructions(&mut self, mm: &ModelManager) -> Result<()> {
         let ids = self
             .instructions
             .iter()
@@ -220,7 +220,7 @@ mod tests {
         let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let mut got = Recipe::get(&state.mm, user.id, recipe_id).await?;
-        got.bolden_instructions(&state.mm).await?;
+        got.bold_ingredients_in_instructions(&state.mm).await?;
 
         pretty_assertions::assert_eq!(
             got.instructions,
@@ -263,7 +263,7 @@ mod tests {
         Recipe::update(&state.mm, user.id, recipe_id, &mut recipe).await?;
 
         let mut got = Recipe::get(&state.mm, user.id, recipe_id).await?;
-        got.bolden_instructions(&state.mm).await?;
+        got.bold_ingredients_in_instructions(&state.mm).await?;
 
         pretty_assertions::assert_eq!(
             got.instructions,

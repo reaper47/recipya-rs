@@ -192,6 +192,21 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                     }
                 }
             }
+            label class="flex justify-between items-center text-sm mt-3" for="settings-recipes-bold-ingredients" {
+                div {
+                    span class="font-semibold" {
+                        "Bold ingredients"
+                    }
+                    br;
+                    span class="text-xs" {
+                        "Bold ingredients in instructions."                    }
+                }
+                input type="checkbox" name="bold-ingredients" #settings-recipes-bold-ingredients
+                  checked[settings.is_bold_ingredients]
+                  class="checkbox"
+                  hx-post="/settings/bold-ingredients"
+                  hx-trigger="click";
+            }
             div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {
                 label for="settings-recipes-measurement-system" class="font-semibold" {

@@ -127,10 +127,14 @@ pub async fn view_recipe_handler(
         view_recipe
     };
 
-    if let Err(err) = view_recipe
-        .recipe_details
-        .bolden_instructions(&state.mm)
-        .await
+    let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
+    let is_autologin = state.config.read().await.is_autologin;
+
+    if user_settings.is_bold_ingredients
+        && let Err(err) = view_recipe
+            .recipe_details
+            .bold_ingredients_in_instructions(&state.mm)
+            .await
     {
         error!(
             recipe_id = recipe_id,
@@ -139,9 +143,6 @@ pub async fn view_recipe_handler(
             "Failed to bolden instructions"
         );
     }
-
-    let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
-    let is_autologin = state.config.read().await.is_autologin;
 
     match templates::recipes::view_recipe(
         &state.fs_support,
