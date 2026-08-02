@@ -5,6 +5,9 @@ use std::{
 
 use derive_more::From;
 use encoding_rs::{ISO_8859_15, WINDOWS_1252};
+use itertools::Itertools;
+use rapidfuzz::distance::levenshtein;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::impl_display_as_debug;
 
@@ -114,6 +117,94 @@ pub fn insert_space_after_leading_number(s: &str) -> Cow<'_, str> {
     Cow::Owned(result)
 }
 
+/// Find the start/end byte indexes of all target elements in each text.
+///
+/// The Levenshtein distance is used to find the indexes.
+/// Returns one `Vec<(start, end)>` per input text in the same order as `texts`.
+pub fn find_indexes(texts: &[&str], targets: &[&str]) -> Result<Vec<Vec<(i32, i32)>>> {
+    if texts.is_empty() || targets.is_empty() {
+        return Err(Error::InvalidInput);
+    }
+
+    Ok(texts
+        .par_iter()
+        .map(|text| calculate_levenshtein_disance(text, targets))
+        .collect::<Vec<_>>())
+}
+
+fn calculate_levenshtein_disance(haystack_original: &str, needles: &[&str]) -> Vec<(i32, i32)> {
+    let mut results = Vec::new();
+    let haystack_original = haystack_original.to_lowercase();
+    let haystack_parts = haystack_original.split_whitespace().collect_vec();
+
+    for needle in needles.iter().map(|s| s.to_lowercase()) {
+        let len_needle = needle.chars().count();
+
+        let exact_matches = haystack_original
+            .match_indices(&needle)
+            .map(|(idx, _)| {
+                (
+                    i32::try_from(idx).unwrap_or_default(),
+                    i32::try_from(idx + len_needle).unwrap_or_default(),
+                )
+            })
+            .collect_vec();
+
+        if !exact_matches.is_empty() {
+            results.extend(exact_matches);
+            continue;
+        }
+
+        for hay in &haystack_parts {
+            let distances = needle
+                .split_whitespace()
+                .map(|s| levenshtein::distance(s.chars(), hay.chars()))
+                .filter(|d| d < &2)
+                .collect_vec()
+                .iter()
+                .fold(Vec::new(), |mut acc, &curr| {
+                    match acc.last() {
+                        Some(&prev) if curr < prev + 3 => {}
+                        _ => acc.push(curr),
+                    }
+                    acc
+                });
+
+            if !distances.is_empty() {
+                let indexes = haystack_original
+                    .match_indices(&needle)
+                    .map(|(idx, _)| {
+                        (
+                            i32::try_from(idx).unwrap_or_default(),
+                            i32::try_from(idx + len_needle).unwrap_or_default(),
+                        )
+                    })
+                    .collect_vec();
+
+                if indexes.is_empty() {
+                    needle.split_whitespace().for_each(|part| {
+                        let res = haystack_original
+                            .match_indices(part)
+                            .map(|(idx, _)| {
+                                (
+                                    i32::try_from(idx).unwrap_or_default(),
+                                    i32::try_from(idx + part.len()).unwrap_or_default(),
+                                )
+                            })
+                            .collect_vec();
+
+                        results.extend(res);
+                    });
+                }
+
+                results.extend(indexes);
+            }
+        }
+    }
+
+    results.iter().unique().copied().collect()
+}
+
 /// Result type for errors related to strings.
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -121,6 +212,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     Conversion,
+    InvalidInput,
     NoNumberFound,
 }
 
@@ -196,7 +288,7 @@ mod tests {
         #[test]
         fn test_utf8_with_bom() {
             let mut bom_bytes = vec![0xEF, 0xBB, 0xBF]; // UTF-8 BOM
-            bom_bytes.extend_from_slice(b"Hello");
+            bom_bytes.extend(b"Hello");
 
             let result = auto_convert_to_utf8(&bom_bytes);
 
@@ -358,6 +450,104 @@ mod tests {
             let got = insert_space_after_leading_number(input);
 
             assert_eq!(got, "1 eggs whole fresh, beaten");
+        }
+    }
+
+    mod tests_find_indexes {
+        use super::*;
+
+        fn recipe1_ingredients<'a>() -> Vec<&'a str> {
+            vec![
+                "butter",
+                "white sugar",
+                "brown sugar",
+                "eggs",
+                "vanilla extract",
+                "baking soda",
+                "hot water",
+                "salt",
+                "all-purpose flour",
+                "semisweet chocolate chips",
+                "chopped walnuts",
+            ]
+        }
+
+        #[test]
+        fn test_empty_text() {
+            let got = find_indexes(&[], &["hello"]);
+
+            assert!(matches!(got, Err(Error::InvalidInput)));
+        }
+
+        #[test]
+        fn test_empty_targets() {
+            let got = find_indexes(&["hello"], &[]);
+
+            assert!(matches!(got, Err(Error::InvalidInput)));
+        }
+
+        #[test]
+        fn test_no_matches_ok() -> Result<()> {
+            let got = find_indexes(
+                &["Store in an airtight container or serve immediately and enjoy!"],
+                recipe1_ingredients().as_slice(),
+            )?;
+
+            assert_eq!(got, vec![vec![]]);
+            Ok(())
+        }
+
+        #[test]
+        fn test_multiple_matches_recipe1() -> Result<()> {
+            let got = find_indexes(
+                &[
+                    "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+                    "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar together in a large bowl with an electric mixer until smooth and creamy.",
+                    "Beat in eggs, one at a time, then stir in vanilla.",
+                    "Dissolve baking soda in hot water; add to batter along with salt and mix until combined.",
+                    "Stir in flour, chocolate chips, and walnuts until a soft dough forms.",
+                    "Drop rounded spoonfuls of cookie dough 2 inches apart onto ungreased baking sheets.",
+                    "Bake in the preheated oven until edges are lightly browned, about 10 minutes.",
+                    "Cool on the baking sheets briefly before transferring to a wire rack to cool completely.",
+                    "Store in an airtight container or serve immediately and enjoy!",
+                ],
+                recipe1_ingredients().as_slice(),
+            )?;
+
+            pretty_assertions::assert_eq!(
+                got,
+                vec![
+                    vec![
+                        (42, 48), // butter
+                        (71, 75), // large eggs
+                    ],
+                    vec![
+                        (56, 62), // butter
+                        (64, 75), // white sugar
+                        (81, 92), // brown sugar
+                    ],
+                    vec![
+                        (8, 12),  // eggs
+                        (42, 49), // vanilla
+                    ],
+                    vec![
+                        (9, 20),  // baking soda
+                        (24, 33), // hot water
+                        (60, 64), // salt
+                    ],
+                    vec![
+                        (8, 13),  // flour
+                        (15, 24), // chocolate chips
+                        (25, 30),
+                        (36, 43), // walnuts
+                    ],
+                    vec![(69, 75)],
+                    vec![],
+                    vec![(12, 18)],
+                    vec![],
+                ]
+            );
+            Ok(())
         }
     }
 }

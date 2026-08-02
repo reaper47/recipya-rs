@@ -32,9 +32,9 @@ reqwest = { workspace = true, features = ["json"] }
 schema-org.workspace = true
 scraper.workspace = true
 serde.workspace = true
-quick-xml = { version = "0.40.1", features = ["serialize"] }
+quick-xml = { version = "0.41.0", features = ["serialize"] }
 serde_json.workspace = true
-serde_yaml_ng = "0.9"
+serde_yaml_ng = "0.10.0"
 strum.workspace = true
 strum_macros.workspace = true
 support.workspace = true

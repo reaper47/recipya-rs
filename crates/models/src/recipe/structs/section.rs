@@ -51,6 +51,7 @@ pub struct SectionItem {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Item {
+    pub id: Option<i64>,
     pub text: String,
     pub duration_seconds: Option<i32>,
 }
@@ -59,7 +60,7 @@ type ItemIter<'a> = std::slice::Iter<'a, Item>;
 
 pub enum SectionComponentsIter<'a> {
     Grouped(
-        std::iter::FlatMap<
+        FlatMap<
             std::slice::Iter<'a, SectionItem>,
             ItemIter<'a>,
             fn(&'a SectionItem) -> ItemIter<'a>,
@@ -82,13 +83,7 @@ impl<'a> Iterator for SectionComponentsIter<'a> {
 type ItemIntoIter = vec::IntoIter<Item>;
 
 pub enum SectionComponentsIntoIter {
-    Grouped(
-        std::iter::FlatMap<
-            vec::IntoIter<SectionItem>,
-            ItemIntoIter,
-            fn(SectionItem) -> ItemIntoIter,
-        >,
-    ),
+    Grouped(FlatMap<vec::IntoIter<SectionItem>, ItemIntoIter, fn(SectionItem) -> ItemIntoIter>),
     Flat(ItemIntoIter),
 }
 
@@ -130,6 +125,7 @@ impl SectionComponents {
             items
                 .into_iter()
                 .map(|item| Item {
+                    id: None,
                     text: item,
                     duration_seconds: None,
                 })
@@ -265,6 +261,7 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                         .into_iter()
                         .filter_map(|elem| match elem {
                             ItemListItemListElementFieldEnum::Text(text) => Some(Item {
+                                id: None,
                                 text,
                                 duration_seconds: None,
                             }),
@@ -326,6 +323,7 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                     };
 
                     current_items.push(Item {
+                        id: None,
                         text: format!(
                             "{}{}{}",
                             if value.is_empty() {
@@ -345,6 +343,7 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                 }
                 RecipeRecipeIngredientFieldEnum::Text(text) => {
                     current_items.push(Item {
+                        id: None,
                         text,
                         duration_seconds: None,
                     });
@@ -447,10 +446,12 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                         .into_iter()
                         .filter_map(|elem| match elem {
                             ItemListItemListElementFieldEnum::Text(text) => Some(Item {
+                                id: None,
                                 text,
                                 duration_seconds: None,
                             }),
                             ItemListItemListElementFieldEnum::ListItem(item) => Some(Item {
+                                id: None,
                                 text: item.text.first().cloned().unwrap_or_default(),
                                 duration_seconds: None,
                             }),
@@ -476,6 +477,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                             .text
                             .into_iter()
                             .map(|text| Item {
+                                id: None,
                                 text,
                                 duration_seconds: None,
                             })
@@ -484,6 +486,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                 }
                 RecipeRecipeInstructionsFieldEnum::Text(text) => {
                     current_items.push(Item {
+                        id: None,
                         text,
                         duration_seconds: None,
                     });
@@ -491,6 +494,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                 RecipeRecipeInstructionsFieldEnum::HowToStep(how_to_step) => {
                     if let Some(text) = how_to_step.text.first().cloned() {
                         current_items.push(Item {
+                            id: None,
                             text,
                             duration_seconds: None,
                         });
@@ -551,14 +555,27 @@ impl Item {
     /// Creates a new item with the given text.
     pub fn new(text: impl Into<String>) -> Self {
         Self {
+            id: None,
             text: text.into(),
             duration_seconds: None,
         }
     }
 
     #[must_use]
+    // Adds an id to the item.
+    pub const fn with_id(mut self, id: i64) -> Self {
+        self.id = Some(id);
+        self
+    }
+
+    #[must_use]
+    // Adds a duration to the item.
     pub const fn with_duration(mut self, duration_seconds: i32) -> Self {
-        self.duration_seconds = Some(duration_seconds);
+        self.duration_seconds = if duration_seconds == 0 {
+            None
+        } else {
+            Some(duration_seconds)
+        };
         self
     }
 }

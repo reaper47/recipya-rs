@@ -120,6 +120,7 @@ mod tests {
             Ok(())
         }
 
+        #[tracing_test::traced_test]
         #[tokio::test]
         async fn test_recipe_no_media_ok() -> Result<()> {
             let config = Some(Config::default());
@@ -342,6 +343,38 @@ mod tests {
                     r##"<li _="on click document.activeElement.blur()"><button hx-get="/recipes/1/rescrape" hx-target="#content" hx-swap="none" hx-indicator="#fullscreen-loader"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"></path></svg>Rescrape</button></li>"##,
                 ],
             )?;
+            Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_get_recipe_bold_enabled_ok() -> Result<()> {
+            let config = Some(Config::default());
+            let (_test_db, config) = TestDb::new(config).await?;
+            let server = build_server_logged_in(config.clone()).await?;
+            let state = create_app_state(config).await;
+            let users = User::all(&state.mm).await?;
+            users[0].update_bold_ingredients(&state.mm, true).await?;
+            let settings = UserSettingDetails::get(&state.mm, users[0].id).await?;
+            let (mut recipe, _) = a_complete_recipe_for_create();
+            recipe.ingredients = SectionComponents::Flat(vec![
+                Item::new("1 cup butter, softened"),
+                Item::new("1 cup white sugar"),
+                Item::new("1 cup packed brown sugar"),
+            ]);
+            recipe.instructions = SectionComponents::Flat(vec![Item::new(
+                "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar together in a large bowl with an electric mixer until smooth and creamy.",
+            )]);
+            let _ = Recipe::create(&state.mm, users[0].id, &recipe, &settings).await?;
+
+            let res = server.get(&base_uri(1)).await;
+
+            res.assert_status_ok();
+            assert_html(
+                &res,
+                &[
+                    r"Preheat the oven to 350 degrees F (175 degrees C). Beat <b>butter</b>, <b>white <b>sugar</b></b>, and <b>brown</b> <b>sugar</b> together in a large bowl with an electric mixer until smooth and creamy.</div>",
+                ],
+            );
             Ok(())
         }
     }

@@ -27,7 +27,8 @@ use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
 use crate::schemas::settings::{
-    ExportDataPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload, TzPayload,
+    BoldIngredientsPayload, ExportDataPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload,
+    TzPayload,
 };
 
 /// Handles rendering the settings page.
@@ -218,6 +219,31 @@ pub async fn export_data_post_handler(
             Error::Fs.into_response()
         }
     }
+}
+
+/// Handles setting the bold ingredients preference for the target user.
+pub async fn set_bold_ingredients_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Form(form): Form<BoldIngredientsPayload>,
+) -> impl IntoResponse {
+    if let Err(err) = user
+        .update_bold_ingredients(
+            &state.mm,
+            form.is_bold_ingredients.is_some_and(|s| &s == "on"),
+        )
+        .await
+    {
+        error!(
+            user_id = user.id.to_string(),
+            error = err.to_string(),
+            "Error updating paper size"
+        );
+        broadcast_error(&state, user.id, "Error updating paper size.").await;
+        return Error::Database.into_response();
+    }
+
+    ().into_response()
 }
 
 /// Handles setting the nutrition source for the target user.

@@ -265,6 +265,22 @@ impl User {
         Ok(count)
     }
 
+    /// Updates the user's preference on whether to bold ingredients in instructions.
+    pub async fn update_bold_ingredients(
+        &self,
+        mm: &ModelManager,
+        new_bold_ingredients: bool,
+    ) -> Result<()> {
+        use schema::user_settings::dsl::{bold_ingredients, user_id, user_settings};
+
+        diesel::update(user_settings.filter(user_id.eq(self.id)))
+            .set(bold_ingredients.eq(new_bold_ingredients))
+            .execute(&mut mm.pool.get().await?)
+            .await?;
+
+        Ok(())
+    }
+
     /// Updates the user's paper size.
     pub async fn update_paper_size(&self, mm: &ModelManager, new_paper_size_id: i16) -> Result<()> {
         use schema::user_settings::dsl::{paper_size_id, user_id, user_settings};

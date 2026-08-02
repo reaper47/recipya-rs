@@ -29,6 +29,13 @@ pub struct ExportDataPayload {
     pub recipe_ids: Vec<i64>,
 }
 
+/// Represents the payload for the bold ingredients setting.
+#[derive(Deserialize, Serialize)]
+pub struct BoldIngredientsPayload {
+    #[serde(rename = "bold-ingredients")]
+    pub is_bold_ingredients: Option<String>,
+}
+
 /// Represents the payload for setting nutrition sources.
 #[derive(Deserialize, Serialize)]
 pub struct NutritionSourcePayload {

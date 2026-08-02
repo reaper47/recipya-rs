@@ -140,10 +140,19 @@ impl Recipe {
                 let sections_map = insert_sections(conn, recipe_c).await?;
 
                 // Ingredients
-                insert_ingredients(conn, &sections_map, &recipe_c.ingredients, recipe_id).await?;
+                let ingredient_names =
+                    insert_ingredients(conn, &sections_map, &recipe_c.ingredients, recipe_id)
+                        .await?;
 
                 // Instructions
-                insert_instructions(conn, &sections_map, &recipe_c.instructions, recipe_id).await?;
+                insert_instructions(
+                    conn,
+                    &sections_map,
+                    &recipe_c.instructions,
+                    recipe_id,
+                    ingredient_names.as_slice(),
+                )
+                .await?;
 
                 // Keywords
                 insert_keywords(&mut conn, &recipe_c.keywords, user_id, recipe_id).await?;
@@ -272,7 +281,7 @@ mod tests {
         }
     }
 
-    fn a_bare_minimum_recipe() -> RecipeForCreate {
+    pub fn a_bare_minimum_recipe() -> RecipeForCreate {
         RecipeForCreate {
             name: "Best Chinese Kale".into(),
             r#yield: Some(4),
@@ -313,7 +322,7 @@ mod tests {
     fn recipe_for_create_to_recipe_with_data(
         recipe_id: i64,
         user_id: Uuid,
-        recipe: RecipeForCreate,
+        mut recipe: RecipeForCreate,
         got: &RecipeDetails,
     ) -> RecipeDetails {
         let mut keywords = recipe.keywords.clone();
@@ -334,6 +343,12 @@ mod tests {
             n.nutrition.id = other_n.nutrition.id;
             n.nutrition.is_precalculated_by_source = other_n.nutrition.is_precalculated_by_source;
         }
+
+        recipe
+            .instructions
+            .iter_mut()
+            .enumerate()
+            .for_each(|(idx, item)| item.id = Some(i64::try_from(idx + 1).unwrap_or_default()));
 
         RecipeDetails {
             recipe: Recipe {
@@ -533,13 +548,13 @@ mod tests {
         pretty_assertions::assert_eq!(
             got.instructions,
             SectionComponents::Flat(vec![
-                Item::new("Heat oil on medium heat in a large"),
+                Item::new("Heat oil on medium heat in a large").with_id(1),
                 Item::new(
-                    "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
-                ).with_duration(5*60),
+                     "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
+                ).with_duration(5*60).with_id(2),
                 Item::new(
                     "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.",
-                ).with_duration(360*60)
+                ).with_duration(360*60).with_id(3)
             ]));
         Ok(())
     }

@@ -602,7 +602,7 @@ fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
                             @for ins in section.items.iter() {
                                 li class="print:mr-4" {
                                     span class="text-sm whitespace-pre-line" {
-                                        (ins.text)
+                                        (PreEscaped(&ins.text))
                                     }
                                 }
                             }
@@ -615,7 +615,7 @@ fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
                     @for ins in items.iter() {
                         li class="print:mr-4" {
                             span class="text-sm whitespace-pre-line" {
-                                (ins.text)
+                                (PreEscaped(&ins.text))
                             }
                         }
                     }
@@ -955,7 +955,7 @@ fn render_instructions_list(instructions: &[Item]) -> Markup {
                     _="on mousedown toggle .line-through toggle .opacity-40 then if I match .line-through then add .invisible to .timer in me else remove .invisible from .timer in me" {
                     div class="flex" {
                         div class="whitespace-pre-line w-full transition-all" {
-                            (instruction.text)
+                            (PreEscaped(&instruction.text))
                         }
                          @if let Some(d) = instruction.duration_seconds {
                             div id=(format!("timer-container-{idx}")) class="timer-container" _="on mousedown halt the event"{

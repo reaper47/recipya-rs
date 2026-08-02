@@ -212,7 +212,7 @@ where
                 .map(ToString::to_string)
                 .collect::<Vec<_>>();
 
-            keywords.extend_from_slice(other_keywords.as_slice());
+            keywords.extend(other_keywords);
 
             let extract_content = |sel: &Selector| {
                 div.select(sel)

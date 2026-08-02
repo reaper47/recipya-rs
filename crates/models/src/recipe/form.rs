@@ -229,7 +229,7 @@ where
         }
 
         if ingredients.is_empty() || instructions.is_empty() {
-            return Err(InvalidBoundary::default())?;
+            Err(InvalidBoundary::default())?;
         }
 
         Ok(Self {

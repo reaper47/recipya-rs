@@ -194,7 +194,9 @@ mod tests {
             Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.name = "Maple Syrup Korean Chicken".into();
             recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
-            recipe.instructions = SectionComponents::Flat(vec![Item::new("Drink juice")]);
+            recipe.instructions = SectionComponents::Flat(vec![
+                Item::new("Drink juice").with_id(5),
+            ]);
 
             let res = server
                 .put(&base_uri(1))
@@ -214,6 +216,7 @@ mod tests {
             Ok(())
         }
 
+        #[tracing_test::traced_test]
         #[tokio::test]
         async fn test_can_only_be_one_category_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
@@ -376,8 +379,8 @@ mod tests {
                 measurement_system_id: 2,
                 category: Some("breakfast".into()),
                 instructions: SectionComponents::Flat(vec![
-                    Item::new("Mix the blueberries"),
-                    Item::new("Mix the strawberries"),
+                    Item::new("Mix the blueberries").with_id(5),
+                    Item::new("Mix the strawberries").with_id(6),
                 ]),
                 ingredients: SectionComponents::Grouped(vec![
                     SectionItem::new(
@@ -485,7 +488,10 @@ mod tests {
             );
             pretty_assertions::assert_eq!(
                 got.instructions,
-                SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat")])
+                SectionComponents::Flat(vec![
+                    Item::new("Mix the apples").with_id(5),
+                    Item::new("Eat").with_id(6),
+                ])
             );
             pretty_assertions::assert_eq!(
                 got.tools,

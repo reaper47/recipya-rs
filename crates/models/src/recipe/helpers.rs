@@ -17,6 +17,7 @@ use uuid::Uuid;
 
 use crate::Result;
 use crate::nutrition::NutritionDataSource;
+use crate::recipe::structs::bold::BoldInstructionIndex;
 use crate::recipe::structs::media::{AdditionalImageForInsert, VideoForCreate, VideoForInsert};
 use crate::recipe::structs::nutrition::{
     NutritionDetailsForCreate, NutritionForInsert, NutritionPer100gForInsert,
@@ -99,7 +100,7 @@ pub async fn insert_ingredients<C>(
     sections_map: &HashMap<String, i64>,
     ingredients: &SectionComponents,
     recipe_id: i64,
-) -> Result<()>
+) -> Result<Vec<String>>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -127,7 +128,7 @@ where
     }
 
     if all_ingredients.is_empty() {
-        return Ok(());
+        return Ok(vec![]);
     }
 
     let mut seen = HashSet::new();
@@ -197,7 +198,7 @@ where
         .execute(conn)
         .await?;
 
-    Ok(())
+    Ok(ingredient_names)
 }
 
 pub async fn insert_instructions<C>(
@@ -205,6 +206,7 @@ pub async fn insert_instructions<C>(
     sections_map: &HashMap<String, i64>,
     instructions: &SectionComponents,
     recipe_id: i64,
+    ingredients: &[String],
 ) -> Result<()>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
@@ -266,6 +268,8 @@ where
         .into_iter()
         .map(|(id, name)| (name, id))
         .collect();
+
+    BoldInstructionIndex::insert(conn, recipe_id, ingredients, name_to_id.clone()).await?;
 
     diesel::insert_into(schema::instructions_recipes::table)
         .values(

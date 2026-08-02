@@ -58,7 +58,7 @@ where
                     let app = App::from_str(&app_name.to_lowercase()).unwrap_or_default();
                     if matches!(app, App::Unknown) {
                         error!("Import recipes from app form field 'app' is invalid: {app_name}");
-                        return Err(InvalidBoundary::default())?;
+                        Err(InvalidBoundary::default())?;
                     }
                     form.app = app;
                 }

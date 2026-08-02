@@ -42,6 +42,32 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    bold_indices_ingredients (id) {
+        id -> Int8,
+        recipe_id -> Int8,
+        instruction_id -> Int8,
+        start_index -> Int4,
+        end_index -> Int4,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    bold_indices_instructions (id) {
+        id -> Int8,
+        recipe_id -> Int8,
+        instruction_id -> Int8,
+        start_index -> Int4,
+        end_index -> Int4,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     categories (id) {
         id -> Int8,
         name -> Text,
@@ -689,6 +715,7 @@ diesel::table! {
         selected_theme -> Int4,
         paper_size_id -> Int2,
         timezone -> Text,
+        bold_ingredients -> Bool,
     }
 }
 
@@ -769,6 +796,10 @@ diesel::table! {
 
 diesel::joinable!(additional_images_recipe -> recipes (recipe_id));
 diesel::joinable!(auth_tokens -> users (user_id));
+diesel::joinable!(bold_indices_ingredients -> instructions (instruction_id));
+diesel::joinable!(bold_indices_ingredients -> recipes (recipe_id));
+diesel::joinable!(bold_indices_instructions -> instructions (instruction_id));
+diesel::joinable!(bold_indices_instructions -> recipes (recipe_id));
 diesel::joinable!(categories_recipes -> categories (category_id));
 diesel::joinable!(categories_recipes -> recipes (recipe_id));
 diesel::joinable!(cookbooks -> users (user_id));
@@ -841,6 +872,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     additional_images_recipe,
     app,
     auth_tokens,
+    bold_indices_ingredients,
+    bold_indices_instructions,
     categories,
     categories_recipes,
     cookbooks,
