@@ -68,8 +68,7 @@ The user interface is better than the the original.
 
 ## Getting Started
 
-The installation instructions are located in
-the [installation section](https://recipes.musicavis.ca/guide/docs/installation/) of the documentation.
+The instructions will be written later. For now, you can use the Docker or Podman solution under the deploy folder.
 
 ## Development
 
