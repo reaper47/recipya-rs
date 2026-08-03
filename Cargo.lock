@@ -4637,6 +4637,7 @@ dependencies = [
  "tracing",
  "tracing-test",
  "unicode-normalization",
+ "url",
  "wreq",
  "wreq-util",
 ]

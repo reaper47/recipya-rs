@@ -13,6 +13,7 @@ pub enum Error {
     Filesystem,
     MissingElement(String),
     NoHost,
+    NoRecipeFound,
     UnknownWebsite,
 
     // Externals

@@ -12,6 +12,13 @@
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
 
 [[website]]
+name = "Aaron Parecki"
+domain = "aaronparecki.com"
+variant = "AaronParecki"
+url = "https://aaronparecki.com"
+test = "https://aaronparecki.com/2020/06/01/19/banana-bread"
+
+[[website]]
 name = "Ace Canning"
 domain = "acecanning.com"
 variant = "AceCanning"
