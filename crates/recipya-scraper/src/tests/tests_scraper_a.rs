@@ -22,6 +22,54 @@ mod tests {
     #[tracing_test::traced_test]
     #[ignore = "needs manual testing"]
     #[allow(clippy::too_many_lines)]
+    async fn test_aaronparecki() -> Result<()> {
+        let got = scrape(Website::AaronParecki, 0).await?;
+
+        let want = Recipe {
+            context: at_context(),
+            r#type: AtType::Recipe.to_opt(),
+            date_published: vec!["2020-06-01T12:29:21-07:00".into()],
+            image: vec![
+                RecipeImageFieldEnum::URL("https://aaronparecki.com/img/1240x,q60/2020/06/01/19/banana-bread.jpg".into()),
+            ],
+            name: vec!["Vegan Banana-Apple Bread".into()],
+            recipe_ingredient: vec![
+                RecipeRecipeIngredientFieldEnum::Text("1 3/4 cup white flour".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tsp baking powder".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 tsp baking soda".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 tsp pumpkin pie spice (or cinnamon/nutmeg/cloves)".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/4 tsp salt".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 large ripe bananas".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 apple, cut into 1-2 inch pieces".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1/2 cup unsweetened non-dairy milk (almond or soy)".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 tbsp blackstrap molasses".into()),
+                RecipeRecipeIngredientFieldEnum::Text("2 tbsp canola oil".into()),
+                RecipeRecipeIngredientFieldEnum::Text("1 tsp vanilla extract".into()),
+                RecipeRecipeIngredientFieldEnum::Text("optional chopped nuts".into()),
+            ],
+            recipe_instructions: vec![
+                RecipeRecipeInstructionsFieldEnum::Text("Whisk all the dry ingredients and spices in a large bowl.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("In a blender, add all the wet ingredients and the apple and banana. Blend until smooth.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("If you're adding nuts, chop them up using a food processor.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Mix everything together in the large bowl.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Drop the batter into a loaf pan, muffin pan, or donut pan.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Bake for 40 minutes at 375 degrees. Reduce heat to 350 and bake for 10-15 more minutes until a toothpick comes out clean. It's better to over-bake than under-bake this.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Cool completely before slicing.".into()),
+                RecipeRecipeInstructionsFieldEnum::Text("Note: if you don't have baking powder, you can make your own by mixing 1 tsp lemon juice and 1/4 tsp baking soda in a small bowl first. Don't add this to the blender, mix it in when adding everything to the large bowl.".into()),
+            ],
+            url: vec![
+                "https://aaronparecki.com/2020/06/01/19/banana-bread<number>0".into(),
+            ],
+            ..Default::default()
+        };
+        pretty_assertions::assert_eq!(got, want);
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    #[ignore = "needs manual testing"]
+    #[allow(clippy::too_many_lines)]
     async fn test_acecanning_ok() -> Result<()> {
         let got = scrape(Website::AceCanning, 0).await?;
 

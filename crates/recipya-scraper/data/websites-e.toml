@@ -10,3 +10,10 @@
 #
 # Optional fields (add when needed):
 #   cuisine = Name of the cuisine (lebanese, korean, vegetarian, etc.)
+
+[[website]]
+name = "Eli Duke"
+domain = "eliduke.com"
+variant = "EliDuke"
+url = "https://eliduke.com/"
+test = "https://eliduke.com/recipes/kale-salad/"
