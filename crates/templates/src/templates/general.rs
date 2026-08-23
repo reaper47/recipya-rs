@@ -1,5 +1,7 @@
 use maud::{DOCTYPE, Markup, PreEscaped, html};
+
 use models::paper::PaperSize;
+use support::numbers::fmt_without_trailing_zeroes;
 
 use crate::settings::SEARCH_INPUT_JS;
 
@@ -38,8 +40,16 @@ pub fn render_paper_sizes_table(data: &[(usize, &str, &PaperSize)]) -> Markup {
                                     td class="py-1" { (idx) }
                                     td class="py-1" { (paper.name) }
                                     td class="py-1 text-center select-none" { (category) }
-                                    td class="py-1 text-center" { (format!("{:.2} x {:.2}", paper.width_mm, paper.height_mm)) }
-                                    td class="py-1 text-center" { (format!("{:.2} x {:.2}", paper.width_in, paper.height_in)) }
+                                    td class="py-1 text-center" {
+                                        (format!(
+                                            "{} x {}",
+                                            fmt_without_trailing_zeroes(paper.width_mm),
+                                            fmt_without_trailing_zeroes(paper.height_mm),
+                                        ))
+                                    }
+                                    td class="py-1 text-center" {
+                                        (format!("{:.2} x {:.2}", paper.width_in, paper.height_in))
+                                    }
                                 }
                             }
                         }

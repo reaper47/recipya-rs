@@ -193,7 +193,7 @@ fn render_ingredients(view: &ViewRecipe) -> Markup {
                                             name="section-ingredient"
                                             placeholder="Section name"
                                             class="input input-sm w-fit"
-                                            value=(format!("{}", section.title))
+                                            value=(section.title)
                                             onfocusout="renumberSections(this.closest('ol'), 'ingredient')";
                                         btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'ingredient')" {
                                             (icon_x_circle())
@@ -244,7 +244,7 @@ fn render_instructions(view: &ViewRecipe) -> Markup {
                                                 name="section-instruction"
                                                 placeholder="Section name"
                                                 class="input input-sm w-fit"
-                                                value=(format!("{}", section.title))
+                                                value=(section.title)
                                                 onfocusout="renumberSections(this.closest('ol'), 'instruction')";
                                             btn class="btn btn-xs btn-square" onclick="deleteSection(this, 'instruction')" {
                                                 (icon_x_circle())

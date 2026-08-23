@@ -444,7 +444,7 @@ fn render_section(components: &SectionComponents, input_name_base: &str) -> Mark
                             li class="text-sm" {
                                 (ing.text)
                             }
-                            input type="hidden" name=(format!("{input_name_base}")) value=(ing.text);
+                            input type="hidden" name=(input_name_base) value=(ing.text);
                         }
                 }
             },

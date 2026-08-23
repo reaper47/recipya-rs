@@ -991,7 +991,7 @@ fn render_list_item_details(item: &ShoppingListItemDetails, view: &ViewMode) -> 
                 }
             } @else {
                 p style=[p_style] {
-                    (format!("{}", item.ingredient))
+                    (item.ingredient)
                 }
             }
             @if let Some(notes) = item.notes.as_deref() {
