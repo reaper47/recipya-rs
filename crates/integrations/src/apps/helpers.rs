@@ -180,7 +180,7 @@ impl ToSections<'_> for Vec<Instruction<'_>> {
     }
 }
 
-pub(super) fn is_vchar_or_space(c: char) -> bool {
+pub(super) const fn is_vchar_or_space(c: char) -> bool {
     !c.is_control() && (c != '\n' && c != '\r')
 }
 
