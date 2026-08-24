@@ -167,9 +167,10 @@ pub async fn forgot_password_post_handler(
         }
 
         templates::general::simple(
-             "Password Reset Requested",
-             "An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
-         ).into_response()
+            "Password Reset Requested",
+            "An email with instructions on how to reset your password has been sent to you.",
+        )
+        .into_response()
     }
 }
 

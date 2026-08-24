@@ -356,7 +356,7 @@ mod tests {
                 &res,
                 &[
                     r#"<h2 class="card-title underline self-center">Password Reset Requested</h2>"#,
-                    r"An email with instructions on how to reset your password has been sent to you. Please check your inbox and follow the provided steps to regain access to your account.",
+                    r"An email with instructions on how to reset your password has been sent to you.",
                     r#"<a href="/" class="btn btn-primary btn-block btn-sm">Back Home</a>"#,
                 ],
             );
