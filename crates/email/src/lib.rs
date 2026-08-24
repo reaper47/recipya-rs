@@ -6,6 +6,7 @@ pub use config::{Config, email_config};
 pub use error::{Error, Result};
 
 use mrml::prelude::render::RenderOptions;
+use tracing::error;
 
 use crate::smtp::SmtpEmailSender;
 
@@ -101,9 +102,23 @@ impl EmailSender for EmailService {
                             .replace("[[.Token]]", &data.token)
                             .replace("[[.URL]]", &data.url)
                             .replace("[[.UserName]]", &data.username),
-                        Err(_) => return Err(Error::RenderFail),
+                        Err(err) => {
+                            error!(
+                                error = err.to_string(),
+                                template = template,
+                                "Failed to render email template"
+                            );
+                            return Err(Error::RenderFail);
+                        }
                     },
-                    Err(_) => return Err(Error::RenderFail),
+                    Err(err) => {
+                        error!(
+                            error = err.to_string(),
+                            template = template,
+                            "Failed to parse email template"
+                        );
+                        return Err(Error::RenderFail);
+                    }
                 };
             }
         }

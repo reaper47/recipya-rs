@@ -29,30 +29,22 @@
                 <mj-column width="100%">
                     <mj-text color="#637381" font-size="16px">
                         Hello [[.UserName]],
-                        <br/>
-                        <br/>
-                        This email proves that your Recipya account has been created.
                     </mj-text>
                     <mj-text color="#637381" font-size="16px">
-                        Please <a href="[[.URL]]/auth/verify-email?token=[[.Token]]">confirm</a> your account to ensure it is not bogus.
+                      Welcome to Recipya! Please verify your account to get started.
                     </mj-text>
+                    <mj-button background-color="#f45e43" width="100%" color="white" href="[[.URL]]/auth/verify-email?token=[[.Token]]">
+                    Verify email
+                   </mj-button>
+                  <mj-text color="#637381" font-size="16px">
+                  If the button above does not work, navigate to this link: [[.URL]]/auth/verify-email?token=[[.Token]]
+                  </mj-text>
                     <mj-text color="#637381" font-size="16px">
                         Sincerely,
                         <br/>
                         Recipya
                     </mj-text>
                 </mj-column>
-            </mj-section>
-        </mj-wrapper>
-        <mj-wrapper full-width="full-width">
-            <mj-section padding-top="0">
-                <mj-group>
-                    <mj-column width="100%" padding-right="0">
-                        <mj-text color="#445566" font-size="11px" align="center" line-height="16px" font-weight="bold">
-                            <a class="footer-link" href="[[.URL]]/privacy">Privacy</a>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;
-                        </mj-text>
-                    </mj-column>
-                </mj-group>
             </mj-section>
         </mj-wrapper>
     </mj-body>
