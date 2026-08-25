@@ -45,6 +45,7 @@ Table of Contents
       * [Database](#database)
 * [Contributing](#contributing)
   * [How to support/verify a website](#how-to-supportverify-a-website)
+      * [Example](#example)
 * [Sponsors](#sponsors)
 * [Inspiration](#inspiration)
 
@@ -229,7 +230,10 @@ fn test_{website name}_ok() -> Result<()> {
       4. Examine the recipe's HTML and add the missing fields. Refer to the other custom parsers for reference.
    3. Make the test pass.
 
-For example, follow these steps to verify/support https://www.allrecipes.com:
+#### Example
+
+Follow these steps to verify/support https://www.allrecipes.com:
+
 1. Open [websites-a.toml](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/data/websites-a.toml)
 2. Append the website's metadata:
 ```text
