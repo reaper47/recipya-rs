@@ -1,49 +1,53 @@
-<div align="center">
+<h1 align="center">
+  <br>
+      Recipya Rust
+  <br>
+</h1>
 
-# Recipya Rust &emsp;
+<h4 align="center">A clean, simple and powerful recipe manager your whole family will enjoy.</h4>
 
-**A clean, simple and powerful recipe manager your whole family will enjoy.**
+<p align="center">
+    <a href="https://github.com/reaper47/recipya-rs/releases/latest" target="_blank" rel="noopener noreferrer">
+        <img src="https://img.shields.io/github/v/release/reaper47/recipya-rs?style=flat&sort=semver">
+    </a>
+    <a href="https://github.com/reaper47/recipya-rs/actions/new" rel="noopener noreferrer">
+        <img src="https://img.shields.io/github/actions/workflow/status/serde-rs/serde/ci.yml?branch=master">
+    </a>
+    <a href="https://github.com/reaper47/recipya-rs/issues" rel="noopener noreferrer">
+        <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" >
+    </a>
+</p>
 
-[![Demo][demo-shield]][demo-url]
-[![Documentation][docs-shield]][docs-url]
-[![Matrix][matrix-shield]][matrix-url]
-<br>
-[![][github-release-shield]][github-release-link]
-[![build-status-shield]][build-status-url]
-[![contributions-shield]][contributions-url]
-
-[build-status-shield]: https://img.shields.io/github/actions/workflow/status/serde-rs/serde/ci.yml?branch=master
-
-[build-status-url]: https://github.com/reaper47/recipya-rs/actions/new
-
-[contributions-shield]: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
-
-[contributions-url]: https://github.com/reaper47/recipya-rs/issues
-
-[demo-shield]: https://img.shields.io/badge/demo-996300?style=flat
-
-[demo-url]: https://recipes.musicavis.ca
-
-[docs-shield]: https://img.shields.io/badge/documentation-5d782e?style=flat
-
-[docs-url]: https://recipes.musicavis.ca/guide/docs/
-
-[matrix-shield]: https://img.shields.io/badge/Matrix-000000?style=flat&logo=matrix&logoColor=white
-
-[matrix-url]: https://app.element.io/#/room/%23comfyui_space%3Amatrix.org
-
-[github-release-shield]: https://img.shields.io/github/v/release/reaper47/recipya-rs?style=flat&sort=semver
-
-[github-release-link]: https://github.com/reaper47/recipya-rs/releases
+<p align="center">
+    <a href="https://recipes.musicavis.ca/guide/docs/" target="_blank" rel="noopener noreferrer">Website</a> •
+    <a href="https://recipya.ca" target="_blank" rel="noopener noreferrer">Demo</a> •
+    <a href="https://app.element.io/#/room/%23comfyui_space%3Amatrix.org" target="_blank" rel="noopener noreferrer">Matrix</a>
+</p>
 
 ![Recipe page screenshot](.github/screenshot-recipes.webp)
 
-</div>
+Table of Contents
+=================
 
-## Introduction
-
-A clean, simple and powerful recipe manager web application for unforgettable family recipes, empowering you to curate
-and share your favorite recipes. It is focused on simplicity for the whole family to enjoy.
+* [Important Note](#warning-important-note)
+* [Features](#features)
+* [Getting Started](#getting-started)
+* [Development](#development)
+  * [Linux](#linux)
+      * [Tooling](#tooling)
+      * [Running Recipya](#running-recipya)
+  * [Windows](#windows)
+      * [Tooling](#tooling-1)
+      * [Running Recipya](#running-recipya-1)
+  * [Development Container](#development-container)
+  * [Useful Commands](#useful-commands)
+      * [Frontend](#frontend)
+      * [Database](#database)
+* [Contributing](#contributing)
+  * [How to support/verify a website](#how-to-supportverify-a-website)
+      * [Example](#example)
+* [Sponsors](#sponsors)
+* [Inspiration](#inspiration)
 
 ## :warning: Important Note 
 
@@ -173,6 +177,98 @@ at macpoule@gmail.com. The same applies if you have any feedback or need support
 You can also join our development and support channel on
 the [Matrix space: #recipya:matrix.org](https://app.element.io/#/room/#recipya:matrix.org).
 Matrix is similar to Discord but is open source.
+
+### How to support/verify a website
+
+1. Open the respective [registry file](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/data)
+2. Add the website's required metadata (name, domain, variant, url, test urls), and if applicable, the optional cuisine
+3. Save the file. A Rust file with the added website will be automatically generated. Run `cargo build` if it does not generate.
+4. Open the website's respective [test file](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/src/tests)
+5. Add the test skeleton for the website:
+```rust
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_{website name}_ok() -> Result<()> {
+    let got = scrape(Website::{website name}, 0)?;
+
+    pretty_assertions::assert_eq!(got, Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        url: vec!["the website url from the registry".into()],
+        ..Default::default()
+    });
+    Ok(())
+}
+```
+6. Run the test.
+   1. If you don't receive a `DomainNotImplemented` error, populate the `want` recipe from the test's output until the test runs green.
+   2. If you receive a `DomainNotImplemented` error, then:
+      1. Add the website to the [`pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe>`](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/src/websites.rs) match statement.
+      2. Create a file to implement the parser in the [respective folder](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/src/custom).
+      3. Add the following skeleton:
+        
+        ```rust
+                use scraper::{Html, Selector};
+                
+                use schema_org::{AtType, Recipe, at_context};
+                
+                use crate::Result;
+        
+                pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
+                    let root = &doc.root_element();
+                    
+                    Ok(Recipe {
+                        r#type: AtType::Recipe.to_opt(),
+                        context: at_context(),
+                        url: vec![url.into()],
+                        ..Default::default()
+                    })
+                }
+        ```
+
+      4. Examine the recipe's HTML and add the missing fields. Refer to the other custom parsers for reference.
+   3. Make the test pass.
+
+#### Example
+
+Follow these steps to verify/support https://www.allrecipes.com:
+
+1. Open [websites-a.toml](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/data/websites-a.toml)
+2. Append the website's metadata:
+```text
+[[website]]
+name = "Allrecipes"
+domain = "allrecipes.com"
+variant = "AllRecipes"
+url = "https://www.allrecipes.com/"
+test = "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"
+```
+3. Save the file 
+4. Open [tests_scraper_a.rs](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/src/tests/tests_scraper_a.rs)
+5. Add the following test:
+```rust
+#[test]
+#[tracing_test::traced_test]
+#[ignore = "Needs manual testing"]
+fn test_allrecipes_ok() -> Result<()> {
+    let got = scrape(Website::AllRecipes, 0)?;
+
+    pretty_assertions::assert_eq!(got, Recipe {
+        context: at_context(),
+        r#type: AtType::Recipe.to_opt(),
+        url: vec!["https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into()],
+        ..Default::default()
+    });
+    Ok(())
+}
+```
+6. Run the test.
+  - If there is no `DomainNotImplemented` error, then copy-paste the missing fields from the test's output to the test. Review the HTML to ensure no field has been forgotten.
+  - If there is a `DomainNotImplemented`, then:
+    1. Add the `Self::Allrecipes => custom::a::allrecipes::parse(doc, url),` arm to the [`pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe>`](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/src/websites.rs) match statement.
+    2. Define a `pub fn parse(doc: &Html, url: &str) -> Result<Recipe>` function in the [respective file](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/src/custom/a/allrecipes.rs)
+    3. Implement the function using the [scraper crate](https://crates.io/crates/scraper) until the test passes.
 
 ## Sponsors
 
