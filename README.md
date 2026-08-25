@@ -180,8 +180,8 @@ Matrix is similar to Discord but is open source.
 ### How to support/verify a website
 
 1. Open the respective [registry file](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/data)
-2. Add the website's required metadata (name, domain, variant, url, test urls), and if applicable, the optional (cuisine)
-3. Save the file. A Rust file with the added website will be generated. Run `cargo build` if it does not generate.
+2. Add the website's required metadata (name, domain, variant, url, test urls), and if applicable, the optional cuisine
+3. Save the file. A Rust file with the added website will be automatically generated. Run `cargo build` if it does not generate.
 4. Open the website's respective [test file](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/src/tests)
 5. Add the test skeleton for the website:
 ```rust
@@ -191,30 +191,32 @@ Matrix is similar to Discord but is open source.
 fn test_{website name}_ok() -> Result<()> {
     let got = scrape(Website::{website name}, 0)?;
 
-    let expected = Recipe {
+    pretty_assertions::assert_eq!(got, Recipe {
         context: at_context(),
         r#type: AtType::Recipe.to_opt(),
         url: vec!["the website url from the registry".into()],
         ..Default::default()
-    };
-    pretty_assertions::assert_eq!(got, expected);
+    });
     Ok(())
 }
 ```
 6. Run the test.
-   1. If you don't receive a `DomainNotImplemented` error, populate the `want` recipe from the test's output until the test goes green.
+   1. If you don't receive a `DomainNotImplemented` error, populate the `want` recipe from the test's output until the test runs green.
    2. If you receive a `DomainNotImplemented` error, then:
       1. Add the website to the [`pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe>`](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/src/websites.rs) match statement.
       2. Create a file to implement the parser in the [respective folder](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/src/custom).
       3. Add the following skeleton:
         
         ```rust
-                use schema_org::{AtType, Recipe, at_context};
                 use scraper::{Html, Selector};
+                
+                use schema_org::{AtType, Recipe, at_context};
+                
                 use crate::Result;
         
                 pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                     let root = &doc.root_element();
+                    
                     Ok(Recipe {
                         r#type: AtType::Recipe.to_opt(),
                         context: at_context(),
@@ -239,7 +241,7 @@ url = "https://www.allrecipes.com/"
 test = "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"
 ```
 3. Save the file 
-4. Open [tests_scraper_a.rs](https://)github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/src/tests/tests_scraper_a.rs)
+4. Open [tests_scraper_a.rs](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/src/tests/tests_scraper_a.rs)
 5. Add the following test:
 ```rust
 #[test]
@@ -248,18 +250,21 @@ test = "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/"
 fn test_allrecipes_ok() -> Result<()> {
     let got = scrape(Website::AllRecipes, 0)?;
 
-    let want = Recipe {
+    pretty_assertions::assert_eq!(got, Recipe {
         context: at_context(),
         r#type: AtType::Recipe.to_opt(),
         url: vec!["https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into()],
         ..Default::default()
-    };
-    pretty_assertions::assert_eq!(got, want);
+    });
     Ok(())
 }
 ```
-6. Run the test. There is no DomainNotImplemented.
-  1. Copy paste the missing fields from the test's output to the test.
+6. Run the test.
+  - If there is no `DomainNotImplemented` error, then copy-paste the missing fields from the test's output to the test. Review the HTML to ensure no field has been forgotten.
+  - If there is a `DomainNotImplemented`, then:
+    1. Add the `Self::Allrecipes => custom::a::allrecipes::parse(doc, url),` arm to the [`pub fn parse_manually(&self, doc: &Html, url: &str) -> Result<Recipe>`](https://github.com/reaper47/recipya-rs/blob/main/crates/recipya-scraper/src/websites.rs) match statement.
+    2. Define a `pub fn parse(doc: &Html, url: &str) -> Result<Recipe>` function in the [respective file](https://github.com/reaper47/recipya-rs/tree/main/crates/recipya-scraper/src/custom/a/allrecipes.rs)
+    3. Implement the function using the [scraper crate](https://crates.io/crates/scraper) until the test passes.
 
 ## Sponsors
 
