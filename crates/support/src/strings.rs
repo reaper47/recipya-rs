@@ -142,6 +142,12 @@ fn calculate_levenshtein_disance(haystack_original: &str, needles: &[&str]) -> V
 
         let exact_matches = haystack_original
             .match_indices(&needle)
+            .filter(|(idx, _)| {
+                let before = haystack_original[..*idx].chars().last();
+                let after = haystack_original[*idx + len_needle..].chars().next();
+                !before.map_or(false, |c| c.is_alphanumeric() || c == '_')
+                    && !after.map_or(false, |c| c.is_alphanumeric() || c == '_')
+            })
             .map(|(idx, _)| {
                 (
                     i32::try_from(idx).unwrap_or_default(),
@@ -173,6 +179,12 @@ fn calculate_levenshtein_disance(haystack_original: &str, needles: &[&str]) -> V
             if !distances.is_empty() {
                 let indexes = haystack_original
                     .match_indices(&needle)
+                    .filter(|(idx, _)| {
+                        let before = haystack_original[..*idx].chars().last();
+                        let after = haystack_original[*idx + len_needle..].chars().next();
+                        !before.map_or(false, |c| c.is_alphanumeric() || c == '_')
+                            && !after.map_or(false, |c| c.is_alphanumeric() || c == '_')
+                    })
                     .map(|(idx, _)| {
                         (
                             i32::try_from(idx).unwrap_or_default(),
@@ -181,21 +193,7 @@ fn calculate_levenshtein_disance(haystack_original: &str, needles: &[&str]) -> V
                     })
                     .collect_vec();
 
-                if indexes.is_empty() {
-                    needle.split_whitespace().for_each(|part| {
-                        let res = haystack_original
-                            .match_indices(part)
-                            .map(|(idx, _)| {
-                                (
-                                    i32::try_from(idx).unwrap_or_default(),
-                                    i32::try_from(idx + part.len()).unwrap_or_default(),
-                                )
-                            })
-                            .collect_vec();
-
-                        results.extend(res);
-                    });
-                }
+                // Removed partial word fallback to avoid matching partial ingredients like "baking" from "baking soda"
 
                 results.extend(indexes);
             }
@@ -527,25 +525,51 @@ mod tests {
                         (81, 92), // brown sugar
                     ],
                     vec![
-                        (8, 12),  // eggs
-                        (42, 49), // vanilla
+                        (8, 12), // eggs (vanilla is NOT matched since it's only a partial ingredient from "vanilla extract")
                     ],
                     vec![
                         (9, 20),  // baking soda
                         (24, 33), // hot water
                         (60, 64), // salt
                     ],
-                    vec![
-                        (8, 13),  // flour
-                        (15, 24), // chocolate chips
-                        (25, 30),
-                        (36, 43), // walnuts
-                    ],
-                    vec![(69, 75)],
                     vec![],
-                    vec![(12, 18)],
+                    vec![],
+                    vec![],
+                    vec![],
                     vec![],
                 ]
+            );
+            Ok(())
+        }
+
+        /// Regression test for issue #322:
+        /// The algorithm was matching substrings inside words (e.g., "a" inside "another",
+        /// "or" inside "form", "and" inside "hands"), producing broken HTML.
+        /// This test ensures word-boundary matching is enforced.
+        #[test]
+        fn test_word_boundary_matching_issue_322() -> Result<()> {
+            let ingredients = vec!["chicken", "oil", "a", "or", "and"];
+            let texts = vec![
+                "In another bowl, combine chicken with remaining ingredients. \
+                 Lightly oil hands and form 4 patties. Oil patties and season \
+                 surface. Barbecue 12 to 15 minutes or until chicken is cooked.",
+            ];
+            let got = find_indexes(&texts, &ingredients)?;
+            // "a" should NOT match inside "another", "remaining", "hands", "patties",
+            // "season", "surface", "barbecue"
+            // "or" should NOT match inside "form"
+            // "and" should NOT match inside "hands"
+            assert_eq!(
+                got,
+                vec![vec![
+                    (25, 32),   // chicken
+                    (166, 173), // chicken (second occurrence)
+                    (69, 72),   // oil
+                    (99, 102),  // Oil (standalone "Oil")
+                    (157, 159), // or (standalone "or")
+                    (79, 82),   // and (standalone "and")
+                    (111, 114), // and (standalone "and")
+                ]]
             );
             Ok(())
         }
