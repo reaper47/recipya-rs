@@ -170,14 +170,17 @@ mod tests {
     mod tests_index {
         use super::*;
 
-        use config::Config;
+        use config::{AutologinState, Config, States};
 
         const BASE_URI: &str = "/";
 
         #[tokio::test]
         async fn test_get_index_redirect_to_recipes_when_autologin_ok() -> Result<()> {
             let config = Some(Config {
-                is_autologin: true,
+                states: States {
+                    autologin: AutologinState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;

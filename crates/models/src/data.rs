@@ -1,5 +1,7 @@
 use iso8601::DateTime;
 
+use config::{AutologinState, DemoState};
+
 use crate::RecipeDetails;
 use crate::params::SearchParams;
 use crate::reports::ViewReport;
@@ -9,11 +11,10 @@ use crate::view::ViewMode;
 
 /// Data holds data to pass on to the templates.
 #[derive(Default)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct Data {
+    pub states: States,
     pub is_admin: bool,
     pub is_authenticated: bool,
-    pub is_autologin: bool,
     pub is_hx_request: bool,
     pub is_preview: bool,
 
@@ -24,6 +25,12 @@ pub struct Data {
     pub recipes: Vec<ViewRecipe>,
     pub reports: Option<ReportsData>,
     pub shopping: Option<ShoppingData>,
+}
+
+#[derive(Default)]
+pub struct States {
+    pub autologin: AutologinState,
+    pub demo: DemoState,
 }
 
 /// Creates a new instance of `AboutData`.

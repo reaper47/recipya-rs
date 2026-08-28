@@ -7,6 +7,8 @@ use std::os::windows::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -49,9 +51,6 @@ async fn fetch_videos(
     conn: &mut PgPooledConn<'_>,
     data_dir: &Arc<DataDir>,
 ) -> Result<HashSet<PathBuf>> {
-    use diesel::prelude::*;
-    use diesel_async::RunQueryDsl;
-
     Ok(schema::videos_recipes::table
         .distinct()
         .order_by(schema::videos_recipes::video.asc())
@@ -71,9 +70,6 @@ async fn fetch_images(
     conn: &mut PgPooledConn<'_>,
     data_dir: &Arc<DataDir>,
 ) -> Result<HashSet<PathBuf>> {
-    use diesel::prelude::*;
-    use diesel_async::RunQueryDsl;
-
     Ok(schema::recipes::table
         .select(schema::recipes::image)
         .distinct()
@@ -90,7 +86,10 @@ async fn fetch_images(
         .load::<Option<Uuid>>(conn)
         .await
         .unwrap_or_else(|err| {
-            error!("CleanMedia: Error fetching distinct recipe and cookbook images: {err}");
+            error!(
+                error = err.to_string(),
+                "CleanMedia: Error fetching distinct recipe and cookbook images"
+            );
             Vec::new()
         })
         .into_iter()
@@ -130,8 +129,9 @@ fn clean_files(
         }
         Err(err) => {
             error!(
-                "CleanMedia: Failed to collect all paths in {:?}: {err}",
-                dir
+                dir = dir.to_string_lossy().to_string(),
+                error = err.to_string(),
+                "CleanMedia: Failed to collect all paths",
             );
         }
     }
@@ -145,28 +145,29 @@ fn process_thumbnail(path: &Path) -> Result<u64> {
         |thumbnail| match fs::metadata(&thumbnail) {
             Ok(metadata) => match fs::remove_file(&thumbnail) {
                 Ok(()) => {
-                    #[cfg(unix)]
-                    {
-                        Ok(metadata.size())
-                    }
-
-                    #[cfg(windows)]
-                    {
-                        Ok(metadata.file_size())
+                    cfg_select! {
+                        unix => {
+                            Ok(metadata.size())
+                        }
+                        _ => {
+                            Ok(metadata.file_size())
+                        }
                     }
                 }
                 Err(err) => {
                     error!(
-                        "CleanMedia: Failed to remove thumbnail {:?}: {err}",
-                        thumbnail
+                        thumbnail = thumbnail.to_string_lossy().to_string(),
+                        error = err.to_string(),
+                        "CleanMedia: Failed to remove thumbnail",
                     );
                     Err(err.into())
                 }
             },
             Err(err) => {
                 error!(
-                    "CleanMedia: Failed to read metadata of thumbnail {:?}: {err}",
-                    thumbnail
+                    thumbnail = thumbnail.to_string_lossy().to_string(),
+                    error = err.to_string(),
+                    "CleanMedia: Failed to read metadata of thumbnail",
                 );
                 Err(err.into())
             }

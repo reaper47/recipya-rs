@@ -38,6 +38,7 @@ pub fn settings_routes(state: &AppState) -> Router<AppState> {
 mod tests {
     use axum::http::{Method, StatusCode};
 
+    use config::DemoState;
     use models::{settings::UserSettingDetails, user::User};
     use test_db::TestDb;
     use test_fixtures::{assert_html, assert_not_in_html, assert_ws_message};
@@ -92,7 +93,7 @@ mod tests {
         #[tokio::test]
         async fn test_demo_sees_fake_connection_data_ok() -> Result<()> {
             let (_test_db, mut config) = TestDb::new(None).await?;
-            config.is_demo = true;
+            config.states.demo = DemoState::On;
             let server = build_server_logged_in(config.clone()).await?;
 
             let res = server.get(BASE_URI).await;

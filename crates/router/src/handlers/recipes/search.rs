@@ -9,7 +9,7 @@ use tracing::error;
 use app::state::AppState;
 use models::{
     Recipe,
-    data::{AboutData, Data, PaginationData, SearchbarData, ViewRecipe},
+    data::{AboutData, Data, PaginationData, SearchbarData, States, ViewRecipe},
     params::SearchParams,
     time::FormattedTimes,
 };
@@ -76,7 +76,10 @@ pub async fn search_recipes_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&headers),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(

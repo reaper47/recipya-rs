@@ -1,3 +1,4 @@
+use config::DemoState;
 use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
 use time::macros::format_description;
@@ -5,7 +6,7 @@ use time_tz::TimeZone;
 
 use math::cooking::units::system::MeasurementSystem;
 use models::Recipe;
-use models::data::Data;
+use models::data::{Data, States};
 use models::nutrition::NutritionDataSource;
 use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
@@ -23,9 +24,8 @@ pub(super) const SEARCH_INPUT_JS: &str = "on input show <tbody>tr/> in next <tab
 
 /// Stores all the settings required for rendering the settings page.
 pub struct SettingsForView {
-    pub is_autologin: bool,
+    pub states: States,
     pub is_allow_signups: bool,
-    pub is_demo: bool,
 
     pub email: EmailSettingsForView,
     pub azure_di_key: String,
@@ -145,7 +145,7 @@ pub fn settings(
                 @if data.is_admin {
                     (settings_connections(config))
                     (settings_server(data, config))
-                    (settings_admin(&users.unwrap_or_default(), user_setting, config.is_demo))
+                    (settings_admin(&users.unwrap_or_default(), user_setting, &config.states.demo))
                 }
                 (settings_data(data))
                 (settings_account(user_setting))
@@ -544,9 +544,24 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
                             }
                             tbody {
                                 @for (setting, description, env, value) in [
-                                    ("Autologin", "Automatically logs in the default user without credentials.", "RECIPYA_IS_AUTOLOGIN", &data.is_autologin),
-                                    ("Allow Signups", "Allows new users to create accounts.", "RECIPYA_IS_ALLOW_SIGNUPS", &config.is_allow_signups),
-                                    ("Is demo", "Enables demo mode with restricted write operations.", "RECIPYA_IS_DEMO", &config.is_demo),
+                                    (
+                                        "Autologin",
+                                        "Automatically logs in the default user without credentials.",
+                                        "RECIPYA_IS_AUTOLOGIN",
+                                        &(&data.states.autologin).into(),
+                                    ),
+                                    (
+                                        "Allow Signups",
+                                        "Allows new users to create accounts.",
+                                        "RECIPYA_IS_ALLOW_SIGNUPS",
+                                        &config.is_allow_signups,
+                                    ),
+                                    (
+                                        "Is demo",
+                                        "Enables demo mode with restricted write operations.",
+                                        "RECIPYA_IS_DEMO",
+                                        &(&config.states.demo).into(),
+                                    ),
                                 ] {
                                     tr {
                                         th { }
@@ -568,7 +583,7 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
     }
 }
 
-fn settings_admin(users: &[User], user_settings: &UserSettingDetails, is_demo: bool) -> Markup {
+fn settings_admin(users: &[User], user_settings: &UserSettingDetails, demo: &DemoState) -> Markup {
     html! {
         div #settings-admin class="hidden p-3 md:max-h-96"  {
             div class="flex justify-between items-center text-sm" {
@@ -583,7 +598,7 @@ fn settings_admin(users: &[User], user_settings: &UserSettingDetails, is_demo: b
                 (themes_palette(true, &user_settings.default_theme, &user_settings.selected_theme))
             }
             div class="divider m-0" {}
-            @if !is_demo {
+            @if demo == &DemoState::Off {
                 div class="flex justify-between items-center text-sm pb-4" {
                     details class="w-full" {
                         summary class="font-semibold cursor-default select-none" {

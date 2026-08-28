@@ -1,3 +1,4 @@
+use config::AutologinState;
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 
 use models::data::Data;
@@ -152,7 +153,7 @@ pub fn main(
                                                     "Settings"
                                                 }
                                             }
-                                            @if !data.is_autologin {
+                                            @if data.states.autologin == AutologinState::Off {
                                                 div class="divider m-0" {}
                                                 li {
                                                     form method="post" action="/auth/logout" class="w-full" {

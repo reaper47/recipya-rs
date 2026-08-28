@@ -7,7 +7,7 @@ use serde::Deserialize;
 
 use app::state::AppState;
 use models::{
-    data::{Data, ReportsData},
+    data::{Data, ReportsData, States},
     reports::ViewReport,
 };
 
@@ -41,7 +41,10 @@ pub async fn reports_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             reports: Some(ReportsData {
                 reports: reports.clone(),
@@ -92,7 +95,10 @@ pub async fn report_handler(
             &Data {
                 is_admin: user.is_admin,
                 is_authenticated: true,
-                is_autologin: state.config.read().await.is_autologin,
+                states: States {
+                    autologin: state.config.read().await.states.autologin.clone(),
+                    ..Default::default()
+                },
                 is_hx_request,
                 reports: Some(ReportsData {
                     reports: reports.clone(),

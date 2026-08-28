@@ -6,8 +6,8 @@ use axum::{
 use tracing::error;
 
 use app::state::AppState;
-use models::Error::EntityNotFound;
 use models::data::Data;
+use models::{Error::EntityNotFound, data::States};
 
 use crate::{
     Error, Result,
@@ -49,9 +49,12 @@ pub async fn duplicate_recipe_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
             is_hx_request: is_hx_request(&header_map),
             recipes: vec![recipe],
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             ..Default::default()
         },
         &settings,

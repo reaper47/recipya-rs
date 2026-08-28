@@ -9,7 +9,7 @@ use tracing::{error, info};
 
 use app::jobs::clean_media;
 use app::state::AppState;
-use config::{Config, DataDir};
+use config::{AutologinState, Config, DataDir};
 use models::{
     nutrition::NutritionDataSource,
     tokens::EmailVerificationToken,
@@ -37,7 +37,7 @@ pub async fn server() -> Result<()> {
 
     copy_assets_to_fs()?;
 
-    if config.is_autologin
+    if config.states.autologin == AutologinState::On
         && let Err(err) = init_autologin_user(&state.mm).await
     {
         error!("Autologin enabled. Error initializing autologin user: {err}");

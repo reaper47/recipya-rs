@@ -15,6 +15,7 @@ use app::state::AppState;
 use models::{
     Error::EntityNotFound,
     Recipe,
+    data::States,
     recipe::{RecipeForm, structs::recipe::RecipeForCreate},
 };
 use models::{data::Data, recipe::structs::media::VideoForCreate};
@@ -53,14 +54,16 @@ pub async fn edit_recipe_handler(
     };
 
     let recipe_id = recipe.recipe_details.recipe.id;
-    let is_autologin = state.config.read().await.is_autologin;
 
     match templates::recipes::edit_recipe(
         &state.fs_support,
         Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             recipes: vec![recipe],
             ..Default::default()

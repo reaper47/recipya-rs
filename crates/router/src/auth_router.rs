@@ -44,7 +44,9 @@ pub fn auth_routes(state: &AppState) -> Router<AppState> {
 #[cfg(test)]
 mod tests {
     use axum::http::{Method, StatusCode};
+
     use config::Config;
+    use config::{AutologinState, DemoState, States};
     use test_db::TestDb;
     use test_fixtures::{assert_html, assert_ws_message};
 
@@ -112,7 +114,10 @@ mod tests {
         #[tokio::test]
         async fn test_post_change_password_cannot_update_if_autologin_ok() -> Result<()> {
             let config = Some(Config {
-                is_autologin: true,
+                states: States {
+                    autologin: AutologinState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;
@@ -212,6 +217,7 @@ mod tests {
         use super::*;
 
         use axum::http::StatusCode;
+
         use models::user::User;
         use test_utils::{
             TEST_USER_EMAIL, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
@@ -228,7 +234,10 @@ mod tests {
         #[tokio::test]
         async fn test_delete_user_demo_cannot_be_deleted_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(Some(Config {
-                is_demo: true,
+                states: States {
+                    demo: DemoState::On,
+                    ..Default::default()
+                },
                 ..Config::default()
             }))
             .await?;
@@ -245,7 +254,10 @@ mod tests {
         #[tokio::test]
         async fn test_delete_user_cannot_delete_if_autologin_ok() -> Result<()> {
             let (_test_db, config) = TestDb::new(Some(Config {
-                is_autologin: true,
+                states: States {
+                    autologin: AutologinState::On,
+                    ..Default::default()
+                },
                 ..Config::default()
             }))
             .await?;
@@ -543,7 +555,10 @@ mod tests {
         #[tokio::test]
         async fn test_get_login_page_demo_show_autologin_ok() -> Result<()> {
             let config = Some(Config {
-                is_demo: true,
+                states: States {
+                    demo: DemoState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;
@@ -599,7 +614,10 @@ mod tests {
         #[tokio::test]
         async fn test_get_login_redirect_to_recipes_when_autologin_ok() -> Result<()> {
             let config = Some(Config {
-                is_autologin: true,
+                states: States {
+                    autologin: AutologinState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;
@@ -772,7 +790,10 @@ mod tests {
         #[tokio::test]
         async fn test_post_logout_cannot_logout_when_autologin_ok() -> Result<()> {
             let config = Some(Config {
-                is_autologin: true,
+                states: States {
+                    autologin: AutologinState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;
@@ -871,7 +892,10 @@ mod tests {
         #[tokio::test]
         async fn test_register_redirect_to_home_when_autologin_ok() -> Result<()> {
             let config = Some(Config {
-                is_autologin: true,
+                states: States {
+                    autologin: AutologinState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;

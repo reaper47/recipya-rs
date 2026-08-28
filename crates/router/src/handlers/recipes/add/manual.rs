@@ -11,7 +11,7 @@ use app::state::AppState;
 use math::cooking::units::system;
 use models::{
     Recipe,
-    data::Data,
+    data::{Data, States},
     recipe::{
         RecipeForm,
         structs::{media::VideoForCreate, recipe::RecipeForCreate, types::Source},
@@ -47,7 +47,10 @@ pub async fn add_manual_recipe_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },

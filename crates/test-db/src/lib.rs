@@ -3,7 +3,7 @@ use std::env;
 use diesel::{Connection, sql_query};
 use uuid::Uuid;
 
-use config::Config;
+use config::{Config, States};
 use repository::make_db_pool;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -13,8 +13,7 @@ pub fn default_config() -> Config {
     Config {
         base_url: "http://localhost:8078".into(),
         database_url: test_database_url(),
-        is_autologin: false,
-        is_demo: false,
+        states: States::default(),
         is_no_signups: false,
         is_production: false,
     }

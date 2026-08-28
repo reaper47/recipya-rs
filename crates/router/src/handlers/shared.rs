@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::Error::EntityNotFound;
-use models::data::{AboutData, Data, ShareData, ShoppingData, ViewRecipe};
+use models::data::{AboutData, Data, ShareData, ShoppingData, States, ViewRecipe};
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::shopping::ShareShoppingList;
@@ -58,7 +58,10 @@ pub async fn share_recipe_handler(
                 &Data {
                     is_admin: user.is_admin,
                     is_authenticated: true,
-                    is_autologin: state.config.read().await.is_autologin,
+                    states: States {
+                        autologin: state.config.read().await.states.autologin.clone(),
+                        ..Default::default()
+                    },
                     is_hx_request: is_hx_request(&header_map),
                     about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
                     share: Some(ShareData {
@@ -80,7 +83,10 @@ pub async fn share_recipe_handler(
             &state.data_dir,
             &Data {
                 is_authenticated: true,
-                is_autologin: state.config.read().await.is_autologin,
+                states: States {
+                    autologin: state.config.read().await.states.autologin.clone(),
+                    ..Default::default()
+                },
                 is_hx_request: is_hx_request(&header_map),
                 about: AboutData {
                     is_update_available: false,
@@ -141,7 +147,10 @@ pub async fn share_shopping_list_handler(
         &Data {
             is_admin: user.as_ref().is_some_and(|u| u.is_admin),
             is_authenticated: user.is_some(),
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             share: Some(ShareData {

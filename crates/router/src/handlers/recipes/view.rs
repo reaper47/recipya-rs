@@ -9,7 +9,7 @@ use tracing::error;
 use app::state::AppState;
 use models::{
     Recipe,
-    data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe},
+    data::{AboutData, Data, PaginationData, SearchbarData, ShareData, States, ViewRecipe},
     params::SearchParams,
     settings::UserSettingDetails,
     time::FormattedTimes,
@@ -80,7 +80,10 @@ pub async fn recipes_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&headers),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
@@ -128,7 +131,6 @@ pub async fn view_recipe_handler(
     };
 
     let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
-    let is_autologin = state.config.read().await.is_autologin;
 
     if user_settings.is_bold_ingredients
         && let Err(err) = view_recipe
@@ -151,7 +153,10 @@ pub async fn view_recipe_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::hidden()),

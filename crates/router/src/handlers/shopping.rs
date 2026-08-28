@@ -22,7 +22,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::Recipe;
-use models::data::{Data, ShoppingData};
+use models::data::{Data, ShoppingData, States};
 use models::download::{Download, DownloadForCreate};
 use models::export::{ExportOptions, ExportType};
 use models::paper::PaperSize;
@@ -94,7 +94,10 @@ pub async fn shopping_lists_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin.clone(),
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             shopping: Some(ShoppingData {
                 labels,

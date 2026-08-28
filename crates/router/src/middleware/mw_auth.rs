@@ -8,6 +8,7 @@ use axum::http::request::Parts;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
+use config::AutologinState;
 use email::{Email, Template};
 use models::tokens::{RefreshToken, RefreshTokenForCreate};
 use reqwest::{StatusCode, header};
@@ -94,7 +95,7 @@ where
         let is_api = is_api_request(parts);
         let app_state = AppState::from_ref(state);
 
-        if app_state.config.read().await.is_autologin {
+        if app_state.config.read().await.states.autologin == AutologinState::On {
             let admin = User::get_first_admin(&app_state.mm)
                 .await
                 .map_err(|_| AuthRejection::unauthorized(&Error::NoUser))?
@@ -188,7 +189,7 @@ where
 {
     let app_state = AppState::from_ref(state);
 
-    if app_state.config.read().await.is_autologin {
+    if app_state.config.read().await.states.autologin == AutologinState::On {
         return User::get_first_admin(&app_state.mm)
             .await
             .map_err(|_| AuthRejection::unauthorized(&Error::NoUser))
@@ -215,7 +216,7 @@ pub async fn mw_refresh_token(
     mut req: Request,
     next: Next,
 ) -> std::result::Result<Response, StatusCode> {
-    if state.config.read().await.is_autologin {
+    if state.config.read().await.states.autologin == AutologinState::On {
         return Ok(next.run(req).await);
     }
 

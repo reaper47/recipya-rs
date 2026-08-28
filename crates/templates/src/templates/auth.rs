@@ -1,5 +1,7 @@
 use maud::{Markup, html};
 
+use config::DemoState;
+
 use crate::templates::layouts;
 
 /// Renders the forgot password request form.
@@ -66,7 +68,7 @@ pub fn forgot_password_reset(token: &str) -> Markup {
 }
 
 /// Renders the login form template.
-pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
+pub fn login(demo: &DemoState, is_no_signups: bool) -> Markup {
     layouts::auth(
         "Login",
         &html! {
@@ -85,7 +87,8 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                     }
                     fieldset class="fieldset" {
                         label class="label" for="email" { "Email" }
-                        input #email type="email" required placeholder="Enter your email address" class="input" name="email" value=@if is_demo { "demo@demo.com" };
+                        input #email type="email" required placeholder="Enter your email address" class="input" name="email"
+                              value=@if demo == &DemoState::On { "demo@demo.com" };
                     }
                     fieldset class="fieldset" {
                         label class="label block" for="password" {
@@ -94,7 +97,8 @@ pub fn login(is_demo: bool, is_no_signups: bool) -> Markup {
                                 "Forgot your password?"
                             }
                         }
-                        input #password type="password" required placeholder="Enter your password" class="input" name="password" value=@if is_demo { "demodemo" };
+                        input #password type="password" required placeholder="Enter your password" class="input" name="password"
+                              value=@if demo == &DemoState::On { "demodemo" };
                     }
                     label class="fieldset-label py-2" {
                         input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked";
