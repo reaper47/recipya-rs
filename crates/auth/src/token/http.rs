@@ -47,7 +47,7 @@ fn set_refresh_token_cookie(
     cookie.set_path("/");
 
     if remember_me {
-        cookie.set_max_age(Duration::days(30)); // Persistent
+        cookie.set_max_age(Duration::days(30));
     }
 
     if is_production {
