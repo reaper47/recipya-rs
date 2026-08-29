@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::{extract::State, http::HeaderMap, response::IntoResponse};
 use axum_htmx::HX_REDIRECT;
+use config::States;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tracing::error;
@@ -11,7 +12,7 @@ use app::state::AppState;
 use math::cooking::units::system;
 use models::{
     Recipe,
-    data::{Data, States},
+    data::Data,
     recipe::{
         RecipeForm,
         structs::{media::VideoForCreate, recipe::RecipeForCreate, types::Source},

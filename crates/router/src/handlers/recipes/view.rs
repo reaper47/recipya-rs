@@ -3,13 +3,14 @@ use axum::{
     http::HeaderMap,
     response::IntoResponse,
 };
+use config::States;
 use iso8601::DateTime;
 use tracing::error;
 
 use app::state::AppState;
 use models::{
     Recipe,
-    data::{AboutData, Data, PaginationData, SearchbarData, ShareData, States, ViewRecipe},
+    data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe},
     params::SearchParams,
     settings::UserSettingDetails,
     time::FormattedTimes,

@@ -8,6 +8,7 @@ use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
+use config::{ProductionState, States};
 use itertools::izip;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
@@ -22,7 +23,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::Recipe;
-use models::data::{Data, ShoppingData, States};
+use models::data::{Data, ShoppingData};
 use models::download::{Download, DownloadForCreate};
 use models::export::{ExportOptions, ExportType};
 use models::paper::PaperSize;
@@ -362,7 +363,7 @@ pub async fn shopping_list_view_handler(
     set_shopping_view_cookie(
         &cookies,
         params.mode.to_string(),
-        state.config.read().await.is_production,
+        state.config.read().await.states.production == ProductionState::On,
     );
 
     let is_hx_request = is_hx_request(&header_map);

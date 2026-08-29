@@ -1,6 +1,6 @@
 use iso8601::DateTime;
 
-use config::{AutologinState, DemoState};
+use config::States;
 
 use crate::RecipeDetails;
 use crate::params::SearchParams;
@@ -25,12 +25,6 @@ pub struct Data {
     pub recipes: Vec<ViewRecipe>,
     pub reports: Option<ReportsData>,
     pub shopping: Option<ShoppingData>,
-}
-
-#[derive(Default)]
-pub struct States {
-    pub autologin: AutologinState,
-    pub demo: DemoState,
 }
 
 /// Creates a new instance of `AboutData`.

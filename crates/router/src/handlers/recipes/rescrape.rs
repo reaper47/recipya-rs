@@ -7,6 +7,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::HX_REDIRECT;
+use config::States;
 use indexmap::IndexMap;
 use reqwest::StatusCode;
 use tracing::error;
@@ -15,7 +16,7 @@ use uuid::Uuid;
 use app::state::AppState;
 use models::{
     Error::EntityNotFound,
-    data::{Data, States},
+    data::Data,
     recipe::structs::{
         media::VideoForCreate,
         nutrition::{

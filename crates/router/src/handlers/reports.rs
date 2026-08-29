@@ -3,11 +3,12 @@ use axum::{
     http::HeaderMap,
     response::IntoResponse,
 };
+use config::States;
 use serde::Deserialize;
 
 use app::state::AppState;
 use models::{
-    data::{Data, ReportsData, States},
+    data::{Data, ReportsData},
     reports::ViewReport,
 };
 

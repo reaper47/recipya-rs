@@ -1,12 +1,12 @@
-use config::DemoState;
 use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
 use time::macros::format_description;
 use time_tz::TimeZone;
 
+use config::{DemoState, States};
 use math::cooking::units::system::MeasurementSystem;
 use models::Recipe;
-use models::data::{Data, States};
+use models::data::Data;
 use models::nutrition::NutritionDataSource;
 use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
@@ -25,8 +25,6 @@ pub(super) const SEARCH_INPUT_JS: &str = "on input show <tbody>tr/> in next <tab
 /// Stores all the settings required for rendering the settings page.
 pub struct SettingsForView {
     pub states: States,
-    pub is_allow_signups: bool,
-
     pub email: EmailSettingsForView,
     pub azure_di_key: String,
     pub azure_di_endpoint: String,
@@ -543,26 +541,28 @@ fn settings_server(data: &Data, config: &SettingsForView) -> Markup {
                                 }
                             }
                             tbody {
-                                @for (setting, description, env, value) in [
+                                @let options: [(&str, &str, &str, bool); 3] = [
                                     (
                                         "Autologin",
                                         "Automatically logs in the default user without credentials.",
                                         "RECIPYA_IS_AUTOLOGIN",
-                                        &(&data.states.autologin).into(),
+                                        data.states.autologin.into(),
                                     ),
                                     (
                                         "Allow Signups",
                                         "Allows new users to create accounts.",
                                         "RECIPYA_IS_ALLOW_SIGNUPS",
-                                        &config.is_allow_signups,
+                                        data.states.signups.into(),
                                     ),
                                     (
                                         "Is demo",
                                         "Enables demo mode with restricted write operations.",
                                         "RECIPYA_IS_DEMO",
-                                        &(&config.states.demo).into(),
+                                        config.states.demo.into(),
                                     ),
-                                ] {
+                                ];
+
+                                @for (setting, description, env, value) in options {
                                     tr {
                                         th { }
                                         td { (setting) }

@@ -2,9 +2,11 @@
 pub struct States {
     pub autologin: AutologinState,
     pub demo: DemoState,
+    pub signups: SignupsState,
+    pub production: ProductionState,
 }
 
-#[derive(Default, Eq, PartialEq, Debug, Clone)]
+#[derive(Default, Eq, PartialEq, Debug, Copy, Clone)]
 pub enum AutologinState {
     #[default]
     Off,
@@ -38,7 +40,7 @@ impl From<bool> for AutologinState {
     }
 }
 
-#[derive(Default, Eq, PartialEq, Debug, Clone)]
+#[derive(Default, Eq, PartialEq, Debug, Copy, Clone)]
 pub enum DemoState {
     #[default]
     Off,
@@ -68,6 +70,74 @@ impl From<bool> for DemoState {
         match value {
             false => DemoState::Off,
             true => DemoState::On,
+        }
+    }
+}
+
+#[derive(Default, Eq, PartialEq, Debug, Copy, Clone)]
+pub enum SignupsState {
+    #[default]
+    Off,
+    On,
+}
+
+impl From<SignupsState> for bool {
+    fn from(value: SignupsState) -> Self {
+        match value {
+            SignupsState::Off => false,
+            SignupsState::On => true,
+        }
+    }
+}
+
+impl From<&SignupsState> for bool {
+    fn from(value: &SignupsState) -> Self {
+        match value {
+            SignupsState::Off => false,
+            SignupsState::On => true,
+        }
+    }
+}
+
+impl From<bool> for SignupsState {
+    fn from(value: bool) -> Self {
+        match value {
+            false => SignupsState::Off,
+            true => SignupsState::On,
+        }
+    }
+}
+
+#[derive(Default, Eq, PartialEq, Debug, Copy, Clone)]
+pub enum ProductionState {
+    #[default]
+    Off,
+    On,
+}
+
+impl From<ProductionState> for bool {
+    fn from(value: ProductionState) -> Self {
+        match value {
+            ProductionState::Off => false,
+            ProductionState::On => true,
+        }
+    }
+}
+
+impl From<&ProductionState> for bool {
+    fn from(value: &ProductionState) -> Self {
+        match value {
+            ProductionState::Off => false,
+            ProductionState::On => true,
+        }
+    }
+}
+
+impl From<bool> for ProductionState {
+    fn from(value: bool) -> Self {
+        match value {
+            false => ProductionState::Off,
+            true => ProductionState::On,
         }
     }
 }

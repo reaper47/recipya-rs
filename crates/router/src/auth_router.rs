@@ -46,7 +46,7 @@ mod tests {
     use axum::http::{Method, StatusCode};
 
     use config::Config;
-    use config::{AutologinState, DemoState, States};
+    use config::{AutologinState, DemoState, SignupsState, States};
     use test_db::TestDb;
     use test_fixtures::{assert_html, assert_ws_message};
 
@@ -505,19 +505,20 @@ mod tests {
     }
 
     mod tests_login {
-        use crate::schemas::auth::LoginForm;
-
-        use super::*;
+        use std::default::Default;
 
         use axum_htmx::HX_REDIRECT;
-        use std::default::Default;
-        use test_fixtures::assert_not_in_html;
         use time::OffsetDateTime;
 
         use auth::token::{http::AUTH_TOKEN, jwt::validate_token};
+        use config::SignupsState;
+        use test_fixtures::assert_not_in_html;
         use test_utils::{
             TEST_USER_EMAIL, TEST_USER_PASSWORD, build_server_anonymous, build_server_logged_in,
         };
+
+        use super::*;
+        use crate::schemas::auth::LoginForm;
 
         const BASE_URI: &str = "/auth/login";
 
@@ -581,7 +582,10 @@ mod tests {
         #[tokio::test]
         async fn test_get_login_page_hide_signup_button_when_no_signups_ok() -> Result<()> {
             let config = Some(Config {
-                is_no_signups: true,
+                states: States {
+                    signups: SignupsState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;
@@ -839,7 +843,10 @@ mod tests {
         #[tokio::test]
         async fn test_get_register_cannot_access_register_when_no_signups_ok() -> Result<()> {
             let config = Some(Config {
-                is_no_signups: true,
+                states: States {
+                    signups: SignupsState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;
@@ -918,7 +925,10 @@ mod tests {
         #[tokio::test]
         async fn test_register_cannot_register_when_no_signups_ok() -> Result<()> {
             let config = Some(Config {
-                is_no_signups: true,
+                states: States {
+                    signups: SignupsState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
             });
             let (_test_db, config) = TestDb::new(config).await?;

@@ -4,7 +4,7 @@ use axum::extract::State;
 use axum::http::{HeaderMap, Response, StatusCode};
 use axum::response::IntoResponse;
 use axum_htmx::{HX_CURRENT_URL, HX_TRIGGER};
-use config::DemoState;
+use config::{DemoState, States};
 use iso8601::DateTime;
 use serde_json::json;
 use tracing::error;
@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::Recipe;
-use models::data::{AboutData, Data, States};
+use models::data::{AboutData, Data};
 use models::download::{Download, DownloadForCreate};
 use models::export::ExportData;
 use models::nutrition::NutritionDataSource;
@@ -100,11 +100,7 @@ pub async fn settings_handler(
         &settings,
         &categories,
         &SettingsForView {
-            states: States {
-                autologin: config.states.autologin.clone(),
-                demo: config.states.demo.clone(),
-            },
-            is_allow_signups: config.is_no_signups,
+            states: config.states.clone(),
             email: EmailSettingsForView {
                 email_admin: email_config.smtp_from_email.clone(),
                 host: email_config.smtp_host.clone(),

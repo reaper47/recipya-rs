@@ -6,6 +6,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::HX_REDIRECT;
+use config::States;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tracing::error;
@@ -15,7 +16,6 @@ use app::state::AppState;
 use models::{
     Error::EntityNotFound,
     Recipe,
-    data::States,
     recipe::{RecipeForm, structs::recipe::RecipeForCreate},
 };
 use models::{data::Data, recipe::structs::media::VideoForCreate};

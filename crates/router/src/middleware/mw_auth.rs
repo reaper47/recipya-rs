@@ -8,7 +8,7 @@ use axum::http::request::Parts;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
-use config::AutologinState;
+use config::{AutologinState, ProductionState};
 use email::{Email, Template};
 use models::tokens::{RefreshToken, RefreshTokenForCreate};
 use reqwest::{StatusCode, header};
@@ -317,7 +317,7 @@ pub async fn mw_refresh_token(
             access_token,
             new_refresh_token_entry.token,
             refresh_token_entry.is_remember_me,
-            state.config.read().await.is_production,
+            state.config.read().await.states.production == ProductionState::On,
         );
 
         req.extensions_mut()

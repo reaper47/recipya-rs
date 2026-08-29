@@ -14,8 +14,6 @@ pub fn default_config() -> Config {
         base_url: "http://localhost:8078".into(),
         database_url: test_database_url(),
         states: States::default(),
-        is_no_signups: false,
-        is_production: false,
     }
 }
 

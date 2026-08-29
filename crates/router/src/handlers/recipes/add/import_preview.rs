@@ -5,13 +5,14 @@ use axum::{
     extract::State,
     response::{Html, IntoResponse},
 };
+use config::States;
 use reqwest::StatusCode;
 use tracing::error;
 
 use app::state::AppState;
 use models::{
     RecipeDetails,
-    data::{AboutData, Data, PaginationData, SearchbarData, ShareData, States, ViewRecipe},
+    data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe},
     recipe::structs::recipe::RecipeForCreate,
     time::FormattedTimes,
 };

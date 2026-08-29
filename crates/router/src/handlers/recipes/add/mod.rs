@@ -5,6 +5,7 @@ mod manual;
 mod raw;
 mod website;
 
+use config::States;
 pub use import_api::*;
 pub use import_app::*;
 pub use import_preview::*;
@@ -19,7 +20,7 @@ use axum::{
 };
 
 use app::state::AppState;
-use models::data::{Data, States};
+use models::data::Data;
 
 use crate::{
     Result,

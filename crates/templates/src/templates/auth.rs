@@ -1,6 +1,6 @@
 use maud::{Markup, html};
 
-use config::DemoState;
+use config::{DemoState, SignupsState};
 
 use crate::templates::layouts;
 
@@ -68,7 +68,7 @@ pub fn forgot_password_reset(token: &str) -> Markup {
 }
 
 /// Renders the login form template.
-pub fn login(demo: &DemoState, is_no_signups: bool) -> Markup {
+pub fn login(demo: &DemoState, signups: &SignupsState) -> Markup {
     layouts::auth(
         "Login",
         &html! {
@@ -110,7 +110,7 @@ pub fn login(demo: &DemoState, is_no_signups: bool) -> Markup {
                         }
                     }
                     div class="grid text-center gap-2" {
-                        @if !is_no_signups {
+                        @if signups == &SignupsState::On {
                             div {
                                 div class="divider" { "OR" }
                                 a class="btn btn-sm btn-block btn-outline" href="/auth/register" {

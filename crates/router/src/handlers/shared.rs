@@ -1,13 +1,14 @@
 use axum::extract::{OriginalUri, Path, State};
 use axum::http::HeaderMap;
 use axum::response::IntoResponse;
+use config::States;
 use iso8601::DateTime;
 use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
 use models::Error::EntityNotFound;
-use models::data::{AboutData, Data, ShareData, ShoppingData, States, ViewRecipe};
+use models::data::{AboutData, Data, ShareData, ShoppingData, ViewRecipe};
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
 use models::shopping::ShareShoppingList;

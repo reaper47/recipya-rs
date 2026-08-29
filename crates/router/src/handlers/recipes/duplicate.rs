@@ -3,11 +3,12 @@ use axum::{
     http::HeaderMap,
     response::IntoResponse,
 };
+use config::States;
 use tracing::error;
 
 use app::state::AppState;
+use models::Error::EntityNotFound;
 use models::data::Data;
-use models::{Error::EntityNotFound, data::States};
 
 use crate::{
     Error, Result,
