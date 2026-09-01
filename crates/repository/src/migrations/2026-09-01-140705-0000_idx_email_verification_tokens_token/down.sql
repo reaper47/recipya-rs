@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_email_verification_tokens_token;

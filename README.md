@@ -209,22 +209,22 @@ fn test_{website name}_ok() -> Result<()> {
       3. Add the following skeleton:
         
         ```rust
-                use scraper::{Html, Selector};
-                
-                use schema_org::{AtType, Recipe, at_context};
-                
-                use crate::Result;
+        use scraper::{Html, Selector};
         
-                pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
-                    let root = &doc.root_element();
-                    
-                    Ok(Recipe {
-                        r#type: AtType::Recipe.to_opt(),
-                        context: at_context(),
-                        url: vec![url.into()],
-                        ..Default::default()
-                    })
-                }
+        use schema_org::{AtType, Recipe, at_context};
+        
+        use crate::Result;
+
+        pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
+            let root = &doc.root_element();
+            
+            Ok(Recipe {
+                r#type: AtType::Recipe.to_opt(),
+                context: at_context(),
+                url: vec![url.into()],
+                ..Default::default()
+            })
+        }
         ```
 
       4. Examine the recipe's HTML and add the missing fields. Refer to the other custom parsers for reference.

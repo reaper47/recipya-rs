@@ -4,11 +4,12 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use ingredient::{Ingredient, IngredientParser};
 use itertools::Itertools;
-use repository::{ModelManager, PgPooledConn, schema};
 use time::Duration;
 use tracing::error;
 use url::Url;
 use uuid::Uuid;
+
+use repository::{ModelManager, PgPooledConn, schema};
 
 use crate::params::SearchParams;
 use crate::recipe::RecipeSearch;
@@ -23,13 +24,11 @@ use crate::{Error, Recipe, Result};
 impl Recipe {
     /// Retrieves all recipes belonging to the user.
     pub async fn all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let recipes = schema::recipes::table
             .filter(schema::recipes::user_id.eq(user_id))
             .select(Self::as_select())
             .order_by(schema::recipes::name.asc())
-            .load(&mut conn)
+            .load(&mut mm.pool.get().await?)
             .await?;
 
         Ok(recipes)
@@ -87,8 +86,6 @@ impl Recipe {
         user_id: Uuid,
         recipe_ids: &[i64],
     ) -> Result<Vec<RecipeDetails>> {
-        let mut conn = mm.pool.get().await?;
-
         let rows = schema::recipes::table
             .inner_join(
                 schema::users_recipes::table
@@ -111,7 +108,9 @@ impl Recipe {
                 schema::times::all_columns,
             ))
             .distinct_on(schema::recipes::id)
-            .load::<(Self, String, Option<String>, Option<String>, Times)>(&mut conn)
+            .load::<(Self, String, Option<String>, Option<String>, Times)>(
+                &mut mm.pool.get().await?,
+            )
             .await?;
 
         let futures = rows

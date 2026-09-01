@@ -125,7 +125,7 @@ impl FdcFetcher for FdcClient<'_> {
         )
         .await?;
 
-        if !is_data_old || tables::FoundationFood::count(self.mm).await?.is_positive() {
+        if !is_data_old || tables::FoundationFood::is_populated(self.mm).await? {
             return Err(Error::NoNeedToUpdateNutrition);
         }
 

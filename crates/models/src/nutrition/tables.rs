@@ -1,5 +1,6 @@
 use diesel::{
     Selectable,
+    dsl::{exists, select},
     prelude::*,
     sql_types::{BigInt, Float8, Text},
 };
@@ -27,11 +28,9 @@ pub struct NutritionSource {
 impl NutritionSource {
     /// Fetches all nutrition sources.
     pub async fn all(mm: &ModelManager) -> Result<Vec<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         schema::nutrition_sources::table
             .select(Self::as_select())
-            .load(&mut conn)
+            .load(&mut mm.pool.get().await?)
             .await
             .map_err(Into::into)
     }
@@ -51,12 +50,9 @@ pub struct FoundationFood {
 
 impl FoundationFood {
     /// Gets the number of entries in the database.
-    pub async fn count(mm: &ModelManager) -> Result<i64> {
-        let mut conn = mm.pool.get().await?;
-
-        Ok(schema::fdc_foods::table
-            .count()
-            .get_result(&mut conn)
+    pub async fn is_populated(mm: &ModelManager) -> Result<bool> {
+        Ok(select(exists(schema::fdc_foods::table.limit(1)))
+            .get_result(&mut mm.pool.get().await?)
             .await?)
     }
 }
@@ -150,17 +146,17 @@ impl NutritionSource {
         source_name: &str,
         date: Date,
     ) -> Result<bool> {
-        let mut conn = mm.pool.get().await?;
-
-        let nutrition_source = schema::nutrition_sources::table
+        schema::nutrition_sources::table
             .filter(schema::nutrition_sources::name.eq(source_name))
-            .first::<Self>(&mut conn)
-            .await?;
-
-        nutrition_source.updated_on.map_or_else(
-            || Ok(true),
-            |updated_on| Ok((updated_on.year(), updated_on.month()) < (date.year(), date.month())),
-        )
+            .first::<Self>(&mut mm.pool.get().await?)
+            .await?
+            .updated_on
+            .map_or_else(
+                || Ok(true),
+                |updated_on| {
+                    Ok((updated_on.year(), updated_on.month()) < (date.year(), date.month()))
+                },
+            )
     }
 }
 
@@ -213,15 +209,14 @@ mod tests {
         async fn test_insert_and_count() -> Result<()> {
             let (_test_db, config) = TestDb::new(None).await?;
             let state = create_app_state(config.clone()).await;
-            let mut conn = state.mm.pool.get().await?;
             diesel::insert_into(schema::fdc_foods::table)
                 .values(&a_food())
-                .execute(&mut conn)
+                .execute(&mut state.mm.pool.get().await?)
                 .await?;
 
-            let got = FoundationFood::count(&state.mm).await?;
+            let got = FoundationFood::is_populated(&state.mm).await?;
 
-            assert_eq!(got, 1);
+            assert!(got);
             Ok(())
         }
     }
@@ -279,10 +274,9 @@ mod tests {
             async fn test_updated_on_before_current_date_ok() -> Result<()> {
                 let (_test_db, config) = TestDb::new(None).await?;
                 let state = create_app_state(config.clone()).await;
-                let mut conn = state.mm.pool.get().await?;
                 diesel::insert_into(schema::fdc_foods::table)
                     .values(&a_food())
-                    .execute(&mut conn)
+                    .execute(&mut state.mm.pool.get().await?)
                     .await?;
 
                 let is_old = NutritionSource::is_current_data_old(

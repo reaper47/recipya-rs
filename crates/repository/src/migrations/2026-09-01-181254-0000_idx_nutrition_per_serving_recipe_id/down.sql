@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_nutrition_per_serving_recipe_id;

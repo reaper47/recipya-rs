@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_keywords_recipes_recipe_id

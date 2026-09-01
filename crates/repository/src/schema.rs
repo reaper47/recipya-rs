@@ -27,21 +27,6 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    auth_tokens (id) {
-        id -> Int8,
-        #[max_length = 12]
-        selector -> Nullable<Bpchar>,
-        #[max_length = 64]
-        hash_validator -> Nullable<Bpchar>,
-        expires -> Nullable<Timestamptz>,
-        user_id -> Uuid,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
     bold_indices_ingredients (id) {
         id -> Int8,
         recipe_id -> Int8,
@@ -68,43 +53,6 @@ diesel::table! {
     categories_recipes (category_id, recipe_id) {
         category_id -> Int8,
         recipe_id -> Int8,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    cookbooks (id) {
-        id -> Int8,
-        title -> Text,
-        image -> Nullable<Uuid>,
-        count -> Nullable<Int4>,
-        user_id -> Nullable<Uuid>,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    cookbooks_recipes (id) {
-        id -> Int8,
-        cookbook_id -> Nullable<Int8>,
-        recipe_id -> Nullable<Int8>,
-        order_index -> Int2,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
-    counts (id) {
-        id -> Int8,
-        user_id -> Nullable<Uuid>,
-        recipes -> Nullable<Int4>,
-        cookbooks -> Nullable<Int4>,
     }
 }
 
@@ -171,8 +119,7 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    fdc_food_portions_fdc_foods (id) {
-        id -> Int8,
+    fdc_food_portions_fdc_foods (food_id, portion_id) {
         food_id -> Int8,
         portion_id -> Int8,
     }
@@ -432,7 +379,7 @@ diesel::table! {
         #[sql_name = "yield"]
         yield_ -> Int2,
         #[max_length = 3]
-        language -> Bpchar,
+        language -> Varchar,
         measurement_system_id -> Int2,
         notes -> Nullable<Text>,
         source -> Text,
@@ -548,26 +495,13 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    shares_cookbooks (id) {
-        id -> Int8,
-        link -> Text,
-        user_id -> Nullable<Uuid>,
-        cookbook_id -> Nullable<Int8>,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use diesel_full_text_search::TsVector as Tsvector;
-
     shares_recipes (id) {
         id -> Int8,
         link -> Uuid,
         user_id -> Uuid,
         recipe_id -> Int8,
         created_at -> Timestamptz,
-        expires_at -> Timestamp,
+        expires_at -> Timestamptz,
         last_accessed -> Timestamptz,
         click_count -> Int4,
     }
@@ -583,7 +517,7 @@ diesel::table! {
         user_id -> Uuid,
         list_id -> Uuid,
         created_at -> Timestamptz,
-        expires_at -> Timestamp,
+        expires_at -> Timestamptz,
         last_accessed -> Timestamptz,
         click_count -> Int4,
     }
@@ -700,9 +634,9 @@ diesel::table! {
         cookbooks_view -> Int4,
         default_theme -> Int4,
         selected_theme -> Int4,
-        paper_size_id -> Int2,
-        timezone -> Text,
         bold_ingredients -> Bool,
+        timezone -> Text,
+        paper_size_id -> Int2,
     }
 }
 
@@ -749,8 +683,7 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
-    users_recipes (id) {
-        id -> Int8,
+    users_recipes (user_id, recipe_id) {
         user_id -> Uuid,
         recipe_id -> Int8,
     }
@@ -782,15 +715,10 @@ diesel::table! {
 }
 
 diesel::joinable!(additional_images_recipe -> recipes (recipe_id));
-diesel::joinable!(auth_tokens -> users (user_id));
 diesel::joinable!(bold_indices_ingredients -> instructions (instruction_id));
 diesel::joinable!(bold_indices_ingredients -> recipes (recipe_id));
 diesel::joinable!(categories_recipes -> categories (category_id));
 diesel::joinable!(categories_recipes -> recipes (recipe_id));
-diesel::joinable!(cookbooks -> users (user_id));
-diesel::joinable!(cookbooks_recipes -> cookbooks (cookbook_id));
-diesel::joinable!(cookbooks_recipes -> recipes (recipe_id));
-diesel::joinable!(counts -> users (user_id));
 diesel::joinable!(cuisines_recipes -> cuisines (cuisine_id));
 diesel::joinable!(cuisines_recipes -> recipes (recipe_id));
 diesel::joinable!(downloads -> users (user_id));
@@ -825,8 +753,6 @@ diesel::joinable!(reports -> users (user_id));
 diesel::joinable!(reports_logs -> levels (level_id));
 diesel::joinable!(reports_logs -> recipes (recipe_id));
 diesel::joinable!(reports_logs -> reports (report_id));
-diesel::joinable!(shares_cookbooks -> cookbooks (cookbook_id));
-diesel::joinable!(shares_cookbooks -> users (user_id));
 diesel::joinable!(shares_recipes -> recipes (recipe_id));
 diesel::joinable!(shares_recipes -> users (user_id));
 diesel::joinable!(shares_shopping_lists -> shopping_lists (list_id));
@@ -856,13 +782,9 @@ diesel::joinable!(videos_recipes -> recipes (recipe_id));
 diesel::allow_tables_to_appear_in_same_query!(
     additional_images_recipe,
     app,
-    auth_tokens,
     bold_indices_ingredients,
     categories,
     categories_recipes,
-    cookbooks,
-    cookbooks_recipes,
-    counts,
     cuisines,
     cuisines_recipes,
     downloads,
@@ -896,7 +818,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     reports,
     reports_logs,
     sections,
-    shares_cookbooks,
     shares_recipes,
     shares_shopping_lists,
     shopping_list_items,

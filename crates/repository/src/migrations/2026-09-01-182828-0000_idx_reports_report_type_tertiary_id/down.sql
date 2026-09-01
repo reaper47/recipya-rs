@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_reports_report_type_tertiary_id;

@@ -131,13 +131,13 @@ mod tests {
             .await?;
             assert!(!result, "{}", fail_message("category"));
 
-            let result: bool = diesel::select(exists(
-                schema::cookbooks_recipes::table
-                    .filter(schema::cookbooks_recipes::recipe_id.eq(recipe_id)),
-            ))
-            .get_result(&mut conn)
-            .await?;
-            assert!(!result, "{}", fail_message("cookbook"));
+            // let result: bool = diesel::select(exists(
+            //     schema::cookbooks_recipes::table
+            //         .filter(schema::cookbooks_recipes::recipe_id.eq(recipe_id)),
+            // ))
+            // .get_result(&mut conn)
+            // .await?;
+            // assert!(!result, "{}", fail_message("cookbook"));
 
             // cuisines_recipes
             let result: bool = diesel::select(exists(
