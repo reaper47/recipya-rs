@@ -3,10 +3,10 @@ use diesel::{Identifiable, Queryable, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use strum::{Display, EnumIter, EnumString};
 use time_tz::{TimeZone, Tz, timezones};
+use uuid::Uuid;
 
 use math::cooking::units::system::MeasurementSystem;
 use repository::{ModelManager, schema};
-use uuid::Uuid;
 
 use crate::nutrition::NutritionDataSource;
 use crate::nutrition::tables::NutritionSource;
@@ -58,14 +58,10 @@ pub enum Theme {
 
 impl Theme {
     pub async fn get_id(&self, mm: &ModelManager) -> Result<i32> {
-        use schema::themes;
-
-        let mut conn = mm.pool.get().await?;
-
-        Ok(themes::table
-            .filter(themes::name.eq(self.to_string()))
-            .select(themes::id)
-            .first::<i32>(&mut conn)
+        Ok(schema::themes::table
+            .filter(schema::themes::name.eq(self.to_string()))
+            .select(schema::themes::id)
+            .first::<i32>(&mut mm.pool.get().await?)
             .await?)
     }
 

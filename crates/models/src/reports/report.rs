@@ -1,6 +1,5 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -43,11 +42,9 @@ pub struct Report {
 impl Report {
     /// Fetches all reports for a user.
     pub async fn fetch_all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let reports = schema::reports::table
             .filter(schema::reports::user_id.eq(user_id))
-            .load::<Self>(&mut conn)
+            .load::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(reports)
@@ -55,11 +52,9 @@ impl Report {
 
     /// Fetches the report logs for a report.
     pub async fn fetch_logs(&self, mm: &ModelManager) -> Result<Vec<ReportLog>> {
-        let mut conn = mm.pool.get().await?;
-
         let logs = schema::reports_logs::table
             .filter(schema::reports_logs::report_id.eq(self.id))
-            .load::<ReportLog>(&mut conn)
+            .load::<ReportLog>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(logs)

@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_fdc_foods_fdc_nutrients_fdc_id;

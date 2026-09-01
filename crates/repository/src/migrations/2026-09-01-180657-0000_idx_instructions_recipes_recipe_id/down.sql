@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_instructions_recipes_recipe_id_order;

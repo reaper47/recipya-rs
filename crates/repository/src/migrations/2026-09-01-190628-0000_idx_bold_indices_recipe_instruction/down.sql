@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_bold_indices_recipe_instruction;

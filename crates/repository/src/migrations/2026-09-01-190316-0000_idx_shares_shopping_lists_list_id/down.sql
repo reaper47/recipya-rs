@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_shares_shopping_lists_list_id;
