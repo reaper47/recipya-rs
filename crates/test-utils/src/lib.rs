@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use axum::Router;
 use axum::http::Method;
@@ -6,6 +6,7 @@ use axum_test::{TestServer, TestServerConfig, TestWebSocket, Transport};
 use test_db::TestDb;
 use tower_cookies::{Cookie, CookieManagerLayer};
 use tracing::error;
+use uuid::Uuid;
 
 use app::state::AppState;
 use auth::token::generate_access_token;
@@ -24,6 +25,19 @@ pub const TEST_USER_EMAIL: &str = "test@test.com";
 
 /// The password of the default user in the test database.
 pub const TEST_USER_PASSWORD: &str = "12345678";
+
+/// The email address of the demo user in the test database.
+pub const TEST_DEMO_EMAIL: &str = "demo@demo.com";
+
+pub static TEST_PASSWORD_SALT: OnceLock<Uuid> = OnceLock::new();
+
+pub const TEST_PASSWORD_HASH: &str = "#02#$argon2id$v=19$m=19456,t=2,p=1$bpxlx+8RTH2isz8k1XIyXw$jPya0CutmZGEV2bcveP+eDalHVGi7Nz2D8cjKsy2MN4";
+
+fn get_password_salth() -> Uuid {
+    TEST_PASSWORD_SALT
+        .get_or_init(|| Uuid::parse_str("6e9c65c7-ef11-4c7d-a2b3-3f24d572325f").unwrap())
+        .clone()
+}
 
 /// Creates the `AppState` for testing.
 ///
@@ -133,12 +147,14 @@ async fn build_server_ws_helper(
 pub async fn get_token(mm: ModelManager) -> Result<String> {
     let email = "confirm@test.com".to_string();
 
-    User::new(
+    User::new_with_hash(
         &mm,
         UserForCreate {
             email: email.clone(),
             password_clear: "12345678".to_string(),
         },
+        get_password_salth(),
+        TEST_PASSWORD_HASH.to_string(),
     )
     .await?;
 
@@ -156,23 +172,28 @@ async fn prepare_router(config: Config) -> Result<Router<()>> {
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 
-    User::new(
+    User::new_with_hash(
         &state.mm,
         UserForCreate {
             email: TEST_USER_EMAIL.into(),
             password_clear: TEST_USER_PASSWORD.into(),
         },
+        get_password_salth(),
+        TEST_PASSWORD_HASH.to_string(),
     )
     .await?;
 
-    User::new(
+    User::new_with_hash(
         &state.mm,
         UserForCreate {
-            email: "demo@demo.com".into(),
+            email: TEST_DEMO_EMAIL.into(),
             password_clear: TEST_USER_PASSWORD.into(),
         },
+        get_password_salth(),
+        TEST_PASSWORD_HASH.to_string(),
     )
     .await?;
+
     Ok(app)
 }
 
@@ -187,15 +208,16 @@ pub async fn insert_other_user(config: Config, email: &str) -> Result<User> {
 }
 
 async fn insert_user_helper(config: Config, email: &str) -> Result<User> {
-    let user = User::new(
+    Ok(User::new_with_hash(
         &create_app_state(config.clone()).await.mm,
         UserForCreate {
             email: email.into(),
             password_clear: TEST_USER_PASSWORD.into(),
         },
+        get_password_salth(),
+        TEST_PASSWORD_HASH.to_string(),
     )
-    .await?;
-    Ok(user)
+    .await?)
 }
 
 /// Asserts that the user cannot access the specified URI.

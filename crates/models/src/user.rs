@@ -232,20 +232,33 @@ impl User {
 
     /// Creates a new user from the provided user creation data.
     pub async fn new(mm: &ModelManager, user_c: UserForCreate) -> Result<Self> {
-        use schema::users::dsl::users;
-
-        let new_password_salt = Uuid::new_v4();
-        let new_password = hash_pwd(ContentToHash {
-            content: user_c.password_clear,
-            salt: new_password_salt,
+        let salt = Uuid::new_v4();
+        let hash = hash_pwd(ContentToHash {
+            content: user_c.password_clear.clone(),
+            salt: salt,
         })
         .await?;
+
+        Ok(Self::new_with_hash(mm, user_c, salt, hash).await?)
+    }
+
+    /// Creates a new user given the password salt and hash.
+    ///
+    /// The function is hidden as it is only meant to be used in tests for fixtures.
+    #[doc(hidden)]
+    pub async fn new_with_hash(
+        mm: &ModelManager,
+        user_c: UserForCreate,
+        password_salt: Uuid,
+        password_hash: String,
+    ) -> Result<Self> {
+        use schema::users::dsl::users;
 
         let user = diesel::insert_into(users)
             .values(&UserForInsert {
                 email: user_c.email.clone(),
-                password_hash: new_password,
-                password_salt: new_password_salt,
+                password_hash,
+                password_salt,
                 is_admin: Self::all(mm).await?.is_empty(),
             })
             .returning(Self::as_returning())

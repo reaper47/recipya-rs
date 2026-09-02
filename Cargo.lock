@@ -5915,6 +5915,7 @@ dependencies = [
  "test-db",
  "tower-cookies",
  "tracing",
+ "uuid",
 ]
 
 [[package]]

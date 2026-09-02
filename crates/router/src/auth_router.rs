@@ -532,7 +532,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_page_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
+            let (_test_db, mut config) = TestDb::new(None).await?;
+            config.states.signups = SignupsState::On;
             let server = build_server_anonymous(config).await?;
 
             let res = server.get(BASE_URI).await;
@@ -636,7 +637,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_remember_me_checked_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
+            let (_test_db, mut config) = TestDb::new(None).await?;
+            config.states.signups = SignupsState::On;
             let server = build_server_anonymous(config).await?;
 
             let res = server

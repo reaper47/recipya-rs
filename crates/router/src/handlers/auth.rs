@@ -327,7 +327,8 @@ pub async fn login_post_handler(
     .await
     {
         Ok(status) => status,
-        Err(_err) => {
+        Err(err) => {
+            dbg!(&err.to_string());
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
             add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
             return res;
@@ -446,7 +447,7 @@ pub async fn register_post_handler(
     } else {
         let config = state.config.read().await;
 
-        if config.states.signups == SignupsState::Off {
+        if config.states.signups == SignupsState::On {
             return Redirect::to("/auth/login").into_response();
         }
 

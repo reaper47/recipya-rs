@@ -33,10 +33,7 @@ impl From<&AutologinState> for bool {
 
 impl From<bool> for AutologinState {
     fn from(value: bool) -> Self {
-        match value {
-            false => AutologinState::Off,
-            true => AutologinState::On,
-        }
+        if value { Self::On } else { Self::Off }
     }
 }
 
@@ -67,10 +64,7 @@ impl From<&DemoState> for bool {
 
 impl From<bool> for DemoState {
     fn from(value: bool) -> Self {
-        match value {
-            false => DemoState::Off,
-            true => DemoState::On,
-        }
+        if value { Self::On } else { Self::Off }
     }
 }
 
@@ -101,10 +95,7 @@ impl From<&SignupsState> for bool {
 
 impl From<bool> for SignupsState {
     fn from(value: bool) -> Self {
-        match value {
-            false => SignupsState::Off,
-            true => SignupsState::On,
-        }
+        if value { Self::On } else { Self::Off }
     }
 }
 
@@ -135,9 +126,6 @@ impl From<&ProductionState> for bool {
 
 impl From<bool> for ProductionState {
     fn from(value: bool) -> Self {
-        match value {
-            false => ProductionState::Off,
-            true => ProductionState::On,
-        }
+        if value { Self::On } else { Self::Off }
     }
 }
