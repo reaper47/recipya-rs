@@ -31,7 +31,7 @@ const FONT_SIZE_BODY_PT: f32 = 11.0;
 const FONT_SIZE_TITLE_PT: f32 = 14.0;
 const ROW_STEP: f32 = 7.5 * 2.834_645_7;
 
-/// Represents a shopping list.
+/// Database representation of a shopping list.
 #[derive(Clone, Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
 #[diesel(belongs_to(User))]
 #[diesel(table_name = schema::shopping_lists)]

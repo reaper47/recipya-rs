@@ -1,0 +1,3 @@
+framework = "diesel"
+check_down = true
+disable_checks = ["CreateExtensionCheck"]

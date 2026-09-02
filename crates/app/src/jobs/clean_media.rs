@@ -78,11 +78,11 @@ async fn fetch_images(
                 .select(schema::additional_images_recipe::image.nullable())
                 .distinct(),
         )
-        .union(
-            schema::cookbooks::table
-                .select(schema::cookbooks::image)
-                .distinct(),
-        )
+        // .union(
+        //     schema::cookbooks::table
+        //         .select(schema::cookbooks::image)
+        //         .distinct(),
+        // )
         .load::<Option<Uuid>>(conn)
         .await
         .unwrap_or_else(|err| {

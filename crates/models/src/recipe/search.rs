@@ -46,6 +46,7 @@ impl RecipeSearch {
         let mut query = schema::recipes::table
             .inner_join(schema::users_recipes::table.on(schema::users_recipes::recipe_id.eq(id)))
             .filter(schema::users_recipes::user_id.eq(self.user_id))
+            .filter(schema::recipes::user_id.eq(self.user_id))
             .inner_join(schema::categories_recipes::table.inner_join(schema::categories::table))
             .left_join(schema::cuisines_recipes::table.left_join(schema::cuisines::table))
             .left_join(schema::keywords_recipes::table.left_join(schema::keywords::table))
@@ -117,6 +118,8 @@ impl RecipeSearch {
             query = query
                 .filter(fts_combined.matches(ts_query))
                 .order_by((id, ts_rank(fts_combined, ts_query).desc()));
+        } else {
+            query = query.order_by(id);
         }
 
         let fetched_recipes = query

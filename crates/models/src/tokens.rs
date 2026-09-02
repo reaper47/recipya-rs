@@ -46,11 +46,9 @@ impl EmailVerificationTokenForCreate {
 impl EmailVerificationToken {
     /// Creates an email verification token.
     pub async fn new(mm: &ModelManager, token_c: EmailVerificationTokenForCreate) -> Result<Self> {
-        let mut conn = mm.pool.get().await?;
-
         let token = diesel::insert_into(schema::email_verification_tokens::table)
             .values(&token_c)
-            .get_result::<Self>(&mut conn)
+            .get_result::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(token)
@@ -58,11 +56,9 @@ impl EmailVerificationToken {
 
     /// Finds an email verification token by its token.
     pub async fn find_by_token(mm: &ModelManager, token: &str) -> Result<Option<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let token = schema::email_verification_tokens::table
             .filter(schema::email_verification_tokens::token.eq(token))
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await
             .optional()?;
 
@@ -71,11 +67,9 @@ impl EmailVerificationToken {
 
     /// Deletes a token.
     pub async fn delete(mm: &ModelManager, token: &str) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::delete(schema::email_verification_tokens::table)
             .filter(schema::email_verification_tokens::token.eq(token))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -83,12 +77,10 @@ impl EmailVerificationToken {
 
     /// Sets the user's email as valid.
     pub async fn verify_user_email(mm: &ModelManager, user_id: Uuid) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::update(schema::users::table)
             .filter(schema::users::id.eq(user_id))
             .set(schema::users::is_email_verified.eq(true))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -135,11 +127,9 @@ impl PasswordResetTokenForCreate {
 impl PasswordResetToken {
     /// Creates a new token.
     pub async fn new(mm: &ModelManager, token_c: PasswordResetTokenForCreate) -> Result<Self> {
-        let mut conn = mm.pool.get().await?;
-
         let token = diesel::insert_into(schema::password_reset_tokens::table)
             .values(&token_c)
-            .get_result::<Self>(&mut conn)
+            .get_result::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(token)
@@ -147,11 +137,9 @@ impl PasswordResetToken {
 
     /// Finds a password token by its token.
     pub async fn find_by_token(mm: &ModelManager, token: &str) -> Result<Option<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let token = schema::password_reset_tokens::table
             .filter(schema::password_reset_tokens::token.eq(token))
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await
             .optional()?;
 
@@ -160,11 +148,9 @@ impl PasswordResetToken {
 
     /// Deletes a token.
     pub async fn delete(mm: &ModelManager, token: &str) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::delete(schema::password_reset_tokens::table)
             .filter(schema::password_reset_tokens::token.eq(token))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -172,11 +158,9 @@ impl PasswordResetToken {
 
     /// Deletes all tokens for a user.
     pub async fn delete_all_for_user(mm: &ModelManager, user_id: Uuid) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::delete(schema::password_reset_tokens::table)
             .filter(schema::password_reset_tokens::user_id.eq(user_id))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -226,11 +210,9 @@ impl RefreshTokenForCreate {
 impl RefreshToken {
     /// Creates a new token.
     pub async fn new(mm: &ModelManager, token_c: RefreshTokenForCreate) -> Result<Self> {
-        let mut conn = mm.pool.get().await?;
-
         let token = diesel::insert_into(schema::refresh_tokens::table)
             .values(&token_c)
-            .get_result::<Self>(&mut conn)
+            .get_result::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(token)
@@ -238,11 +220,9 @@ impl RefreshToken {
 
     /// Finds a refresh token by its token.
     pub async fn find_by_token(mm: &ModelManager, token: &str) -> Result<Option<Self>> {
-        let mut conn = mm.pool.get().await?;
-
         let token = schema::refresh_tokens::table
             .filter(schema::refresh_tokens::token.eq(token))
-            .first::<Self>(&mut conn)
+            .first::<Self>(&mut mm.pool.get().await?)
             .await
             .optional()?;
 
@@ -251,11 +231,9 @@ impl RefreshToken {
 
     /// Deletes the token.
     pub async fn delete(mm: &ModelManager, token: &str) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::delete(schema::refresh_tokens::table)
             .filter(schema::refresh_tokens::token.eq(token))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -263,11 +241,9 @@ impl RefreshToken {
 
     /// Deletes all the user's tokens.
     pub async fn delete_all_for_user(mm: &ModelManager, user_id: Uuid) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::delete(schema::refresh_tokens::table)
             .filter(schema::refresh_tokens::user_id.eq(user_id))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
@@ -275,15 +251,13 @@ impl RefreshToken {
 
     /// Marks a token as used.
     pub async fn mark_as_used(mm: &ModelManager, token: &str) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         diesel::update(schema::refresh_tokens::table)
             .filter(schema::refresh_tokens::token.eq(token))
             .set((
                 schema::refresh_tokens::is_used.eq(true),
                 schema::refresh_tokens::used_at.eq(OffsetDateTime::now_utc()),
             ))
-            .execute(&mut conn)
+            .execute(&mut mm.pool.get().await?)
             .await?;
 
         Ok(())
