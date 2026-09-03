@@ -36,8 +36,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
-      - uses: taiki-e/install-action@nextest
-
       - uses: ikalnytskyi/action-setup-postgres@v7
         with:
           username: postgres
@@ -65,7 +63,7 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Build tests
-        run: cargo nextest run --no-run
+        run: cargo test
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
 
@@ -84,7 +82,7 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: cargo nextest run
+          command: cargo test
 
       - name: Test release build every 10 runs
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -102,7 +100,7 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: cargo nextest run --release
+          command: cargo test --release
 
       - name: sccache stats
         run: ${SCCACHE_PATH} --show-stats
