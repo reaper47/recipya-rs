@@ -54,6 +54,7 @@ pub async fn edit_recipe_handler(
     };
 
     let recipe_id = recipe.recipe_details.recipe.id;
+    let autologin = state.config.read().await.states.autologin;
 
     match templates::recipes::edit_recipe(
         &state.fs_support,
@@ -61,7 +62,7 @@ pub async fn edit_recipe_handler(
             is_admin: user.is_admin,
             is_authenticated: true,
             states: States {
-                autologin: state.config.read().await.states.autologin.clone(),
+                autologin,
                 ..Default::default()
             },
             is_hx_request: is_hx_request(&header_map),

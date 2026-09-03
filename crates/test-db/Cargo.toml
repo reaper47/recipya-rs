@@ -17,5 +17,9 @@ config.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 dotenvy.workspace = true
+futures-util.workspace = true
 repository.workspace = true
+tokio.workspace = true
 uuid.workspace = true
+diesel_migrations = { version = "2.3.1", features = ["postgres"] }
+url.workspace = true

@@ -327,8 +327,7 @@ pub async fn login_post_handler(
     .await
     {
         Ok(status) => status,
-        Err(err) => {
-            dbg!(&err.to_string());
+        Err(_err) => {
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
             add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
             return res;

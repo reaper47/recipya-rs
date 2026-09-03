@@ -21,6 +21,7 @@ pub fn reports_routes(state: &AppState) -> Router<AppState> {
 mod tests {
     use axum::http::HeaderValue;
     use reqwest::Method;
+    use uuid::Uuid;
 
     use models::reports::{
         report::{Items, ReportForCreate},
@@ -31,10 +32,9 @@ mod tests {
     };
     use models::user::User;
     use repository::ModelManager;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::assert_html;
-    use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
-    use uuid::Uuid;
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -49,9 +49,8 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_no_reports_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+        async fn test_reports_no_reports_ok() -> Result<()> {
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -68,20 +67,26 @@ mod tests {
 
         #[tokio::test]
         async fn test_reports_reports_exists_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            insert_reports(&state.mm, user_id).await?;
+            let ids = insert_reports(&state.mm, user_id).await?;
 
             let res = server.get(BASE_URI).await;
 
             res.assert_status_ok();
+            res.assert_text_contains(format!(
+                r#"<li class="bg-base-300" hx-get="/reports/{}""#,
+                ids[0]
+            ));
+            res.assert_text_contains(format!(
+                "document.getElementById('selected-report-id').value = '{}';",
+                ids[0]
+            ));
+            res.assert_text_contains(format!(r#"<li hx-get="/reports/{}""#, ids[1]));
             assert_html(
                 &res,
                 &[
-                    r##"<div id="report-index" class="flex flex-col-reverse md:flex-row h-full"><aside class="relative max-h-full" hx-get="/reports/list" hx-trigger="refreshReports from:body" hx-target="#report-list-container" hx-include="#selected-report-id"><input id="selected-report-id" type="hidden" name="selected" value="0"><div id="report-list-container"><div class="md:hidden divider m-0"></div><ul id="report-menu" class="menu block bg-base-100 w-full overflow-y-auto max-h-[40vh] md:max-h-[89vh] pb-16 md:pb-0 h-full"><li class="bg-base-300" hx-get="/reports/2" hx-target="#report-view-pane" hx-push-url="false" hx-trigger="mousedown" hx-on:mousedown="document.querySelectorAll('#report-menu li').forEach((el) =&gt; el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-report-id').value = '2';"><div class="flex justify-between items-center gap-2 w-full"><div class="min-w-0"><p class="font-bold text-sm truncate">"##,
-                    r#"<table class="table table-sm"><thead><tr><th></th><th>Entity</th><th>Level</th><th>Error code</th><th>Error reason</th><th>Duration</th><th>Actions</th></tr></thead><tbody><tr><td>1</td><td class="max-w-xs truncate"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/</a></td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>243ms</td><td></td></tr><tr><td>2</td><td class="max-w-xs truncate"><a class="link" href="https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741" target="_blank">https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741</a></td><td><span class="badge badge-xs w-14 badge-warning">warning</span></td><td>-</td><td>The recipe exists in your collection.</td><td>124ms</td><td></td></tr><tr><td>3</td><td class="max-w-xs truncate"><a class="link" href="https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741" target="_blank">https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741</a></td><td><span class="badge badge-xs w-14 badge-error">error</span></td><td>NetworkFailure</td><td>Failed to connect to the website.</td><td>124ms</td><td><button class="btn btn-xs" hx-post="/recipes/add/website" hx-swap="none" hx-vals="{&quot;urls&quot;: &quot;https://www.allrecipes.com/southern-breakfast-potatoes-recipe-11907741&quot;}">Retry</button></td></tr></tbody></table>"#,
+                    r#"<table class="table table-sm"><thead><tr><th></th><th>Entity</th><th>Level</th><th>Error code</th><th>Error reason</th><th>Duration</th><th>Actions</th></tr></thead><tbody><tr><td>1</td><td class="max-w-xs truncate">Raspberry Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>167ms</td><td></td></tr><tr><td>2</td><td class="max-w-xs truncate">Orange Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>544ms</td><td></td></tr><tr><td>3</td><td class="max-w-xs truncate">Pink Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>78ms</td><td></td></tr></tbody></table>"#,
                     r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">1</span>-<span class="font-semibold text-base-content">2</span> of <span id="search-count" class="font-medium">2</span> results</p></div></footer>"#,
                 ],
             );
@@ -103,8 +108,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_no_reports_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -114,19 +118,21 @@ mod tests {
 
         #[tokio::test]
         async fn test_reports_exists_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            insert_reports(&state.mm, user_id).await?;
+            let ids = insert_reports(&state.mm, user_id).await?;
 
-            let res = server.get(&base_uri(1)).await;
+            let res = server.get(&base_uri(ids[0])).await;
 
             res.assert_status_ok();
+            res.assert_text_contains(format!(
+                r#"<input id="selected-report-id" type="hidden" name="selected" value="{}">"#,
+                ids[0]
+            ));
+            res.assert_text_contains(format!(r#"<li hx-get="/reports/{}""#, ids[1]));
             assert_html(
                 &res,
                 &[
-                    r##"<div id="report-index" class="flex flex-col-reverse md:flex-row h-full"><aside class="relative max-h-full" hx-get="/reports/list" hx-trigger="refreshReports from:body" hx-target="#report-list-container" hx-include="#selected-report-id"><input id="selected-report-id" type="hidden" name="selected" value="1"><div id="report-list-container"><div class="md:hidden divider m-0"></div><ul id="report-menu" class="menu block bg-base-100 w-full overflow-y-auto max-h-[40vh] md:max-h-[89vh] pb-16 md:pb-0 h-full"><li hx-get="/reports/2" hx-target="#report-view-pane" hx-push-url="false" hx-trigger="mousedown" hx-on:mousedown="document.querySelectorAll('#report-menu li').forEach((el) =&gt; el.classList.remove('bg-base-300')); this.classList.add('bg-base-300'); document.getElementById('selected-report-id').value = '2';"><div class="flex justify-between items-center gap-2 w-full"><div class="min-w-0"><p class="font-bold text-sm truncate">"##,
                     r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">1</span>-<span class="font-semibold text-base-content">2</span> of <span id="search-count" class="font-medium">2</span> results</p></div></footer>"#,
                     r#"<table class="table table-sm"><thead><tr><th></th><th>Entity</th><th>Level</th><th>Error code</th><th>Error reason</th><th>Duration</th><th>Actions</th></tr></thead><tbody><tr><td>1</td><td class="max-w-xs truncate">Raspberry Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>167ms</td><td></td></tr><tr><td>2</td><td class="max-w-xs truncate">Orange Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>544ms</td><td></td></tr><tr><td>3</td><td class="max-w-xs truncate">Pink Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>78ms</td><td></td></tr></tbody></table>"#,
                 ],
@@ -136,14 +142,12 @@ mod tests {
 
         #[tokio::test]
         async fn test_reports_exists_htmx_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let mut server = build_server_logged_in(config.clone()).await?;
+            let (mut server, state) = build_server_logged_in(default_config()).await?;
             server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
-            let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
-            insert_reports(&state.mm, user_id).await?;
+            let ids = insert_reports(&state.mm, user_id).await?;
 
-            let res = server.get(&base_uri(1)).await;
+            let res = server.get(&base_uri(ids.first().copied().unwrap())).await;
 
             res.assert_status_ok();
             assert_html(
@@ -168,8 +172,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_no_reports_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -185,32 +188,30 @@ mod tests {
 
         #[tokio::test]
         async fn test_has_reports_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            insert_reports(&state.mm, user_id).await?;
+            let ids = insert_reports(&state.mm, user_id).await?;
 
-            let res = server.get(&format!("{BASE_URI}?selected=1")).await;
+            let res = server.get(&format!("{BASE_URI}?selected={}", ids[0])).await;
 
             res.assert_status_ok();
-            let body = res.text();
-            assert_eq!(body.matches(r#"hx-get="/reports/"#).count(), 2);
-            assert!(body.contains(r#"hx-get="/reports/1"#));
-            assert!(body.contains(r#"class="bg-base-300"#));
-            assert!(body.contains(r#"badge-primary">website<"#));
-            assert!(body.contains(r#"badge-primary">import<"#));
+            res.assert_text_contains(format!(r#"hx-get="/reports/{}"#, ids[0]));
+            res.assert_text_contains(r#"class="bg-base-300"#);
+            res.assert_text_contains(r#"badge-primary">website<"#);
+            res.assert_text_contains(r#"badge-primary">import<"#);
             assert_html(
                 &res,
                 &[
                     r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">1</span>-<span class="font-semibold text-base-content">2</span> of <span id="search-count" class="font-medium">2</span> results</p></div></footer>"#,
                 ],
             );
+            let body = res.text();
+            assert_eq!(body.matches(r#"hx-get="/reports/"#).count(), 2);
             Ok(())
         }
     }
 
-    async fn insert_reports(mm: &ModelManager, user_id: Uuid) -> Result<()> {
+    async fn insert_reports(mm: &ModelManager, user_id: Uuid) -> Result<Vec<i64>> {
         let reports = [
             ReportForCreate::new(
                 ReportTypeFull {
@@ -267,9 +268,13 @@ mod tests {
                 user_id,
             ),
         ];
+
+        let mut ids = Vec::with_capacity(reports.len());
         for report in reports {
-            report.insert(mm).await?;
+            let id = report.insert(mm).await?;
+            ids.push(id);
         }
-        Ok(())
+
+        Ok(ids)
     }
 }

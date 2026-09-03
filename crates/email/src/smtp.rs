@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use lettre::message::Mailbox;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
@@ -77,7 +79,7 @@ impl EmailSender for SmtpEmailSender {
                     config.smtp_username.clone(),
                     config.smtp_password.clone(),
                 ))
-                .timeout(Some(std::time::Duration::from_secs(1)))
+                .timeout(Some(Duration::from_secs(1)))
                 .build()
                 .test_connection()
             {

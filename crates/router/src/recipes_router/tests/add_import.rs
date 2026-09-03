@@ -6,10 +6,10 @@ mod tests {
 
     use models::Recipe;
     use serde_json::json;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::{HIDDEN_WS_NOTIFICATION, assert_html, assert_ws_message, open_test_file};
     use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
     };
 
     use crate::recipes_router::params::PreviewForm;
@@ -102,6 +102,7 @@ mod tests {
 
     mod tests_import_app {
         use models::{reports::ViewReport, user::User};
+        use test_db::default_config;
 
         use super::*;
 
@@ -114,8 +115,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_error_parsing_files() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
             let file = open_test_file("integrations/kalorio1.txt");
 
             let res = server
@@ -136,17 +136,14 @@ mod tests {
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Parsing recipes...</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">1 of 100</span><span class="font-semibold">1.0%</span></div><div id="export-progress"><progress max="100" value="1.00"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"An error occurred while parsing the recipes. Please check the logs.","status":"alert-error","title":"Operation Failed"}}"#).await;
-            let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             pretty_assertions::assert_eq!(Recipe::count(&state.mm, user_id).await?, 0);
             Ok(())
         }
 
-        #[tracing_test::traced_test]
         #[tokio::test]
         async fn test_post_valid_request() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
             let file = open_test_file("integrations/kalorio1.txt");
 
             let res = server
@@ -170,7 +167,6 @@ mod tests {
             assert_ws_message(&mut ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Saving recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">3 of 3</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
             assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Imported 3 recipes. Skipped 0.","status":"alert-info","title":"Success"}}"#).await;
-            let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             pretty_assertions::assert_eq!(Recipe::count(&state.mm, user_id).await?, 3);
             let reports = ViewReport::fetch_all(&state.mm, 1, user_id).await?;
@@ -180,8 +176,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_payload_too_large() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
             let large_payload = "x".repeat(101 * 1024 * 1024);
 
             let res = server
@@ -230,8 +225,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_payload_invalid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -252,8 +246,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_payload_with_properties1_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -267,8 +260,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_payload_with_properties2_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -282,8 +274,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_payload_valid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.post(BASE_URI).form(&valid_preview_form()).await;
 
@@ -299,7 +290,7 @@ mod tests {
     }
 
     mod tests_recipe_add_import_raw_json {
-        use models::{reports::ViewReport, user::User};
+        use models::{Recipe, reports::ViewReport, user::User};
 
         use super::*;
 
@@ -312,8 +303,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_payload_invalid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -329,24 +319,22 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_payload_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
 
             let res = server.post(BASE_URI).form(&valid_preview_form()).await;
 
             res.assert_status_ok();
-            res.assert_header(axum_htmx::HX_REDIRECT, "/recipes/1");
-            let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
+            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
             let reports = ViewReport::fetch_all(&state.mm, 1, user_id).await?;
+            res.assert_header(axum_htmx::HX_REDIRECT, format!("/recipes/{recipe_id}"));
             assert_eq!(reports.len(), 1);
             Ok(())
         }
 
         #[tokio::test]
         async fn test_post_payload_double_insert_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
             let _ = server.post(BASE_URI).form(&valid_preview_form()).await;
 
             let res = server.post(BASE_URI).form(&valid_preview_form()).await;

@@ -8,7 +8,6 @@ use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_PROMPT, HX_TRIGGER};
-use config::{ProductionState, States};
 use itertools::izip;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
@@ -22,6 +21,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
+use config::{ProductionState, States};
 use models::Recipe;
 use models::data::{Data, ShoppingData};
 use models::download::{Download, DownloadForCreate};
@@ -96,7 +96,7 @@ pub async fn shopping_lists_handler(
             is_admin: user.is_admin,
             is_authenticated: true,
             states: States {
-                autologin: state.config.read().await.states.autologin.clone(),
+                autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
             is_hx_request: is_hx_request(&header_map),
@@ -177,7 +177,7 @@ pub async fn shopping_list_put_handler(
             templates::shopping::render_shopping_list_title(list_id, &payload.name, num_items)
                 .into_response()
         }
-        Err(err) if err.to_string().contains("duplicate key") => {
+        Err(models::Error::NameExists) => {
             broadcast_warning(&state, user.id, "Title already exists.").await;
             Error::InvalidPayload.into_response()
         }

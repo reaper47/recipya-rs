@@ -104,8 +104,8 @@ impl Download {
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
-    use test_utils::{build_server_anonymous, create_app_state};
+    use test_db::default_config;
+    use test_utils::build_server_anonymous;
 
     use super::*;
     use crate::user::User;
@@ -122,9 +122,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_download_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
 
         let dl_c = a_download_for_create(user_id);
@@ -136,9 +134,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_by_token_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let token = Uuid::new_v4();
         let dl_c = DownloadForCreate::new(user_id, token, test_file_path());
@@ -156,9 +152,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_by_token_not_found() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
 
         let dl = Download::find_by_token(&state.mm, Uuid::new_v4()).await?;
 
@@ -168,9 +162,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_by_token_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let file_path = test_file_path();
         tokio::fs::write(&file_path, b"dummy content").await?;
@@ -188,9 +180,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_by_token_missing_file_err() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let token = Uuid::new_v4();
         let dl_c = DownloadForCreate::new(user_id, token, PathBuf::from("/tmp/nonexistent.zip"));

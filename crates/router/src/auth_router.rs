@@ -47,7 +47,7 @@ mod tests {
 
     use config::Config;
     use config::{AutologinState, DemoState, SignupsState, States};
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::{assert_html, assert_ws_message};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -75,8 +75,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_change_password_form_invalid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -94,8 +93,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_change_password_password_same_as_new_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -113,15 +111,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_change_password_cannot_update_if_autologin_ok() -> Result<()> {
-            let config = Some(Config {
+            let (server, _) = build_server_logged_in(Config {
                 states: States {
                     autologin: AutologinState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_logged_in(config).await?;
+            })
+            .await?;
 
             let res = server.post(BASE_URI).form(&a_change_password_form()).await;
 
@@ -131,8 +128,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_change_password_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server.post(BASE_URI).form(&a_change_password_form()).await;
 
@@ -147,7 +143,7 @@ mod tests {
             tokens::{EmailVerificationToken, EmailVerificationTokenForCreate},
             user::User,
         };
-        use test_utils::{build_server_anonymous, create_app_state};
+        use test_utils::build_server_anonymous;
 
         use super::*;
 
@@ -155,8 +151,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_confirm_missing_token_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -166,9 +161,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_confirm_invalid_token_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let entry = EmailVerificationToken::new(
                 &state.mm,
@@ -187,9 +180,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_confirm_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let entry = EmailVerificationToken::new(
                 &state.mm,
@@ -214,15 +205,15 @@ mod tests {
     }
 
     mod tests_delete_user {
-        use super::*;
-
         use axum::http::StatusCode;
 
         use models::user::User;
         use test_utils::{
             TEST_USER_EMAIL, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
-            build_server_ws_other_user, create_app_state,
+            build_server_ws_other_user,
         };
+
+        use super::*;
 
         const BASE_URI: &str = "/auth/user";
 
@@ -233,16 +224,17 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_user_demo_cannot_be_deleted_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(Some(Config {
-                states: States {
-                    demo: DemoState::On,
-                    ..Default::default()
+            let (server, mut ws_server, _) = build_server_ws_other_user(
+                Config {
+                    states: States {
+                        demo: DemoState::On,
+                        ..Default::default()
+                    },
+                    ..Config::default()
                 },
-                ..Config::default()
-            }))
+                "demo@demo.com",
+            )
             .await?;
-            let (server, mut ws_server) =
-                build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
 
             let res = server.delete(BASE_URI).await;
 
@@ -253,15 +245,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_user_cannot_delete_if_autologin_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(Some(Config {
+            let (server, mut ws_server, _) = build_server_ws(Config {
                 states: States {
                     autologin: AutologinState::On,
                     ..Default::default()
                 },
                 ..Config::default()
-            }))
+            })
             .await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
 
             let res = server.delete(BASE_URI).await;
 
@@ -272,9 +263,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_user_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
 
             let res = server.delete(BASE_URI).await;
 
@@ -295,7 +284,7 @@ mod tests {
             tokens::{PasswordResetToken, PasswordResetTokenForCreate},
             user::User,
         };
-        use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
+        use test_utils::{build_server_anonymous, build_server_logged_in};
 
         use super::*;
         use crate::schemas::auth::{ForgotPasswordForm, ForgotPasswordResetForm};
@@ -305,8 +294,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_forgot_password_anonymous_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -324,8 +312,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_forgot_password_authenticated_no_access_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -336,8 +323,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_forgot_password_cannot_when_authenticated_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -353,8 +339,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_forgot_password_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -377,8 +362,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_forgot_password_reset_no_token_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server.get(URI_RESET).await;
 
@@ -389,9 +373,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_forgot_password_reset_err_invalid_token() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let entry =
                 PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 0))
@@ -414,9 +396,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_forgot_password_reset_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let entry =
                 PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
@@ -445,9 +425,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_forgot_password_reset_err_invalid() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let server = build_server_anonymous(config).await?;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let entry =
                 PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
@@ -472,9 +450,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_forgot_password_reset_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let server = build_server_anonymous(config).await?;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let entry =
                 PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
@@ -532,9 +508,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_page_ok() -> Result<()> {
-            let (_test_db, mut config) = TestDb::new(None).await?;
+            let mut config = default_config();
             config.states.signups = SignupsState::On;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(config).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -556,15 +532,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_page_demo_show_autologin_ok() -> Result<()> {
-            let config = Some(Config {
+            let (server, _) = build_server_anonymous(Config {
                 states: States {
                     demo: DemoState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_anonymous(config).await?;
+            })
+            .await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -582,15 +557,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_page_hide_signup_button_when_no_signups_ok() -> Result<()> {
-            let config = Some(Config {
+            let (server, _) = build_server_anonymous(Config {
                 states: States {
                     signups: SignupsState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_anonymous(config).await?;
+            })
+            .await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -606,8 +580,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_redirect_to_home_when_already_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(test_db::default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -618,15 +591,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_redirect_to_recipes_when_autologin_ok() -> Result<()> {
-            let config = Some(Config {
+            let (server, _) = build_server_anonymous(Config {
                 states: States {
                     autologin: AutologinState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_anonymous(config).await?;
+            })
+            .await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -637,9 +609,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_login_remember_me_checked_ok() -> Result<()> {
-            let (_test_db, mut config) = TestDb::new(None).await?;
+            let mut config = default_config();
             config.states.signups = SignupsState::On;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(config).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -665,8 +637,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_login_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server.post(BASE_URI).form(&a_login_form()).await;
 
@@ -676,8 +647,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_login_invalid_email_err() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -698,8 +668,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_login_invalid_password_err() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -720,8 +689,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_login_remember_me_checked_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -747,18 +715,17 @@ mod tests {
     }
 
     mod tests_logout {
-        use super::*;
-
         use auth::token::http::REFRESH_TOKEN;
         use models::user::User;
-        use test_utils::{TEST_USER_EMAIL, build_server_logged_in, create_app_state};
+        use test_utils::{TEST_USER_EMAIL, build_server_logged_in};
+
+        use super::*;
 
         const BASE_URI: &str = "/auth/logout";
 
         #[tokio::test]
         async fn test_post_logout_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
 
             let res = server.post(BASE_URI).await;
 
@@ -768,7 +735,6 @@ mod tests {
                 res.maybe_cookie(REFRESH_TOKEN).is_none(),
                 "refresh token should be deleted"
             );
-            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
                 .await?
                 .expect("Expected user");
@@ -778,8 +744,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_logout_user_already_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res_post = server.post(BASE_URI).await;
             let res_get = server.get("/auth/login").await;
@@ -795,15 +760,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_logout_cannot_logout_when_autologin_ok() -> Result<()> {
-            let config = Some(Config {
+            let (server, _) = build_server_logged_in(Config {
                 states: States {
                     autologin: AutologinState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_logged_in(config).await?;
+            })
+            .await?;
 
             let res = server.post(BASE_URI).await;
 
@@ -813,12 +777,11 @@ mod tests {
     }
 
     mod tests_register {
-        use crate::schemas::auth::{LoginForm, RegisterForm};
+        use models::user::User;
+        use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
 
         use super::*;
-        use models::user::User;
-
-        use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
+        use crate::schemas::auth::{LoginForm, RegisterForm};
 
         const BASE_URI: &str = "/auth/register";
 
@@ -832,8 +795,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_register_redirect_to_home_when_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -844,15 +806,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_register_cannot_access_register_when_no_signups_ok() -> Result<()> {
-            let config = Some(Config {
+            let (server, _) = build_server_logged_in(Config {
                 states: States {
                     signups: SignupsState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_logged_in(config).await?;
+            })
+            .await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -863,14 +824,12 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_register_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config.clone()).await?;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let form = a_register_form();
 
             let res = server.post(BASE_URI).form(&form).await;
 
             res.assert_status_see_other();
-            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, &form.email).await?;
             assert!(user.is_some(), "should have user in database");
             Ok(())
@@ -878,8 +837,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_register_when_user_already_registered_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
             let form = a_register_form();
 
             let _res = server.post(BASE_URI).form(&form).await;
@@ -900,15 +858,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_register_redirect_to_home_when_autologin_ok() -> Result<()> {
-            let config = Some(Config {
+            let (server, state) = build_server_logged_in(Config {
                 states: States {
                     autologin: AutologinState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            })
+            .await?;
             let a_form = a_register_form();
 
             let res_get = server.get(BASE_URI).await;
@@ -918,7 +875,6 @@ mod tests {
             res_post.assert_status_see_other();
             res_get.assert_header("Location", "/recipes");
             res_post.assert_header("Location", "/recipes");
-            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, &a_form.email).await?;
             assert!(user.is_none(), "user should not have been registered");
             Ok(())
@@ -926,15 +882,14 @@ mod tests {
 
         #[tokio::test]
         async fn test_register_cannot_register_when_no_signups_ok() -> Result<()> {
-            let config = Some(Config {
+            let config = Config {
                 states: States {
                     signups: SignupsState::On,
                     ..Default::default()
                 },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_anonymous(config.clone()).await?;
+            };
+            let (server, _) = build_server_anonymous(config.clone()).await?;
             let a_form = a_register_form();
 
             let res_get = server.post(BASE_URI).form(&a_form).await;

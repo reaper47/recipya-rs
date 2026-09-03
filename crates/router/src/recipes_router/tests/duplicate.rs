@@ -4,11 +4,11 @@ mod tests {
     use axum_test::TestResponse;
 
     use models::{Recipe, settings::UserSettingDetails, user::User};
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::assert_ws_message;
     use test_models::a_complete_recipe_for_create;
     use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -24,8 +24,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_recipe_does_not_exist() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+        let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
         let res = server.get(&base_uri(99)).await;
 
@@ -36,15 +35,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_dup_get_recipe_exists() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config).await;
+        let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-        let res = server.get(&base_uri(1)).await;
+        let res = server.get(&base_uri(recipe_id)).await;
 
         assert_recipe_form(&res);
         Ok(())

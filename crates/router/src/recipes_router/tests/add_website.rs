@@ -2,17 +2,17 @@
 mod tests {
     use std::{iter::once, time::Duration};
 
+    use app::state::AppState;
     use diesel::prelude::*;
     use diesel_async::RunQueryDsl;
     use models::reports::report_log::ReportLog;
     use reqwest::{Method, StatusCode};
 
-    use config::Config;
     use recipya_scraper::tests::support::scraper::scrape_test_websites;
     use repository::schema;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::{HIDDEN_WS_NOTIFICATION, assert_ws_message, collect_ws_messages};
-    use test_utils::{assert_must_be_logged_in, build_server_ws, create_app_state};
+    use test_utils::{assert_must_be_logged_in, build_server_ws};
 
     use crate::recipes_router::params::RecipeScrapeForm;
 
@@ -37,8 +37,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_no_input_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config).await?;
+        let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -54,8 +53,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_no_valid_urls_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config).await?;
+        let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -71,8 +69,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_one_valid_url_from_unsupported_websites_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+        let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -86,11 +83,17 @@ mod tests {
         assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
         assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-error","title":"Error"}}"#).await;
         tokio::time::sleep(Duration::from_millis(500)).await;
-        let got_logs = fetch_logs(config.clone()).await?;
+        let got_logs = fetch_logs(&state).await?;
         let got_normalized = got_logs.iter().map(normalize_log).collect::<Vec<_>>();
-        let want_normalized = once(&example_report_log())
+        let mut want_normalized = once(&example_report_log())
             .map(normalize_log)
             .collect::<Vec<_>>();
+        want_normalized
+            .iter_mut()
+            .zip(got_normalized.clone())
+            .for_each(|(want, got)| {
+                want.0 = got.0;
+            });
         pretty_assertions::assert_eq!(got_normalized, want_normalized);
         Ok(())
     }
@@ -98,8 +101,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "flaky in CI, needs manual testing"]
     async fn test_add_one_valid_url_from_supported_websites_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+        let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
         scrape_test_websites(1).await?;
 
         let res = server
@@ -124,7 +126,7 @@ mod tests {
             messages[2]
         );
         tokio::time::sleep(Duration::from_millis(50)).await;
-        let got_logs = fetch_logs(config.clone()).await?;
+        let got_logs = fetch_logs(&state).await?;
         let got_normalized = got_logs.iter().map(normalize_log).collect::<Vec<_>>();
         let want_normalized = once(&zweigles_report_log(1))
             .map(normalize_log)
@@ -136,8 +138,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "flaky in CI, needs manual testing"]
     async fn test_add_duplicates_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+        let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
         scrape_test_websites(1).await?;
 
         let res = server
@@ -163,7 +164,7 @@ mod tests {
         );
         let got_logs = tokio::time::timeout(Duration::from_secs(5), async {
             loop {
-                let logs = fetch_logs(config.clone()).await?;
+                let logs = fetch_logs(&state).await?;
                 if !logs.is_empty() {
                     return Ok::<_, Box<dyn std::error::Error>>(logs);
                 }
@@ -183,8 +184,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "flaky in CI, needs manual testing"]
     async fn test_add_a_website_that_has_already_been_added_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+        let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
         let form = RecipeScrapeForm {
             urls: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes/\nhttps://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes".into(),
         };
@@ -214,7 +214,7 @@ mod tests {
             r#"{"headers": {"HX-Trigger": "refreshReports"}}"#
         );
         tokio::time::sleep(Duration::from_millis(100)).await;
-        let got_logs = fetch_logs(config.clone()).await?;
+        let got_logs = fetch_logs(&state).await?;
         let want_logs = [
             zweigles_report_log(1),
             ReportLog {
@@ -241,8 +241,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "flaky in CI, needs manual testing"]
     async fn test_add_many_valid_urls_from_supported_websites_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+        let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
         scrape_test_websites(1).await?;
         scrape_test_websites(2).await?;
         scrape_test_websites(3).await?;
@@ -259,7 +258,7 @@ mod tests {
         assert_ws_message(&mut ws_server, HIDDEN_WS_NOTIFICATION).await;
         assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 3. Skipped: 0","status":"alert-info","title":"Success"}}"#).await;
         tokio::time::sleep(Duration::from_millis(50)).await;
-        let got_logs = fetch_logs(config.clone()).await?;
+        let got_logs = fetch_logs(&state).await?;
         let want_logs = [
             zweigles_report_log(1),
             ReportLog {
@@ -296,8 +295,7 @@ mod tests {
         Ok(())
     }
 
-    async fn fetch_logs(config: Config) -> Result<Vec<ReportLog>> {
-        let state = create_app_state(config).await;
+    async fn fetch_logs(state: &AppState) -> Result<Vec<ReportLog>> {
         let mut conn = state.mm.pool.get().await?;
         let logs = schema::reports_logs::table
             .select(ReportLog::as_select())

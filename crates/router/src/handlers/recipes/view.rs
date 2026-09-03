@@ -82,7 +82,7 @@ pub async fn recipes_handler(
             is_admin: user.is_admin,
             is_authenticated: true,
             states: States {
-                autologin: state.config.read().await.states.autologin.clone(),
+                autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
             is_hx_request: is_hx_request(&headers),
@@ -147,6 +147,8 @@ pub async fn view_recipe_handler(
         );
     }
 
+    let autologin = state.config.read().await.states.autologin;
+
     match templates::recipes::view_recipe(
         &state.fs_support,
         uri.path(),
@@ -155,7 +157,7 @@ pub async fn view_recipe_handler(
             is_admin: user.is_admin,
             is_authenticated: true,
             states: States {
-                autologin: state.config.read().await.states.autologin.clone(),
+                autologin,
                 ..Default::default()
             },
             is_hx_request: is_hx_request(&header_map),

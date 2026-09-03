@@ -88,7 +88,7 @@ pub async fn settings_handler(
             is_admin,
             is_authenticated: true,
             states: States {
-                autologin: config.states.autologin.clone(),
+                autologin: config.states.autologin,
                 ..Default::default()
             },
             is_hx_request: is_hx_request(&header_map),

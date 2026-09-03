@@ -4,7 +4,7 @@ mod tests {
     use axum_test::{TestResponse, http::header::CONTENT_TYPE};
 
     use recipya_scraper::Website;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{assert_must_be_logged_in, build_server_logged_in};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -18,8 +18,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_websites_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
+        let (server, _) = build_server_logged_in(default_config()).await?;
 
         let res: TestResponse = server.get(BASE_URI).await;
 

@@ -53,7 +53,7 @@ pub async fn duplicate_recipe_handler(
             is_hx_request: is_hx_request(&header_map),
             recipes: vec![recipe],
             states: States {
-                autologin: state.config.read().await.states.autologin.clone(),
+                autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
             ..Default::default()

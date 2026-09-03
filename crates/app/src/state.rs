@@ -61,6 +61,36 @@ impl AppState {
         })
     }
 
+    /// Creates a new instance of `AppState` by initializing the `ModelManager`
+    /// with the provided database URL.
+    ///
+    /// Only meant for use in tests because the ModelManager uses a single test
+    /// database throughout the tests.
+    ///
+    /// # Panics
+    ///
+    /// This function contains an infallible expect that will never panic in practice.
+    #[doc(hidden)]
+    pub fn new_for_test(
+        config: Config,
+        mm: ModelManager,
+        http_client: Arc<dyn HttpClient + Send + Sync>,
+        fs_support: Arc<dyn FsSupport + Send + Sync>,
+    ) -> Result<Self> {
+        Ok(Self {
+            config: Arc::new(RwLock::new(config)),
+            data_dir: DataDir::new()?,
+            email_service: EmailClient::new().ok(),
+            fs_support,
+            mm,
+            recipe_cache: Arc::new(Mutex::new(RecipeCache::new(
+                NonZeroUsize::new(1000).expect("LRU to be initialized"),
+            ))),
+            scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
+            subscribers: Arc::new(Mutex::new(HashMap::new())),
+        })
+    }
+
     /// Hides the websocket's frontend notification.
     pub async fn hide_broadcast(&self, user_id: Uuid) {
         self.broadcast_progress("", -1, -1, false, user_id).await;

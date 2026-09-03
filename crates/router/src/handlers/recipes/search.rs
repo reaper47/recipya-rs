@@ -78,7 +78,7 @@ pub async fn search_recipes_handler(
             is_admin: user.is_admin,
             is_authenticated: true,
             states: States {
-                autologin: state.config.read().await.states.autologin.clone(),
+                autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
             is_hx_request: is_hx_request(&headers),

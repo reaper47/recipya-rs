@@ -117,7 +117,7 @@ pub async fn add_recipe_import_raw_handler(
     );
 
     match report.insert(&state.mm).await {
-        Ok(()) => state.broadcast_trigger("refreshReports", user.id).await,
+        Ok(_) => state.broadcast_trigger("refreshReports", user.id).await,
         Err(err) => {
             error!("Error inserting website report into the database: {err}");
         }

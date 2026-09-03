@@ -2,8 +2,9 @@ use axum::Router;
 use axum::routing::get;
 use tower_http::services::ServeDir;
 
-use crate::handlers::static_files::static_files_handler;
 use app::state::AppState;
+
+use crate::handlers::static_files::static_files_handler;
 
 /// Defines the routes for serving static files.
 pub fn static_files_routes(state: AppState) -> Router<AppState> {

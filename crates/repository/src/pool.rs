@@ -20,7 +20,7 @@ pub type PgPooledConn<'a> = bb8::PooledConnection<'a, PgConn>;
 pub type PgPool = bb8::Pool<PgConn>;
 
 /// The path to the migration files to embed into the binary.
-const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/migrations");
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/migrations");
 
 /// A wrapper around a `PostgreSQL` connection pool (`PgPool`).
 #[derive(Clone)]

@@ -99,7 +99,7 @@ async fn fetch_images(
 }
 
 fn clean_files(
-    dir: &PathBuf,
+    dir: &Path,
     files_to_keep: &HashSet<PathBuf>,
     is_delete_thumbnails: bool,
     fs_support: &Arc<dyn FsSupport + Sync + Send>,

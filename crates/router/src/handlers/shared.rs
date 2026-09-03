@@ -60,7 +60,7 @@ pub async fn share_recipe_handler(
                     is_admin: user.is_admin,
                     is_authenticated: true,
                     states: States {
-                        autologin: state.config.read().await.states.autologin.clone(),
+                        autologin: state.config.read().await.states.autologin,
                         ..Default::default()
                     },
                     is_hx_request: is_hx_request(&header_map),
@@ -85,7 +85,7 @@ pub async fn share_recipe_handler(
             &Data {
                 is_authenticated: true,
                 states: States {
-                    autologin: state.config.read().await.states.autologin.clone(),
+                    autologin: state.config.read().await.states.autologin,
                     ..Default::default()
                 },
                 is_hx_request: is_hx_request(&header_map),
@@ -149,7 +149,7 @@ pub async fn share_shopping_list_handler(
             is_admin: user.as_ref().is_some_and(|u| u.is_admin),
             is_authenticated: user.is_some(),
             states: States {
-                autologin: state.config.read().await.states.autologin.clone(),
+                autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
             is_hx_request: is_hx_request(&header_map),

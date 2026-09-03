@@ -18,6 +18,7 @@ pub enum Error {
     File(String),
     InvalidCssSelector,
     InvalidZipArchive,
+    NameExists,
     NoFileInZip,
     NoNeedToUpdateNutrition,
     NoSearch,

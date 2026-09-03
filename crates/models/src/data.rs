@@ -11,6 +11,7 @@ use crate::view::ViewMode;
 
 /// Data holds data to pass on to the templates.
 #[derive(Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Data {
     pub states: States,
     pub is_admin: bool,

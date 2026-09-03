@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use app::state::AppState;
     use axum::http::Method;
     use axum_test::{TestServer, TestWebSocket};
     use reqwest::StatusCode;
@@ -10,8 +11,9 @@ mod tests {
         user::User,
     };
     use recipya_scraper::tests::support::scraper::scrape_test_websites;
+    use test_db::default_config;
     use test_fixtures::{assert_html, assert_ws_message};
-    use test_utils::{assert_must_be_logged_in, build_server_ws, create_app_state};
+    use test_utils::{assert_must_be_logged_in, build_server_ws};
 
     use crate::recipes_router::params::RecipeScrapeForm;
 
@@ -37,7 +39,6 @@ mod tests {
             reports::ViewReport,
             settings::UserSettingDetails,
         };
-        use test_db::TestDb;
         use test_fixtures::assert_ws_messages_any_order;
         use test_models::a_complete_recipe_for_create;
 
@@ -45,8 +46,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_recipe_not_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server.get(&base_uri(99)).await;
 
@@ -57,17 +57,15 @@ mod tests {
 
         #[tokio::test]
         async fn test_recipe_url_not_valid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.name = "Not a valid URL".into();
             recipe.source = Source::new("a magazine");
-            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-            let res = server.get(&base_uri(1)).await;
+            let res = server.get(&base_uri(recipe_id)).await;
 
             res.assert_status_internal_server_error();
             assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"Error scraping recipe or recipe source is not a URL.","status":"alert-error","title":"Operation Failed"}}"# ).await;
@@ -76,11 +74,10 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_same_as_old_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
 
-            let res = server.get(&base_uri(1)).await;
+            let res = server.get(&base_uri(recipe_id)).await;
 
             res.assert_status_ok();
             assert_ws_messages_any_order(
@@ -91,7 +88,6 @@ mod tests {
                     ],
                 )
                 .await;
-            let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let reports = ViewReport::fetch_all(&state.mm, 1, user_id).await?;
             assert_eq!(reports.len(), 1);
@@ -100,28 +96,29 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_one_updated_field_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = Recipe::get(&state.mm, user_id, 1).await?;
+            let mut recipe = Recipe::get(&state.mm, user_id, recipe_id).await?;
             recipe.keywords = vec!["potatoes".into(), "fish".into()];
             Recipe::update(
                 &state.mm,
                 user_id,
-                1,
+                recipe_id,
                 &mut RecipeForCreate::from(recipe.clone()),
             )
             .await?;
 
             let res = server
-                .get(&base_uri(1))
+                .get(&base_uri(recipe_id))
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_ok();
-            res.assert_header(axum_htmx::HX_PUSH_URL, "/recipes/1/rescrape");
+            res.assert_header(
+                axum_htmx::HX_PUSH_URL,
+                format!("/recipes/{recipe_id}/rescrape"),
+            );
             res.assert_header(axum_htmx::HX_RESWAP, "innerHTML transition:true");
             assert_html(
                 &res,
@@ -196,12 +193,10 @@ mod tests {
         #[tokio::test]
         #[allow(clippy::too_many_lines)]
         async fn test_scraped_recipe_all_fields_updated_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut recipe = Recipe::get(&state.mm, user_id, 1).await?;
+            let mut recipe = Recipe::get(&state.mm, user_id, recipe_id).await?;
             recipe.recipe.name = "Borsch".into();
             recipe.category = "soup".into();
             recipe.recipe.description = Some("Borsch is a traditional Ukrainian soup made with beets, cabbage, and meat or vegetables.".into());
@@ -252,7 +247,7 @@ mod tests {
             recipe.recipe.rating = Some(4);
             recipe.times = Times {
                 id: 1,
-                recipe_id: 1,
+                recipe_id,
                 prep_seconds: 300,
                 cook_seconds: 600,
                 total_seconds: 900,
@@ -261,18 +256,21 @@ mod tests {
             Recipe::update(
                 &state.mm,
                 user_id,
-                1,
+                recipe_id,
                 &mut RecipeForCreate::from(recipe.clone()),
             )
             .await?;
 
             let res = server
-                .get(&base_uri(1))
+                .get(&base_uri(recipe_id))
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_ok();
-            res.assert_header(axum_htmx::HX_PUSH_URL, "/recipes/1/rescrape");
+            res.assert_header(
+                axum_htmx::HX_PUSH_URL,
+                format!("/recipes/{recipe_id}/rescrape"),
+            );
             res.assert_header(axum_htmx::HX_RESWAP, "innerHTML transition:true");
             assert_html(
                 &res,
@@ -399,40 +397,35 @@ mod tests {
             time::Times,
             tool::ToolRecipe,
         };
-        use test_db::TestDb;
         use uuid::Uuid;
 
         use super::*;
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_title_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> =
                 vec![("title-source", "new"), ("title-new", "Bluerry Pie")];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.recipe.name, "Bluerry Pie");
             Ok(())
         }
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_description_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> = vec![
                 ("description-source", "new"),
@@ -440,28 +433,26 @@ mod tests {
             ];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.recipe.description, Some("Bluerry description".into()));
             Ok(())
         }
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_media_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&vec![
                     ("media-source", "new"),
                     (
@@ -481,8 +472,8 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.all_images().len(), 2);
             assert_eq!(got.num_videos(), 1);
             Ok(())
@@ -490,45 +481,41 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_notes_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> =
                 vec![("notes-source", "new"), ("notes-new", "The best notes")];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.recipe.notes, Some("The best notes".into()));
             Ok(())
         }
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_source_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> = vec![];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(
                 got.recipe.source,
                 Source::Url(
@@ -540,100 +527,90 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_rating_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> = vec![("rating-source", "new"), ("rating-new", "3")];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.recipe.rating, Some(3));
             Ok(())
         }
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_yield_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> = vec![("yield-source", "new"), ("yield-new", "20")];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.recipe.r#yield, 20);
             Ok(())
         }
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_category_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> =
                 vec![("category-source", "new"), ("category-new", "lunch")];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.category, "lunch".to_string());
             Ok(())
         }
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_cuisine_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> =
                 vec![("cuisine-source", "new"), ("cuisine-new", "tunisian")];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.cuisine, Some("tunisian".to_string()));
             Ok(())
         }
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_ingredients_flat_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let new_ingredients = ["4 chicken legs".to_string(), "3 potatoes".to_string()];
 
@@ -643,14 +620,14 @@ mod tests {
             }
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(
                 got.ingredients,
                 SectionComponents::Flat(
@@ -665,10 +642,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_ingredients_grouped_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let sections = [
                 ("Marinade", vec!["4 chicken legs", "2 tbsp olive oil"]),
@@ -686,14 +661,14 @@ mod tests {
             }
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(
                 got.ingredients,
                 SectionComponents::Grouped(vec![
@@ -712,10 +687,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_instructions_flat_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let new_instructions = [
                 "Mix all ingredients".to_string(),
@@ -728,22 +701,25 @@ mod tests {
             }
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+            if let SectionComponents::Flat(v) = &mut got.instructions {
+                for item in v.iter_mut() {
+                    item.id = None;
+                }
+            }
             pretty_assertions::assert_eq!(
                 got.instructions,
                 SectionComponents::Flat(
                     new_instructions
                         .into_iter()
-                        .enumerate()
-                        .map(|(idx, s)| Item::new(s)
-                            .with_id(i64::try_from(idx + 8).unwrap_or_default()))
+                        .map(Item::new)
                         .collect::<Vec<_>>()
                 )
             );
@@ -752,10 +728,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_instructions_grouped_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let sections = [
                 (
@@ -784,30 +758,35 @@ mod tests {
             }
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+            if let SectionComponents::Grouped(v) = &mut got.instructions {
+                for item in v.iter_mut() {
+                    item.items.iter_mut().for_each(|i| i.id = None);
+                }
+            }
             pretty_assertions::assert_eq!(
                 got.instructions,
                 SectionComponents::Grouped(vec![
                     SectionItem {
                         title: "Marinade".into(),
                         items: vec![
-                            Item::new("Mix all marinade ingredients").with_id(8),
-                            Item::new("Let soak overnight").with_id(9),
+                            Item::new("Mix all marinade ingredients"),
+                            Item::new("Let soak overnight"),
                         ],
                     },
                     SectionItem {
                         title: "Sides".into(),
                         items: vec![
-                            Item::new("Cut potatoes").with_id(10),
-                            Item::new("Bake them in the oven").with_id(11),
-                            Item::new("Mix marinade with baked potatoes").with_id(12),
+                            Item::new("Cut potatoes"),
+                            Item::new("Bake them in the oven"),
+                            Item::new("Mix marinade with baked potatoes"),
                         ],
                     },
                 ])
@@ -818,10 +797,8 @@ mod tests {
         #[tokio::test]
         #[tracing_test::traced_test]
         async fn test_scraped_recipe_diff_keywords_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let new_keywords = ["fish".to_string(), "potatoes".to_string()];
 
@@ -831,14 +808,14 @@ mod tests {
             }
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(got.keywords.as_slice(), new_keywords);
             Ok(())
         }
@@ -846,14 +823,12 @@ mod tests {
         #[tokio::test]
         #[ignore = "search for a scraped recipe that precalculates nutrition"]
         async fn test_scraped_recipe_diff_nutrition_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&[
                     ("nutrition-source", "new"),
                     ("nutrition-new-calories-per-100g", "1g"),
@@ -883,8 +858,8 @@ mod tests {
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(
                 got.nutrition,
                 NutritionDetails {
@@ -928,10 +903,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_times_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let form: Vec<(&str, &str)> = vec![
                 ("times-source", "new"),
@@ -940,19 +913,19 @@ mod tests {
             ];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
-            assert_eq!(
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+            pretty_assertions::assert_eq!(
                 got.times,
                 Times {
-                    id: 1,
-                    recipe_id: 1,
+                    id: got.times.id,
+                    recipe_id,
                     prep_seconds: 1380,
                     cook_seconds: 3300,
                     total_seconds: 4680,
@@ -963,10 +936,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_scraped_recipe_diff_tools_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            insert_zweigles_recipe(&server, &mut ws_server).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+            let recipe_id = insert_zweigles_recipe(&server, &mut ws_server, &state).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let new_tools = ["1 wok".to_string(), "big knife".to_string()];
 
@@ -976,14 +947,14 @@ mod tests {
             }
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .form(&form)
                 .add_header(axum_htmx::HX_REQUEST, "true")
                 .await;
 
             res.assert_status_see_other();
-            res.assert_header("hx-redirect", "/recipes/1");
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             assert_eq!(
                 got.tools.as_slice(),
                 new_tools
@@ -1003,7 +974,8 @@ mod tests {
     async fn insert_zweigles_recipe(
         server: &TestServer,
         ws_server: &mut TestWebSocket,
-    ) -> Result<()> {
+        state: &AppState,
+    ) -> Result<i64> {
         let form = RecipeScrapeForm {
             urls: "https://zweigles.com/recipes/polish-kielbasa-sheet-pan-and-potatoes".into(),
         };
@@ -1014,7 +986,9 @@ mod tests {
         res.assert_status(StatusCode::ACCEPTED);
         assert_ws_message(ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"# ).await;
         assert_ws_message(ws_server, r#"<div id="ws-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"# ).await;
-        assert_ws_message(ws_server, r#"{"showMessageHtmx":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Success"}}"# ).await;
-        Ok(())
+        let user_id = User::all(&state.mm).await?[0].id;
+        let last_recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;
+        assert_ws_message(ws_server, &format!(r#"{{"showMessageHtmx":{{"type":"toast","action":"View /recipes/{last_recipe_id}","message":"Recipe has been added to your collection.","status":"alert-info","title":"Success"}}}}"#)).await;
+        Ok(last_recipe_id)
     }
 }

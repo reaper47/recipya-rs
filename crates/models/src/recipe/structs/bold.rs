@@ -161,7 +161,7 @@ impl RecipeDetails {
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{create_app_state, insert_user};
 
     use super::*;
@@ -212,9 +212,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_bolden_instrucions_on_recipe_create_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let recipe = a_bare_minimum_recipe();
         let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
@@ -222,21 +221,17 @@ mod tests {
         let mut got = Recipe::get(&state.mm, user.id, recipe_id).await?;
         got.bold_ingredients_in_instructions(&state.mm).await?;
 
+        got.instructions.iter_mut().for_each(|item| item.id = None);
         pretty_assertions::assert_eq!(
             got.instructions,
             SectionComponents::Grouped(vec![
-                SectionItem::new(
-                    "Sauce",
-                    vec![Item::new("Mix all these ingredients").with_id(1),]
-                ),
+                SectionItem::new("Sauce", vec![Item::new("Mix all these ingredients"),]),
                 SectionItem::new(
                     "Chicken",
                     vec![
-                        Item::new("Turn the oven at 300 F").with_id(2),
-                        Item::new("Soak the <b>chicken</b> in the <b>lemon juice</b>").with_id(3),
-                        Item::new("Bake for 35 minutes")
-                            .with_duration(2100)
-                            .with_id(4),
+                        Item::new("Turn the oven at 300 F"),
+                        Item::new("Soak the <b>chicken</b> in the <b>lemon juice</b>"),
+                        Item::new("Bake for 35 minutes").with_duration(2100),
                     ],
                 ),
             ])
@@ -246,9 +241,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_bolden_instructions_on_recipe_update_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let mut recipe = a_bare_minimum_recipe();
         let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
@@ -265,16 +259,21 @@ mod tests {
         let mut got = Recipe::get(&state.mm, user.id, recipe_id).await?;
         got.bold_ingredients_in_instructions(&state.mm).await?;
 
+        match &mut got.instructions {
+            SectionComponents::Grouped(section_items) => section_items
+                .iter_mut()
+                .for_each(|item| item.items.iter_mut().for_each(|i| i.id = None)),
+            SectionComponents::Flat(items) => items.iter_mut().for_each(|i| i.id = None),
+        }
         pretty_assertions::assert_eq!(
             got.instructions,
             SectionComponents::Grouped(vec![SectionItem::new(
                 "Chicken",
                 vec![
-                    Item::new("Wash the <b>blue spinach</b> carefully.").with_id(5),
-                    Item::new("Soak the <b>chicken</b> in the <b>lemon juice</b>.").with_id(6),
+                    Item::new("Wash the <b>blue spinach</b> carefully."),
+                    Item::new("Soak the <b>chicken</b> in the <b>lemon juice</b>."),
                     Item::new("Bake for 35 minutes then sprinkle with <b>cinnamon</b>.")
-                        .with_duration(2100)
-                        .with_id(7),
+                        .with_duration(2100),
                 ],
             ),])
         );

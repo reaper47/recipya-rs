@@ -162,7 +162,7 @@ impl NutritionSource {
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::create_app_state;
     use time::OffsetDateTime;
 
@@ -181,8 +181,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
+        let state = create_app_state(default_config()).await;
         let now = OffsetDateTime::now_utc().date();
 
         let got = NutritionSource::all(&state.mm).await?;
@@ -207,8 +206,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_insert_and_count() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
             diesel::insert_into(schema::fdc_foods::table)
                 .values(&a_food())
                 .execute(&mut state.mm.pool.get().await?)
@@ -235,8 +233,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_updated_on_null_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
+                let state = create_app_state(default_config()).await;
 
                 let is_old = NutritionSource::is_current_data_old(
                     &state.mm,
@@ -251,12 +248,10 @@ mod tests {
 
             #[tokio::test]
             async fn test_updated_on_equal_current_date_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
-                let mut conn = state.mm.pool.get().await?;
+                let state = create_app_state(default_config()).await;
                 diesel::insert_into(schema::fdc_foods::table)
                     .values(&a_food())
-                    .execute(&mut conn)
+                    .execute(&mut state.mm.pool.get().await?)
                     .await?;
 
                 let is_old = NutritionSource::is_current_data_old(
@@ -272,8 +267,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_updated_on_before_current_date_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
+                let state = create_app_state(default_config()).await;
                 diesel::insert_into(schema::fdc_foods::table)
                     .values(&a_food())
                     .execute(&mut state.mm.pool.get().await?)

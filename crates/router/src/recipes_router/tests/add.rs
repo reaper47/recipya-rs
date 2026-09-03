@@ -3,7 +3,7 @@ mod tests {
     use axum_test::TestResponse;
     use reqwest::Method;
 
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::assert_html;
     use test_utils::{assert_must_be_logged_in, build_server_logged_in};
 
@@ -18,8 +18,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_recipe_is_htmx_request_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let mut server = build_server_logged_in(config).await?;
+        let (mut server, _) = build_server_logged_in(default_config()).await?;
         server.add_header(axum_htmx::HX_REQUEST, "true");
 
         let res = server.get(BASE_URI).await;
@@ -30,8 +29,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_recipe_is_not_htmx_request_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
+        let (server, _) = build_server_logged_in(default_config()).await?;
 
         let res = server.get(BASE_URI).await;
 

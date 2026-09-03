@@ -4,7 +4,7 @@ mod tests {
     use axum_test::TestServer;
     use axum_test::TestWebSocket;
 
-    use config::Config;
+    use app::state::AppState;
     use models::Recipe;
     use models::recipe::structs::recipe::RecipeForCreate;
     use models::recipe::structs::section::Item;
@@ -12,10 +12,10 @@ mod tests {
     use models::recipe::structs::section::SectionItem;
     use models::settings::UserSettingDetails;
     use models::user::User;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::{assert_html, assert_ws_message};
     use test_models::a_complete_recipe_for_create;
-    use test_utils::{assert_must_be_logged_in, build_server_ws, create_app_state};
+    use test_utils::{assert_must_be_logged_in, build_server_ws};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -23,14 +23,13 @@ mod tests {
         format!("/recipes/{recipe_id}/scale")
     }
 
-    async fn setup(config: Config) -> Result<(TestServer, TestWebSocket)> {
-        let (server, ws_server) = build_server_ws(config.clone()).await?;
-        let state = create_app_state(config).await;
+    async fn setup() -> Result<(TestServer, TestWebSocket, AppState)> {
+        let (server, ws_server, state) = build_server_ws(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
         let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
-        Ok((server, ws_server))
+        Ok((server, ws_server, state))
     }
 
     #[tokio::test]
@@ -40,8 +39,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_yield_query_param_must_be_specified() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, _ws_server) = setup(config).await?;
+        let (server, _ws_server, _) = setup().await?;
 
         let res = server.get(&base_uri(1)).await;
 
@@ -52,8 +50,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_query_param_must_not_be_negative() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, _ws_server) = setup(config).await?;
+        let (server, _ws_server, _) = setup().await?;
 
         let res = server.get(&format!("{}?yield=-1", base_uri(1))).await;
 
@@ -64,8 +61,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_query_param_must_be_greater_than_0() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = setup(config).await?;
+        let (server, mut ws_server, _) = setup().await?;
 
         let res = server.get(&format!("{}?yield=0", base_uri(1))).await;
 
@@ -76,8 +72,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cannot_find_recipe_in_database() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = setup(config).await?;
+        let (server, mut ws_server, _) = setup().await?;
 
         let res = server.get(&format!("{}?yield=8", base_uri(999))).await;
 
@@ -88,9 +83,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_valid_double_yield() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, _ws_server) = setup(config.clone()).await?;
-        let state = create_app_state(config).await;
+        let (server, _ws_server, state) = setup().await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let recipe_id = Recipe::create(
