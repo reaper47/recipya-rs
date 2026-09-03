@@ -87,7 +87,7 @@ jobs:
           command: cargo nextest run
 
       - name: Test release build every 10 runs
-        if: ${{ github.run_number % 10 == 0 }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: nick-fields/retry@v2
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
