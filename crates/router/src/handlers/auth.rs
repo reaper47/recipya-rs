@@ -327,7 +327,12 @@ pub async fn login_post_handler(
     .await
     {
         Ok(status) => status,
-        Err(_err) => {
+        Err(err) => {
+            error!(
+                user = user.id.to_string(),
+                ?err,
+                "Password validation failed for user"
+            );
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
             add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
             return res;
