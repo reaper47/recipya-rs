@@ -54,7 +54,7 @@ impl AuthConfig {
     fn for_test() -> Self {
         const PASSWORD_KEY: &str = "wF5vV1lY7cQe8s3fJ4kH9dR2xB6zN0mP";
         const TOKEN_KEY: &str = "aG9uZXN0bHkgYW55IGZpeGVkIGtleSB3aWxsIGRv";
-
+        error!("Using for test");
         Self {
             jwt_secret: "test-jwt-secret".into(),
             decoded_password_key: URL_SAFE_NO_PAD.decode(PASSWORD_KEY).unwrap(),

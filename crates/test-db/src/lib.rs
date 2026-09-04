@@ -61,6 +61,10 @@ pub fn setup_env() {
         std::env::var("DATABASE_URL").is_ok(),
         "Environment variable 'DATABASE_URL' to be set: NotPresent"
     );
+    assert!(
+        std::env::var("APP_ENV").is_ok(),
+        "Environment variable 'APP_ENV' to be set: NotPresent"
+    );
 }
 
 static TEST_DB_INIT: OnceCell<(TestDb, Config)> = OnceCell::const_new();
