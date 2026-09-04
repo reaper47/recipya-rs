@@ -13,7 +13,7 @@ use url::Url;
 use config::{Config, States};
 use repository::{DbPool, MIGRATIONS, ModelManager, make_db_pool};
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+type Result<T> = core::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 const TEMPLATE_DB: &str = "recipya_test_template";
 
@@ -140,8 +140,8 @@ const TEMPLATE_LOCK_ID: i64 = 918_273_645;
 
 /// AI usage:
 ///
-/// Assisted by Claude because I couldn't figure out why so many tests were failing randomly
-/// while re-architecting the tests to drastically improve the time it takes to run them.
+/// Assisted by Claude *Sonnet 5* because I struggled understanding why so many tests were
+/// failing randomly while refactoring the tests to drastically improve the time it takes to run them.
 async fn ensure_template_exists(admin_url: &str) -> Result<()> {
     let pool = make_db_pool(admin_url).await?;
     let mut conn = pool.get().await?;
@@ -165,7 +165,7 @@ async fn ensure_template_exists(admin_url: &str) -> Result<()> {
         })
         .await?;
 
-        Ok::<_, Box<dyn std::error::Error>>(())
+        Ok(())
     }
     .await;
 
