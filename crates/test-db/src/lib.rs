@@ -57,6 +57,10 @@ pub fn test_database_url() -> String {
 pub fn setup_env() {
     let _ = dotenvy::dotenv();
 
+    unsafe {
+        std::env::set_var("APP_ENV", "test");
+    }
+
     assert!(
         std::env::var("DATABASE_URL").is_ok(),
         "Environment variable 'DATABASE_URL' to be set: NotPresent"

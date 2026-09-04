@@ -30,7 +30,7 @@ pub const TEST_DEMO_EMAIL: &str = "demo@demo.com";
 
 pub static TEST_PASSWORD_SALT: OnceLock<Uuid> = OnceLock::new();
 
-pub const TEST_PASSWORD_HASH: &str = "#02#$argon2id$v=19$m=19456,t=2,p=1$bpxlx+8RTH2isz8k1XIyXw$jPya0CutmZGEV2bcveP+eDalHVGi7Nz2D8cjKsy2MN4";
+pub const TEST_PASSWORD_HASH: &str = "#02#$argon2id$v=19$m=19456,t=2,p=1$bpxlx+8RTH2isz8k1XIyXw$aknwhS/gQtL5taRD5jSgHOqUjxfrI4kifQWbvV0WY/U";
 
 /// Gets the password salt.
 ///
