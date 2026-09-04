@@ -27,7 +27,6 @@ impl Scheme for Scheme02 {
     }
 
     fn validate(&self, to_hash: &ContentToHash, pwd_ref: &str) -> Result<()> {
-        dbg!("Called validate 02");
         let argon2 = get_argon2();
 
         let parsed_hash_ref = PasswordHash::new(pwd_ref).map_err(|_| Error::Hash)?;

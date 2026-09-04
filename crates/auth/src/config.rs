@@ -38,12 +38,9 @@ pub fn auth_config() -> &'static AuthConfig {
     static INSTANCE: OnceLock<AuthConfig> = OnceLock::new();
 
     INSTANCE.get_or_init(|| {
-        dbg!(format!("APP_ENV: {:?}", std::env::var("APP_ENV")));
         if std::env::var("APP_ENV").as_deref() == Ok("test") {
-            dbg!("Using auth config for test");
             AuthConfig::for_test()
         } else {
-            dbg!("Using auth config from file");
             AuthConfig::load_from_file().expect("Failed to load auth config")
         }
     })
@@ -54,7 +51,7 @@ impl AuthConfig {
     fn for_test() -> Self {
         const PASSWORD_KEY: &str = "wF5vV1lY7cQe8s3fJ4kH9dR2xB6zN0mP";
         const TOKEN_KEY: &str = "aG9uZXN0bHkgYW55IGZpeGVkIGtleSB3aWxsIGRv";
-        dbg!("Using for test");
+
         Self {
             jwt_secret: "test-jwt-secret".into(),
             decoded_password_key: URL_SAFE_NO_PAD.decode(PASSWORD_KEY).unwrap(),

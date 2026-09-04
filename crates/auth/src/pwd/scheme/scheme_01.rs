@@ -19,7 +19,6 @@ impl Scheme for Scheme01 {
     }
 
     fn validate(&self, to_hash: &ContentToHash, raw_pwd_ref: &str) -> Result<()> {
-        dbg!("Called validate 01");
         let raw_pwd_new = self.hash(to_hash)?;
         if raw_pwd_new == raw_pwd_ref {
             Ok(())

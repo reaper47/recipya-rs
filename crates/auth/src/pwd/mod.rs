@@ -106,4 +106,19 @@ mod tests {
         );
         Ok(())
     }
+
+    #[tokio::test]
+    async fn print_fixture_hash() {
+        unsafe {
+            std::env::set_var("APP_ENV", "test");
+        } // ensure for_test() key is used
+        let salt = uuid::Uuid::parse_str("6e9c65c7-ef11-4c7d-a2b3-3f24d572325f").unwrap();
+        let hash = hash_pwd(ContentToHash {
+            content: "12345678".to_string(),
+            salt,
+        })
+        .await
+        .unwrap();
+        dbg!("TEST_PASSWORD_HASH = {hash}");
+    }
 }
