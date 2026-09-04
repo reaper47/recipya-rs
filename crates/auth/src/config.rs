@@ -37,10 +37,31 @@ pub struct AuthConfig {
 pub fn auth_config() -> &'static AuthConfig {
     static INSTANCE: OnceLock<AuthConfig> = OnceLock::new();
 
-    INSTANCE.get_or_init(|| AuthConfig::load_from_file().expect("Failed to load auth config"))
+    INSTANCE.get_or_init(|| {
+        if std::env::var("APP_ENV").as_deref() == Ok("test") {
+            AuthConfig::for_test()
+        } else {
+            AuthConfig::load_from_file().expect("Failed to load auth config")
+        }
+    })
 }
 
 impl AuthConfig {
+    #[doc(hidden)]
+    fn for_test() -> Self {
+        const PASSWORD_KEY: &str = "wF5vV1lY7cQe8s3fJ4kH9dR2xB6zN0mP";
+        const TOKEN_KEY: &str = "aG9uZXN0bHkgYW55IGZpeGVkIGtleSB3aWxsIGRv";
+
+        Self {
+            jwt_secret: "test-jwt-secret".into(),
+            decoded_password_key: URL_SAFE_NO_PAD.decode(PASSWORD_KEY).unwrap(),
+            decoded_token_key: URL_SAFE_NO_PAD.decode(TOKEN_KEY).unwrap(),
+            password_key: PASSWORD_KEY.into(),
+            token_key: TOKEN_KEY.into(),
+            token_duration_sec: 1800.0,
+        }
+    }
+
     fn load_from_file() -> Result<Self> {
         let data_dir = get_base_dir()?;
         let config_path = data_dir.join("auth_config.json");

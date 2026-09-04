@@ -68,6 +68,7 @@ jobs:
         run: cargo nextest run --no-run --locked
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+          APP_ENV: "test"
 
       - name: Test dev build
         uses: nick-fields/retry@v2
@@ -81,6 +82,7 @@ jobs:
           SMTP_HOST: "smtp.gmail.com"
           SMTP_USERNAME: "example@gmail.com"
           SMTP_PASSWORD: "abcd abcd bcd abcd"
+          APP_ENV: "test"
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -99,6 +101,7 @@ jobs:
           SMTP_HOST: "smtp.gmail.com"
           SMTP_USERNAME: "example@gmail.com"
           SMTP_PASSWORD: "abcd abcd bcd abcd"
+          APP_ENV: "test"
         with:
           timeout_minutes: 30
           max_attempts: 3
