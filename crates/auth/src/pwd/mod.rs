@@ -25,7 +25,7 @@ pub struct ContentToHash {
 
 /// Hash the password with the default scheme.
 pub async fn hash_pwd(to_hash: ContentToHash) -> Result<String> {
-    let dispatch = tracing::dispatcher::get_default(|d| d.clone());
+    let dispatch = tracing::dispatcher::get_default(Clone::clone);
     tokio::task::spawn_blocking(move || {
         tracing::dispatcher::with_default(&dispatch, || hash_for_scheme(DEFAULT_SCHEME, &to_hash))
     })
@@ -47,7 +47,7 @@ pub async fn validate_pwd(to_hash: ContentToHash, pwd_ref: &str) -> Result<Schem
     };
 
     // Note: Validate might take some time depending on the algorithm.
-    let dispatch = tracing::dispatcher::get_default(|d| d.clone());
+    let dispatch = tracing::dispatcher::get_default(Clone::clone);
     tokio::task::spawn_blocking(move || {
         tracing::dispatcher::with_default(&dispatch, || {
             validate_for_scheme(&scheme_name, &to_hash, &hashed)
