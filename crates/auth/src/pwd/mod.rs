@@ -119,6 +119,6 @@ mod tests {
         })
         .await
         .unwrap();
-        dbg!("TEST_PASSWORD_HASH = {hash}");
+        dbg!(format!("TEST_PASSWORD_HASH = {hash}"));
     }
 }
