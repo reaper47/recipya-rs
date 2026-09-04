@@ -25,12 +25,9 @@ pub struct ContentToHash {
 
 /// Hash the password with the default scheme.
 pub async fn hash_pwd(to_hash: ContentToHash) -> Result<String> {
-    let dispatch = tracing::dispatcher::get_default(Clone::clone);
-    tokio::task::spawn_blocking(move || {
-        tracing::dispatcher::with_default(&dispatch, || hash_for_scheme(DEFAULT_SCHEME, &to_hash))
-    })
-    .await
-    .map_err(|_| Error::FailSpawnBlockForHash)?
+    tokio::task::spawn_blocking(move || hash_for_scheme(DEFAULT_SCHEME, &to_hash))
+        .await
+        .map_err(|_| Error::FailSpawnBlockForHash)?
 }
 
 /// Validate whether a `ContentToHash` matches.
@@ -47,14 +44,9 @@ pub async fn validate_pwd(to_hash: ContentToHash, pwd_ref: &str) -> Result<Schem
     };
 
     // Note: Validate might take some time depending on the algorithm.
-    let dispatch = tracing::dispatcher::get_default(Clone::clone);
-    tokio::task::spawn_blocking(move || {
-        tracing::dispatcher::with_default(&dispatch, || {
-            validate_for_scheme(&scheme_name, &to_hash, &hashed)
-        })
-    })
-    .await
-    .map_err(|_| Error::FailSpawnBlockForValidate)??;
+    tokio::task::spawn_blocking(move || validate_for_scheme(&scheme_name, &to_hash, &hashed))
+        .await
+        .map_err(|_| Error::FailSpawnBlockForValidate)??;
 
     Ok(scheme_status)
 }

@@ -2,7 +2,6 @@ use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha512;
 
 use support::b64::b64u_encode;
-use tracing::error;
 
 use super::{ContentToHash, Error, Result, Scheme};
 use crate::config::auth_config;
@@ -20,7 +19,7 @@ impl Scheme for Scheme01 {
     }
 
     fn validate(&self, to_hash: &ContentToHash, raw_pwd_ref: &str) -> Result<()> {
-        error!("Called validate 01");
+        dbg!("Called validate 01");
         let raw_pwd_new = self.hash(to_hash)?;
         if raw_pwd_new == raw_pwd_ref {
             Ok(())
