@@ -521,7 +521,7 @@ pub async fn fetch_recipe_details(
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{build_server_anonymous, create_app_state};
 
     use super::*;
@@ -538,9 +538,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_all_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_anonymous(config.clone()).await?;
+            let (_, state) = build_server_anonymous(default_config()).await?;
             let all_users = User::all(&state.mm).await?;
             let user1_id = all_users[0].id;
             let user2_id = all_users[1].id;
@@ -569,9 +567,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_count_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_anonymous(config.clone()).await?;
+            let (_, state) = build_server_anonymous(default_config()).await?;
             let all_users = User::all(&state.mm).await?;
             let user = all_users[0].clone();
             let user2 = all_users[1].clone();
@@ -602,8 +598,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_page_no_recipes_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
 
             let recipes = Recipe::get_page(
                 &state.mm,
@@ -621,9 +616,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_page_first_page_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_anonymous(config.clone()).await?;
+            let (_, state) = build_server_anonymous(default_config()).await?;
             let user = User::all(&state.mm).await?[0].clone();
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let mut expected = Vec::with_capacity(15);
@@ -656,9 +649,7 @@ mod tests {
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
     async fn test_get_many_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe1, images1) = a_complete_recipe_for_create();
@@ -667,11 +658,19 @@ mod tests {
         let id1 = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
         let id2 = Recipe::create(&state.mm, user_id, &recipe2, &settings).await?;
 
-        let got = Recipe::get_many(&state.mm, user_id, &[id1, id2]).await?;
+        let mut got = Recipe::get_many(&state.mm, user_id, &[id1, id2]).await?;
 
+        for r in &mut got {
+            match &mut r.instructions {
+                SectionComponents::Grouped(section_items) => section_items
+                    .iter_mut()
+                    .for_each(|i| i.items.iter_mut().for_each(|i| i.id = None)),
+                SectionComponents::Flat(items) => items.iter_mut().for_each(|i| i.id = None),
+            }
+        }
         let want_recipe1 = RecipeDetails {
             recipe: Recipe {
-                id: 1,
+                id: id1,
                 name: "Best Chinese Kale".into(),
                 description: Some("This is the most delicious recipe!".into()),
                 r#yield: 4,
@@ -710,23 +709,21 @@ mod tests {
             instructions: SectionComponents::Grouped(vec![
                 SectionItem {
                     title: "Sauce".into(),
-                    items: vec![Item::new("Mix all these ingredients").with_id(1)],
+                    items: vec![Item::new("Mix all these ingredients")],
                 },
                 SectionItem {
                     title: "Chicken".into(),
                     items: vec![
-                        Item::new("Turn the oven at 300 F").with_id(2),
-                        Item::new("Soak the chicken in the lemon juice").with_id(3),
-                        Item::new("Bake for 35 minutes")
-                            .with_duration(2100)
-                            .with_id(4),
+                        Item::new("Turn the oven at 300 F"),
+                        Item::new("Soak the chicken in the lemon juice"),
+                        Item::new("Bake for 35 minutes").with_duration(2100),
                     ],
                 },
             ]),
             keywords: vec!["tofu".into(), "vegetarian".into()],
             nutrition: NutritionDetails {
                 per_100g: Some(Nutrition {
-                    id: 1,
+                    id: got[0].nutrition.clone().per_100g.map_or(1, |n| n.id),
                     is_precalculated_by_source: true,
                     calories_kcal: Some(300),
                     total_carbohydrates: Some(55.0),
@@ -742,7 +739,11 @@ mod tests {
                 }),
                 per_serving: Some(NutritionPerServingDetails {
                     nutrition: Nutrition {
-                        id: 2,
+                        id: got[0]
+                            .nutrition
+                            .clone()
+                            .per_serving
+                            .map_or(1, |n| n.nutrition.id),
                         is_precalculated_by_source: true,
                         calories_kcal: Some(240),
                         total_carbohydrates: Some(30.0),
@@ -760,8 +761,8 @@ mod tests {
                 }),
             },
             times: Times {
-                id: 1,
-                recipe_id: 1,
+                id: got[0].times.id,
+                recipe_id: id1,
                 prep_seconds: 120,
                 cook_seconds: 3600,
                 total_seconds: 3720,
@@ -788,7 +789,7 @@ mod tests {
         };
         let want_recipe2 = RecipeDetails {
             recipe: Recipe {
-                id: 2,
+                id: id2,
                 name: "Hello".into(),
                 description: want_recipe1.recipe.description.clone(),
                 r#yield: want_recipe1.recipe.r#yield,
@@ -811,7 +812,7 @@ mod tests {
             keywords: want_recipe1.keywords.clone(),
             nutrition: NutritionDetails {
                 per_100g: Some(Nutrition {
-                    id: 3,
+                    id: got[1].nutrition.clone().per_100g.map_or(1, |n| n.id),
                     is_precalculated_by_source: true,
                     calories_kcal: Some(300),
                     total_carbohydrates: Some(55.0),
@@ -827,7 +828,11 @@ mod tests {
                 }),
                 per_serving: Some(NutritionPerServingDetails {
                     nutrition: Nutrition {
-                        id: 4,
+                        id: got[1]
+                            .nutrition
+                            .clone()
+                            .per_serving
+                            .map_or(1, |n| n.nutrition.id),
                         is_precalculated_by_source: true,
                         calories_kcal: Some(240),
                         total_carbohydrates: Some(30.0),
@@ -845,8 +850,8 @@ mod tests {
                 }),
             },
             times: Times {
-                id: 2,
-                recipe_id: 2,
+                id: got[1].times.id,
+                recipe_id: id2,
                 prep_seconds: 120,
                 cook_seconds: 3600,
                 total_seconds: 3720,
@@ -866,9 +871,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_categories_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user = User::all(&state.mm).await?[0].clone();
         let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let category1 = String::from("late snack");
@@ -889,9 +892,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_cuisines_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user = User::all(&state.mm).await?[0].clone();
         let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let cuisine1 = String::from("italian");
@@ -912,9 +913,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_ingredients_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user = User::all(&state.mm).await?[0].clone();
         let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
@@ -936,9 +935,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_keywords_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user = User::all(&state.mm).await?[0].clone();
         let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
@@ -955,9 +952,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_tools_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user = User::all(&state.mm).await?[0].clone();
         let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
@@ -971,9 +966,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_fetch_sources_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user = User::all(&state.mm).await?[0].clone();
         let settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
@@ -987,9 +980,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_ingredients_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let (recipe, _) = a_complete_recipe_for_create();
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;

@@ -21,6 +21,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
+use config::{ProductionState, States};
 use models::Recipe;
 use models::data::{Data, ShoppingData};
 use models::download::{Download, DownloadForCreate};
@@ -94,7 +95,10 @@ pub async fn shopping_lists_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             shopping: Some(ShoppingData {
                 labels,
@@ -173,7 +177,7 @@ pub async fn shopping_list_put_handler(
             templates::shopping::render_shopping_list_title(list_id, &payload.name, num_items)
                 .into_response()
         }
-        Err(err) if err.to_string().contains("duplicate key") => {
+        Err(models::Error::NameExists) => {
             broadcast_warning(&state, user.id, "Title already exists.").await;
             Error::InvalidPayload.into_response()
         }
@@ -359,7 +363,7 @@ pub async fn shopping_list_view_handler(
     set_shopping_view_cookie(
         &cookies,
         params.mode.to_string(),
-        state.config.read().await.is_production,
+        state.config.read().await.states.production == ProductionState::On,
     );
 
     let is_hx_request = is_hx_request(&header_map);

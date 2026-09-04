@@ -4,12 +4,10 @@ mod tests {
     use axum_test::http::StatusCode;
 
     use models::{Recipe, settings::UserSettingDetails, user::User};
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::assert_ws_message;
     use test_models::a_complete_recipe_for_create;
-    use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
-    };
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, build_server_ws};
 
     use crate::recipes_router::params::RecipeCategoryForm;
 
@@ -26,8 +24,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_category_cannot_be_empty_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
+        let (server, _) = build_server_logged_in(default_config()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -42,8 +39,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_user_already_has_category_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config).await?;
+        let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -59,8 +55,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_add_category_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
+        let (server, _) = build_server_logged_in(default_config()).await?;
 
         let res = server
             .post(BASE_URI)
@@ -86,8 +81,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_nonexistent_category_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config).await?;
+        let (server, _) = build_server_logged_in(default_config()).await?;
 
         let res = server
             .delete(BASE_URI)
@@ -102,10 +96,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_category_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
+        let (server, state) = build_server_logged_in(default_config()).await?;
         let category = String::from("midnight dinner");
-        let state = create_app_state(config.clone()).await;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
@@ -122,8 +114,7 @@ mod tests {
     }
 
     async fn send_delete_400(category: String) -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let (server, mut ws_server) = build_server_ws(config).await?;
+        let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
         let res = server
             .delete(BASE_URI)

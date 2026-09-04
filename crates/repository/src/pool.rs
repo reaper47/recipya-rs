@@ -20,7 +20,7 @@ pub type PgPooledConn<'a> = bb8::PooledConnection<'a, PgConn>;
 pub type PgPool = bb8::Pool<PgConn>;
 
 /// The path to the migration files to embed into the binary.
-const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/migrations");
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/migrations");
 
 /// A wrapper around a `PostgreSQL` connection pool (`PgPool`).
 #[derive(Clone)]
@@ -63,8 +63,10 @@ struct CountResult {
 /// - The database existence check fails
 /// - The database creation fails
 pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result::Error> {
-    let db_url =
-        std::env::var("DATABASE_URL").expect("Environment variable 'DATABASE_URL' not set");
+    let db_url = format!(
+        "{}/{db_name}",
+        std::env::var("DATABASE_URL").expect("Environment variable 'DATABASE_URL' not set")
+    );
 
     let conn = &mut diesel::PgConnection::establish(&db_url)
         .unwrap_or_else(|_| panic!("Error connecting to {db_url}"));
@@ -75,7 +77,7 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
 
     match res {
         Ok(row) if row.count > 0 => {
-            info!("Database '{}' exists", db_name);
+            info!("Connected to database '{db_url}'");
             Ok(())
         }
         Ok(_) => {
@@ -83,6 +85,7 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
 
             sql_query(format!("CREATE DATABASE {db_name}"))
                 .execute(conn)
+                .inspect(|_| info!("Connected to database '{db_url}'"))
                 .map(|_| ())
                 .map_err(|err| {
                     error!("Failed to create database '{db_name}': {err}");

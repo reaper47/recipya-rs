@@ -363,7 +363,7 @@ impl From<i16> for NutritionDataSource {
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::create_app_state;
 
     use crate::nutrition::{NutritionDataSource, all_nutrition_sources};
@@ -421,8 +421,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_no_calculation_when_unknown_source_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
             let mut conn = state.mm.pool.get().await?;
             let source = NutritionDataSource::Unknown;
 
@@ -436,9 +435,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_nutrition1_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config).await;
-            let mut conn = state.mm.pool.get().await?;
+            let state = create_app_state(default_config()).await;
             let client = FdcClientForTests::new(FDC_FF_DATASET_3);
             let parser: FdcParser<DataFetchedState> = FdcParser::new().fetch(&client).await?;
             parser.push_into_database(&state.mm).await?;
@@ -456,6 +453,7 @@ mod tests {
             ];
             let source = NutritionDataSource::USDAFoodDataCentral;
             let num_servings = 4;
+            let mut conn = state.mm.pool.get().await?;
 
             let got = source
                 .calculate_nutrition(&mut conn, ingredients.as_slice(), num_servings)

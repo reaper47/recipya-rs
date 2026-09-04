@@ -38,12 +38,13 @@ pub fn settings_routes(state: &AppState) -> Router<AppState> {
 mod tests {
     use axum::http::{Method, StatusCode};
 
+    use config::DemoState;
     use models::{settings::UserSettingDetails, user::User};
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::{assert_html, assert_not_in_html, assert_ws_message};
     use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
-        build_server_ws_other_user, create_app_state, insert_other_user,
+        TEST_DEMO_EMAIL, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
+        build_server_ws_other_user, insert_other_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -60,8 +61,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_server_and_conn_tabs_not_displayed_when_not_admin_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, _) = build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+            let server = build_server_ws_other_user(default_config(), TEST_DEMO_EMAIL)
+                .await?
+                .0;
 
             let res = server.get(BASE_URI).await;
 
@@ -91,9 +93,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_demo_sees_fake_connection_data_ok() -> Result<()> {
-            let (_test_db, mut config) = TestDb::new(None).await?;
-            config.is_demo = true;
-            let server = build_server_logged_in(config.clone()).await?;
+            let mut config = default_config();
+            config.states.demo = DemoState::On;
+            let (server, _) = build_server_logged_in(config).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -117,7 +119,7 @@ mod tests {
             // TODO: Write this test once the update available functionality is implemented.
             /*let (_test_db, mut config): (_, config::Config) = TestDb::new(None).await?;
             config.is_demo = true;
-            let server = build_server_logged_in(config.clone()).await?;
+            let (server, state) = build_server_logged_in(config.clone()).await?;
             let res = server.get(BASE_URI).await;
 
             res.assert_status_ok();
@@ -129,8 +131,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_display_settings_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -184,8 +185,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_no_recipes_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
                 let res = server.get(BASE_URI).await;
 
@@ -196,13 +196,11 @@ mod tests {
 
             #[tokio::test]
             async fn test_with_recipes_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let server = build_server_logged_in(config.clone()).await?;
+                let (server, state) = build_server_logged_in(default_config()).await?;
                 let (recipe1, _) = a_complete_recipe_for_create();
                 let (mut recipe2, _) = a_complete_recipe_for_create();
                 recipe2.name = "Taco Tuesday".to_string();
                 recipe2.category = Some("Meat".to_string());
-                let state = create_app_state(config).await;
                 let user_id = User::all(&state.mm).await?[0].id;
                 let settings = UserSettingDetails::get(&state.mm, user_id).await?;
                 let _ = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
@@ -217,8 +215,6 @@ mod tests {
                         r##"<form class="card bg-base-100 shadow-sm min-w-[50vw]" hx-post="/settings/export-data" hx-indicator="#export-data-spinner" hx-on:download-ready="document.querySelector('#export-data-dialog').close(); window.location.href = event.detail.url;">"##,
                         r#"<div class="card-body"><h3 class="mb-1 grid grid-flow-col"><label class="input input-sm"><svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg><input type="search" placeholder="Search a recipe" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label><select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end"><option value="json" selected>JSON</option><option value="markdown">Markdown</option><option value="pdf">PDF</option><option value="text">Text</option></select></h3>"#,
                         r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" class="checkbox" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked then call checkDataSubmit('checkbox-recipe-id', 'export-data-submit-button')"></label></th><th class="py-1">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-results">"#,
-                        r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="1" _="on change call checkDataSubmit('checkbox-recipe-id', 'export-data-submit-button')"></label></td><td class="py-1">Best Chinese Kale</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/1" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
-                        r#"<tr><td class="py-1"><label><input type="checkbox" name="recipe-ids" class="checkbox-recipe-id checkbox" value="2" _="on change call checkDataSubmit('checkbox-recipe-id', 'export-data-submit-button')"></label></td><td class="py-1">Taco Tuesday</td><td class="py-1 text-center select-none"></td><td class="py-1 text-center">4/5</td><td class="py-1 text-center"><a class="link" href="//recipes/2" target="_blank">View</a></td><td class="py-1 text-center"><a class="link" href="https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/" target="_blank">Visit</a></td></tr>"#,
                         r#"</tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="export-data-submit-button" type="submit" class="btn btn-sm" disabled=""><img id="export-data-submit-button-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading..."><svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></div></form>"#,
                     ],
                 );
@@ -228,6 +224,7 @@ mod tests {
 
         mod tests_post {
             use axum_htmx::HX_TRIGGER;
+
             use models::download::Download;
             use test_models::a_complete_recipe_for_create;
 
@@ -235,8 +232,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_invalid_payload_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let server = build_server_logged_in(config).await?;
+                let (server, _) = build_server_logged_in(default_config()).await?;
 
                 let res = server
                     .post(BASE_URI)
@@ -250,8 +246,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_empty_recipe_ids_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
                 let res = server
                     .post(BASE_URI)
@@ -270,9 +265,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_export_json_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
-                let server = build_server_logged_in(config).await?;
+                let (server, state) = build_server_logged_in(default_config()).await?;
                 let user_id = User::all(&state.mm).await?[0].id;
                 let settings = UserSettingDetails::get(&state.mm, user_id).await?;
                 let (recipe, _) = a_complete_recipe_for_create();
@@ -309,9 +302,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_export_multiple_recipes_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
-                let server = build_server_logged_in(config).await?;
+                let (server, state) = build_server_logged_in(default_config()).await?;
                 let user_id = User::all(&state.mm).await?[0].id;
                 let settings = UserSettingDetails::get(&state.mm, user_id).await?;
                 let (recipe, _) = a_complete_recipe_for_create();
@@ -338,8 +329,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_export_nonexistent_recipe_ids_broadcasts_error_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
                 let res = server
                     .post(BASE_URI)
@@ -365,9 +355,8 @@ mod tests {
     mod tests_nutrition {
         use models::nutrition::NutritionDataSource;
 
-        use crate::schemas::settings::NutritionSourcePayload;
-
         use super::*;
+        use crate::schemas::settings::NutritionSourcePayload;
 
         const BASE_URI: &str = "/settings/nutrition/source";
 
@@ -378,9 +367,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_set_same_nutrition_source_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let users = User::all(&state.mm).await?;
 
             let res = server
@@ -401,9 +388,8 @@ mod tests {
     }
 
     mod tests_bold_ingredients {
-        use crate::schemas::settings::BoldIngredientsPayload;
-
         use super::*;
+        use crate::schemas::settings::BoldIngredientsPayload;
 
         const BASE_URI: &str = "/settings/bold-ingredients";
 
@@ -414,9 +400,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_update_bold_ingredients_for_user_on_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server
@@ -434,9 +418,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_update_bold_ingredients_for_user_off_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server
@@ -467,9 +449,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_update_paper_size_for_user_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server
@@ -485,9 +465,8 @@ mod tests {
     }
 
     mod tests_timezone {
-        use crate::schemas::settings::TzPayload;
-
         use super::*;
+        use crate::schemas::settings::TzPayload;
 
         const BASE_URI: &str = "/settings/tz";
 
@@ -498,9 +477,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_set_invalid_tz_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server
@@ -517,9 +494,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_set_valid_tz_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server
@@ -539,9 +514,8 @@ mod tests {
     mod tests_themes {
         use models::settings::Theme;
 
-        use crate::schemas::settings::ThemePayload;
-
         use super::*;
+        use crate::schemas::settings::ThemePayload;
 
         const BASE_URI: &str = "/settings/theme";
 
@@ -554,8 +528,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_set_default_theme_must_be_admin_err() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, _) = build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+            let server = build_server_ws_other_user(default_config(), TEST_DEMO_EMAIL)
+                .await?
+                .0;
 
             let res = server
                 .post(&format!("{BASE_URI}-default"))
@@ -570,10 +545,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_set_default_theme_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
-            let other_user = insert_other_user(config, "slava@ukraini.ua").await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let other_user = insert_other_user(&state, "slava@ukraini.ua").await?;
             let users = User::all(&state.mm).await?;
 
             let res = server
@@ -593,9 +566,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_set_selected_theme_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let users = User::all(&state.mm).await?;
 
             let res = server

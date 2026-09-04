@@ -14,6 +14,7 @@ use auth::pwd::scheme::SchemeStatus;
 use auth::pwd::{ContentToHash, validate_pwd};
 use auth::token::generate_access_token;
 use auth::token::http::{clear_auth_cookies, set_auth_cookies};
+use config::{AutologinState, DemoState, ProductionState, SignupsState};
 use email::{Data, Email, Template};
 use models::tokens::{
     EmailVerificationToken, EmailVerificationTokenForCreate, PasswordResetToken,
@@ -34,7 +35,7 @@ pub async fn change_password_post_handler(
     State(state): State<AppState>,
     Form(form): Form<ChangePasswordForm>,
 ) -> impl IntoResponse {
-    if state.config.read().await.is_autologin {
+    if state.config.read().await.states.autologin == AutologinState::On {
         return Error::ConfirmForbidden.into_response();
     }
 
@@ -288,7 +289,7 @@ pub async fn login_handler(
     } else {
         let config = state.config.read().await;
 
-        templates::auth::login(config.is_demo, config.is_no_signups).into_response()
+        templates::auth::login(&config.states.demo, &config.states.signups).into_response()
     }
 }
 
@@ -326,7 +327,13 @@ pub async fn login_post_handler(
     .await
     {
         Ok(status) => status,
-        Err(_err) => {
+        Err(err) => {
+            error!(
+                user = user.id.to_string(),
+                ?form,
+                ?err,
+                "Password validation failed for user"
+            );
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
             add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
             return res;
@@ -392,7 +399,7 @@ pub async fn login_post_handler(
         access_token,
         refresh_token_entry.token,
         form.is_remember_me(),
-        state.config.read().await.is_production,
+        state.config.read().await.states.production == ProductionState::On,
     );
 
     (StatusCode::SEE_OTHER, [("HX-Redirect", "/recipes")]).into_response()
@@ -404,7 +411,7 @@ pub async fn logout_post_handler(
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
-    if state.config.read().await.is_autologin {
+    if state.config.read().await.states.autologin == AutologinState::On {
         return Error::LogoutForbidden.into_response();
     }
 
@@ -426,7 +433,7 @@ pub async fn register_handler(
     if user.is_some() {
         Redirect::to("/recipes").into_response()
     } else {
-        if state.config.read().await.is_no_signups {
+        if state.config.read().await.states.signups == SignupsState::Off {
             return Redirect::to("/auth/login").into_response();
         }
 
@@ -445,7 +452,7 @@ pub async fn register_post_handler(
     } else {
         let config = state.config.read().await;
 
-        if config.is_no_signups {
+        if config.states.signups == SignupsState::Off {
             return Redirect::to("/auth/login").into_response();
         }
 
@@ -541,12 +548,12 @@ pub async fn user_delete_handler(
 ) -> impl IntoResponse {
     let config = state.config.read().await;
 
-    if config.is_autologin {
+    if config.states.autologin == AutologinState::On {
         broadcast_error(&state, user.id, "This account cannot be deleted.").await;
         return Error::DeleteForbidden.into_response();
     }
 
-    if config.is_demo && is_demo_user(&state, user.id).await {
+    if config.states.demo == DemoState::On && is_demo_user(&state, user.id).await {
         broadcast_error(
             &state,
             user.id,

@@ -33,19 +33,18 @@ mod tests {
     use axum::http::Method;
     use models::user::User;
     use reqwest::StatusCode;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::{assert_html, assert_ws_message};
     use test_utils::{
         TEST_USER_EMAIL, assert_must_be_logged_in, build_server_logged_in, build_server_ws,
-        build_server_ws_other_user, create_app_state, insert_other_user,
+        build_server_ws_other_user, insert_other_user,
     };
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_user {
-        use crate::schemas::auth::RegisterForm;
-
         use super::*;
+        use crate::schemas::auth::RegisterForm;
 
         const BASE_URI: &str = "/admin/user";
 
@@ -56,8 +55,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_must_be_admin_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, _) = build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+            let (server, _, _) =
+                build_server_ws_other_user(default_config(), "demo@demo.com").await?;
 
             let res = server.post(BASE_URI).await;
 
@@ -67,8 +66,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_add_user_password_invalid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -86,8 +84,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_add_user_email_exists_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -105,8 +102,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_add_user_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -117,7 +113,6 @@ mod tests {
                 })
                 .await;
 
-            let state = create_app_state(config.clone()).await;
             let user = User::get_user_by_email(&state.mm, "trumpisa@loser.com")
                 .await?
                 .unwrap();
@@ -165,9 +160,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_must_be_admin_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, _) =
-                    build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+                let server = build_server_ws_other_user(default_config(), "demo@demo.com")
+                    .await?
+                    .0;
 
                 let res = server.delete(&base_uri(user_id2())).await;
 
@@ -177,9 +172,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_cannot_delete_admin_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-                let state = create_app_state(config).await;
+                let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
                 let user_id = User::all(&state.mm).await?[0].id;
 
                 let res = server.delete(&base_uri(user_id)).await;
@@ -191,8 +184,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_delete_user_not_exist_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
                 let res = server.delete(&base_uri(Uuid::new_v4())).await;
 
@@ -203,15 +195,13 @@ mod tests {
 
             #[tokio::test]
             async fn test_delete_user_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-                let user2 = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
+                let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+                let user2 = insert_other_user(&state, "slava@ukraini.ua").await?;
 
                 let res = server.delete(&base_uri(user2.id)).await;
 
                 res.assert_status_ok();
                 assert_ws_message(&mut ws_server, r#"{"showMessageHtmx":{"type":"toast","message":"User deleted.","status":"alert-info","title":"Success"}}"# ).await;
-                let state = create_app_state(config.clone()).await;
                 let user = User::get_user_by_id(&state.mm, user2.id).await;
                 assert!(
                     !(user.is_ok() && user.unwrap().is_some()),
@@ -228,9 +218,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_must_be_admin_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, _) =
-                    build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+                let server = build_server_ws_other_user(default_config(), "demo@demo.com")
+                    .await?
+                    .0;
 
                 let res = server.patch(&base_uri(user_id2())).await;
 
@@ -240,8 +230,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_invalid_payload_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
                 let res = server
                     .patch(&base_uri(user_id1()))
@@ -259,8 +248,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_user_does_not_exist_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
                 let password = "a big beautiful bill";
 
                 let res = server
@@ -279,16 +267,15 @@ mod tests {
 
             #[tokio::test]
             async fn test_update_success_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config.clone()).await?;
-                let user2_id = insert_other_user(config, "slava@ukraini.ua").await?.id;
-                let password = "a big beautiful bill";
+                const PASSWORD: &str = "a big beautiful bill";
+                let (server, mut ws_server, state) = build_server_ws(default_config()).await?;
+                let user2_id = insert_other_user(&state, "slava@ukraini.ua").await?.id;
 
                 let res = server
                     .patch(&base_uri(user2_id))
                     .form(&UpdatePasswordForm {
-                        new_password: password.into(),
-                        new_password_confirm: password.into(),
+                        new_password: PASSWORD.into(),
+                        new_password_confirm: PASSWORD.into(),
                         row_index: 3,
                     })
                     .await;
@@ -314,9 +301,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_must_be_admin_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, _) =
-                    build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
+                let server = build_server_ws_other_user(default_config(), "demo@demo.com")
+                    .await?
+                    .0;
 
                 let res = server.get(&base_uri(user_id3())).await;
 
@@ -326,8 +313,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_user_does_not_exist_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let (server, mut ws_server) = build_server_ws(config).await?;
+                let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
                 let res = server
                     .get(&format!("{}?row-index=1", base_uri(Uuid::new_v4())))
@@ -340,9 +326,7 @@ mod tests {
 
             #[tokio::test]
             async fn test_valid_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let server = build_server_logged_in(config.clone()).await?;
-                let state = create_app_state(config).await;
+                let (server, state) = build_server_logged_in(default_config()).await?;
                 let user_id = User::all(&state.mm).await?[0].id;
 
                 let res = server
@@ -377,9 +361,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_must_be_admin_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, _) = build_server_ws_other_user(config.clone(), "demo@demo.com").await?;
-            let state = create_app_state(config).await;
+            let (server, _, state) =
+                build_server_ws_other_user(default_config(), "demo@demo.com").await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server.get(&base_uri(user_id, 1)).await;
@@ -390,8 +373,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_user_not_exist_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config.clone()).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server.get(&base_uri(Uuid::new_v4(), 3)).await;
 
@@ -402,9 +384,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_valid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
 
             let res = server.get(&base_uri(user_id, 1)).await;

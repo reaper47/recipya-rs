@@ -291,10 +291,11 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
+    use test_db::default_config;
+    use test_utils::{create_app_state, insert_user};
+
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
-    use test_db::TestDb;
-    use test_utils::{create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -303,9 +304,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_user_does_not_exist_err() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
             let id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
@@ -321,9 +321,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_valid_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
             let initial_state = recipe.is_favourite;

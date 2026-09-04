@@ -1,5 +1,7 @@
 use iso8601::DateTime;
 
+use config::States;
+
 use crate::RecipeDetails;
 use crate::params::SearchParams;
 use crate::reports::ViewReport;
@@ -11,9 +13,9 @@ use crate::view::ViewMode;
 #[derive(Default)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Data {
+    pub states: States,
     pub is_admin: bool,
     pub is_authenticated: bool,
-    pub is_autologin: bool,
     pub is_hx_request: bool,
     pub is_preview: bool,
 

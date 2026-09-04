@@ -69,7 +69,7 @@ struct PaperCategory {
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::create_app_state;
 
     use super::*;
@@ -78,8 +78,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_all_paper_sizes_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
+        let state = create_app_state(default_config()).await;
 
         let got = PaperSize::get_all(&state.mm).await?;
 
@@ -102,8 +101,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_paper_size_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
+        let state = create_app_state(default_config()).await;
 
         let got = PaperSize::get(&state.mm, 1).await?;
 

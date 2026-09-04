@@ -5875,8 +5875,12 @@ dependencies = [
  "config",
  "diesel",
  "diesel-async",
+ "diesel_migrations",
  "dotenvy",
+ "futures-util",
  "repository",
+ "tokio",
+ "url",
  "uuid",
 ]
 
@@ -5915,6 +5919,7 @@ dependencies = [
  "test-db",
  "tower-cookies",
  "tracing",
+ "uuid",
 ]
 
 [[package]]

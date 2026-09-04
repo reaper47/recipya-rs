@@ -295,7 +295,7 @@ fn parse_section<'a>(
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{create_app_state, insert_user};
 
     use super::*;
@@ -545,23 +545,41 @@ mod tests {
                 n.id = other_n.id;
                 n.is_precalculated_by_source = other_n.is_precalculated_by_source;
             }
+
             if let Some(n) = recipe.nutrition.per_serving.as_mut() {
                 let other_n = other_recipe.nutrition.per_serving.unwrap().nutrition;
                 n.nutrition.id = other_n.id;
                 n.nutrition.is_precalculated_by_source = other_n.is_precalculated_by_source;
             }
+
+            remove_id_from_recipes(&mut recipe);
+
+            recipe.recipe.id = other_recipe.recipe.id;
             recipe.recipe.name = other_recipe.recipe.name;
             recipe.recipe.created_at = other_recipe.recipe.created_at;
             recipe.recipe.updated_at = other_recipe.recipe.updated_at;
+            recipe.times.id = other_recipe.times.id;
+            recipe.times.recipe_id = other_recipe.times.recipe_id;
             recipe.videos = other_recipe.videos;
+
             recipe
+        }
+
+        fn remove_id_from_recipes(recipe: &mut RecipeDetails) {
+            match &mut recipe.instructions {
+                SectionComponents::Grouped(section_items) => {
+                    for item in section_items.iter_mut() {
+                        item.items.iter_mut().for_each(|i| i.id = None);
+                    }
+                }
+                SectionComponents::Flat(items) => items.iter_mut().for_each(|i| i.id = None),
+            }
         }
 
         #[tokio::test]
         async fn test_search_by_name() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (mut a_recipe, _) = a_complete_recipe_for_create();
             let _ = Recipe::create(&state.mm, user.id, &a_recipe, &settings).await?;
@@ -569,8 +587,9 @@ mod tests {
             let _ = Recipe::create(&state.mm, user.id, &a_recipe, &settings).await?;
 
             let recipe_search = RecipeSearch::new("chinese", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
@@ -583,9 +602,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_search_by_rank() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -603,8 +621,9 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("chinese", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![
@@ -617,9 +636,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_search_by_category() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -637,23 +655,32 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("cat:Breakfast", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            for result in &mut results {
+                match &mut result.instructions {
+                    SectionComponents::Grouped(section_items) => {
+                        for item in section_items.iter_mut() {
+                            item.items.iter_mut().for_each(|i| i.id = None);
+                        }
+                    }
+                    SectionComponents::Flat(items) => items.iter_mut().for_each(|i| i.id = None),
+                }
+            }
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
                     to_recipe_details(3, recipe3, user.id),
                     results[0].clone()
-                ),]
+                )]
             );
             Ok(())
         }
 
         #[tokio::test]
         async fn test_search_by_category_and_unclassified() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config.clone()).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -671,8 +698,9 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("tacos cat:Breakfast", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
@@ -685,9 +713,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_search_by_cuisine() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -705,8 +732,9 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("cui:THAI", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![
@@ -719,9 +747,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_search_by_ingredients() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -745,8 +772,9 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("ing:cayenne pepper,chicken", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
@@ -759,9 +787,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_search_by_instructions() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -786,24 +813,19 @@ mod tests {
 
             let recipe_search =
                 RecipeSearch::new("ins:melt butter medium heat", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
-            let mut expected =
+            results.iter_mut().for_each(remove_id_from_recipes);
+            let expected =
                 adjust_recipe(to_recipe_details(2, recipe2, user.id), results[0].clone());
-            expected
-                .instructions
-                .iter_mut()
-                .enumerate()
-                .for_each(|(idx, item)| item.id = Some(i64::try_from(idx + 5).unwrap_or_default()));
             pretty_assertions::assert_eq!(results, vec![expected]);
             Ok(())
         }
 
         #[tokio::test]
         async fn test_search_by_keywords() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -821,8 +843,9 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("kw:very fat,air fryer", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
@@ -835,9 +858,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_search_by_rating() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -855,8 +877,9 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("stars:1", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![adjust_recipe(
@@ -869,9 +892,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_search_by_tools() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe1, _) = a_complete_recipe_for_create();
             let (mut recipe2, _) = a_complete_recipe_for_create();
@@ -895,8 +917,9 @@ mod tests {
             .await?;
 
             let recipe_search = RecipeSearch::new("tool:wok", 1, false, user.id)?;
-            let results = recipe_search.search(&state.mm).await?;
+            let mut results = recipe_search.search(&state.mm).await?;
 
+            results.iter_mut().for_each(remove_id_from_recipes);
             pretty_assertions::assert_eq!(
                 results,
                 vec![

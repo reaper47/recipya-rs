@@ -3,6 +3,7 @@ use axum::{
     http::HeaderMap,
     response::IntoResponse,
 };
+use config::States;
 use serde::Deserialize;
 
 use app::state::AppState;
@@ -10,6 +11,7 @@ use models::{
     data::{Data, ReportsData},
     reports::ViewReport,
 };
+use tracing::error;
 
 use crate::{
     Result,
@@ -41,7 +43,10 @@ pub async fn reports_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             reports: Some(ReportsData {
                 reports: reports.clone(),
@@ -92,7 +97,10 @@ pub async fn report_handler(
             &Data {
                 is_admin: user.is_admin,
                 is_authenticated: true,
-                is_autologin: state.config.read().await.is_autologin,
+                states: States {
+                    autologin: state.config.read().await.states.autologin,
+                    ..Default::default()
+                },
                 is_hx_request,
                 reports: Some(ReportsData {
                     reports: reports.clone(),
@@ -115,11 +123,11 @@ pub async fn reports_list_handler(
 ) -> Result<impl IntoResponse> {
     let page = params.page.unwrap_or(1);
     let reports = ViewReport::fetch_all(&state.mm, page, user.id).await?;
-
+    // dbg!(&page, &reports);
     let report_id = params.selected.unwrap_or(1);
     let report = ViewReport::fetch(&state.mm, report_id, user.id)
         .await
-        .inspect_err(|err| tracing::error!(?err, report_id, "Failed to fetch report"))
+        .inspect_err(|err| error!(?err, report_id, "Failed to fetch report"))
         .ok();
 
     Ok(templates::reports::render_reports_list(&ReportsData {

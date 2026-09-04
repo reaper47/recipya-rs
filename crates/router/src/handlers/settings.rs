@@ -4,6 +4,7 @@ use axum::extract::State;
 use axum::http::{HeaderMap, Response, StatusCode};
 use axum::response::IntoResponse;
 use axum_htmx::{HX_CURRENT_URL, HX_TRIGGER};
+use config::{DemoState, States};
 use iso8601::DateTime;
 use serde_json::json;
 use tracing::error;
@@ -70,7 +71,7 @@ pub async fn settings_handler(
         None
     };
 
-    let email_config = if config.is_demo {
+    let email_config = if config.states.demo == DemoState::On {
         &email::Config {
             smtp_host: "smtp.gmail.com".into(),
             smtp_port: 587,
@@ -86,7 +87,10 @@ pub async fn settings_handler(
         &Data {
             is_admin,
             is_authenticated: true,
-            is_autologin: config.is_autologin,
+            states: States {
+                autologin: config.states.autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             // TODO: Populate AboutData with good values.
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
@@ -96,9 +100,7 @@ pub async fn settings_handler(
         &settings,
         &categories,
         &SettingsForView {
-            is_autologin: config.is_autologin,
-            is_allow_signups: config.is_no_signups,
-            is_demo: config.is_demo,
+            states: config.states.clone(),
             email: EmailSettingsForView {
                 email_admin: email_config.smtp_from_email.clone(),
                 host: email_config.smtp_host.clone(),

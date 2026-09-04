@@ -5,6 +5,7 @@ use axum::{
     extract::State,
     response::{Html, IntoResponse},
 };
+use config::States;
 use reqwest::StatusCode;
 use tracing::error;
 
@@ -39,15 +40,18 @@ pub async fn add_recipe_import_preview_handler(
 
             let fs_support = Arc::clone(&state.fs_support);
             let data_dir = state.data_dir.clone();
-            let is_autologin = state.config.read().await.is_autologin;
+            let autologin = state.config.read().await.states.autologin;
 
             match templates::recipes::view_recipe_helper(
                 &fs_support,
                 &data_dir,
                 &Data {
+                    states: States {
+                        autologin,
+                        ..Default::default()
+                    },
                     is_admin: user.is_admin,
                     is_authenticated: true,
-                    is_autologin,
                     is_hx_request: true,
                     is_preview: true,
                     about: AboutData::default(),

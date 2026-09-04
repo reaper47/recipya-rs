@@ -1,22 +1,21 @@
 mod data;
 mod error;
+mod states;
 
 pub use data::DataDir;
 pub use error::{Error, Result};
-use tracing::warn;
+pub use states::{AutologinState, DemoState, ProductionState, SignupsState, States};
 
 use std::env;
 
+use tracing::warn;
+
 /// Configuration struct for the application.
 #[derive(Eq, PartialEq, Debug, Clone)]
-#[allow(clippy::struct_excessive_bools)]
 pub struct Config {
     pub base_url: String,
     pub database_url: String,
-    pub is_autologin: bool,
-    pub is_demo: bool,
-    pub is_no_signups: bool,
-    pub is_production: bool,
+    pub states: States,
 }
 
 impl Default for Config {
@@ -24,10 +23,7 @@ impl Default for Config {
         Self {
             base_url: "http://localhost:8078".into(),
             database_url: "postgres://postgres:postgres@localhost:5432/recipya".into(),
-            is_autologin: false,
-            is_demo: false,
-            is_no_signups: false,
-            is_production: false,
+            states: States::default(),
         }
     }
 }
@@ -50,10 +46,14 @@ impl Config {
         Ok(Self {
             base_url: get_env_on_load("RECIPYA_BASE_URL")?,
             database_url,
-            is_autologin: get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true",
-            is_demo: get_env_on_load("RECIPYA_IS_DEMO")? == "true",
-            is_no_signups: get_env_on_load("RECIPYA_IS_ALLOW_SIGNUPS")? == "false",
-            is_production: get_env_on_load("RECIPYA_IS_PRODUCTION")? == "true",
+            states: States {
+                autologin: AutologinState::from(get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true"),
+                demo: DemoState::from(get_env_on_load("RECIPYA_IS_DEMO")? == "true"),
+                signups: SignupsState::from(get_env_on_load("RECIPYA_IS_ALLOW_SIGNUPS")? == "true"),
+                production: ProductionState::from(
+                    get_env_on_load("RECIPYA_IS_PRODUCTION")? == "true",
+                ),
+            },
         })
     }
 }

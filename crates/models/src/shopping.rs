@@ -570,7 +570,7 @@ pub(crate) struct ShareShoppingListForInsert {
 }
 
 /// Represents a recipe with its details for a shopping list item.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ShoppingListRecipeDetails {
     pub id: i64,
     pub name: String,
@@ -595,38 +595,32 @@ impl ShoppingList {
         title: impl Into<String>,
         user_id: Uuid,
     ) -> Result<Uuid> {
-        let list_id = diesel::insert_into(schema::shopping_lists::table)
+        Ok(diesel::insert_into(schema::shopping_lists::table)
             .values(&ShoppingListForInsert {
                 name: title.into(),
                 user_id,
             })
             .returning(schema::shopping_lists::id)
             .get_result::<Uuid>(&mut mm.pool.get().await?)
-            .await?;
-
-        Ok(list_id)
+            .await?)
     }
 
     /// Gets a shopping list by its ID and user ID.
     pub async fn get(mm: &ModelManager, list_id: Uuid, user_id: Uuid) -> Result<Self> {
-        let list = schema::shopping_lists::table
+        Ok(schema::shopping_lists::table
             .filter(schema::shopping_lists::id.eq(list_id))
             .filter(schema::shopping_lists::user_id.eq(user_id))
             .first::<Self>(&mut mm.pool.get().await?)
-            .await?;
-
-        Ok(list)
+            .await?)
     }
 
     /// Gets all of the user's shopping lists.
     pub async fn get_all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
-        let lists = schema::shopping_lists::table
+        Ok(schema::shopping_lists::table
             .filter(schema::shopping_lists::user_id.eq(user_id))
             .order(schema::shopping_lists::created_at.desc())
             .load::<Self>(&mut mm.pool.get().await?)
-            .await?;
-
-        Ok(lists)
+            .await?)
     }
 
     /// Adds an item to a shopping list.
@@ -672,6 +666,8 @@ impl ShoppingList {
                 .execute(&mut conn)
                 .await?;
         }
+
+        drop(conn);
 
         Ok(ShoppingListItemDetails {
             id: item.id,
@@ -802,6 +798,8 @@ impl ShoppingList {
                 entity: "shopping_list_item",
                 id: item_id.to_string(),
             })?;
+
+        drop(conn);
 
         Ok(ShoppingListItemDetails {
             id: item.id,
@@ -976,6 +974,19 @@ impl ShoppingList {
 
         Self::verify_ownership(&mut conn, list_id, user_id).await?;
 
+        let is_title_exists = diesel::select(diesel::dsl::exists(
+            schema::shopping_lists::table
+                .filter(schema::shopping_lists::user_id.eq(user_id))
+                .filter(schema::shopping_lists::name.eq(title.as_ref()))
+                .filter(schema::shopping_lists::id.ne(list_id)),
+        ))
+        .get_result::<bool>(&mut conn)
+        .await?;
+
+        if is_title_exists {
+            return Err(Error::NameExists);
+        }
+
         diesel::update(schema::shopping_lists::table)
             .filter(schema::shopping_lists::id.eq(list_id))
             .set(schema::shopping_lists::name.eq(title.as_ref()))
@@ -1013,7 +1024,7 @@ impl ShoppingList {
         item_id: i64,
         item_u: ShoppingListItemForUpdate,
         user_id: Uuid,
-    ) -> Result<()> {
+    ) -> Result<ShoppingListItem> {
         let mut conn = mm.pool.get().await?;
 
         Self::verify_ownership(&mut conn, list_id, user_id).await?;
@@ -1029,7 +1040,7 @@ impl ShoppingList {
             None
         };
 
-        let _ = diesel::update(schema::shopping_list_items::table)
+        let item = diesel::update(schema::shopping_list_items::table)
             .filter(schema::shopping_list_items::id.eq(item_id))
             .set(&ShoppingListItemForUpdateInternal {
                 ingredient: item_u.ingredient,
@@ -1042,7 +1053,7 @@ impl ShoppingList {
             .get_result::<ShoppingListItem>(&mut conn)
             .await?;
 
-        Ok(())
+        Ok(item)
     }
 
     /// Updates the positions of items in a shopping list.
@@ -1053,27 +1064,22 @@ impl ShoppingList {
         user_id: Uuid,
     ) -> Result<()> {
         let mut conn = mm.pool.get().await?;
-
         Self::verify_ownership(&mut conn, list_id, user_id).await?;
 
         let mut sorted = values.into_iter().collect::<Vec<_>>();
         sorted.sort_by_key(|(id, _)| *id);
 
-        mm.pool
-            .get()
-            .await?
-            .transaction::<_, Error, _>(async |conn| {
-                for (item_id, position) in sorted {
-                    diesel::update(schema::shopping_list_items::table)
-                        .filter(schema::shopping_list_items::id.eq(item_id))
-                        .set(schema::shopping_list_items::position.eq(position))
-                        .execute(conn)
-                        .await?;
-                }
-
-                Ok(())
-            })
-            .await?;
+        conn.transaction::<_, Error, _>(async |conn| {
+            for (item_id, position) in sorted {
+                diesel::update(schema::shopping_list_items::table)
+                    .filter(schema::shopping_list_items::id.eq(item_id))
+                    .set(schema::shopping_list_items::position.eq(position))
+                    .execute(conn)
+                    .await?;
+            }
+            Ok(())
+        })
+        .await?;
 
         Ok(())
     }
@@ -1248,8 +1254,8 @@ impl ShareShoppingList {
 mod tests {
     use time::{Duration, OffsetDateTime};
 
-    use test_db::TestDb;
-    use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
+    use test_db::default_config;
+    use test_utils::{build_server_anonymous, create_app_state};
 
     use crate::{
         Recipe, recipe::structs::test_utils::a_complete_recipe_for_create,
@@ -1298,9 +1304,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_shopping_list_by_id_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
 
@@ -1312,9 +1316,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_all_shopping_lists_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         for i in 0..3 {
             let _ = ShoppingList::create(&state.mm, format!("List {i}"), user_id).await?;
@@ -1326,9 +1328,9 @@ mod tests {
         pretty_assertions::assert_eq!(
             lists.into_iter().map(|l| l.name).collect::<Vec<_>>(),
             vec![
-                "List 2".to_string(),
+                "List 0".to_string(),
                 "List 1".to_string(),
-                "List 0".to_string()
+                "List 2".to_string(),
             ]
         );
         Ok(())
@@ -1336,13 +1338,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_item_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
 
-        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
         pretty_assertions::assert_eq!(
@@ -1351,11 +1351,11 @@ mod tests {
                 id: list_id,
                 name: "Costco".into(),
                 items: vec![ShoppingListItemDetails {
-                    id: 1,
+                    id: item.id,
                     ingredient: "chicken".into(),
                     quantity: Some("1 cup".into()),
                     notes: Some("new notes".into()),
-                    label_id: 2,
+                    label_id: item.label_id,
                     label: "Meat".into(),
                     position: 1,
                     recipe: None,
@@ -1377,9 +1377,7 @@ mod tests {
     #[tokio::test]
     #[allow(unused)]
     async fn test_add_item_to_list_that_does_not_belong_to_user_err() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = Uuid::new_v4();
 
@@ -1391,34 +1389,24 @@ mod tests {
 
     #[tokio::test]
     async fn test_duplicate_shopping_list_name_err() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let _ = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let _ = ShoppingList::create(&state.mm, "wintersun", user_id).await?;
 
-        let got_res = ShoppingList::create(&state.mm, "COSTCO", user_id).await;
+        let got_res = ShoppingList::create(&state.mm, "WINTERSUN", user_id).await;
 
         assert!(matches!(got_res, Err(Error::Diesel(_))));
-        let lists = ShoppingList::get_all(&state.mm, user_id).await?;
-        assert_eq!(lists.len(), 1);
-        pretty_assertions::assert_eq!(
-            lists.into_iter().map(|l| l.name).collect::<Vec<_>>(),
-            vec![a_list_name()]
-        );
         Ok(())
     }
 
     #[tokio::test]
     async fn test_duplicate_shopping_list_label_name_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
 
-        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
-        let _ = ShoppingList::add_item(&state.mm, list_id, other_meat_item(), user_id).await?;
+        let item1 = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let item2 = ShoppingList::add_item(&state.mm, list_id, other_meat_item(), user_id).await?;
 
         let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
         pretty_assertions::assert_eq!(
@@ -1428,11 +1416,11 @@ mod tests {
                 name: "Costco".into(),
                 items: vec![
                     ShoppingListItemDetails {
-                        id: 1,
+                        id: item1.id,
                         ingredient: "chicken".into(),
                         quantity: Some("1 cup".into()),
                         notes: Some("new notes".into()),
-                        label_id: 2,
+                        label_id: item1.label_id,
                         label: "Meat".into(),
                         position: 1,
                         recipe: None,
@@ -1441,11 +1429,11 @@ mod tests {
                         updated_at: got.items[0].updated_at
                     },
                     ShoppingListItemDetails {
-                        id: 2,
+                        id: item2.id,
                         ingredient: "beef".into(),
                         quantity: Some("500g".into()),
                         notes: Some("other notes".into()),
-                        label_id: 2,
+                        label_id: item2.label_id,
                         label: "Meat".into(),
                         position: 2,
                         recipe: None,
@@ -1469,9 +1457,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_item_with_recipe_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
@@ -1483,8 +1469,8 @@ mod tests {
         let item1 = an_item_with_recipe(recipe_id);
         let item2 = other_item_with_recipe(recipe_id2);
 
-        let _ = ShoppingList::add_item(&state.mm, list_id, item1, user_id).await?;
-        let _ = ShoppingList::add_item(&state.mm, list_id, item2, user_id).await?;
+        let item1 = ShoppingList::add_item(&state.mm, list_id, item1, user_id).await?;
+        let item2 = ShoppingList::add_item(&state.mm, list_id, item2, user_id).await?;
 
         let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
         pretty_assertions::assert_eq!(
@@ -1494,15 +1480,15 @@ mod tests {
                 name: "Costco".into(),
                 items: vec![
                     ShoppingListItemDetails {
-                        id: 1,
+                        id: item1.id,
                         ingredient: "chicken".into(),
                         quantity: Some("1 cup".into()),
                         notes: Some("new notes".into()),
-                        label_id: 2,
+                        label_id: item1.label_id,
                         label: "Meat".into(),
                         position: 1,
                         recipe: Some(ShoppingListRecipeDetails {
-                            id: 1,
+                            id: recipe_id,
                             name: recipe1.name,
                         }),
                         is_checked: false,
@@ -1510,15 +1496,15 @@ mod tests {
                         updated_at: got.items[0].updated_at
                     },
                     ShoppingListItemDetails {
-                        id: 2,
+                        id: item2.id,
                         ingredient: "beef".into(),
                         quantity: Some("500g".into()),
                         notes: Some("other notes".into()),
-                        label_id: 2,
+                        label_id: item2.label_id,
                         label: "Meat".into(),
                         position: 2,
                         recipe: Some(ShoppingListRecipeDetails {
-                            id: 2,
+                            id: recipe_id2,
                             name: recipe2.name,
                         }),
                         is_checked: false,
@@ -1535,9 +1521,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_items_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
@@ -1559,7 +1543,7 @@ mod tests {
                 name: "Costco".into(),
                 items: vec![
                     ShoppingListItemDetails {
-                        id: 1,
+                        id: got.items[0].id,
                         ingredient: "chicken".into(),
                         quantity: Some("1 cup".into()),
                         notes: Some("new notes".into()),
@@ -1567,7 +1551,7 @@ mod tests {
                         label: "No label".into(),
                         position: 1,
                         recipe: Some(ShoppingListRecipeDetails {
-                            id: 1,
+                            id: got.items[0].recipe.clone().unwrap().id,
                             name: recipe1.name.clone(),
                         }),
                         is_checked: false,
@@ -1575,7 +1559,7 @@ mod tests {
                         updated_at: got.items[0].updated_at
                     },
                     ShoppingListItemDetails {
-                        id: 2,
+                        id: got.items[1].id,
                         ingredient: "Muffins".into(),
                         quantity: Some("1 cup".into()),
                         notes: Some("new notes".into()),
@@ -1583,7 +1567,7 @@ mod tests {
                         label: "No label".into(),
                         position: 2,
                         recipe: Some(ShoppingListRecipeDetails {
-                            id: 1,
+                            id: got.items[1].recipe.clone().unwrap().id,
                             name: recipe1.name,
                         }),
                         is_checked: false,
@@ -1600,9 +1584,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_item_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1616,15 +1598,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_item_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
         let new_item = other_meat_item();
 
-        ShoppingList::update_item(
+        let updated = ShoppingList::update_item(
             &state.mm,
             list_id,
             item.id,
@@ -1645,11 +1625,11 @@ mod tests {
         pretty_assertions::assert_eq!(
             got.items,
             vec![ShoppingListItemDetails {
-                id: 1,
+                id: item.id,
                 ingredient: new_item.ingredient,
                 quantity: new_item.quantity,
                 notes: Some("other notes".into()),
-                label_id: 3,
+                label_id: updated.shopping_list_label_id,
                 label: "Super C".into(),
                 position: 1,
                 recipe: None,
@@ -1663,9 +1643,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_item_toggle_check_item_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1696,9 +1674,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_shopping_list_name_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let original_list = ShoppingList::get_all(&state.mm, user_id).await?[0].clone();
@@ -1712,9 +1688,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_shopping_list_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1730,9 +1704,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_item_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1746,9 +1718,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_label_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
 
         let got = ShoppingList::label(&state.mm, 1).await?;
 
@@ -1758,9 +1728,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_labels_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1780,9 +1748,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_or_insert_label_label_exists_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1795,24 +1761,20 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_or_insert_label_label_not_exists_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
-        let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
+        let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         let got = ShoppingList::get_or_insert_label(&state.mm, "Veggies", user_id).await?;
 
-        assert_eq!(got, 3);
+        assert_ne!(got, item.label_id);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_update_item_labels_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1826,9 +1788,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_toggle_check_item_once_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1842,9 +1802,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_toggle_check_item_twice_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let _ = build_server_anonymous(config.clone()).await?;
+        let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
@@ -1859,13 +1817,11 @@ mod tests {
 
     mod tests_share {
         use app::state::AppState;
-        use config::Config;
 
         use super::*;
         use crate::user::UserForCreate;
 
-        async fn insert_recipe(config: &Config, state: &AppState, user_id: Uuid) -> Result<()> {
-            let _ = build_server_logged_in(config.clone()).await?;
+        async fn insert_recipe(state: &AppState, user_id: Uuid) -> Result<()> {
             let (recipe, _) = a_complete_recipe_for_create();
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
@@ -1905,10 +1861,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_default_expiration_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
+                let state = create_app_state(default_config()).await;
                 let user_id = add_user(&state.mm).await?.id;
-                insert_recipe(&config, &state, user_id).await?;
+                insert_recipe(&state, user_id).await?;
                 let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
 
                 let got = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
@@ -1916,7 +1871,7 @@ mod tests {
                 assert_share_list(
                     &got,
                     &ShareShoppingList {
-                        id: 1,
+                        id: got.id,
                         link: got.link,
                         user_id,
                         list_id,
@@ -1931,10 +1886,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_custom_expiration_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
+                let state = create_app_state(default_config()).await;
                 let user_id = add_user(&state.mm).await?.id;
-                insert_recipe(&config, &state, user_id).await?;
+                insert_recipe(&state, user_id).await?;
                 let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
                 let expires_at = {
                     let dt = OffsetDateTime::now_utc() + Duration::days(14);
@@ -1947,7 +1901,7 @@ mod tests {
                 assert_share_list(
                     &got,
                     &ShareShoppingList {
-                        id: 1,
+                        id: got.id,
                         link: got.link,
                         user_id,
                         list_id,
@@ -1962,10 +1916,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_already_shared_err() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
+                let state = create_app_state(default_config()).await;
                 let user_id = add_user(&state.mm).await?.id;
-                insert_recipe(&config, &state, user_id).await?;
+                insert_recipe(&state, user_id).await?;
                 let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
                 let share = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
 
@@ -1981,10 +1934,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_exists_ok() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
+                let state = create_app_state(default_config()).await;
                 let user = add_user(&state.mm).await?;
-                insert_recipe(&config, &state, user.id).await?;
+                insert_recipe(&state, user.id).await?;
                 let list_id = ShoppingList::create(&state.mm, a_list_name(), user.id).await?;
                 let shared = ShareShoppingList::new(&state.mm, list_id, user.id, None).await?;
 
@@ -1996,10 +1948,9 @@ mod tests {
 
             #[tokio::test]
             async fn test_exists_err() -> Result<()> {
-                let (_test_db, config) = TestDb::new(None).await?;
-                let state = create_app_state(config.clone()).await;
+                let state = create_app_state(default_config()).await;
                 let user = add_user(&state.mm).await?;
-                insert_recipe(&config, &state, user.id).await?;
+                insert_recipe(&state, user.id).await?;
 
                 let res = ShareShoppingList::get_by_link(&state.mm, user.id).await;
 

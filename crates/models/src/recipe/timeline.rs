@@ -78,13 +78,11 @@ impl RecipeTimeline {
     pub async fn all(mm: &ModelManager, recipe_id: i64, user_id: Uuid) -> Result<Vec<Self>> {
         use schema::recipe_timelines;
 
-        let mut conn = mm.pool.get().await?;
-
         let timelines = recipe_timelines::table
             .filter(recipe_timelines::recipe_id.eq(recipe_id))
             .filter(recipe_timelines::user_id.eq(user_id))
             .order(recipe_timelines::created_at.asc())
-            .load::<Self>(&mut conn)
+            .load::<Self>(&mut mm.pool.get().await?)
             .await?;
 
         Ok(timelines)
@@ -97,9 +95,7 @@ impl RecipeTimeline {
         user_id: Uuid,
         timeline_c: &RecipeTimelineForCreate,
     ) -> Result<i64> {
-        let mut conn = mm.pool.get().await?;
-
-        let timeline_id = diesel::insert_into(schema::recipe_timelines::table)
+        let timeline_id: i64 = diesel::insert_into(schema::recipe_timelines::table)
             .values(&TimelineForInsert {
                 recipe_id,
                 user_id,
@@ -109,16 +105,15 @@ impl RecipeTimeline {
                 image: timeline_c.image,
                 created_at: timeline_c.created_at,
             })
-            .execute(&mut conn)
+            .returning(schema::recipe_timelines::id)
+            .get_result(&mut mm.pool.get().await?)
             .await?;
 
-        Ok(timeline_id.try_into().unwrap_or(i64::MAX))
+        Ok(timeline_id)
     }
 
     /// Updates the fields of an existing timeline.
     pub async fn edit(mm: &ModelManager, user_id: Uuid, new_timeline: &Self) -> Result<Self> {
-        let mut conn = mm.pool.get().await?;
-
         let patch = RecipeTimelinePatch {
             title: Some(&new_timeline.title),
             comment: new_timeline.comment.as_deref(),
@@ -134,7 +129,7 @@ impl RecipeTimeline {
                 .filter(schema::recipe_timelines::user_id.eq(user_id)),
         )
         .set(&patch)
-        .get_result::<Self>(&mut conn)
+        .get_result::<Self>(&mut mm.pool.get().await?)
         .await?;
 
         Ok(result)
@@ -174,8 +169,8 @@ impl RecipeTimeline {
 mod tests {
     use time::{PrimitiveDateTime, macros::format_description};
 
-    use test_db::TestDb;
-    use test_utils::{build_server_anonymous, create_app_state, insert_other_user};
+    use test_db::default_config;
+    use test_utils::{build_server_anonymous, insert_other_user};
 
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
@@ -187,12 +182,10 @@ mod tests {
         use super::*;
 
         #[tokio::test]
-        async fn test_all_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_anonymous(config.clone()).await?;
+        async fn test_timeline_all_ok() -> Result<()> {
+            let (_, state) = build_server_anonymous(default_config()).await?;
             let user1 = User::all(&state.mm).await?[0].clone();
-            let user2 = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
+            let user2 = insert_other_user(&state, "slava@ukraini.ua").await?;
             let settings1 = UserSettingDetails::get(&state.mm, user1.id).await?;
             let settings2 = UserSettingDetails::get(&state.mm, user2.id).await?;
             let recipe_id1 = Recipe::create(
@@ -209,12 +202,17 @@ mod tests {
                 &settings2,
             )
             .await?;
-            RecipeTimeline::create(&state.mm, 1, user1.id, &RecipeTimelineForCreate::default())
-                .await?;
+            RecipeTimeline::create(
+                &state.mm,
+                recipe_id1,
+                user1.id,
+                &RecipeTimelineForCreate::default(),
+            )
+            .await?;
             let image = Uuid::new_v4();
             RecipeTimeline::create(
                 &state.mm,
-                1,
+                recipe_id1,
                 user1.id,
                 &RecipeTimelineForCreate {
                     title: "A title".into(),
@@ -248,10 +246,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_no_updates_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_anonymous(config.clone()).await?;
-            let user = User::all(&state.mm).await?[0].clone();
+            let (_, state) = build_server_anonymous(default_config()).await?;
+            let user = insert_other_user(&state, "no_update_test_user@example.com").await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
             let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
@@ -268,6 +264,7 @@ mod tests {
             let timeline_id =
                 RecipeTimeline::create(&state.mm, recipe_id, user.id, &timeline_c).await?;
 
+            dbg!("OH");
             RecipeTimeline::edit(
                 &state.mm,
                 user.id,
@@ -285,10 +282,11 @@ mod tests {
             .await?;
 
             let got = RecipeTimeline::all(&state.mm, recipe_id, user.id).await?;
+
             pretty_assertions::assert_eq!(
                 got,
                 vec![RecipeTimeline {
-                    id: 1,
+                    id: timeline_id,
                     recipe_id,
                     user_id: user.id,
                     title: timeline_c.title.clone(),
@@ -303,10 +301,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_update_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_anonymous(config.clone()).await?;
-            let user = User::all(&state.mm).await?[0].clone();
+            let (_, state) = build_server_anonymous(default_config()).await?;
+            let user = insert_other_user(&state, "update_test_user@example.com").await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
             let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
@@ -338,12 +334,12 @@ mod tests {
             };
 
             RecipeTimeline::edit(&state.mm, user.id, &new_timeline).await?;
-
             let got = RecipeTimeline::all(&state.mm, recipe_id, user.id).await?;
+
             pretty_assertions::assert_eq!(
                 got,
                 vec![RecipeTimeline {
-                    id: 1,
+                    id: timeline_id,
                     recipe_id,
                     user_id: user.id,
                     title: new_timeline.title.clone(),

@@ -1,12 +1,12 @@
 use std::fs;
 use std::path::PathBuf;
 
-use support::fs::get_base_dir;
 use tracing::info;
 
-use crate::Error;
+use support::fs::get_base_dir;
 
 use super::Result;
+use crate::Error;
 
 /// Stores paths to various application directories.
 #[derive(Clone)]

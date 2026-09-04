@@ -204,6 +204,8 @@ impl UserSettingDetails {
             .parse()
             .map_err(|_| Error::ThemeNotFound)?;
 
+        drop(conn);
+
         Ok(Self {
             user_id,
             measurement_system: MeasurementSystem::from_id(settings.measurement_system_id)?,
@@ -230,7 +232,7 @@ impl UserSettingDetails {
 mod tests {
     use strum::IntoEnumIterator;
 
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{create_app_state, insert_user};
 
     use super::*;
@@ -239,9 +241,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_settings() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
 
         let got = UserSettingDetails::get(&state.mm, user.id).await?;
 
@@ -266,8 +267,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_themes_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
+        let state = create_app_state(default_config()).await;
 
         let got = ThemeModel::all(&state.mm).await?;
 
@@ -277,8 +277,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_theme_id_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
+        let state = create_app_state(default_config()).await;
         let theme = Theme::Halloween;
 
         let got = theme.get_id(&state.mm).await?;
@@ -289,9 +288,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_theme_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let theme1 = Theme::Halloween;
         let theme2 = Theme::Autumn;
 

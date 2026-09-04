@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::{extract::State, http::HeaderMap, response::IntoResponse};
 use axum_htmx::HX_REDIRECT;
+use config::States;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tracing::error;
@@ -47,7 +48,10 @@ pub async fn add_manual_recipe_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },

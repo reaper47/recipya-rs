@@ -26,3 +26,4 @@ support.workspace = true
 test-db.workspace = true
 tower-cookies.workspace = true
 tracing.workspace = true
+uuid.workspace = true

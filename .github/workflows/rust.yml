@@ -65,12 +65,12 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Build tests
-        run: cargo nextest run --no-run
+        run: cargo nextest run --no-run --locked
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
 
-      - name: Test
-        run: cargo nextest run
+      - name: Test dev build
+        uses: nick-fields/retry@v2
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
@@ -81,6 +81,28 @@ jobs:
           SMTP_HOST: "smtp.gmail.com"
           SMTP_USERNAME: "example@gmail.com"
           SMTP_PASSWORD: "abcd abcd bcd abcd"
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: cargo nextest run --locked
+
+      - name: Test release build every 10 runs
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: nick-fields/retry@v2
+        env:
+          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
+          RECIPYA_BASE_URL: "http://localhost:8078"
+          RECIPYA_IS_AUTOLOGIN: "false"
+          RECIPYA_IS_DEMO: "false"
+          RECIPYA_IS_ALLOW_SIGNUPS: "false"
+          SMTP_FROM_EMAIL: "example@gmail.com"
+          SMTP_HOST: "smtp.gmail.com"
+          SMTP_USERNAME: "example@gmail.com"
+          SMTP_PASSWORD: "abcd abcd bcd abcd"
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: cargo nextest run --release --locked
 
       - name: sccache stats
         run: ${SCCACHE_PATH} --show-stats

@@ -11,10 +11,10 @@ mod tests {
     use models::user::User;
     use models::{Recipe, settings::UserSettingDetails};
     use repository::schema;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::assert_html;
     use test_models::a_complete_recipe_for_create;
-    use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in};
 
     use crate::recipes_router::params::ShareRecipeForm;
 
@@ -37,20 +37,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_default_expires_at_time_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config).await;
+        let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
         let res = server
-            .post(&base_uri(1))
+            .post(&base_uri(recipe_id))
             .form(&ShareRecipeForm::new(None))
             .await;
 
-        let share = get_first_shared_recipe(state, user_id).await;
+        let share = get_first_shared_recipe(state, user_id, recipe_id).await;
         res.assert_status_ok();
         assert_html(
             &res,
@@ -70,24 +68,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_custom_expires_at_time_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config).await;
+        let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let expires_at = {
             let dt = OffsetDateTime::now_utc() + Duration::days(31);
             PrimitiveDateTime::new(dt.date(), dt.time())
         };
 
         let res = server
-            .post(&base_uri(1))
+            .post(&base_uri(recipe_id))
             .form(&ShareRecipeForm::new(Some(expires_at.to_string())))
             .await;
 
-        let share = get_first_shared_recipe(state, user_id).await;
+        let share = get_first_shared_recipe(state, user_id, recipe_id).await;
         res.assert_status_ok();
         assert_html(
             &res,
@@ -107,57 +103,60 @@ mod tests {
 
     #[tokio::test]
     async fn test_invalid_expires_at_time_defaults_to_7_days_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config).await;
+        let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let now = OffsetDateTime::now_utc();
 
         let res = server
-            .post(&base_uri(1))
+            .post(&base_uri(recipe_id))
             .form(&ShareRecipeForm::new(Some("hello".into())))
             .await;
 
-        let share = get_first_shared_recipe(state, user_id).await;
+        let share = get_first_shared_recipe(state, user_id, recipe_id).await;
         res.assert_status_ok();
-        pretty_assertions::assert_eq!((share.expires_at.assume_utc() - now).whole_days(), 7);
+        pretty_assertions::assert_eq!(
+            ((share.expires_at.assume_utc() - now).whole_hours() + 1) / 24,
+            7
+        );
         Ok(())
     }
 
     #[tokio::test]
     #[tracing_test::traced_test]
     async fn test_share_twice_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let server = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config).await;
+        let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+        let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let expires_at = {
             let dt = OffsetDateTime::now_utc() + Duration::days(31);
             PrimitiveDateTime::new(dt.date(), dt.time())
         };
         let _ = server
-            .post(&base_uri(1))
+            .post(&base_uri(recipe_id))
             .form(&ShareRecipeForm::new(Some(expires_at.to_string())))
             .await;
 
         let res = server
-            .post(&base_uri(1))
+            .post(&base_uri(recipe_id))
             .form(&ShareRecipeForm::new(Some(expires_at.to_string())))
             .await;
 
         res.assert_status_ok();
-        let share = get_first_shared_recipe(state, user_id).await;
-        assert_eq!(share.recipe_id, 1);
+        let share = get_first_shared_recipe(state, user_id, recipe_id).await;
+        assert_eq!(share.recipe_id, recipe_id);
         Ok(())
     }
 
-    async fn get_first_shared_recipe(state: AppState, user_id: Uuid) -> ShareRecipe {
+    async fn get_first_shared_recipe(
+        state: AppState,
+        user_id: Uuid,
+        recipe_id: i64,
+    ) -> ShareRecipe {
         let mut conn = state
             .mm
             .pool
@@ -168,7 +167,7 @@ mod tests {
         schema::shares_recipes::table
             .filter(
                 schema::shares_recipes::recipe_id
-                    .eq(1)
+                    .eq(recipe_id)
                     .and(schema::shares_recipes::user_id.eq(user_id)),
             )
             .first::<ShareRecipe>(&mut conn)

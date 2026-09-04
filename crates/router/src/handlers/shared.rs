@@ -1,6 +1,7 @@
 use axum::extract::{OriginalUri, Path, State};
 use axum::http::HeaderMap;
 use axum::response::IntoResponse;
+use config::States;
 use iso8601::DateTime;
 use tracing::error;
 use uuid::Uuid;
@@ -58,7 +59,10 @@ pub async fn share_recipe_handler(
                 &Data {
                     is_admin: user.is_admin,
                     is_authenticated: true,
-                    is_autologin: state.config.read().await.is_autologin,
+                    states: States {
+                        autologin: state.config.read().await.states.autologin,
+                        ..Default::default()
+                    },
                     is_hx_request: is_hx_request(&header_map),
                     about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
                     share: Some(ShareData {
@@ -80,7 +84,10 @@ pub async fn share_recipe_handler(
             &state.data_dir,
             &Data {
                 is_authenticated: true,
-                is_autologin: state.config.read().await.is_autologin,
+                states: States {
+                    autologin: state.config.read().await.states.autologin,
+                    ..Default::default()
+                },
                 is_hx_request: is_hx_request(&header_map),
                 about: AboutData {
                     is_update_available: false,
@@ -141,7 +148,10 @@ pub async fn share_shopping_list_handler(
         &Data {
             is_admin: user.as_ref().is_some_and(|u| u.is_admin),
             is_authenticated: user.is_some(),
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             share: Some(ShareData {

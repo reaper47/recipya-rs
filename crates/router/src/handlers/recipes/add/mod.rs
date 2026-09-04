@@ -5,6 +5,7 @@ mod manual;
 mod raw;
 mod website;
 
+use config::States;
 pub use import_api::*;
 pub use import_app::*;
 pub use import_preview::*;
@@ -41,7 +42,10 @@ pub async fn add_recipes_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             ..Default::default()
         },

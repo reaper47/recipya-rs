@@ -92,6 +92,8 @@ impl ViewReport {
             .load::<ReportLogWithLevel>(&mut conn)
             .await?;
 
+        drop(conn);
+
         let mut logs_map: HashMap<i64, Vec<ReportLogWithLevel>> = HashMap::new();
         for log in logs {
             logs_map
@@ -164,6 +166,8 @@ impl ViewReport {
             .order(schema::reports_logs::seq_num.asc())
             .load::<ReportLogWithLevel>(&mut conn)
             .await?;
+
+        drop(conn);
 
         Ok(Self {
             id: r.report.id,
@@ -256,7 +260,7 @@ mod tests {
 
     use super::*;
 
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -264,9 +268,8 @@ mod tests {
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
     async fn test_fetch_reports_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let reports = [
             ReportForCreate::new(
                 ReportTypeFull {

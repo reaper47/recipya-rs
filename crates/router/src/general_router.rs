@@ -36,8 +36,8 @@ mod tests {
     use axum::http::Method;
     use axum_test::multipart::{MultipartForm, Part};
     use serde_json::json;
-    use test_db::TestDb;
-    use test_utils::{assert_must_be_logged_in, build_server_logged_in, create_app_state};
+    use test_db::default_config;
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in};
     use uuid::Uuid;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -56,8 +56,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_missing_url_param_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("")).await;
 
@@ -67,8 +66,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_invalid_url_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("not-a-url")).await;
 
@@ -78,8 +76,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_non_http_scheme_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("ftp://example.com/file.txt")).await;
 
@@ -89,8 +86,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_file_scheme_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("file:///etc/passwd")).await;
 
@@ -100,8 +96,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_loopback_ip_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("http://127.0.0.1/admin")).await;
 
@@ -111,8 +106,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_private_ip_10_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("http://10.0.0.1/internal")).await;
 
@@ -122,8 +116,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_private_ip_172_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("http://172.16.0.1/internal")).await;
 
@@ -133,8 +126,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_private_ip_192_168_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("http://192.168.1.1/internal")).await;
 
@@ -144,8 +136,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_cloud_metadata_ip_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .get(&url("http://169.254.169.254/latest/meta-data"))
@@ -157,8 +148,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_unreachable_url_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url("http://192.0.2.1/")).await;
 
@@ -168,20 +158,22 @@ mod tests {
     }
 
     mod tests_index {
-        use super::*;
+        use config::{AutologinState, Config, States};
 
-        use config::Config;
+        use super::*;
 
         const BASE_URI: &str = "/";
 
         #[tokio::test]
         async fn test_get_index_redirect_to_recipes_when_autologin_ok() -> Result<()> {
-            let config = Some(Config {
-                is_autologin: true,
+            let (server, _) = build_server_logged_in(Config {
+                states: States {
+                    autologin: AutologinState::On,
+                    ..Default::default()
+                },
                 ..Default::default()
-            });
-            let (_test_db, config) = TestDb::new(config).await?;
-            let server = build_server_logged_in(config).await?;
+            })
+            .await?;
 
             let res = server.get(BASE_URI).await;
 
@@ -213,8 +205,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_token_not_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(&url(Uuid::new_v4())).await;
 
@@ -224,9 +215,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_download_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let server = build_server_logged_in(config).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let file_path = std::env::temp_dir().join("test_export.zip");
             tokio::fs::write(&file_path, b"some zip bytes").await?;
@@ -252,9 +241,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_download_file_missing_on_disk_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let server = build_server_logged_in(config).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user = User::all(&state.mm).await?[0].clone();
             let token = Uuid::new_v4();
             Download::create(
@@ -286,8 +273,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_successful_request_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res: axum_test::TestResponse = server.get(BASE_URI).await;
 
@@ -298,7 +284,7 @@ mod tests {
     }
 
     mod tests_search_suggestions {
-        use config::Config;
+        use app::state::AppState;
         use models::{Recipe, settings::UserSettingDetails, user::User};
         use test_models::a_complete_recipe_for_create;
 
@@ -310,9 +296,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_categories_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let _ = insert_basic_recipe(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let _ = insert_basic_recipe(&state).await;
 
             let res = server.get(&url("cat:")).await;
 
@@ -329,10 +314,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_cuisines_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = insert_basic_recipe(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let _ = insert_basic_recipe(&state).await;
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.name = "Test Recipe".into();
             recipe.cuisine = Some("Italian".into());
@@ -354,10 +337,9 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_ingredients_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let _ = insert_basic_recipe(config).await;
+        async fn test_general_ingredients_ok() -> Result<()> {
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let _ = insert_basic_recipe(&state).await;
 
             let res = server.get(&url("ing:")).await;
 
@@ -374,9 +356,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_keywords_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let _ = insert_basic_recipe(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let _ = insert_basic_recipe(&state).await;
 
             let res = server.get(&url("kw:")).await;
 
@@ -393,9 +374,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_tools_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let _ = insert_basic_recipe(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let _ = insert_basic_recipe(&state).await;
 
             let res = server.get(&url("tool:")).await;
 
@@ -412,9 +392,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_sources_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let _ = insert_basic_recipe(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let _ = insert_basic_recipe(&state).await;
 
             let res = server.get(&url("src:")).await;
 
@@ -431,9 +410,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_invalid_term_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let _ = insert_basic_recipe(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let _ = insert_basic_recipe(&state).await;
 
             let res = server.get(&url("source:")).await;
 
@@ -442,13 +420,12 @@ mod tests {
             Ok(())
         }
 
-        async fn insert_basic_recipe(config: Config) -> Result<()> {
-            let state = create_app_state(config.clone()).await;
+        async fn insert_basic_recipe(state: &AppState) -> Result<i64> {
             let user = User::all(&state.mm).await?[0].clone();
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
-            Ok(())
+            let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+            Ok(recipe_id)
         }
     }
 
@@ -502,8 +479,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_no_image_in_form_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -518,8 +494,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_image_type_not_supported_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -534,8 +509,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_image_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
                 .post(BASE_URI)
@@ -563,8 +537,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_get_user_initials_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server.get(BASE_URI).await;
 

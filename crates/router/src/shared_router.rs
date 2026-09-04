@@ -15,23 +15,22 @@ pub fn shared_routes() -> Router<AppState> {
 
 #[cfg(test)]
 mod tests {
-    use models::user::User;
-    use models::{Recipe, recipe::structs::recipe::RecipeForCreate};
-    use test_db::TestDb;
-    use test_models::a_complete_recipe_for_create;
+    use axum_test::TestResponse;
     use uuid::Uuid;
 
-    use axum_test::TestResponse;
     use models::share::ShareRecipe;
+    use models::user::User;
+    use models::{Recipe, recipe::structs::recipe::RecipeForCreate};
+    use test_db::default_config;
     use test_fixtures::{RecipeImages, assert_html, assert_not_in_html};
-    use test_utils::{
-        build_server_anonymous, build_server_logged_in, create_app_state, insert_other_user,
-    };
+    use test_models::a_complete_recipe_for_create;
+    use test_utils::{build_server_anonymous, build_server_logged_in, insert_other_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_recipe {
         use models::settings::UserSettingDetails;
+        use test_db::default_config;
 
         use super::*;
 
@@ -41,8 +40,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_recipe_not_shared_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server.get(&base_uri(Uuid::new_v4())).await;
 
@@ -52,9 +50,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_shared_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe1, images) = a_complete_recipe_for_create();
@@ -68,18 +64,28 @@ mod tests {
             assert_complete_recipe(&res, &recipe, &images);
             assert_html(
                 &res,
-                &[
-                    r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input max-w-18 md:max-w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
-                ],
+                &[&format!(
+                    r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input max-w-18 md:max-w-24" hx-get="/recipes/{recipe_id}/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##
+                )],
             );
             assert_not_in_html(
                 &res,
                 &[
-                    r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
-                    r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
-                    r##"#<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
-                    r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/1/share" hx-target="#share-dialog-result""##,
-                    r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/1" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##,
+                    &format!(
+                        r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/{recipe_id}/share" hx-push-url="true">"#
+                    ),
+                    &format!(
+                        r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/{recipe_id}/duplicate" hx-target="#content">"##
+                    ),
+                    &format!(
+                        r##"#<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/{recipe_id}/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##
+                    ),
+                    &format!(
+                        r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/{recipe_id}/share" hx-target="#share-dialog-result""##
+                    ),
+                    &format!(
+                        r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/{recipe_id}" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##
+                    ),
                 ],
             )?;
             Ok(())
@@ -87,10 +93,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_shared_logged_in_other_user_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let user = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let user = insert_other_user(&state, "slava@ukraini.ua").await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
             let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
@@ -102,8 +106,12 @@ mod tests {
             assert_html(
                 &res,
                 &[
-                    r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
-                    r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input max-w-18 md:max-w-24" hx-get="/recipes/1/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##,
+                    &format!(
+                        r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/{recipe_id}/share" hx-push-url="true">"#
+                    ),
+                    &format!(
+                        r##"<fieldset class="fieldset"><legend>Servings</legend><input id="yield" type="number" min="1" name="yield" value="4" class="input max-w-18 md:max-w-24" hx-get="/recipes/{recipe_id}/scale" hx-trigger="input" hx-target="#ingredients-instructions-container"></fieldset>"##
+                    ),
                 ],
             );
             Ok(())
@@ -111,9 +119,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_shared_anonymous_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
@@ -128,17 +134,27 @@ mod tests {
             assert_html(
                 &res,
                 &[
-                    r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/1/share" hx-push-url="true">"#,
+                    &format!(
+                        r#"<button class="mr-2" title="Add recipe to collection" hx-get="/recipes/{recipe_id}/share" hx-push-url="true">"#
+                    ),
                     "<p class=\"text-xs\">Nutrition Facts\nPer 100g: calories 300 kcal; total carbohydrates 55g; sugar 43g; protein 7g; total fat 6g; saturated fat 1g; unsaturated fat 2g; trans fat 3g; cholesterol 5mg; sodium 12mg; fiber 10g</p>",
                 ],
             );
             assert_not_in_html(
                 &res,
                 &[
-                    r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/1/duplicate" hx-target="#content">"##,
-                    r##"<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/1/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##,
-                    r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/1/share" hx-target="#share-dialog-result""##,
-                    r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/1" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##,
+                    &format!(
+                        r##"<a id="duplicate-recipe" title="Duplicate recipe" hx-push-url="/recipes/add/manual" hx-get="/recipes/{recipe_id}/duplicate" hx-target="#content">"##
+                    ),
+                    &format!(
+                        r##"<button class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/{recipe_id}/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##
+                    ),
+                    &format!(
+                        r##"<button title="Share recipe" class="mr-2 hidden sm:block" hx-post="/recipes/{recipe_id}/share" hx-target="#share-dialog-result""##
+                    ),
+                    &format!(
+                        r##"<button title="Delete recipe" class="mr-2 hidden sm:block" hx-delete="/recipes/{recipe_id}" hx-swap="none" hx-confirm="Are you sure you wish to delete this recipe?" hx-indicator="#fullscreen-loader">"##
+                    ),
                 ],
             )?;
             Ok(())
@@ -207,8 +223,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_list_not_shared_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_anonymous(config).await?;
+            let (server, _) = build_server_anonymous(default_config()).await?;
 
             let res = server.get(&base_uri(Uuid::new_v4())).await;
 
@@ -218,9 +233,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_sl_shared_no_items_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Costco", user_id).await?;
             let share = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
@@ -239,13 +252,11 @@ mod tests {
 
         #[tokio::test]
         async fn test_sl_shared_logged_in_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Costco", user_id).await?;
             let share = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
-            let _ = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
+            let item = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
 
             let res = server.get(&base_uri(share.link)).await;
 
@@ -254,7 +265,10 @@ mod tests {
                 &res,
                 &[
                     r#"<div id="content" class="flex-1 pb-0"><div class="p-2"><h1 class="text-center text-2xl font-bold underline p-2">Costco</h1>"#,
-                    r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]" data-item-id="1" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/items/1/toggle"><div class="text-left [input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all"><p>Spaghetti</p></div></label></div></div></li></ol></details></div>"#,
+                    &format!(
+                        r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]" data-item-id="{}" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/items/{}/toggle"><div class="text-left [input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all"><p>Spaghetti</p></div></label></div></div></li></ol></details></div>"#,
+                        item.id, item.id
+                    ),
                 ],
             );
             assert_not_in_html(
@@ -278,13 +292,13 @@ mod tests {
 
         #[tokio::test]
         async fn test_sl_shared_anonymous_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let list_id = ShoppingList::create(&state.mm, "Costco", user_id).await?;
             let share = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
-            let _ = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id).await?;
+            let item_id = ShoppingList::add_item(&state.mm, list_id, an_item_c(), user_id)
+                .await?
+                .id;
 
             let res = server.get(&base_uri(share.link)).await;
 
@@ -293,7 +307,9 @@ mod tests {
                 &res,
                 &[
                     r#"<div id="content" class="flex-1 pb-0"><div class="p-2"><h1 class="text-center text-2xl font-bold underline p-2">Costco</h1>"#,
-                    r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]" data-item-id="1" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/items/1/toggle"><div class="text-left [input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all"><p>Spaghetti</p></div></label></div></div></li></ol></details></div>"#,
+                    &format!(
+                        r#"<div class="grid"><div class="min-w-full sm:min-w-[33vw] place-self-center"><details open><summary class="text-left cursor-default">No label</summary><ol class="list bg-base-100 rounded-box shadow-md"><li class="list-row grid grid-cols-[1fr_auto]" data-item-id="{item_id}" data-drag-row><div class="grid grid-flow-col" data-drageable draggable="true"><div class="grid gap-1 min-w-0"><label class="label text-base-content"><input type="checkbox" class="checkbox peer" hx-post="/shopping/lists/items/{item_id}/toggle"><div class="text-left [input:checked~&amp;]:line-through [input:checked~&amp;]:opacity-50 transition-all"><p>Spaghetti</p></div></label></div></div></li></ol></details></div>"#
+                    ),
                 ],
             );
             assert_not_in_html(

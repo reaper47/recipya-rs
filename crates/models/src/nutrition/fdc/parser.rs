@@ -541,25 +541,23 @@ impl SRLegacyFoodDetails {
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::create_app_state;
 
-    use crate::nutrition::testdata::nutrition_data::nutrition_data_for_tests::*;
-
     use super::*;
+    use crate::nutrition::testdata::nutrition_data::nutrition_data_for_tests::*;
 
     type Result<T> = core::result::Result<T, Error>;
     type Error = Box<dyn std::error::Error>;
 
     #[tokio::test]
     async fn test_parses_correctly_simple_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config).await;
-        let mut conn = state.mm.pool.get().await?;
+        let state = create_app_state(default_config()).await;
         let client = FdcClientForTests::new(FDC_FF_DATASET_1);
         let parser: FdcParser<DataFetchedState> = FdcParser::new().fetch(&client).await?;
         parser.push_into_database(&state.mm).await?;
 
+        let mut conn = state.mm.pool.get().await?;
         let foods = SRLegacyFoodDetails::get_relevant(&mut conn, "hummus").await?;
 
         pretty_assertions::assert_eq!(
@@ -659,13 +657,12 @@ mod tests {
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
     async fn test_parses_correctly_complex_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config).await;
-        let mut conn = state.mm.pool.get().await?;
+        let state = create_app_state(default_config()).await;
         let client = FdcClientForTests::new(FDC_FF_DATASET_2);
         let parser: FdcParser<DataFetchedState> = FdcParser::new().fetch(&client).await?;
         parser.push_into_database(&state.mm).await?;
 
+        let mut conn = state.mm.pool.get().await?;
         let foods = SRLegacyFoodDetails::get_relevant(&mut conn, "egg frozen").await?;
 
         pretty_assertions::assert_eq!(foods.len(), 2);

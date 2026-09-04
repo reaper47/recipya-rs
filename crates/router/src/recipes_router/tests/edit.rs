@@ -22,11 +22,11 @@ mod tests {
         settings::UserSettingDetails,
         user::User,
     };
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_fixtures::{RecipeImages, assert_ws_message};
     use test_models::a_complete_recipe_for_create;
     use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws, create_app_state,
+        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
     };
 
     use crate::recipes_router::tests::helpers::create_form;
@@ -48,8 +48,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_recipe_not_exist_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let (server, mut ws_server) = build_server_ws(config).await?;
+            let (server, mut ws_server, _) = build_server_ws(default_config()).await?;
 
             let res = server.get(&base_uri(1)).await;
 
@@ -60,34 +59,30 @@ mod tests {
 
         #[tokio::test]
         async fn test_edit_recipe_exists_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-            let res = server.get(&base_uri(1)).await;
+            let res = server.get(&base_uri(recipe_id)).await;
 
-            assert_recipe_form(&res, &images);
+            assert_recipe_form(&res, &images, recipe_id);
             Ok(())
         }
 
         #[tokio::test]
         async fn test_recipe_exists_htmx_request_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let mut server = build_server_logged_in(config.clone()).await?;
+            let (mut server, state) = build_server_logged_in(default_config()).await?;
             server.add_header(axum_htmx::HX_REQUEST, HeaderValue::from_static("true"));
-            let state = create_app_state(config).await;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, images) = a_complete_recipe_for_create();
-            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-            let res = server.get(&base_uri(1)).await;
+            let res = server.get(&base_uri(recipe_id)).await;
 
-            assert_recipe_form(&res, &images);
+            assert_recipe_form(&res, &images, recipe_id);
             Ok(())
         }
     }
@@ -100,8 +95,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_missing_required_title_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
             let recipe = RecipeForCreate {
                 ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
                 instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
@@ -109,7 +105,7 @@ mod tests {
             };
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
@@ -119,8 +115,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_missing_required_ingredients_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
                 instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
@@ -128,7 +125,7 @@ mod tests {
             };
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
@@ -138,8 +135,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_missing_required_instructions_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config).await?;
+            let (server, state) = build_server_logged_in(default_config()).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
                 ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
@@ -147,7 +145,7 @@ mod tests {
             };
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
@@ -157,9 +155,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_update_image_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
@@ -185,27 +181,27 @@ mod tests {
 
         #[tokio::test]
         async fn test_missing_fields_defaults_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.name = "Maple Syrup Korean Chicken".into();
             recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
             recipe.instructions = SectionComponents::Flat(vec![
-                Item::new("Drink juice").with_id(5),
+                Item::new("Drink juice"),
             ]);
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
             res.assert_status_see_other();
-            let state = create_app_state(config.clone()).await;
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+            if let SectionComponents::Flat(instructions) = &mut got.instructions {
+                for i in instructions.iter_mut() { i.id = None; }
+            }
             let expected = recipe_for_create_to_details(recipe, &got, user_id);
             pretty_assertions::assert_eq!(got, expected);
             assert!(got.recipe.image.is_some());
@@ -219,32 +215,27 @@ mod tests {
         #[tracing_test::traced_test]
         #[tokio::test]
         async fn test_can_only_be_one_category_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.category = Some("breakfast,dinner".into());
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
             res.assert_status_see_other();
-            let state = create_app_state(config.clone()).await;
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             pretty_assertions::assert_eq!(got.category, "breakfast");
             Ok(())
         }
 
         #[tokio::test]
         async fn test_subcategories_are_possible() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let mut recipe = RecipeForCreate {
@@ -253,30 +244,27 @@ mod tests {
                 ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
                 ..Default::default()
             };
-            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.category = Some("drinks:vodka".into());
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
             res.assert_status_see_other();
-            let state = create_app_state(config.clone()).await;
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             pretty_assertions::assert_eq!(got.category, "drinks:vodka");
             Ok(())
         }
 
         #[tokio::test]
         async fn test_submit_recipe_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
                 description: Some("Trust me. They're delicious.".into()),
@@ -352,12 +340,12 @@ mod tests {
             };
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
             res.assert_status_see_other();
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             let mut expected = recipe_for_create_to_details(recipe, &got, user_id);
             expected.ingredients = got.ingredients.clone();
             expected.instructions = got.instructions.clone();
@@ -367,20 +355,18 @@ mod tests {
 
         #[tokio::test]
         async fn test_submit_recipe_groups_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe = RecipeForCreate {
                 name: "Crepes".into(),
                 measurement_system_id: 2,
                 category: Some("breakfast".into()),
                 instructions: SectionComponents::Flat(vec![
-                    Item::new("Mix the blueberries").with_id(5),
-                    Item::new("Mix the strawberries").with_id(6),
+                    Item::new("Mix the blueberries"),
+                    Item::new("Mix the strawberries"),
                 ]),
                 ingredients: SectionComponents::Grouped(vec![
                     SectionItem::new(
@@ -427,12 +413,15 @@ mod tests {
             };
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
             res.assert_status_see_other();
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+            if let SectionComponents::Flat(instructions) = &mut got.instructions {
+                for i in instructions.iter_mut() { i.id = None; }
+            }
             let expected = recipe_for_create_to_details(recipe, &got, user_id);
             pretty_assertions::assert_eq!(got.ingredients, expected.ingredients);
             pretty_assertions::assert_eq!(got.instructions, expected.instructions);
@@ -441,13 +430,11 @@ mod tests {
 
         #[tokio::test]
         async fn test_duplicates_are_removed_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let server = build_server_logged_in(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
             let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (mut recipe, _) = a_complete_recipe_for_create();
-            Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.instructions = SectionComponents::Flat(vec![
                 Item::new("Mix the apples"),
                 Item::new("Eat"),
@@ -471,13 +458,15 @@ mod tests {
             ];
 
             let res = server
-                .put(&base_uri(1))
+                .put(&base_uri(recipe_id))
                 .multipart(create_form(&recipe))
                 .await;
 
             res.assert_status_see_other();
-            let state = create_app_state(config.clone()).await;
-            let got = Recipe::get(&state.mm, user_id, 1).await?;
+            let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
+            if let SectionComponents::Flat(instructions) = &mut got.instructions {
+                for i in instructions.iter_mut() { i.id = None; }
+            }
             pretty_assertions::assert_eq!(
                 got.keywords,
                 vec!["drinks".to_string(), "vodka".to_string()]
@@ -489,8 +478,8 @@ mod tests {
             pretty_assertions::assert_eq!(
                 got.instructions,
                 SectionComponents::Flat(vec![
-                    Item::new("Mix the apples").with_id(5),
-                    Item::new("Eat").with_id(6),
+                    Item::new("Mix the apples"),
+                    Item::new("Eat"),
                 ])
             );
             pretty_assertions::assert_eq!(
@@ -505,13 +494,13 @@ mod tests {
         }
     }
 
-    fn assert_recipe_form(res: &TestResponse, images: &RecipeImages) {
+    fn assert_recipe_form(res: &TestResponse, images: &RecipeImages, recipe_id: i64) {
         let body = res.text();
         let normalized = body.split_whitespace().collect::<Vec<_>>().join(" ");
 
         let expected = [
             r#"<title hx-swap-oob="true">Edit Best Chinese Kale | Recipya</title>"#,
-            r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/1/edit" hx-indicator="#fullscreen-loader">"##,
+            &format!(r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/{recipe_id}/edit" hx-indicator="#fullscreen-loader">"##),
             r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale">"#,
             &format!(
                 r#"<img src="/data/images/{}.webp" alt="Image #1 of the recipe" class="block w-full h-full object-contain"><input type="hidden" name="media-existing-image" value="/data/images/{}.webp">"#,
@@ -568,7 +557,7 @@ mod tests {
 
         RecipeDetails {
             recipe: Recipe {
-                id: 1,
+                id: reference.recipe.id,
                 name: recipe_c.name,
                 description: recipe_c.description,
                 image: reference.recipe.image,
@@ -631,8 +620,8 @@ mod tests {
                 }),
             },
             times: Times {
-                id: 1,
-                recipe_id: 1,
+                id: reference.times.id,
+                recipe_id: reference.recipe.id,
                 prep_seconds: recipe_c.times.clone().unwrap_or_default().prep_seconds,
                 cook_seconds: recipe_c.times.clone().unwrap_or_default().cook_seconds,
                 total_seconds: recipe_c.times.clone().unwrap_or_default().prep_seconds

@@ -223,7 +223,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         );
 
         match report.insert(&state.mm).await {
-            Ok(()) => state.broadcast_trigger("refreshReports", user_id).await,
+            Ok(_) => state.broadcast_trigger("refreshReports", user_id).await,
             Err(err) => {
                 error!("Error inserting website report into the database: {err}");
             }

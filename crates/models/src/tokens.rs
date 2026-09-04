@@ -276,7 +276,7 @@ impl RefreshToken {
 
 #[cfg(test)]
 mod tests {
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{create_app_state, insert_user};
 
     use super::*;
@@ -302,9 +302,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_new_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let token = EmailVerificationTokenForCreate {
                 user_id: user.id,
                 token: "test_token".to_string(),
@@ -328,9 +327,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_find_by_token_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = EmailVerificationToken::new(
                 &state.mm,
                 EmailVerificationTokenForCreate {
@@ -358,8 +356,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_find_by_token_not_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
 
             let got = EmailVerificationToken::find_by_token(&state.mm, "test_token").await?;
 
@@ -369,9 +366,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = EmailVerificationToken::new(
                 &state.mm,
                 EmailVerificationTokenForCreate {
@@ -391,8 +387,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_not_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
 
             EmailVerificationToken::delete(&state.mm, "test_token").await?;
 
@@ -403,9 +398,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_verify_user_email_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
 
             EmailVerificationToken::verify_user_email(&state.mm, user.id).await?;
 
@@ -433,9 +427,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_all_for_user_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created1 = PasswordResetToken::new(
                 &state.mm,
                 PasswordResetTokenForCreate {
@@ -466,9 +459,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = PasswordResetToken::new(
                 &state.mm,
                 PasswordResetTokenForCreate {
@@ -488,9 +480,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_find_by_token_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = PasswordResetToken::new(
                 &state.mm,
                 PasswordResetTokenForCreate {
@@ -518,8 +509,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_find_by_token_not_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
 
             let got = PasswordResetToken::find_by_token(&state.mm, "test_token").await?;
 
@@ -581,9 +571,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_all_for_user_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created1 = RefreshToken::new(
                 &state.mm,
                 RefreshTokenForCreate {
@@ -614,9 +603,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = RefreshToken::new(
                 &state.mm,
                 RefreshTokenForCreate {
@@ -636,9 +624,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_find_by_token_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = RefreshToken::new(
                 &state.mm,
                 RefreshTokenForCreate {
@@ -669,9 +656,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_find_by_token_not_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = RefreshToken::new(
                 &state.mm,
                 RefreshTokenForCreate {
@@ -702,9 +688,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_mark_as_used_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user = insert_user(config).await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let created = RefreshToken::new(
                 &state.mm,
                 RefreshTokenForCreate {

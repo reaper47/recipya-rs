@@ -91,12 +91,10 @@ pub struct UserForAuth {
 impl User {
     /// Retrieves all of the users in the database.
     pub async fn all(mm: &ModelManager) -> Result<Vec<Self>> {
-        let all_users = schema::users::table
+        Ok(schema::users::table
             .select(Self::as_select())
             .load::<Self>(&mut mm.pool.get().await?)
-            .await?;
-
-        Ok(all_users)
+            .await?)
     }
 
     /// Retrieves all of a user's recipe categories.
@@ -232,20 +230,33 @@ impl User {
 
     /// Creates a new user from the provided user creation data.
     pub async fn new(mm: &ModelManager, user_c: UserForCreate) -> Result<Self> {
-        use schema::users::dsl::users;
-
-        let new_password_salt = Uuid::new_v4();
-        let new_password = hash_pwd(ContentToHash {
-            content: user_c.password_clear,
-            salt: new_password_salt,
+        let salt = Uuid::new_v4();
+        let hash = hash_pwd(ContentToHash {
+            content: user_c.password_clear.clone(),
+            salt,
         })
         .await?;
+
+        Self::new_with_hash(mm, user_c, salt, hash).await
+    }
+
+    /// Creates a new user given the password salt and hash.
+    ///
+    /// The function is hidden as it is only meant to be used in tests for fixtures.
+    #[doc(hidden)]
+    pub async fn new_with_hash(
+        mm: &ModelManager,
+        user_c: UserForCreate,
+        password_salt: Uuid,
+        password_hash: String,
+    ) -> Result<Self> {
+        use schema::users::dsl::users;
 
         let user = diesel::insert_into(users)
             .values(&UserForInsert {
                 email: user_c.email.clone(),
-                password_hash: new_password,
-                password_salt: new_password_salt,
+                password_hash,
+                password_salt,
                 is_admin: Self::all(mm).await?.is_empty(),
             })
             .returning(Self::as_returning())
@@ -366,7 +377,7 @@ mod tests {
 
     use super::*;
 
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{
         TEST_USER_EMAIL, build_server_logged_in, create_app_state, insert_other_user, insert_user,
     };
@@ -378,10 +389,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_all_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let user1 = insert_user(config.clone()).await?;
-            let user2 = insert_other_user(config.clone(), "slava@ukraini.ua").await?;
+            let state = create_app_state(default_config()).await;
+            let user1 = insert_user(&state).await?;
+            let user2 = insert_other_user(&state, "slava@ukraini.ua").await?;
 
             let got = User::all(&state.mm)
                 .await?
@@ -395,12 +405,12 @@ mod tests {
     }
 
     mod test_categories {
-        use super::*;
-
         use diesel_async::RunQueryDsl;
 
         use schema;
-        use test_utils::{build_server_logged_in, create_app_state};
+        use test_utils::build_server_logged_in;
+
+        use super::*;
 
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_categories)]
@@ -410,81 +420,102 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_categories_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_logged_in(config.clone()).await?;
+        async fn test_user_categories_ok() -> Result<()> {
+            let (_, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut conn = state.mm.pool.get().await?;
             let (id, _name) = diesel::insert_into(schema::categories::table)
                 .values(schema::categories::name.eq("date"))
-                .get_result::<(i64, String)>(&mut conn)
+                .get_result::<(i64, String)>(&mut state.mm.pool.get().await?)
                 .await?;
             diesel::insert_into(schema::users_categories::table)
                 .values(&NewUserCategory {
                     category_id: id,
                     user_id,
                 })
-                .execute(&mut conn)
+                .execute(&mut state.mm.pool.get().await?)
                 .await?;
 
             let categories = User::categories(&state.mm, user_id).await?;
 
             let want = vec![
                 Category {
-                    id: 1,
+                    id: categories
+                        .iter()
+                        .find(|c| c.name == "uncategorized")
+                        .unwrap()
+                        .id,
                     name: "uncategorized".into(),
                 },
                 Category {
-                    id: 2,
+                    id: categories
+                        .iter()
+                        .find(|c| c.name == "appetizers")
+                        .unwrap()
+                        .id,
                     name: "appetizers".into(),
                 },
                 Category {
-                    id: 3,
+                    id: categories.iter().find(|c| c.name == "bread").unwrap().id,
                     name: "bread".into(),
                 },
                 Category {
-                    id: 4,
+                    id: categories
+                        .iter()
+                        .find(|c| c.name == "breakfasts")
+                        .unwrap()
+                        .id,
                     name: "breakfasts".into(),
                 },
                 Category {
-                    id: 5,
+                    id: categories
+                        .iter()
+                        .find(|c| c.name == "condiments")
+                        .unwrap()
+                        .id,
                     name: "condiments".into(),
                 },
                 Category {
-                    id: 6,
+                    id: categories.iter().find(|c| c.name == "dessert").unwrap().id,
                     name: "dessert".into(),
                 },
                 Category {
-                    id: 7,
+                    id: categories.iter().find(|c| c.name == "lunch").unwrap().id,
                     name: "lunch".into(),
                 },
                 Category {
-                    id: 8,
+                    id: categories
+                        .iter()
+                        .find(|c| c.name == "main dish")
+                        .unwrap()
+                        .id,
                     name: "main dish".into(),
                 },
                 Category {
-                    id: 9,
+                    id: categories.iter().find(|c| c.name == "salad").unwrap().id,
                     name: "salad".into(),
                 },
                 Category {
-                    id: 10,
+                    id: categories
+                        .iter()
+                        .find(|c| c.name == "side dish")
+                        .unwrap()
+                        .id,
                     name: "side dish".into(),
                 },
                 Category {
-                    id: 11,
+                    id: categories.iter().find(|c| c.name == "snacks").unwrap().id,
                     name: "snacks".into(),
                 },
                 Category {
-                    id: 12,
+                    id: categories.iter().find(|c| c.name == "soups").unwrap().id,
                     name: "soups".into(),
                 },
                 Category {
-                    id: 13,
+                    id: categories.iter().find(|c| c.name == "stews").unwrap().id,
                     name: "stews".into(),
                 },
                 Category {
-                    id: 14,
+                    id: categories.iter().find(|c| c.name == "date").unwrap().id,
                     name: "date".into(),
                 },
             ];
@@ -498,10 +529,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_num_users() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            insert_user(config.clone()).await?;
-            insert_other_user(config.clone(), "slava@ukraini.ua").await?;
+            let state = create_app_state(default_config()).await;
+            insert_user(&state).await?;
+            insert_other_user(&state, "slava@ukraini.ua").await?;
 
             let num_users = User::num_users(&state.mm).await?;
 
@@ -514,7 +544,7 @@ mod tests {
         use diesel_async::RunQueryDsl;
 
         use super::*;
-        use test_utils::{build_server_logged_in, create_app_state};
+        use test_utils::build_server_logged_in;
 
         #[derive(Insertable)]
         #[diesel(table_name = schema::users_keywords)]
@@ -526,23 +556,20 @@ mod tests {
         #[tokio::test]
         #[allow(clippy::cast_possible_wrap)]
         async fn test_keywords_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_logged_in(config.clone()).await?;
+            let (_, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let mut conn = state.mm.pool.get().await?;
             let want_keywords = ["main:cheeses", "main:meat"];
             for kw in want_keywords {
                 let (id, _name) = diesel::insert_into(schema::keywords::table)
                     .values(schema::keywords::name.eq(kw))
-                    .get_result::<(i64, String)>(&mut conn)
+                    .get_result::<(i64, String)>(&mut state.mm.pool.get().await?)
                     .await?;
                 diesel::insert_into(schema::users_keywords::table)
                     .values(&NewUserKeyword {
                         keyword_id: id,
                         user_id,
                     })
-                    .execute(&mut conn)
+                    .execute(&mut state.mm.pool.get().await?)
                     .await?;
             }
 
@@ -550,9 +577,11 @@ mod tests {
 
             let want = want_keywords
                 .into_iter()
-                .enumerate()
-                .map(|(id, name)| Keyword {
-                    id: id as i64 + 1,
+                .map(|name| Keyword {
+                    id: keywords
+                        .iter()
+                        .find(|kw| kw.name == name)
+                        .map_or(1, |kw| kw.id),
                     name: name.to_string(),
                 })
                 .collect::<Vec<_>>();
@@ -563,10 +592,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_user_new_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
+        let state = create_app_state(default_config()).await;
 
-        insert_user(config.clone()).await?;
+        insert_user(&state).await?;
 
         let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
@@ -577,10 +605,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_user_new_already_exists_err() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        insert_user(&state).await?;
 
-        let res = insert_user(config.clone()).await;
+        let res = insert_user(&state).await;
 
         assert!(res.is_err());
         Ok(())
@@ -588,8 +616,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_user_not_exist_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
+        let state = create_app_state(default_config()).await;
         let user_id = Uuid::new_v4();
 
         match User::delete(&state.mm, user_id).await {
@@ -600,9 +627,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_user_exists_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
 
         User::delete(&state.mm, user.id).await?;
 
@@ -614,9 +640,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_favourite_recipes() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let _ = build_server_logged_in(config.clone()).await?;
-        let state = create_app_state(config.clone()).await;
+        let (_, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe1, _) = a_complete_recipe_for_create();
@@ -645,9 +669,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user_by_id_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
 
         let got_user = User::get_user_by_id(&state.mm, user.id)
             .await?
@@ -659,9 +682,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user_auth_by_email_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
 
         let got_user = User::get_user_auth_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
@@ -673,9 +695,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_paper_size_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
 
         user.update_paper_size(&state.mm, 2).await?;
 
@@ -686,9 +707,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_password_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let password_before = String::from(&user.password_hash);
 
         user.update_password(&state.mm, "new password").await?;
@@ -703,9 +723,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_password_by_user_id_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let password_before = user.password_hash;
 
         User::update_password_by_user_id(&state.mm, user.id, "new password").await?;
@@ -720,9 +739,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_update_remember_me_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
 
         User::update_remember_me(&state.mm, user.id, true).await?;
 

@@ -94,12 +94,12 @@ impl Recipe {
 
 #[cfg(test)]
 mod tests {
+    use test_db::default_config;
+    use test_utils::{create_app_state, insert_user};
+
     use super::*;
     use crate::recipe::structs::test_utils::a_complete_recipe_for_create;
-
     use crate::settings::UserSettingDetails;
-    use test_db::TestDb;
-    use test_utils::{create_app_state, insert_user};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -109,9 +109,8 @@ mod tests {
         #[tokio::test]
         #[allow(clippy::too_many_lines)]
         async fn test_delete_recipe_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
             let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
@@ -243,9 +242,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_delete_recipe_not_found_err() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
 
             match Recipe::delete(&state.mm, 1, user.id).await {
                 Ok(()) => panic!("Should not return error"),
@@ -269,18 +267,16 @@ mod tests {
 
         #[tokio::test]
         async fn test_category_not_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
-            let mut conn = state.mm.pool.get().await?;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let categories_before = schema::users_categories::table
-                .load::<UserCategory>(&mut conn)
+                .load::<UserCategory>(&mut state.mm.pool.get().await?)
                 .await?;
 
             Recipe::delete_recipe_category(&state.mm, A_CATEGORY, user.id).await?;
 
             let categories_after = schema::users_categories::table
-                .load::<UserCategory>(&mut conn)
+                .load::<UserCategory>(&mut state.mm.pool.get().await?)
                 .await?;
             pretty_assertions::assert_eq!(categories_before.len(), categories_after.len());
             Ok(())
@@ -288,9 +284,8 @@ mod tests {
 
         #[tokio::test]
         async fn test_category_found_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let user = insert_user(config.clone()).await?;
-            let state = create_app_state(config.clone()).await;
+            let state = create_app_state(default_config()).await;
+            let user = insert_user(&state).await?;
             let settings = UserSettingDetails::get(&state.mm, user.id).await?;
             Recipe::add_category(&state.mm, A_CATEGORY, user.id).await?;
             let (mut a_recipe, _) = a_complete_recipe_for_create();

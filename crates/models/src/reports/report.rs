@@ -135,7 +135,7 @@ impl ReportForCreate {
     }
 
     /// Inserts a report into the database.
-    pub async fn insert(&self, mm: &ModelManager) -> Result<()> {
+    pub async fn insert(&self, mm: &ModelManager) -> Result<i64> {
         let mut conn = mm.pool.get().await?;
 
         let report_id = diesel::insert_into(schema::reports::table)
@@ -164,7 +164,7 @@ impl ReportForCreate {
             .execute(&mut conn)
             .await?;
 
-        Ok(())
+        Ok(report_id)
     }
 }
 

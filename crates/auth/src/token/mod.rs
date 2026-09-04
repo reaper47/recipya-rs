@@ -1,9 +1,6 @@
 pub mod http;
 pub mod jwt;
 
-#[cfg(feature = "test-helpers")]
-pub mod jwt_test_helpers;
-
 pub use crate::{Error, Result};
 
 use uuid::Uuid;

@@ -7,10 +7,9 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::HX_REDIRECT;
+use config::States;
 use indexmap::IndexMap;
 use reqwest::StatusCode;
-use support::strings::calc_seconds_from_parts;
-use templates::recipes::RecipeDiff;
 use tracing::error;
 use uuid::Uuid;
 
@@ -28,6 +27,8 @@ use models::{
     },
 };
 use models::{Recipe, recipe::structs::recipe::RecipeForCreate};
+use support::strings::calc_seconds_from_parts;
+use templates::recipes::RecipeDiff;
 
 use crate::{
     Error, Result,
@@ -85,14 +86,16 @@ pub async fn recrape_recipe_handler(
         return Ok(().into_response());
     }
 
-    let is_autologin = state.config.read().await.is_autologin;
     let is_hx_request = is_hx_request(&header_map);
 
     let mut res = templates::recipes::rescrape_recipe_diff(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin,
+                ..Default::default()
+            },
             is_hx_request,
             recipes: vec![],
             ..Default::default()

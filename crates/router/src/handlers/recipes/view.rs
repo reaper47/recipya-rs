@@ -3,6 +3,7 @@ use axum::{
     http::HeaderMap,
     response::IntoResponse,
 };
+use config::States;
 use iso8601::DateTime;
 use tracing::error;
 
@@ -80,7 +81,10 @@ pub async fn recipes_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin: state.config.read().await.is_autologin,
+            states: States {
+                autologin: state.config.read().await.states.autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&headers),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
@@ -128,7 +132,6 @@ pub async fn view_recipe_handler(
     };
 
     let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
-    let is_autologin = state.config.read().await.is_autologin;
 
     if user_settings.is_bold_ingredients
         && let Err(err) = view_recipe
@@ -144,6 +147,8 @@ pub async fn view_recipe_handler(
         );
     }
 
+    let autologin = state.config.read().await.states.autologin;
+
     match templates::recipes::view_recipe(
         &state.fs_support,
         uri.path(),
@@ -151,7 +156,10 @@ pub async fn view_recipe_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_autologin,
+            states: States {
+                autologin,
+                ..Default::default()
+            },
             is_hx_request: is_hx_request(&header_map),
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::hidden()),

@@ -205,7 +205,7 @@ impl Recipe {
 #[cfg(test)]
 mod tests {
     use app::state::AppState;
-    use test_db::TestDb;
+    use test_db::default_config;
     use test_utils::{build_server_logged_in, create_app_state, insert_user};
     use time::PrimitiveDateTime;
 
@@ -231,9 +231,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_create_new_ok() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_logged_in(config.clone()).await?;
+            let (_, state) = build_server_logged_in(default_config()).await?;
             let user = User::all(&state.mm).await?[0].clone();
             let category = "fish";
 
@@ -245,36 +243,29 @@ mod tests {
 
         #[tokio::test]
         async fn test_create_new_duplicate_err() -> Result<()> {
-            let (_test_db, config) = TestDb::new(None).await?;
-            let state = create_app_state(config.clone()).await;
-            let _ = build_server_logged_in(config.clone()).await?;
+            let (_, state) = build_server_logged_in(default_config()).await?;
             let user = User::all(&state.mm).await?[0].clone();
             let category = "fish";
             Recipe::add_category(&state.mm, category, user.id).await?;
 
             let res = Recipe::add_category(&state.mm, category, user.id).await;
 
-            if res.is_ok() {
-                panic!("Should not succeed")
-            } else {
-                assert_category(state, category).await?;
-                Ok(())
-            }
+            assert!(matches!(res, Err(Error::Diesel(_))));
+            Ok(())
         }
 
         async fn assert_category(state: AppState, category: &str) -> Result<()> {
-            let mut conn = state.mm.pool.get().await?;
             let category_id = schema::categories::table
                 .filter(schema::categories::name.eq(category))
                 .select(schema::categories::id)
-                .first::<i64>(&mut conn)
+                .first::<i64>(&mut state.mm.pool.get().await?)
                 .await?;
             assert!(category_id > 0);
 
             let count = schema::users_categories::table
                 .filter(schema::users_categories::category_id.eq(category_id))
                 .count()
-                .get_result::<i64>(&mut conn)
+                .get_result::<i64>(&mut state.mm.pool.get().await?)
                 .await?;
             pretty_assertions::assert_eq!(count, 1);
             Ok(())
@@ -322,8 +313,8 @@ mod tests {
     fn recipe_for_create_to_recipe_with_data(
         recipe_id: i64,
         user_id: Uuid,
-        mut recipe: RecipeForCreate,
-        got: &RecipeDetails,
+        recipe: RecipeForCreate,
+        got: &mut RecipeDetails,
     ) -> RecipeDetails {
         let mut keywords = recipe.keywords.clone();
         keywords.sort();
@@ -344,11 +335,7 @@ mod tests {
             n.nutrition.is_precalculated_by_source = other_n.nutrition.is_precalculated_by_source;
         }
 
-        recipe
-            .instructions
-            .iter_mut()
-            .enumerate()
-            .for_each(|(idx, item)| item.id = Some(i64::try_from(idx + 1).unwrap_or_default()));
+        got.instructions.iter_mut().for_each(|item| item.id = None);
 
         RecipeDetails {
             recipe: Recipe {
@@ -375,7 +362,7 @@ mod tests {
             keywords,
             nutrition,
             times: Times {
-                id: recipe_id,
+                id: got.times.id,
                 recipe_id,
                 prep_seconds: times.prep_seconds,
                 cook_seconds: times.cook_seconds,
@@ -384,11 +371,15 @@ mod tests {
             tools: recipe
                 .tools
                 .into_iter()
-                .enumerate()
-                .map(|(idx, t)| ToolRecipe {
-                    name: t.name,
+                .map(|t| ToolRecipe {
+                    name: t.name.clone(),
                     quantity: t.quantity,
-                    tool_order: i16::try_from(idx + 1).unwrap_or_default(),
+                    tool_order: got
+                        .tools
+                        .iter()
+                        .find(|t2| t2.name == t.name)
+                        .unwrap()
+                        .tool_order,
                 })
                 .collect::<Vec<_>>(),
             videos: recipe
@@ -411,25 +402,23 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let (recipe, _) = a_complete_recipe_for_create();
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
-        let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
-        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
+        let mut got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
+        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &mut got);
         pretty_assertions::assert_eq!(got, want);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_create_duplicates_err() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let _ = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
@@ -437,17 +426,16 @@ mod tests {
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
-        let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
-        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
+        let mut got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
+        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &mut got);
         pretty_assertions::assert_eq!(got, want);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_create_duplicate_name_err() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let (recipe, _) = a_complete_recipe_for_create();
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let _ = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
@@ -463,25 +451,23 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_bare_minimum_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let recipe = a_bare_minimum_recipe();
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
-        let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
-        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &got);
+        let mut got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
+        let want = recipe_for_create_to_recipe_with_data(got_recipe_id, user.id, recipe, &mut got);
         pretty_assertions::assert_eq!(got, want);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_create_some_fields_are_lowercase_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let mut recipe = a_bare_minimum_recipe();
         recipe.keywords = vec!["CHICKEN".into(), "MEAT".into()];
@@ -527,34 +513,44 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_parse_duration_seconds_ok() -> Result<()> {
-        let (_test_db, config) = TestDb::new(None).await?;
-        let state = create_app_state(config.clone()).await;
-        let user = insert_user(config.clone()).await?;
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state).await?;
         let user_settings = UserSettingDetails::get(&state.mm, user.id).await?;
         let mut recipe = a_bare_minimum_recipe();
+        let instruction1 = "Heat oil on medium heat in a large";
+        let instruction2 = "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil";
+        let instruction3 = "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.";
         recipe.instructions = SectionComponents::Flat(vec![
-            Item::new("Heat oil on medium heat in a large"),
-            Item::new(
-                "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
-            ),
-            Item::new(
-                "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.",
-            ),
+            Item::new(instruction1),
+            Item::new(instruction2),
+            Item::new(instruction3),
         ]);
 
         let got_recipe_id = Recipe::create(&state.mm, user.id, &recipe, &user_settings).await?;
 
         let got = Recipe::get(&state.mm, user.id, got_recipe_id).await?;
+        let get_id = |idx| match got.instructions {
+            SectionComponents::Grouped(ref items) => items[0]
+                .items
+                .iter()
+                .find(|&it| it.text == idx)
+                .unwrap()
+                .id
+                .unwrap(),
+            SectionComponents::Flat(ref items) => {
+                items.iter().find(|&it| it.text == idx).unwrap().id.unwrap()
+            }
+        };
         pretty_assertions::assert_eq!(
             got.instructions,
             SectionComponents::Flat(vec![
-                Item::new("Heat oil on medium heat in a large").with_id(1),
+                Item::new("Heat oil on medium heat in a large").with_id(get_id(instruction1)),
                 Item::new(
                      "When tomatoes have softened and have started to release their juices (about 4-5 min) add basil",
-                ).with_duration(5*60).with_id(2),
+                ).with_duration(5*60).with_id(get_id(instruction2)),
                 Item::new(
                     "Simmer on low for at least 1 hour, or up to 6 hours, stirring occasionally. The longer you simmer, the better.",
-                ).with_duration(360*60).with_id(3)
+                ).with_duration(360*60).with_id(get_id(instruction3))
             ]));
         Ok(())
     }
