@@ -86,7 +86,7 @@ jobs:
           max_attempts: 3
           command: cargo nextest run --locked
 
-      - name: Test release build every 10 runs
+      - name: Test release build
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: nick-fields/retry@v2
         env:

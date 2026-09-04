@@ -32,10 +32,7 @@ pub async fn duplicate_recipe_handler(
         match fetch_view_recipe(&state, user.id, recipe_id).await {
             Ok(res) => res,
             Err(err) => {
-                error!(
-                    "Error fetching view recipe '{recipe_id}' for user '{}': {err}",
-                    user.id
-                );
+                error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
                 broadcast_error(&state, user.id, "Recipe not found.").await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),

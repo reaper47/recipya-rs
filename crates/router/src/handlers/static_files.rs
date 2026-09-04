@@ -71,7 +71,7 @@ pub fn copy_to_fs(src: &str, dest: PathBuf) -> Result<()> {
 
     let mut file = File::create_new(dest).map_err(|_| Error::FileExists)?;
     file.write_all(asset.data.trim_ascii()).map_err(|err| {
-        error!("Failed to write content to file: {err}");
+        error!(?err, "Failed to write content to file");
         Error::Fs
     })?;
 

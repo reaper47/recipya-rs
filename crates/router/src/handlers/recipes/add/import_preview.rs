@@ -71,17 +71,14 @@ pub async fn add_recipe_import_preview_handler(
             ) {
                 Ok(res) => Ok(res.into_response()),
                 Err(err) => {
-                    error!(
-                        "Error rendering view recipe page preview for user {}: {err}",
-                        user.id
-                    );
+                    error!(user = ?user.id, ?err, "Error rendering view recipe page preview");
                     broadcast_error(&state, user.id, "Error rendering recipe preview.").await;
                     Err(Error::Templates)
                 }
             }
         }
         Err(err) => {
-            error!("Error parsing recipe schema JSON: {err}");
+            error!(?err, "Error parsing recipe schema JSON");
             Ok((
                 StatusCode::OK,
                 Html(format!(

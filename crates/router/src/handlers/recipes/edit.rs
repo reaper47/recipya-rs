@@ -41,10 +41,7 @@ pub async fn edit_recipe_handler(
     let (recipe, categories, keywords) = match fetch_view_recipe(&state, user.id, recipe_id).await {
         Ok(res) => res,
         Err(err) => {
-            error!(
-                "Error fetching view recipe '{recipe_id}' for user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
             broadcast_error(&state, user.id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
@@ -76,10 +73,7 @@ pub async fn edit_recipe_handler(
     ) {
         Ok(res) => Ok(res),
         Err(err) => {
-            error!(
-                "Error rendering edit recipe page for user {} and recipe {recipe_id}: {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error rendering edit recipe page");
             Err(Error::Templates)
         }
     }
@@ -166,10 +160,7 @@ pub async fn edit_recipe_put_handler(
             state.remove_cached_recipe((user.id, recipe_id)).await;
         }
         Err(err) => {
-            error!(
-                "Failed to update recipe '{recipe_id}' user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
             broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }

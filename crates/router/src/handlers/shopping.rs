@@ -60,7 +60,7 @@ pub async fn shopping_lists_handler(
     let shopping_lists = match ShoppingList::get_all(&state.mm, user.id).await {
         Ok(lists) => lists,
         Err(err) => {
-            error!("Failed to get shopping lists for user '{}': {err}", user.id);
+            error!(user = ?user.id, ?err, "Failed to get shopping lists");
             broadcast_error(&state, user.id, "Failed to get shopping lists.").await;
             return Err(Error::Database);
         }
@@ -70,10 +70,7 @@ pub async fn shopping_lists_handler(
         match ShoppingListDetails::get(&state.mm, list.id, user.id).await {
             Ok(details) => Some(details),
             Err(err) => {
-                error!(
-                    "Failed to get shopping list details of list '{}' for user '{}': {err}",
-                    list.id, user.id
-                );
+                error!(user = ?user.id, list = ?list.id, ?err, "Failed to get shopping list details of list");
                 broadcast_error(&state, user.id, "Failed to get shopping list details.").await;
                 None
             }
@@ -85,7 +82,7 @@ pub async fn shopping_lists_handler(
     let labels = match ShoppingList::labels(&state.mm, user.id).await {
         Ok(labels) => Some(labels),
         Err(err) => {
-            error!("Failed to fetch the labels for user '{}': {err}", user.id);
+            error!(user = ?user.id, ?err, "Failed to fetch the labels");
             None
         }
     };
@@ -124,7 +121,7 @@ pub async fn shopping_list_handler(
     let list = match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
         Ok(list) => list,
         Err(err) => {
-            error!("Failed to get shopping list: {err}");
+            error!(?err, "Failed to get shopping list");
             return Error::Database.into_response();
         }
     };
@@ -148,7 +145,7 @@ pub async fn shopping_list_delete_handler(
     Path(list_id): Path<Uuid>,
 ) -> impl IntoResponse {
     if let Err(err) = ShoppingList::delete(&state.mm, list_id, user.id).await {
-        error!("Failed to delete shopping list: {err}");
+        error!(?err, "Failed to delete shopping list");
         broadcast_error(&state, user.id, "Failed to delete shopping list.").await;
         return Error::Database.into_response();
     }
@@ -182,7 +179,7 @@ pub async fn shopping_list_put_handler(
             Error::InvalidPayload.into_response()
         }
         Err(err) => {
-            error!("Failed to update shopping list title: {err}");
+            error!(?err, "Failed to update shopping list title");
             broadcast_error(&state, user.id, "Failed to update shopping list title.").await;
             Error::Database.into_response()
         }
@@ -215,10 +212,7 @@ pub async fn shopping_list_copy_handler(
             return Err(Error::Write);
         }
         Err(err) => {
-            error!(
-                "Failed to write shopping list to '{:?}': {err}",
-                params.format
-            );
+            error!(format = ?params.format, ?err, "Failed to write shopping list");
             broadcast_error(&state, user.id, "Failed to write shopping list.").await;
             return Err(Error::Write);
         }
@@ -252,7 +246,7 @@ pub async fn shopping_list_export_handler(
             return Err(Error::Write);
         }
         Err(err) => {
-            error!("Failed to export shopping list: {err}");
+            error!(?err, "Failed to export shopping list");
             broadcast_error(&state, user.id, "Failed to export shopping list.").await;
             return Err(Error::Database);
         }
@@ -262,7 +256,7 @@ pub async fn shopping_list_export_handler(
     let dl_c = DownloadForCreate::new(user.id, token, path);
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
-        error!("Failed to create download for user {}: {err}", user.id);
+        error!(user = ?user.id, ?err, "Failed to create download");
         broadcast_error(&state, user.id, "Failed to create export data response.").await;
         return Err(Error::Database);
     }
@@ -281,7 +275,7 @@ pub async fn shopping_list_export_handler(
     {
         Ok(res) => Ok(res),
         Err(err) => {
-            error!("Failed to create response for user {}: {err}", user.id);
+            error!(user = ?user.id, ?err, "Failed to create response");
             broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Err(Error::Fs)
         }
@@ -292,7 +286,7 @@ pub async fn shopping_list_export_handler(
 async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<ExportOptions>> {
     let settings = UserSettingDetails::get(&state.mm, user_id)
         .await
-        .inspect_err(|err| error!("Failed to get user settings: {err}"))
+        .inspect_err(|err| error!(?err, "Failed to get user settings"))
         .map_err(|_| {
             let state = state.clone();
             tokio::spawn(async move {
@@ -303,7 +297,7 @@ async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<Ex
 
     let paper_size = PaperSize::get(&state.mm, settings.paper_size_id)
         .await
-        .inspect_err(|err| error!("Failed to get paper size for user '{}': {err}", user_id))
+        .inspect_err(|err| error!(user = ?user.id, ?err, "Failed to get paper size"))
         .map_err(|_| {
             let state = state.clone();
             tokio::spawn(async move {
@@ -329,7 +323,7 @@ pub async fn shopping_list_print_handler(
     let list = match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
         Ok(list) => list,
         Err(err) => {
-            error!("Failed to get shopping list: {err}");
+            error!(?err, "Failed to get shopping list");
             return Error::Database.into_response();
         }
     };
@@ -351,10 +345,7 @@ pub async fn shopping_list_view_handler(
     let list = match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
         Ok(list) => list,
         Err(err) => {
-            error!(
-                "Failed to get shopping list '{list_id}' for user '{}': {err}",
-                user.id
-            );
+            error!(?list_id, user = ?user.id, ?err, "Failed to get shopping list");
             broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
             return Error::Database.into_response();
         }
@@ -416,7 +407,7 @@ pub async fn shopping_list_share_post_handler(
             )
         })
         .inspect_err(|err| {
-            error!("Invalid datetime '{}': {}", dt, err);
+            error!(?dt, ?err, "Invalid datetime");
         })
         .ok()
     });
@@ -431,10 +422,7 @@ pub async fn shopping_list_share_post_handler(
             templates::general::share_link(&url).into_response()
         }
         Err(err) => {
-            error!(
-                "Error generating shared recipe link for recipe '{list_id}' and user '{}': {err}",
-                user.id
-            );
+            error!(?list_id, user = ?user.id, ?err, "Error generating shared recipe link for recipe");
             broadcast_error(&state, user.id, "Error creating shared shopping list link.").await;
             Error::BadTimeFormat.into_response()
         }
@@ -468,7 +456,7 @@ pub async fn shopping_list_labels_post_handler(
         }
         Err(err) => {
             broadcast_error(&state, user.id, "Error creating shopping list label.").await;
-            error!("Failed to create shopping list label: {err}");
+            error!(?err, "Failed to create shopping list label");
             return Error::Database.into_response();
         }
         _ => {}
@@ -496,7 +484,7 @@ pub async fn shopping_list_label_put_handler(
         match ShoppingList::get_or_insert_label(&state.mm, &payload.name, user.id).await {
             Ok(id) => id,
             Err(err) => {
-                error!("Failed to update shopping list label: {err}");
+                error!(?err, "Failed to update shopping list label");
                 broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
                 return Error::Database.into_response();
             }
@@ -505,7 +493,7 @@ pub async fn shopping_list_label_put_handler(
     if let Err(err) =
         ShoppingList::update_item_labels(&state.mm, list_id, label_id, new_label_id, user.id).await
     {
-        error!("Failed to update shopping list label: {err}");
+        error!(?err, "Failed to update shopping list label");
         broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
         return Error::Database.into_response();
     }
@@ -532,7 +520,7 @@ pub async fn shopping_lists_post_handler(
     let list_id = match ShoppingList::create(&state.mm, title, user.id).await {
         Ok(id) => id,
         Err(err) => {
-            error!("Failed to create shopping list: {err}");
+            error!(?err, "Failed to create shopping list");
             broadcast_error(&state, user.id, "Failed to create shopping list.").await;
             return Error::Database.into_response();
         }
@@ -589,7 +577,7 @@ pub async fn shopping_list_item_post_handler(
             .into_response();
         }
         Err(err) => {
-            error!("Failed to add shopping list item: {err}");
+            error!(?err, "Failed to add shopping list item");
             broadcast_error(&state, user.id, "Failed to add shopping list item.").await;
             return Error::Database.into_response();
         }
@@ -616,7 +604,7 @@ pub async fn shopping_list_items_positions_put_handler(
             .to_string()
             .contains("shopping_list_items_quantity_check")
     {
-        error!("Failed to update shopping list item: {err}");
+        error!(?err, "Failed to update shopping list item");
         broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
         return Error::Database.into_response();
     }
@@ -631,7 +619,7 @@ pub async fn shopping_list_item_delete_handler(
     Path((list_id, item_id)): Path<(Uuid, i64)>,
 ) -> impl IntoResponse {
     if let Err(err) = ShoppingList::delete_item(&state.mm, list_id, item_id, user.id).await {
-        error!("Failed to delete shopping list item: {err}");
+        error!(?err, "Failed to delete shopping list item");
         broadcast_error(&state, user.id, "Failed to delete shopping list item.").await;
         return Error::Database.into_response();
     }
@@ -664,7 +652,7 @@ pub async fn shopping_list_item_put_handler(
             .to_string()
             .contains("shopping_list_items_quantity_check")
     {
-        error!("Failed to update shopping list item: {err}");
+        error!(?err, "Failed to update shopping list item");
         broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
         return Error::Database.into_response();
     }
@@ -681,7 +669,7 @@ pub async fn shopping_list_item_put_handler(
             .into_response()
         }
         Err(err) => {
-            error!("Failed to get shopping list item: {err}");
+            error!(?err, "Failed to get shopping list item");
             broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
             Error::Database.into_response()
         }
@@ -700,7 +688,7 @@ pub async fn shopping_list_item_edit_handler(
                 .into_response()
         }
         Err(err) => {
-            error!("Failed to get shopping list item: {err}");
+            error!(?err, "Failed to get shopping list item");
             broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
             Error::EntityNotFound {
                 entity: "shopping_list_item",
@@ -717,7 +705,7 @@ pub async fn shopping_list_item_toggle_handler(
     Path(item_id): Path<i64>,
 ) -> impl IntoResponse {
     if let Err(err) = ShoppingList::toggle_item_check(&state.mm, item_id).await {
-        error!("Failed to toggle item check: {err}");
+        error!(?err, "Failed to toggle item check");
         if let Some(user) = user {
             broadcast_error(&state, user.id, "Failed to toggle item check.").await;
         }
@@ -752,7 +740,7 @@ pub async fn shopping_recipe_ingredients_handler(
             })
             .collect::<Vec<_>>(),
         Err(err) => {
-            error!("Failed to fetch ingredients for recipe '{recipe_id}': {err}");
+            error!(?recipe_id, ?err, "Failed to fetch ingredients");
             broadcast_error(&state, user.id, "Failed to fetch ingredients.").await;
             return Error::Database.into_response();
         }
@@ -761,10 +749,7 @@ pub async fn shopping_recipe_ingredients_handler(
     let mut shopping_lists = match ShoppingList::get_all(&state.mm, user.id).await {
         Ok(lists) => lists,
         Err(err) => {
-            error!(
-                "Failed to fetch shopping lists for user '{}': {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?err, "Failed to fetch shopping lists");
             broadcast_error(&state, user.id, "Failed to fetch shopping lists.").await;
             return Error::Database.into_response();
         }
@@ -797,7 +782,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
         Err(_) => match ShoppingList::create(&state.mm, payload.list, user.id).await {
             Ok(list) => list,
             Err(err) => {
-                error!("Failed to create new shopping list: {err}",);
+                error!(?err, "Failed to create new shopping list");
                 broadcast_error(&state, user.id, "Failed to create new shopping list.").await;
                 return Error::Database.into_response();
             }
@@ -807,7 +792,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
     let list = match ShoppingList::get(&state.mm, list_id, user.id).await {
         Ok(list) => list,
         Err(err) => {
-            error!("Failed to fetch shopping list '{list_id}': {err}");
+            error!(?list_id, ?err, "Failed to fetch shopping list");
             broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
             return Error::Database.into_response();
         }
@@ -838,7 +823,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
         .add_items_for_recipe(&state.mm, items.as_slice(), recipe_id, user.id)
         .await
     {
-        error!("Failed to add items for recipe '{}': {err}", recipe_id);
+        error!(?recipe_id, ?err, "Failed to add items");
         broadcast_error(&state, user.id, "Failed to add items for recipe.").await;
         return Error::Database.into_response();
     }

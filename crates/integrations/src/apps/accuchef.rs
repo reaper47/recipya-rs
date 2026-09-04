@@ -128,13 +128,11 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                     match parse_duration(&s) {
                         Ok(d) => i32::try_from(d.as_secs())
                             .inspect_err(|err| {
-                                error!(
-                                    "Failed to parse prep time '{d:?}' of an AccuChef recipe: {err}"
-                                );
+                                error!(?d, ?err, "Failed to parse prep time of an AccuChef recipe");
                             })
                             .unwrap_or_default(),
                         Err(err) => {
-                            error!("Failed to parse prep time of an AccuChef recipe: {err}");
+                            error!(?err, "Failed to parse prep time of an AccuChef recipe");
                             15 * 60
                         }
                     }

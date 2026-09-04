@@ -41,7 +41,7 @@ pub async fn share_recipe_post_handler(
             )
         })
         .inspect_err(|err| {
-            error!("Invalid datetime '{}': {}", dt, err);
+            error!(?dt, ?err, "Invalid datetime");
         })
         .ok()
     });
@@ -56,10 +56,7 @@ pub async fn share_recipe_post_handler(
             templates::general::share_link(&url).into_response()
         }
         Err(err) => {
-            error!(
-                "Error generating shared recipe link for recipe '{recipe_id}' and user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error generating shared recipe link");
             broadcast_error(&state, user.id, "Error creating shared recipe link.").await;
             Error::BadTimeFormat.into_response()
         }

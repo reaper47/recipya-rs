@@ -55,10 +55,7 @@ pub async fn download_handler(
             return StatusCode::NOT_FOUND.into_response();
         }
         Err(err) => {
-            error!(
-                "Failed to find download token '{token}' for user {}: {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?token, ?err, "Failed to find download token");
             broadcast_error(&state, user.id, "Failed to find download token.").await;
             return StatusCode::NOT_FOUND.into_response();
         }
@@ -77,10 +74,7 @@ pub async fn download_handler(
     let file = match tokio::fs::File::open(&file_path).await {
         Ok(f) => f,
         Err(err) => {
-            error!(
-                "Failed to open file '{file_path}' for user {}: {err}",
-                user.id
-            );
+            error!(?file_path, user = ?user.id, ?err, "Failed to open file");
             broadcast_error(&state, user.id, "Failed to open export file.").await;
             return Error::Fs.into_response();
         }
@@ -90,10 +84,7 @@ pub async fn download_handler(
     let file_path = file_path.clone();
     let stream = ReaderStream::new(file).chain(futures::stream::once(async move {
         if let Err(err) = Download::delete_by_token(&mm, token, file_path).await {
-            error!(
-                "Failed to delete download token '{token}' for user {}: {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?token, ?err, "Failed to delete download token");
         }
         Ok(bytes::Bytes::new())
     }));
@@ -108,7 +99,7 @@ pub async fn download_handler(
     {
         Ok(res) => res,
         Err(err) => {
-            error!("Failed to create response for user {}: {err}", user.id);
+            error!(user = ?user.id, ?err, "Failed to create response");
             broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Error::Fs.into_response()
         }
@@ -139,7 +130,7 @@ pub async fn fetch_handler(
     let res = match client.get(parsed).send().await {
         Ok(r) => r,
         Err(err) => {
-            error!("Failed to fetch URL: {err}");
+            error!(?err, "Failed to fetch URL");
             broadcast_error(&state, user.id, "Could not fetch URL").await;
             return StatusCode::BAD_REQUEST.into_response();
         }
@@ -150,7 +141,7 @@ pub async fn fetch_handler(
     let body = match res.bytes().await {
         Ok(b) => b,
         Err(err) => {
-            error!("Failed to read response: {err}");
+            error!(?err, "Failed to read response");
             broadcast_error(&state, user.id, "Could not read response").await;
             return StatusCode::BAD_GATEWAY.into_response();
         }
@@ -239,7 +230,7 @@ pub async fn paper_sizes_handler(
     let papers = match PaperSize::get_all(&state.mm).await {
         Ok(papers) => papers,
         Err(err) => {
-            error!("Failed to get paper sizes: {err}");
+            error!(?err, "Failed to get paper sizes");
             broadcast_error(&state, user.id, "Failed to fetch paper sizes").await;
             return Error::Database.into_response();
         }
@@ -301,10 +292,7 @@ pub async fn search_suggestions_handler(
                     acc
                 }),
             Err(err) => {
-                error!(
-                    "(search_suggestions_handler) Error fetching items '{q}' for user '{}': {err}",
-                    user.id,
-                );
+                error!(?q, user = ?user.id, ?err, "(search_suggestions_handler) Error fetching items");
                 broadcast_error(&state, user.id, "Error fetching components.").await;
                 return Err(Error::Database);
             }
@@ -331,7 +319,7 @@ pub async fn upload_note_image(
             Ok(b) if b.len() <= MAX_IMAGE_SIZE => b,
             Ok(_) => return err_json(StatusCode::PAYLOAD_TOO_LARGE, "fileTooLarge"),
             Err(err) => {
-                error!("Error reading file: {err}");
+                error!(?err, "Error reading file");
                 return err_json(StatusCode::BAD_REQUEST, "importError");
             }
         };
@@ -350,7 +338,7 @@ pub async fn upload_note_image(
                 .upload_image(&tmp_path, filename, &state.data_dir.images.notes);
 
             if let Err(err) = fs::remove_file(tmp_path).await {
-                error!("Error removing temporary file '{filename}': {err}");
+                error!(?filename, ?err, "Error removing temporary file");
             }
 
             let result = json!({
@@ -396,7 +384,7 @@ pub async fn user_initials_handler(
             .next()
             .map_or_else(|| "A".into(), |first| first.to_string()),
         Ok(None) => {
-            error!("User {} does not exist", user.id);
+            error!(user = ?user.id, "User does not exist");
             "A".into()
         }
         Err(err) => {

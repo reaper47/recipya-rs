@@ -88,12 +88,12 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
                 .inspect(|_| info!("Connected to database '{db_url}'"))
                 .map(|_| ())
                 .map_err(|err| {
-                    error!("Failed to create database '{db_name}': {err}");
+                    error!(?db_name, ?err, "Failed to create database");
                     err
                 })
         }
         Err(err) => {
-            error!("Error checking database existence: {err}");
+            error!(?err, "Error checking database existence");
             Err(err)
         }
     }
@@ -120,7 +120,7 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
 
         tokio::spawn(async move {
             if let Err(err) = connection.await {
-                error!("connection error: {err}");
+                error!(?err, "connection error");
             }
         });
 
@@ -148,7 +148,7 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
 
         tokio::spawn(async move {
             if let Err(err) = connection.await {
-                error!("connection error: {err}");
+                error!(?err, "connection error");
             }
         });
 

@@ -75,12 +75,7 @@ impl Parser<'_> {
                 if is_recipe_type(&object) {
                     return serde_json::from_value::<Recipe>(object)
                         .inspect_err(|err| {
-                            error!(
-                                error = err.to_string(),
-                                url = self.url,
-                                json = json,
-                                "Error parsing schema"
-                            );
+                            error!(?err, url = self.url, ?json, "Error parsing schema");
                         })
                         .ok();
                 }
@@ -95,11 +90,7 @@ impl Parser<'_> {
                             .and_then(|item| {
                                 serde_json::from_value::<Recipe>(item.clone())
                                     .inspect_err(|err| {
-                                        error!(
-                                            url = self.url,
-                                            error = err.to_string(),
-                                            "Parsing failed"
-                                        );
+                                        error!(url = self.url, ?err, "Parsing failed");
                                     })
                                     .ok()
                             })

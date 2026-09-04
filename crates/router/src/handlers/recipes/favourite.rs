@@ -25,10 +25,7 @@ pub async fn toggle_favourite_handler(
     let is_favourite = match Recipe::toggle_favourite(&state.mm, user.id, recipe_id).await {
         Ok(v) => v,
         Err(err) => {
-            error!(
-                "Error toggling the favourite state of recipe '{recipe_id}' for user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error toggling the favourite state of recipe");
             broadcast_error(&state, user.id, "Error toggling favourite.").await;
             return Error::Database.into_response();
         }

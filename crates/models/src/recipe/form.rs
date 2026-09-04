@@ -71,7 +71,7 @@ where
         let mut r#yield: Option<i16> = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
-            error!("Failed to read multipart field in recipe: {err}");
+            error!(?err, "Failed to read multipart field in recipe");
             InvalidBoundary::default()
         })? {
             let name = field.name().unwrap_or_default().to_string();
@@ -95,7 +95,7 @@ where
                 "keyword" => push_non_empty(field, &mut keywords).await,
                 "media" => {
                     if let Err(err) = save_media_field(field, &mut images, &mut videos).await {
-                        error!("Saving media failed: {err}");
+                        error!(?err, "Saving media failed");
                     }
                 }
                 "media-existing-image" => {

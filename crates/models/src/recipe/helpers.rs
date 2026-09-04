@@ -178,16 +178,18 @@ where
                             section_order: i16::try_from(*section_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast ingredients section order '{}': {err}",
-                                        *section_order
+                                        order = *section_order,
+                                        ?err,
+                                        "Failed to cast ingredients section order",
                                     );
                                 })
                                 .unwrap_or_default(),
                             item_order: i16::try_from(*item_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast ingredients item order '{}': {err}",
-                                        *item_order
+                                        order = *item_order,
+                                        ?err,
+                                        "Failed to cast ingredients item order",
                                     );
                                 })
                                 .unwrap_or_default(),
@@ -285,16 +287,18 @@ where
                             section_order: i16::try_from(*section_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast instructions section order '{}': {err}",
-                                        *section_order
+                                        order = *section_order,
+                                        ?err,
+                                        "Failed to cast instructions section order",
                                     );
                                 })
                                 .unwrap_or_default(),
                             item_order: i16::try_from(*item_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast instructions item order '{}': {err}",
-                                        *item_order
+                                        order = *item_order,
+                                        ?err,
+                                        "Failed to cast instructions item order",
                                     );
                                 })
                                 .unwrap_or_default(),
@@ -557,7 +561,7 @@ where
                 recipe_id,
                 quantity: tools.get(idx).map_or(1, |x| x.quantity),
                 tool_order: i16::try_from(idx)
-                    .inspect_err(|err| error!("Failed to cast tool order '{idx}': {err}"))
+                    .inspect_err(|err| error!(?idx, ?err, "Failed to cast tool order"))
                     .unwrap_or_default(),
             })
             .collect::<Vec<_>>();
@@ -591,8 +595,9 @@ where
                             let days = i32::try_from(duration.whole_days())
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast num days '{}': {err}",
-                                        duration.whole_days()
+                                        days = duration.whole_days(),
+                                        ?err,
+                                        "Failed to cast num days",
                                     );
                                 })
                                 .unwrap_or_default();
@@ -601,8 +606,9 @@ where
                                 i64::try_from(duration.whole_microseconds())
                                     .inspect_err(|err| {
                                         error!(
-                                            "Failed to cast num microseconds '{}': {err}",
-                                            duration.whole_microseconds()
+                                            ms = duration.whole_microseconds(),
+                                            ?err,
+                                            "Failed to cast num microseconds",
                                         );
                                     })
                                     .unwrap_or_default(),
@@ -610,8 +616,9 @@ where
                                 i32::try_from(duration.whole_weeks() * 100_000 / 434_524)
                                     .inspect_err(|err| {
                                         error!(
-                                            "Failed to cast num weeks '{}': {err}",
-                                            duration.whole_weeks()
+                                            weeks = duration.whole_weeks(),
+                                            ?err,
+                                            "Failed to cast num weeks",
                                         );
                                     })
                                     .unwrap_or_default(),

@@ -93,7 +93,7 @@ impl ToRecipeSchema for Recipe {
                         }
                     }
                     Err(err) => {
-                        error!("Failed to create file for paprika photo: {err}");
+                        error!(?err, "Failed to create file for paprika photo");
                         None
                     }
                 }

@@ -63,15 +63,13 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
                             match push_recipe_in_db(&state, recipe, user_id).await {
                                 Ok(recipe_id_db) => Ok((recipe_id_db, recipe_name, num_recipes)),
                                 Err((name, err)) => {
-                                    error!(
-                                        "Failed to push recipe with id '{id}' to database: {err}",
-                                    );
+                                    error!(?id, ?err, "Failed to push recipe with id to database",);
                                     Err((id, Some(name), num_recipes, Error::Database))
                                 }
                             }
                         }
                         Err((id, num_recipes, err)) => {
-                            error!("Failed to fetch recipe with id '{id}' from API: {err}");
+                            error!(?id, ?err, "Failed to fetch recipe with id from API");
                             Err((id, None, num_recipes, Error::FailFetch))
                         }
                     }
@@ -207,7 +205,7 @@ async fn push_recipe_in_db(
             Err((recipe.name, Error::Model(DuplicateEntity)))
         }
         Err(err) => {
-            error!("Error saving recipe '{}': {err}", recipe.name);
+            error!(name = recipe.name, ?err, "Error saving recipe");
             Err((recipe.name, Error::Model(err)))
         }
     }

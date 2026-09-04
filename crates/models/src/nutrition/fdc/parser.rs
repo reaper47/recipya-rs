@@ -178,7 +178,11 @@ impl<C: FdcFetcher> DataNotFetched<C> for FdcParser<'_, DataNotFetchedState> {
         let mut bytes = Vec::with_capacity(
             usize::try_from(file.size())
                 .inspect_err(|err| {
-                    error!("Failed to cast file size to usize '{}': {err}", file.size());
+                    error!(
+                        file_size = file.size(),
+                        ?err,
+                        "Failed to cast file size to usize"
+                    );
                 })
                 .unwrap_or_default(),
         );
@@ -375,7 +379,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
             Ok(())
         })
         .await
-        .inspect_err(|err| error!("Failed to push data into database: {err}"))?;
+        .inspect_err(|err| error!(?err, "Failed to push data into database"))?;
 
         Ok(())
     }

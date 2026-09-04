@@ -48,7 +48,10 @@ where
         let mut form = Self::default();
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
-            error!("Failed to read multipart field in import recipes from app: {err}");
+            error!(
+                ?err,
+                "Failed to read multipart field in import recipes from app"
+            );
             InvalidBoundary::default()
         })? {
             let name = field.name().unwrap_or("");
@@ -57,7 +60,10 @@ where
                     let app_name = field.text().await.map_err(|_| InvalidBoundary::default())?;
                     let app = App::from_str(&app_name.to_lowercase()).unwrap_or_default();
                     if matches!(app, App::Unknown) {
-                        error!("Import recipes from app form field 'app' is invalid: {app_name}");
+                        error!(
+                            ?app_name,
+                            "Import recipes from app form field 'app' is invalid"
+                        );
                         Err(InvalidBoundary::default())?;
                     }
                     form.app = app;
@@ -73,7 +79,7 @@ where
                         .bytes()
                         .await
                         .map_err(|err| {
-                            error!("Failed to read file bytes for '{filename}': {err}");
+                            error!(?filename, ?err, "Failed to read file bytes");
                             InvalidBoundary::default()
                         })?
                         .to_vec();
@@ -170,7 +176,10 @@ where
         let mut videos: HashMap<String, PathBuf> = HashMap::new();
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
-            error!("Failed to read multipart field in timeline event form: {err}");
+            error!(
+                ?err,
+                "Failed to read multipart field in timeline event form"
+            );
             InvalidBoundary::default()
         })? {
             let name = field.name().unwrap_or("");
@@ -194,7 +203,7 @@ where
                     });
 
                     if let Err(err) = save_media_field(field, &mut images, &mut videos).await {
-                        error!("Saving media failed: {err}");
+                        error!(?err, "Saving media failed");
                     }
                 }
                 "comment" => form.comment = text_trim(field).await,

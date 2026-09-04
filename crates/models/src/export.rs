@@ -50,7 +50,7 @@ impl From<&[RecipeDetails]> for Manifest {
         let mut manifest: HashMap<i64, &RecipeDetails> = HashMap::new();
         for (idx, r) in recipes.iter().enumerate() {
             let order = i64::try_from(idx + 1)
-                .inspect_err(|err| error!("Failed to convert manifest export index to i64: {err}"))
+                .inspect_err(|err| error!(?err, "Failed to convert manifest export index to i64"))
                 .unwrap_or(0);
 
             manifest.insert(order, r);
@@ -120,7 +120,7 @@ impl ExportData {
                 let recipe_id = recipe.recipe.id;
 
                 if let Err(err) = Self::add_images(&mut zip, &recipe, idx, options, &images_dir) {
-                    error!("Failed to add images for recipe '{recipe_id}': {err}");
+                    error!(?recipe_id, ?err, "Failed to add images for recipe");
                 }
 
                 let serialized: Vec<u8> = match r#type {
@@ -128,7 +128,7 @@ impl ExportData {
                         recipe,
                     ))
                     .inspect_err(|err| {
-                        error!("Failed to serialize recipe '{recipe_id}': {err}");
+                        error!(?recipe_id, ?err, "Failed to serialize recipe");
                     })?,
                     ExportType::Markdown => match recipe.to_markdown(&base_url) {
                         Ok(serialized) => serialized.into_bytes(),

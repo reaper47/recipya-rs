@@ -77,7 +77,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
         let num_recipes = recipes
             .len()
             .try_into()
-            .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
+            .inspect_err(|err| error!(len = recipes.len(), ?err, "Failed to cast recipes length"))
             .unwrap_or(i64::MAX);
 
         let state = Arc::new(state);
@@ -195,7 +195,7 @@ async fn parse_recipes(
     let recipes = match form.parse_recipes() {
         Ok(r) => r,
         Err(err) => {
-            error!("Failed to parse recipes: {err}");
+            error!(?err, "Failed to parse recipes");
 
             let saved_file =
                 state
@@ -203,7 +203,7 @@ async fn parse_recipes(
                     .debug
                     .join(format!("{}_{}", Uuid::new_v4(), form.file_name));
             fs::write(saved_file.clone(), &form.file_data).await?;
-            error!("Saved file to '{:?}' for debugging purposes", saved_file);
+            error!(?saved_file, "Saved file to for debugging purposes");
 
             return Err(err);
         }
@@ -226,7 +226,7 @@ async fn push_recipes_to_db(
     let num_recipes_usize = recipes.len();
     let num_recipes = num_recipes_usize
         .try_into()
-        .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
+        .inspect_err(|err| error!(len = recipes.len(), ?err, "Failed to cast recipes length"))
         .unwrap_or(i64::MAX);
     let user_settings = Arc::new(
         UserSettingDetails::get(&state.mm, user_id)
@@ -298,7 +298,7 @@ async fn push_recipes_to_db(
                 }
                 report_logs.push(result.log);
             }
-            Err(err) => error!("push_recipe failed: {err}"),
+            Err(err) => error!(?err, "push_recipe failed"),
         }
     }
 
@@ -339,7 +339,7 @@ async fn push_recipe(
             )
         }
         Err(err) => {
-            error!("Error saving recipe '{}': {err}", recipe_c.name);
+            error!(name = recipe_c.name, ?err, "Error saving recipe");
             (
                 None,
                 ReportLogForCreate::error(

@@ -43,7 +43,7 @@ pub async fn add_user_handler(
     {
         Ok(user) => user,
         Err(err) => {
-            error!("Error inserting user '{user_id}' as admin: {err}");
+            error!(?user_id, ?err, "Error inserting user as admin");
             broadcast_error(&state, user_id, "A user with this email exists.").await;
             return Error::EntityExists { entity: "user" }.into_response();
         }
@@ -52,7 +52,7 @@ pub async fn add_user_handler(
     let num_users = match User::num_users(&state.mm).await {
         Ok(count) => count,
         Err(err) => {
-            error!("Error fetching user count: {err}");
+            error!(?err, "Error fetching user count");
             broadcast_error(&state, user_id, "Failed to fetch number of users.").await;
             return Error::Database.into_response();
         }
@@ -60,7 +60,7 @@ pub async fn add_user_handler(
 
     templates::settings::new_user_with_new_row(
         usize::try_from(num_users)
-            .inspect_err(|err| error!("Failed to cast num users to usize '{num_users}': {err}"))
+            .inspect_err(|err| error!(?num_users, ?err, "Failed to cast num users to usize"))
             .unwrap_or_default(),
         &user,
     )
@@ -82,7 +82,7 @@ pub async fn delete_user_handler(
             return Error::EntityNotFound { entity: "user" }.into_response();
         }
         Err(err) => {
-            error!("Error fetching user with id {user_id}: {err}");
+            error!(?user_id, err, "Error fetching user with id");
             broadcast_error(&state, caller_user_id, "Failed to fetch user.").await;
             return Error::Database.into_response();
         }
@@ -94,7 +94,7 @@ pub async fn delete_user_handler(
     }
 
     if let Err(err) = User::delete(&state.mm, user_id).await {
-        error!("Could not delete user with id {user_id}: {err}");
+        error!(?user_id, err, "Could not delete user with id");
         broadcast_error(&state, caller_user_id, "Failed to delete user.").await;
         return Error::DeleteUser.into_response();
     }
@@ -102,7 +102,7 @@ pub async fn delete_user_handler(
     let users = match User::all(&state.mm).await {
         Ok(users) => users,
         Err(err) => {
-            error!("Error fetching users: {err}");
+            error!(?err, "Error fetching users");
             broadcast_error(&state, caller_user_id, "Failed to fetch users.").await;
             return Error::Database.into_response();
         }
@@ -124,14 +124,14 @@ pub async fn update_user_form_handler(
     let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(user) => match user {
             None => {
-                error!("User '{user_id}' not found in database.");
+                error!(?user_id, "User not found in database.");
                 broadcast_error(&state, caller_user_id, "User not found.").await;
                 return Error::NoUser.into_response();
             }
             Some(user) => user,
         },
         Err(err) => {
-            error!("Error fetching user '{user_id}' as admin: {err}");
+            error!(?user_id, ?err, "Error fetching user as admin");
             broadcast_error(&state, caller_user_id, "Error fetching user.").await;
             return Error::Database.into_response();
         }
@@ -150,7 +150,7 @@ pub async fn update_user_handler(
     let caller_user_id = user.id;
 
     if let Err(err) = form.validate() {
-        error!("Error validating update user form: {err}");
+        error!(?err, "Error validating update user form");
         broadcast_error(&state, caller_user_id, "Payload cannot be empty.").await;
         return Error::InvalidPayload.into_response();
     }
@@ -158,7 +158,7 @@ pub async fn update_user_handler(
     match User::update_password_by_user_id(&state.mm, user_id, &form.new_password).await {
         Ok(()) => {}
         Err(err) => {
-            error!("Error updating user password for user #'{user_id}': {err}");
+            error!(?user_id, ?err, "Error updating user password for user");
             broadcast_error(&state, caller_user_id, "Failed to update user password.").await;
             return Error::Database.into_response();
         }
@@ -167,14 +167,14 @@ pub async fn update_user_handler(
     let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(user) => match user {
             None => {
-                error!("User '{user_id}' not found in database.");
+                error!(?user_id, "User not found in database.");
                 broadcast_error(&state, caller_user_id, "User not found.").await;
                 return Error::NoUser.into_response();
             }
             Some(user) => user,
         },
         Err(err) => {
-            error!("Error fetching user '{user_id}' as admin: {err}");
+            error!(?user_id, ?err, "Error fetching user as admin");
             broadcast_error(&state, caller_user_id, "Error fetching user.").await;
             return Error::Database.into_response();
         }
@@ -196,14 +196,14 @@ pub async fn user_row_handler(
     let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(user) => match user {
             None => {
-                error!("User '{user_id}' not found in database.");
+                error!(?user_id, "User not found in database.");
                 broadcast_error(&state, caller_user_id, "User not found.").await;
                 return Error::NoUser.into_response();
             }
             Some(user) => user,
         },
         Err(err) => {
-            error!("Error fetching user '{user_id}' as admin: {err}");
+            error!(?user_id, ?err, "Error fetching user as admin");
             broadcast_error(&state, caller_user_id, "Error fetching user.").await;
             return Error::Database.into_response();
         }

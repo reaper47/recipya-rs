@@ -388,7 +388,7 @@ impl From<RecipeForCreate> for RecipeDetails {
                 .map(|(idx, t)| {
                     let mut tool = ToolRecipe::from(&t);
                     tool.tool_order = i16::try_from(idx)
-                        .inspect_err(|err| error!("Failed to convert tool index to i16: {err}"))
+                        .inspect_err(|err| error!(?err, "Failed to convert tool index to i16"))
                         .unwrap_or_default();
                     tool
                 })
@@ -574,7 +574,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
         let original_ingredients = schema.recipe_ingredient.clone();
         let ingredients = SectionComponents::try_from(original_ingredients)
             .inspect_err(|err| {
-                error!("Failed to parse ingredients: {err}");
+                error!(?err, "Failed to parse ingredients");
             })
             .unwrap_or_default();
         let measurement_system_id =

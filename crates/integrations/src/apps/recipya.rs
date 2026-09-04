@@ -75,7 +75,7 @@ where
 {
     // read the JSON recipe
     let mut v: Value = serde_json::from_reader(r).map_err(|err| {
-        error!("Failed to read Recipya JSON file: {err}");
+        error!(?err, "Failed to read Recipya JSON file");
         Error::Parse(err.to_string())
     })?;
 
@@ -84,7 +84,7 @@ where
 
     // convert the JSON value to a Recipe struct
     serde_json::from_value(v).map_err(|err| {
-        error!("Failed to migrate Recipya JSON file: {err}");
+        error!(?err, "Failed to migrate Recipya JSON file");
         Error::Parse(err.to_string())
     })
 }

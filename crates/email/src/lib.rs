@@ -103,20 +103,12 @@ impl EmailSender for EmailService {
                             .replace("[[.URL]]", &data.url)
                             .replace("[[.UserName]]", &data.username),
                         Err(err) => {
-                            error!(
-                                error = err.to_string(),
-                                template = template,
-                                "Failed to render email template"
-                            );
+                            error!(?err, ?template, "Failed to render email template");
                             return Err(Error::RenderFail);
                         }
                     },
                     Err(err) => {
-                        error!(
-                            error = err.to_string(),
-                            template = template,
-                            "Failed to parse email template"
-                        );
+                        error!(?err, ?template, "Failed to parse email template");
                         return Err(Error::RenderFail);
                     }
                 };

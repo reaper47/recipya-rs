@@ -177,7 +177,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                 .collect(),
             comment_count: vec![
                 i32::try_from(num_comments)
-                    .inspect_err(|err| error!("Failed to convert comment_count to i32: {err}"))
+                    .inspect_err(|err| error!(?err, "Failed to convert comment_count to i32"))
                     .unwrap_or_default(),
             ]
             .into_iter()
@@ -187,8 +187,9 @@ impl From<CookmateRecipe<'_>> for Recipe {
                 Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
                 Err(err) => {
                     error!(
-                        "Failed to parse cook time '{}' of an AccuChef recipe: {err}",
-                        r.cooktime
+                        cooktime = ?r.cooktime,
+                        ?err,
+                        "Failed to parse cook time of an AccuChef recipe",
                     );
                     vec![]
                 }
@@ -218,10 +219,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
             prep_time: match parse_duration(&r.preptime) {
                 Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
                 Err(err) => {
-                    error!(
-                        "Failed to parse prep time '{}' of a CookMate XML recipe: {err}",
-                        r.preptime
-                    );
+                    error!(preptime = ?r.preptime, ?err, "Failed to parse prep time of a CookMate XML recipe");
                     vec![]
                 }
             },

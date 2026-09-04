@@ -40,7 +40,7 @@ pub async fn server() -> Result<()> {
     if config.states.autologin == AutologinState::On
         && let Err(err) = init_autologin_user(&state.mm).await
     {
-        error!("Autologin enabled. Error initializing autologin user: {err}");
+        error!(?err, "Autologin enabled. Error initializing autologin user");
     }
 
     start_cron_jobs(
@@ -140,7 +140,7 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
                         "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
                     );
                     if let Err(err) = EmailVerificationToken::verify_user_email(mm, user.id).await {
-                        error!("Error confirming autologin user: {err}");
+                        error!(?err, "Error confirming autologin user");
                         return Err(Error::Server(err.to_string()));
                     }
                     Ok(())
@@ -174,7 +174,7 @@ async fn start_cron_jobs(
 
             Box::pin(async move {
                 if let Err(err) = clean_media(mm, data_dir, fs_support).await {
-                    error!("CleanMedia: Failed to run job: {err}");
+                    error!(?err, "CleanMedia: Failed to run job");
                 }
             })
         })?)

@@ -107,7 +107,11 @@ impl FsSupport for AppFs {
         {
             Ok(output) => output,
             Err(err) => {
-                error!("Failed to run video '{input_file}' through ffmpeg for information: {err}");
+                error!(
+                    ?input_file,
+                    ?err,
+                    "Failed to run video through ffmpeg for information"
+                );
                 return Err(Error::Calculate);
             }
         };
@@ -143,12 +147,12 @@ impl FsSupport for AppFs {
                 let start = Instant::now();
 
                 let Some(input_path) = temp_path.to_str() else {
-                    error!("Failed to convert input path '{:?}' to string", temp_path);
+                    error!(?temp_path, "Failed to convert input path to string");
                     return;
                 };
 
                 let Some(output_path) = output_path.to_str() else {
-                    error!("Failed to convert output path '{output_path:?}' to string");
+                    error!(?output_path, "Failed to convert output path to string");
                     return;
                 };
 
@@ -176,13 +180,10 @@ impl FsSupport for AppFs {
                         );
                     }
                     Ok(exit_status) => {
-                        error!(
-                            "FFmpeg failed for {:?} with exit code {:?}",
-                            temp_path, exit_status
-                        );
+                        error!(?temp_path, ?exit_status, "FFmpeg failed");
                     }
                     Err(err) => {
-                        error!("Error running FFmpeg for {:?}: {:?}", temp_path, err);
+                        error!(?temp_path, ?err, "Error running FFmpeg");
                     }
                 }
             })
@@ -216,7 +217,7 @@ impl FsSupport for AppFs {
         let file_uuid = Uuid::new_v4();
         let temp_path = temp_dir().join(file_uuid.to_string());
         tokio::fs::write(&temp_path, content).await.map_err(|err| {
-            error!("Error uploading to temporary directory: {err}");
+            error!(?err, "Error uploading to temporary directory");
             Error::UploadFile
         })?;
         Ok(temp_path)
@@ -224,7 +225,7 @@ impl FsSupport for AppFs {
 
     fn upload_image(&self, path: &Path, file_name: Uuid, output_path: &Path) {
         if let Err(err) = self.convert_image(path, file_name.to_string(), output_path) {
-            error!("Error converting image '{file_name}' to WebP: {err}");
+            error!(?filename, ?err, "Error converting image to WebP");
         }
     }
 
@@ -268,7 +269,7 @@ impl FsSupport for AppFs {
             let tmp_out: PathBuf = temp_dir().join(format!("{file_name}-thumb.webp"));
             fs::write(&tmp_out, &buf)?;
             if let Err(err) = self.convert_image(&tmp_out, file_name.to_string(), output_path) {
-                error!("Error generating thumbnail image '{file_name}' to WebP: {err}");
+                error!(?file_name, ?err, "Error generating thumbnail image to WebP");
             }
 
             let _ = fs::remove_file(&tmp_out);
@@ -287,7 +288,7 @@ impl FsSupport for AppFs {
 
         task::spawn(async move {
             if let Err(err) = this.convert_videos(videos, &output).await {
-                error!("Error converting videos: {err}");
+                error!(?err, "Error converting videos");
             }
         });
     }

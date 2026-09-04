@@ -372,7 +372,7 @@ pub async fn fetch_recipe_details(
             ),
     )
     .inspect_err(|err| {
-        error!("Failed to load ingredients: {err}");
+        error!(?err, "Failed to load ingredients");
     })
     .unwrap_or_default();
 
@@ -417,7 +417,7 @@ pub async fn fetch_recipe_details(
             ),
     )
     .inspect_err(|err| {
-        error!("Failed to load instructions: {err}");
+        error!(?err, "Failed to load instructions");
     })
     .unwrap_or_default();
 

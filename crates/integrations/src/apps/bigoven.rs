@@ -165,7 +165,9 @@ fn transform_ingredient_types<'a>(
                         i32::try_from(num_items)
                             .inspect_err(|err| {
                                 error!(
-                                    "Failed to convert number of items '{num_items}' to i32: {err}"
+                                    ?err,
+                                    ?num_items,
+                                    "Failed to convert number of items to i32"
                                 );
                             })
                             .unwrap_or_default(),

@@ -435,7 +435,7 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
         let active_time_secs = match humantime::parse_duration(&r.active_time) {
             Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
             Err(err) => {
-                error!("Failed to parse prep time of a RecipeSage recipe: {err}");
+                error!(?err, "Failed to parse prep time of a RecipeSage recipe");
                 15 * 60
             }
         };
@@ -443,7 +443,7 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
         let total_time_secs = match humantime::parse_duration(&r.total_time) {
             Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
             Err(err) => {
-                error!("Failed to total time of a RecipeSage recipe: {err}");
+                error!(?err, "Failed to total time of a RecipeSage recipe");
                 30 * 60
             }
         };
@@ -533,7 +533,7 @@ where
     R: Read + BufRead,
 {
     let root: RecipeSageXMLData = quick_xml::de::from_reader(r).map_err(|err| {
-        error!("Failed to read RecipeSage XML file: {err}");
+        error!(?err, "Failed to read RecipeSage XML file");
         Error::Parse(err.to_string())
     })?;
 
@@ -555,7 +555,7 @@ where
             if let Ok(root) = serde_json::from_str::<JsonRoot>(&buf) {
                 Ok(root.recipes)
             } else {
-                error!("Failed to read RecipeSage JSON file: {err}");
+                error!(?err, "Failed to read RecipeSage JSON file");
                 Err(Error::Parse(err.to_string()))
             }
         }

@@ -61,7 +61,7 @@ impl HttpClient for AppHttpClient {
             if !wres.status().is_success() {
                 let status = wres.status();
                 let bytes = wres.bytes().await?;
-                error!("Failed to scrape '{url}' - HTTP error: {status} (body: {bytes:?})");
+                error!(?url, ?status, body = ?bytes, "Failed to scrape");
                 return Err(Error::Fetch(format!("HTTP error: {status}")));
             }
 

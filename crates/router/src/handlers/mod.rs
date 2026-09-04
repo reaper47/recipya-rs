@@ -24,7 +24,7 @@ pub async fn get_settings(state: &AppState, user_id: Uuid) -> Result<UserSetting
     match UserSettingDetails::get(&state.mm, user_id).await {
         Ok(settings) => Ok(settings),
         Err(err) => {
-            error!("Error fetching user settings for user {user_id}: {err}");
+            error!(?user_id, ?err, "Error fetching user settings");
             broadcast_error(state, user_id, "Error fetching user settings.").await;
             Err(Error::Database)
         }

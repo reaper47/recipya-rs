@@ -61,7 +61,7 @@ impl FetchWebsiteContext {
             report_logs: Arc::new(Mutex::new(Vec::new())),
             total: num_websites
                 .try_into()
-                .inspect_err(|err| error!("Failed to cast total '{num_websites}' to i64: {err}"))
+                .inspect_err(|err| error!(?num_websites, ?err, "Failed to cast total to i64"))
                 .unwrap_or(i64::MAX),
         }
     }
@@ -177,7 +177,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let num_urls = num_urls
             .try_into()
             .inspect_err(|err| {
-                error!("Failed to convert num_urls '{num_urls}' to i64: {err}");
+                error!(?num_urls, ?err, "Failed to convert num_urls to i64");
             })
             .unwrap_or(i64::MAX);
 
@@ -225,7 +225,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         match report.insert(&state.mm).await {
             Ok(_) => state.broadcast_trigger("refreshReports", user_id).await,
             Err(err) => {
-                error!("Error inserting website report into the database: {err}");
+                error!(?err, "Error inserting website report into the database");
             }
         }
     });
@@ -268,7 +268,7 @@ async fn process_recipe_url(
                 }
                 Err(err) => {
                     fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
-                    error!("Error inserting recipe into database '{url}': {err}");
+                    error!(?url, ?err, "Error inserting recipe into database");
                     match err {
                         models::Error::DuplicateEntityWithID(id) => {
                             fetch_ctx.recipe_ids.lock().await.push(id);
@@ -304,7 +304,7 @@ async fn process_recipe_url(
         }
         Err(err) => {
             fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
-            error!("Error fetching recipe '{url}': {err}");
+            error!(?url, ?err, "Error fetching recipe");
             fetch_ctx
                 .report_logs
                 .lock()

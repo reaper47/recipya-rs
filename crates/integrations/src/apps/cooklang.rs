@@ -144,7 +144,7 @@ impl CookLang {
             .for_each(|w| warn!("Cooklang parsing warning: {w}"));
         report
             .errors()
-            .for_each(|err| error!("Cooklang parsing error: {err}"));
+            .for_each(|err| error!(?err, "Cooklang parsing error"));
 
         let metadata = recipe.metadata.clone().map;
 
@@ -328,7 +328,7 @@ impl CookLang {
                     v.as_number().map(|v| {
                         i16::try_from(v)
                             .inspect_err(|err| {
-                                error!("Failed to convert '{v}' servings to i16: {err}");
+                                error!(?err, ?v, "Failed to convert servings to i16");
                             })
                             .unwrap_or_default()
                     })

@@ -519,7 +519,7 @@ impl ShoppingListDetails {
 
         let bytes = doc
             .finish()
-            .inspect_err(|err| error!("Failed to create shopping list pdf: {err}"))
+            .inspect_err(|err| error!(?err, "Failed to create shopping list PDF"))
             .unwrap_or_default();
 
         writer.write_all(&bytes)?;

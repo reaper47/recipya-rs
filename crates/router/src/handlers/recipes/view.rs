@@ -35,7 +35,7 @@ pub async fn recipes_handler(
     let num_recipes = match Recipe::count(&state.mm, user.id).await {
         Ok(count) => count,
         Err(err) => {
-            error!("Error counting recipes for user {}: {err}", user.id);
+            error!(user = ?user.id,?err, "Error counting recipes");
             broadcast_error(&state, user.id, "Error fetching number of recipes.").await;
             return Ok(Error::Database.into_response());
         }
@@ -52,7 +52,7 @@ pub async fn recipes_handler(
                             formatted_times,
                         })
                         .map_err(async |err| {
-                            error!("Error formatting times for recipe: {err}");
+                            error!(?err, "Error formatting times for recipe");
                             Error::Database
                         })
                 })
@@ -66,10 +66,7 @@ pub async fn recipes_handler(
             }
         }
         Err(err) => {
-            error!(
-                "(recipes_handler) Error fetching recipes for user '{:?}' with search params '{search_params:?}': {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?search_params, ?err, "(recipes_handler) Error fetching recipes for user with search params");
             broadcast_error(&state, user.id, "Error fetching recipes.").await;
             return Err(Error::Database);
         }
@@ -139,12 +136,7 @@ pub async fn view_recipe_handler(
             .bold_ingredients_in_instructions(&state.mm)
             .await
     {
-        error!(
-            recipe_id = recipe_id,
-            user_id = user.id.to_string(),
-            err = err.to_string(),
-            "Failed to bolden instructions"
-        );
+        error!(?recipe_id, user = ?user.id, ?err, "Failed to bolden instructions");
     }
 
     let autologin = state.config.read().await.states.autologin;
@@ -179,10 +171,7 @@ pub async fn view_recipe_handler(
     ) {
         Ok(res) => Ok(res),
         Err(err) => {
-            error!(
-                "Error rendering view recipe page for user {} and recipe {recipe_id}: {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?recipe_id, ?err, "Error rendering view recipe page");
             Err(Error::Templates)
         }
     }

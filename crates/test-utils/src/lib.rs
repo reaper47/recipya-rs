@@ -57,7 +57,7 @@ pub async fn create_app_state(config: Config) -> AppState {
         Arc::new(MockFs),
     )
     .map_err(|err| {
-        error!("Could not initialise app state: {err}");
+        error!(?err, "Could not initialise app state");
         err
     })
     .expect("Failed to initialise app state")

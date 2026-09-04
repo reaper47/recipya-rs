@@ -54,16 +54,16 @@ impl EmailSender for SmtpEmailSender {
             }
             Err(err) => {
                 error!(
-                    "Failed to set up relay {}: {:?}",
-                    email_config().smtp_host,
-                    err
+                    config = email_config().smtp_host,
+                    ?err,
+                    "Failed to set up relay"
                 );
                 return Err(Error::General(err.to_string()));
             }
         };
 
         if let Err(err) = mailer.send(&email) {
-            error!("Send email failed: {:?}", err);
+            error!(?err, "Send email failed");
             return Err(Error::General(err.to_string()));
         }
 

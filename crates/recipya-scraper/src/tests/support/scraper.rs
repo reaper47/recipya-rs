@@ -75,7 +75,7 @@ pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
         fs::File::create(path)
             .unwrap()
             .write(&fetch_html(url).await?)
-            .inspect_err(|err| error!("Could not write {website}: {err}"))
+            .inspect_err(|err| error!(?website, ?err, "Could not write"))
             .unwrap();
     }
 
@@ -172,11 +172,11 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes().await?)
-                    .inspect_err(|err| error!("Could not write {website}: {err}"))
+                    .inspect_err(|err| error!(?website, ?err, "Could not write"))
                     .unwrap();
             }
             Err(err) => {
-                error!("Could not fetch {website}: {err}");
+                error!(?website, ?err, "Could not fetch");
             }
         }
     }

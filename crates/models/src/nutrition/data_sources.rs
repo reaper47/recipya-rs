@@ -343,7 +343,7 @@ impl NutritionDataSource {
                     Ok(())
                 }
                 Err(err) => {
-                    error!("Failed to update nutrition data '{self}': {err}");
+                    error!(?self, ?err, "Failed to update nutrition data");
                     Err(err)
                 }
             },

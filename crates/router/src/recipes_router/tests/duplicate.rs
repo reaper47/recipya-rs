@@ -7,9 +7,7 @@ mod tests {
     use test_db::default_config;
     use test_fixtures::assert_ws_message;
     use test_models::a_complete_recipe_for_create;
-    use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
-    };
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, build_server_ws};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

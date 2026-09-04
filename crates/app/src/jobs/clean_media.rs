@@ -58,7 +58,7 @@ async fn fetch_videos(
         .load::<Uuid>(conn)
         .await
         .unwrap_or_else(|err| {
-            error!("CleanMedia: Error fetching distinct video images: {err}");
+            error!(?err, "CleanMedia: Error fetching distinct video images");
             Vec::new()
         })
         .into_iter()
@@ -87,7 +87,7 @@ async fn fetch_images(
         .await
         .unwrap_or_else(|err| {
             error!(
-                error = err.to_string(),
+                ?err,
                 "CleanMedia: Error fetching distinct recipe and cookbook images"
             );
             Vec::new()
@@ -123,16 +123,12 @@ fn clean_files(
                         }
                     }
                     Err(err) => {
-                        error!("CleanMedia: Failed to delete file {:?}: {err}", path);
+                        error!(?path, ?err, "CleanMedia: Failed to delete file");
                     }
                 });
         }
         Err(err) => {
-            error!(
-                dir = dir.to_string_lossy().to_string(),
-                error = err.to_string(),
-                "CleanMedia: Failed to collect all paths",
-            );
+            error!(?dir, ?err, "CleanMedia: Failed to collect all paths",);
         }
     }
 
@@ -155,18 +151,14 @@ fn process_thumbnail(path: &Path) -> Result<u64> {
                     }
                 }
                 Err(err) => {
-                    error!(
-                        thumbnail = thumbnail.to_string_lossy().to_string(),
-                        error = err.to_string(),
-                        "CleanMedia: Failed to remove thumbnail",
-                    );
+                    error!(?thumbnail, ?err, "CleanMedia: Failed to remove thumbnail",);
                     Err(err.into())
                 }
             },
             Err(err) => {
                 error!(
-                    thumbnail = thumbnail.to_string_lossy().to_string(),
-                    error = err.to_string(),
+                    ?thumbnail,
+                    ?err,
                     "CleanMedia: Failed to read metadata of thumbnail",
                 );
                 Err(err.into())

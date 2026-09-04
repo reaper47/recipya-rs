@@ -67,7 +67,7 @@ where
                 .first()
                 .map(|amount| match amount.factor {
                     Factor::Integer(n) => i16::try_from(n)
-                        .inspect_err(|err| error!("Failed to parse integer '{n}': {err}"))
+                        .inspect_err(|err| error!(?n, ?err, "Failed to parse integer"))
                         .unwrap_or_default(),
                     Factor::Fraction(numerator, denominator) => {
                         (numerator / denominator).cast_signed()

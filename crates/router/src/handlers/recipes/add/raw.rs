@@ -74,7 +74,7 @@ pub async fn add_recipe_import_raw_handler(
                 }
                 Err(err) => {
                     items.failed += 1;
-                    error!("Error saving recipe '{}': {err}", recipe_c.name);
+                    error!(name = recipe_c.name, ?err, "Error saving recipe");
                     broadcast_error(&state, user.id, "Failed to insert recipe.").await;
                     (
                         Error::Database.into_response(),
@@ -92,7 +92,7 @@ pub async fn add_recipe_import_raw_handler(
         }
         Err(err) => {
             items.failed += 1;
-            error!("Error parsing recipe schema JSON: {err}");
+            error!(?err, "Error parsing recipe schema JSON");
             broadcast_error(&state, user.id, "Error parsing recipe schema JSON.").await;
             (
                 Error::InvalidPayload.into_response(),
@@ -119,7 +119,7 @@ pub async fn add_recipe_import_raw_handler(
     match report.insert(&state.mm).await {
         Ok(_) => state.broadcast_trigger("refreshReports", user.id).await,
         Err(err) => {
-            error!("Error inserting website report into the database: {err}");
+            error!(?err, "Error inserting website report into the database");
         }
     }
 

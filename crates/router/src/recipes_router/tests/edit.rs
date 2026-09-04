@@ -25,9 +25,7 @@ mod tests {
     use test_db::default_config;
     use test_fixtures::{RecipeImages, assert_ws_message};
     use test_models::a_complete_recipe_for_create;
-    use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
-    };
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, build_server_ws};
 
     use crate::recipes_router::tests::helpers::create_form;
 
@@ -97,7 +95,10 @@ mod tests {
         async fn test_missing_required_title_ok() -> Result<()> {
             let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
+            let recipe_id = Recipe::all(&state.mm, user_id)
+                .await?
+                .last()
+                .map_or(1, |r| r.id);
             let recipe = RecipeForCreate {
                 ingredients: SectionComponents::Flat(vec![Item::new("1 apple")]),
                 instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
@@ -117,7 +118,10 @@ mod tests {
         async fn test_missing_required_ingredients_ok() -> Result<()> {
             let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
+            let recipe_id = Recipe::all(&state.mm, user_id)
+                .await?
+                .last()
+                .map_or(1, |r| r.id);
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
                 instructions: SectionComponents::Flat(vec![Item::new("Mix the apples")]),
@@ -137,7 +141,10 @@ mod tests {
         async fn test_missing_required_instructions_ok() -> Result<()> {
             let (server, state) = build_server_logged_in(default_config()).await?;
             let user_id = User::all(&state.mm).await?[0].id;
-            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
+            let recipe_id = Recipe::all(&state.mm, user_id)
+                .await?
+                .last()
+                .map_or(1, |r| r.id);
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
                 ingredients: SectionComponents::Flat(vec![Item::new("8 apples")]),
@@ -188,9 +195,7 @@ mod tests {
             let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             recipe.name = "Maple Syrup Korean Chicken".into();
             recipe.ingredients = SectionComponents::Flat(vec![Item::new("4 apples")]);
-            recipe.instructions = SectionComponents::Flat(vec![
-                Item::new("Drink juice"),
-            ]);
+            recipe.instructions = SectionComponents::Flat(vec![Item::new("Drink juice")]);
 
             let res = server
                 .put(&base_uri(recipe_id))
@@ -200,7 +205,9 @@ mod tests {
             res.assert_status_see_other();
             let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             if let SectionComponents::Flat(instructions) = &mut got.instructions {
-                for i in instructions.iter_mut() { i.id = None; }
+                for i in instructions.iter_mut() {
+                    i.id = None;
+                }
             }
             let expected = recipe_for_create_to_details(recipe, &got, user_id);
             pretty_assertions::assert_eq!(got, expected);
@@ -420,7 +427,9 @@ mod tests {
             res.assert_status_see_other();
             let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             if let SectionComponents::Flat(instructions) = &mut got.instructions {
-                for i in instructions.iter_mut() { i.id = None; }
+                for i in instructions.iter_mut() {
+                    i.id = None;
+                }
             }
             let expected = recipe_for_create_to_details(recipe, &got, user_id);
             pretty_assertions::assert_eq!(got.ingredients, expected.ingredients);
@@ -465,7 +474,9 @@ mod tests {
             res.assert_status_see_other();
             let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             if let SectionComponents::Flat(instructions) = &mut got.instructions {
-                for i in instructions.iter_mut() { i.id = None; }
+                for i in instructions.iter_mut() {
+                    i.id = None;
+                }
             }
             pretty_assertions::assert_eq!(
                 got.keywords,
@@ -477,10 +488,7 @@ mod tests {
             );
             pretty_assertions::assert_eq!(
                 got.instructions,
-                SectionComponents::Flat(vec![
-                    Item::new("Mix the apples"),
-                    Item::new("Eat"),
-                ])
+                SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat"),])
             );
             pretty_assertions::assert_eq!(
                 got.tools,
@@ -500,7 +508,9 @@ mod tests {
 
         let expected = [
             r#"<title hx-swap-oob="true">Edit Best Chinese Kale | Recipya</title>"#,
-            &format!(r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/{recipe_id}/edit" hx-indicator="#fullscreen-loader">"##),
+            &format!(
+                r##"<form class="card-body contents" style="padding: 0" enctype="multipart/form-data" hx-put="/recipes/{recipe_id}/edit" hx-indicator="#fullscreen-loader">"##
+            ),
             r#"<input required type="text" name="title" placeholder="Title of the recipe*" autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200" value="Best Chinese Kale">"#,
             &format!(
                 r#"<img src="/data/images/{}.webp" alt="Image #1 of the recipe" class="block w-full h-full object-contain"><input type="hidden" name="media-existing-image" value="/data/images/{}.webp">"#,
