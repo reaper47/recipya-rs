@@ -38,12 +38,12 @@ pub fn auth_config() -> &'static AuthConfig {
     static INSTANCE: OnceLock<AuthConfig> = OnceLock::new();
 
     INSTANCE.get_or_init(|| {
-        info!("APP_ENV: {:?}", std::env::var("APP_ENV"));
+        error!("APP_ENV: {:?}", std::env::var("APP_ENV"));
         if std::env::var("APP_ENV").as_deref() == Ok("test") {
-            info!("Using auth config for test");
+            error!("Using auth config for test");
             AuthConfig::for_test()
         } else {
-            info!("Using auth config from file");
+            error!("Using auth config from file");
             AuthConfig::load_from_file().expect("Failed to load auth config")
         }
     })
