@@ -65,7 +65,7 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Build tests
-        run: cargo nextest run --no-run
+        run: cargo nextest run --no-run --locked
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
 
@@ -84,7 +84,7 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: cargo nextest run
+          command: cargo nextest run --locked
 
       - name: Test release build every 10 runs
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -102,7 +102,7 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: cargo nextest run --release
+          command: cargo nextest run --release --locked
 
       - name: sccache stats
         run: ${SCCACHE_PATH} --show-stats
