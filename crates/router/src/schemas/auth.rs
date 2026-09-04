@@ -29,7 +29,7 @@ pub struct ForgotPasswordResetForm {
 }
 
 /// A form structure used for logging in a user.
-#[derive(Default, Validate, Deserialize, Serialize)]
+#[derive(Debug, Default, Validate, Deserialize, Serialize)]
 pub struct LoginForm {
     #[validate(email(message = "Invalid email address"))]
     pub email: String,

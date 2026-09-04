@@ -86,8 +86,7 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          # command: cargo nextest run --locked
-          command: cargo nextest run --success-output immediate --failure-output immediate
+          command: cargo nextest run --locked
 
       - name: Test release build every 10 runs
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

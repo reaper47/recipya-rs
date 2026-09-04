@@ -330,6 +330,7 @@ pub async fn login_post_handler(
         Err(err) => {
             error!(
                 user = user.id.to_string(),
+                ?form,
                 ?err,
                 "Password validation failed for user"
             );
