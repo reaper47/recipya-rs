@@ -136,23 +136,44 @@ fn admin_database_url() -> String {
     std::env::var("DATABASE_URL").expect("DATABASE_URL not set")
 }
 
+const TEMPLATE_LOCK_ID: i64 = 918_273_645;
+
+/// AI usage:
+///
+/// Assisted by Claude because I couldn't figure out why so many tests were failing randomly
+/// while re-architecting the tests to drastically improve the time it takes to run them.
 async fn ensure_template_exists(admin_url: &str) -> Result<()> {
-    let _ = sql_query(format!("CREATE DATABASE \"{TEMPLATE_DB}\";"))
-        .execute(&mut make_db_pool(admin_url).await?.get().await?)
-        .await;
+    let pool = make_db_pool(admin_url).await?;
+    let mut conn = pool.get().await?;
 
-    let mut url = Url::parse(admin_url)?;
-    url.set_path(TEMPLATE_DB);
+    sql_query(format!("SELECT pg_advisory_lock({TEMPLATE_LOCK_ID})"))
+        .execute(&mut conn)
+        .await?;
 
-    tokio::task::spawn_blocking(move || {
-        diesel::PgConnection::establish(url.as_ref())
-            .expect("connect to template db")
-            .run_pending_migrations(MIGRATIONS)
-            .expect("migrate template db");
-    })
-    .await?;
+    let result = async {
+        let _ = sql_query(format!("CREATE DATABASE \"{TEMPLATE_DB}\";"))
+            .execute(&mut conn)
+            .await;
 
-    Ok(())
+        let mut url = Url::parse(admin_url)?;
+        url.set_path(TEMPLATE_DB);
+        tokio::task::spawn_blocking(move || {
+            diesel::PgConnection::establish(url.as_ref())
+                .expect("connect to template db")
+                .run_pending_migrations(MIGRATIONS)
+                .expect("migrate template db");
+        })
+        .await?;
+
+        Ok::<_, Box<dyn std::error::Error>>(())
+    }
+    .await;
+
+    sql_query(format!("SELECT pg_advisory_unlock({TEMPLATE_LOCK_ID})"))
+        .execute(&mut conn)
+        .await?;
+
+    result
 }
 
 /// Creates the model manager for use in tests.

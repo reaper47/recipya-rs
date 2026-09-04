@@ -636,6 +636,7 @@ mod tests {
         }
 
         #[tokio::test]
+        #[tracing_test::traced_test]
         async fn test_post_login_ok() -> Result<()> {
             let (server, _) = build_server_anonymous(default_config()).await?;
 
@@ -778,7 +779,7 @@ mod tests {
 
     mod tests_register {
         use models::user::User;
-        use test_utils::{build_server_anonymous, build_server_logged_in, create_app_state};
+        use test_utils::{build_server_anonymous, build_server_logged_in};
 
         use super::*;
         use crate::schemas::auth::{LoginForm, RegisterForm};
@@ -824,7 +825,9 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_register_ok() -> Result<()> {
-            let (server, state) = build_server_anonymous(default_config()).await?;
+            let mut config = default_config();
+            config.states.signups = SignupsState::On;
+            let (server, state) = build_server_anonymous(config).await?;
             let form = a_register_form();
 
             let res = server.post(BASE_URI).form(&form).await;
@@ -837,11 +840,13 @@ mod tests {
 
         #[tokio::test]
         async fn test_post_register_when_user_already_registered_ok() -> Result<()> {
-            let (server, _) = build_server_anonymous(default_config()).await?;
+            let mut config = default_config();
+            config.states.signups = SignupsState::On;
+            let (server, _) = build_server_anonymous(config).await?;
             let form = a_register_form();
 
-            let _res = server.post(BASE_URI).form(&form).await;
-            let _res = server
+            let _ = server.post(BASE_URI).form(&form).await;
+            let _ = server
                 .post("/auth/login")
                 .form(&LoginForm {
                     email: form.email.clone(),
@@ -882,14 +887,7 @@ mod tests {
 
         #[tokio::test]
         async fn test_register_cannot_register_when_no_signups_ok() -> Result<()> {
-            let config = Config {
-                states: States {
-                    signups: SignupsState::On,
-                    ..Default::default()
-                },
-                ..Default::default()
-            };
-            let (server, _) = build_server_anonymous(config.clone()).await?;
+            let (server, state) = build_server_anonymous(default_config()).await?;
             let a_form = a_register_form();
 
             let res_get = server.post(BASE_URI).form(&a_form).await;
@@ -899,7 +897,6 @@ mod tests {
             res_get.assert_status_see_other();
             res_get.assert_header("Location", "/auth/login");
             res_post.assert_header("Location", "/auth/login");
-            let state = create_app_state(config).await;
             let user = User::get_user_by_email(&state.mm, &a_form.email).await?;
             assert!(user.is_none(), "user should not have been registered");
             Ok(())

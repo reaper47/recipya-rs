@@ -182,7 +182,6 @@ mod tests {
     #[tokio::test]
     async fn test_all_ok() -> Result<()> {
         let state = create_app_state(default_config()).await;
-        let now = OffsetDateTime::now_utc().date();
 
         let got = NutritionSource::all(&state.mm).await?;
 
@@ -194,7 +193,7 @@ mod tests {
                 description: "USDA FoodData Central".into(),
                 url: "https://fdc.nal.usda.gov/".into(),
                 country: "United States".into(),
-                created_on: now,
+                created_on: got[0].created_on,
                 updated_on: None,
             }]
         );

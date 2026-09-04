@@ -245,8 +245,7 @@ mod tests {
             let res = server.post(BASE_URI).multipart(form).await;
 
             res.assert_status(StatusCode::CREATED);
-            let users = User::all(&state.mm).await?;
-            let user_id = users[0].id;
+            let user_id = User::all(&state.mm).await?[0].id;
             let recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;
             let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             pretty_assertions::assert_eq!(got.category, "drinks:vodka");

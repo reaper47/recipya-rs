@@ -446,7 +446,7 @@ pub async fn register_post_handler(
     } else {
         let config = state.config.read().await;
 
-        if config.states.signups == SignupsState::On {
+        if config.states.signups == SignupsState::Off {
             return Redirect::to("/auth/login").into_response();
         }
 
