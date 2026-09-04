@@ -28,7 +28,7 @@ impl Scheme for Scheme02 {
     }
 
     fn validate(&self, to_hash: &ContentToHash, pwd_ref: &str) -> Result<()> {
-        error!("Called validate");
+        error!("Called validate 02");
         let argon2 = get_argon2();
 
         let parsed_hash_ref = PasswordHash::new(pwd_ref).map_err(|_| Error::Hash)?;
@@ -44,7 +44,6 @@ fn get_argon2() -> &'static Argon2<'static> {
 
     INSTANCE.get_or_init(|| {
         let key = &auth_config().decoded_password_key;
-        error!("Using key: {key:?}");
         Argon2::new_with_secret(
             key,
             argon2::Algorithm::Argon2id,
