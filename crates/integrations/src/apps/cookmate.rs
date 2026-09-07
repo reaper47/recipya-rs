@@ -459,7 +459,7 @@ mod tests {
             let mut got = parse_backup(buf)?;
 
             let want = results::xml_recipes();
-            assert!(match got[4].image[0].clone() {
+            assert!(match &got[4].image[0] {
                 schema_org::field::FieldEnum22::ImageObject(_) => false,
                 schema_org::field::FieldEnum22::URL(u) =>
                     u.starts_with("/tmp") || u.contains(r"\Temp\"),
@@ -479,9 +479,9 @@ mod tests {
             let want = results::xml2_recipes();
             let want = want
                 .into_iter()
-                .zip(got.clone())
+                .zip(&got)
                 .map(|(mut a, b)| {
-                    a.image = b.image;
+                    a.image = b.image.clone();
                     a
                 })
                 .collect::<Vec<_>>();

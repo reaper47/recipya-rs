@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
+use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{line_ending, space0, space1};
 use winnow::combinator::{alt, delimited, opt, preceded, repeat, separated, seq, terminated};
@@ -79,10 +80,7 @@ pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
 
 impl From<KalorioTextRecipe> for Recipe {
     fn from(r: KalorioTextRecipe) -> Self {
-        let (category, keywords) = match r.keywords.as_slice() {
-            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
-            [] => (None, Vec::new()),
-        };
+        let (category, keywords) = r.keywords.split_first_owned();
 
         Self {
             r#type: AtType::Recipe.to_opt(),

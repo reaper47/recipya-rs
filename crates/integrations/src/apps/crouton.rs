@@ -10,7 +10,7 @@ use schema_org::field::{
     RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
 };
 use schema_org::{AtType, Energy, Mass, NutritionInformation, Recipe};
-use support::strings::extract_number;
+use support::strings::{SplitFirstOwned, extract_number};
 
 use crate::common::Nutrition;
 use crate::error::Result;
@@ -104,16 +104,12 @@ where
 {
     let mut crouton: Crouton = serde_json::from_reader(r)?;
 
-    let (category, keywords) = match crouton
+    let (category, keywords) = crouton
         .tags
         .into_iter()
         .map(|tag| tag.name)
         .collect::<Vec<_>>()
-        .as_slice()
-    {
-        [first, rest @ ..] => (Some(first).cloned(), rest.to_vec()),
-        [] => (None, Vec::new()),
-    };
+        .split_first_owned();
 
     let source = if !crouton.web_link.is_empty() {
         Some(crouton.web_link)

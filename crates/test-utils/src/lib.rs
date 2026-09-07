@@ -80,7 +80,7 @@ pub async fn build_server_anonymous(app_config: Config) -> Result<(TestServer, A
 ///
 /// Panics if the test user is not found in the database.
 pub async fn build_server_logged_in(app_config: Config) -> Result<(TestServer, AppState)> {
-    let (routes, state) = prepare_router(app_config.clone()).await?;
+    let (routes, state) = prepare_router(app_config).await?;
     let config = TestServerConfig {
         save_cookies: true,
         ..TestServerConfig::default()
@@ -119,7 +119,7 @@ async fn build_server_ws_helper(
     app_config: Config,
     auth_email: &str,
 ) -> Result<(TestServer, TestWebSocket, AppState)> {
-    let (routes, state) = prepare_router(app_config.clone()).await?;
+    let (routes, state) = prepare_router(app_config).await?;
     let config = TestServerConfig {
         save_cookies: true,
         transport: Some(Transport::HttpRandomPort),
@@ -133,7 +133,7 @@ async fn build_server_ws_helper(
     let mut server = TestServer::new_with_config(routes, config);
 
     let token = generate_access_token(&user.id)?;
-    let mut cookie = Cookie::new(AUTH_TOKEN, token.clone());
+    let mut cookie = Cookie::new(AUTH_TOKEN, token);
     cookie.set_http_only(true);
     cookie.set_path("/");
     server.add_cookie(cookie);
@@ -149,12 +149,12 @@ async fn build_server_ws_helper(
 ///
 /// Panics if the user cannot be found after creation.
 pub async fn get_token(mm: ModelManager) -> Result<String> {
-    let email = "confirm@test.com".to_string();
+    let email = "confirm@test.com";
 
     User::new_with_hash(
         &mm,
         UserForCreate {
-            email: email.clone(),
+            email: email.to_string(),
             password_clear: "12345678".to_string(),
         },
         get_password_salt(),
@@ -162,7 +162,7 @@ pub async fn get_token(mm: ModelManager) -> Result<String> {
     )
     .await?;
 
-    let user = User::get_user_by_email(&mm, &email)
+    let user = User::get_user_by_email(&mm, email)
         .await?
         .expect("User not found");
 

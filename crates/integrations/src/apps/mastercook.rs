@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
+use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space0, space1};
 use winnow::combinator::{
@@ -48,10 +49,7 @@ struct RecipeComponents<'a> {
 impl From<RecipeComponents<'_>> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: RecipeComponents) -> Self {
-        let (category, keywords) = match r.categories.as_slice() {
-            [first, rest @ ..] => (first.trim().to_string(), rest.to_vec()),
-            [] => (String::new(), Vec::new()),
-        };
+        let (category, keywords) = r.categories.split_first_owned();
 
         let rating = r
             .rating
@@ -159,11 +157,10 @@ impl From<RecipeComponents<'_>> for Recipe {
                 parse_nutrition_schema(nutrition_slice)
             },
             prep_time: seconds_to_duration(prep_secs),
-            recipe_category: if category.is_empty() {
-                vec![]
-            } else {
-                vec![category]
-            },
+            recipe_category: category
+                .map(|c| c.trim())
+                .filter(|c| !c.is_empty())
+                .map_or(Vec::new(), |c| vec![c.into()]),
             recipe_ingredient: r
                 .ingredients
                 .into_iter()
@@ -324,10 +321,11 @@ struct Rating {
 impl From<MastercookRecipe> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: MastercookRecipe) -> Self {
-        let (category, keywords) = match r.categories.unwrap_or_default().categories.as_slice() {
-            [first, rest @ ..] => (first.trim().to_string(), rest.to_vec()),
-            [] => (String::new(), Vec::new()),
-        };
+        let (category, keywords) = r
+            .categories
+            .unwrap_or_default()
+            .categories
+            .split_first_owned();
 
         let prep_secs = parse_time(&r.prep_time.unwrap_or_default().elapsed);
         let total_secs = r.total_time.map_or(0, |t| parse_time(&t.elapsed));
@@ -402,11 +400,10 @@ impl From<MastercookRecipe> for Recipe {
             name: vec![r.name],
             nutrition: parse_nutrition_schema(nutrition.split(';').collect::<Vec<_>>().as_slice()),
             prep_time: seconds_to_duration(prep_secs),
-            recipe_category: if category.is_empty() {
-                vec![]
-            } else {
-                vec![category]
-            },
+            recipe_category: category
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .map_or(Vec::new(), |s| vec![s]),
             recipe_ingredient: r
                 .ingredients
                 .into_iter()

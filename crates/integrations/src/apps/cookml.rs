@@ -16,7 +16,7 @@ use schema_org::field::{
 use schema_org::{
     AggregateRating, AtType, DurationOrText, ItemList, Mass, NutritionInformation, Recipe,
 };
-use support::strings::extract_number;
+use support::strings::{SplitFirstOwned, extract_number};
 
 use crate::helpers::to_is_based_on;
 use crate::{Error, Result};
@@ -167,10 +167,14 @@ struct Ingredient<'a> {
 
 impl Display for Ingredient<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut parts = vec![self.qty.clone(), self.unit.clone(), self.item.clone()];
+        let mut parts = vec![
+            Cow::Borrowed(self.qty.as_ref()),
+            Cow::Borrowed(self.unit.as_ref()),
+            Cow::Borrowed(self.item.as_ref()),
+        ];
 
-        if let Some(bls) = self.bls.clone() {
-            parts.push(bls);
+        if let Some(bls) = &self.bls {
+            parts.push(Cow::Borrowed(bls.as_ref()));
         }
 
         if let Some(gram) = &self.gram {
@@ -253,10 +257,8 @@ impl From<CookmlRecipe<'_>> for Recipe {
         let prep_time = Duration::from_str(&r.head.timeprepqty.unwrap_or_default()).ok();
         let cook_time = Duration::from_str(&r.head.timecookqty.unwrap_or_default()).ok();
         let quality = extract_number(&r.head.quality.unwrap_or_default()).ok();
-        let (category, keywords) = match r.head.hint.unwrap_or_default().as_slice() {
-            [first, rest @ ..] => (Some(first.clone()), Some(rest.to_vec())),
-            [] => (None, None),
-        };
+        let hints = r.head.hint.unwrap_or_default();
+        let (category, keywords) = hints.split_first_owned();
 
         let images = r
             .head
@@ -324,12 +326,9 @@ impl From<CookmlRecipe<'_>> for Recipe {
                 .map(|l| vec![RecipeInLanguageFieldEnum::Text(l.to_string())])
                 .unwrap_or_default(),
             keywords: keywords
-                .map(|v| {
-                    v.into_iter()
-                        .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
-                        .collect()
-                })
-                .unwrap_or_default(),
+                .into_iter()
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
+                .collect(),
             name: Some(r.head.title.to_string())
                 .filter(|v| !v.is_empty())
                 .map(|s| vec![s])
@@ -424,9 +423,9 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod test_recipes {
-        use super::*;
-
         use std::io::Cursor;
+
+        use super::*;
 
         #[test]
         fn test_recipes1() -> Result<()> {

@@ -42,9 +42,9 @@ where
 impl ToRecipeSchema for Recipe {
     #[allow(clippy::too_many_lines)]
     fn to_recipe_schema(&self) -> schema_org::Recipe {
-        let (category, keywords) = match self.categories.as_slice() {
-            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
-            [] => (None, Vec::new()),
+        let (category, keywords) = match self.categories.split_first() {
+            Some((category, keywords)) => (Some(category.clone()), keywords.to_vec()),
+            None => (None, Vec::new()),
         };
 
         let instructions: Vec<RecipeRecipeInstructionsFieldEnum> = std::iter::once(

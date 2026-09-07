@@ -427,13 +427,14 @@ pub struct RecipeForCreate {
 impl RecipeForCreate {
     /// Returns the first image UUID if available and a vector of the remaining image UUIDs.
     pub fn first_and_rest_images(&self) -> (Option<Uuid>, Vec<Uuid>) {
-        match self.images.as_slice() {
-            [first, rest @ ..] => (
-                Some(*first).filter(|u| !u.is_nil()),
-                rest.iter().copied().filter(|u| !u.is_nil()).collect(),
-            ),
-            [] => (None, Vec::new()),
-        }
+        let Some((first, rest)) = self.images.split_first() else {
+            return (None, Vec::new());
+        };
+
+        (
+            Some(*first).filter(|u| !u.is_nil()),
+            rest.iter().copied().filter(|u| !u.is_nil()).collect(),
+        )
     }
 
     /// Determines the recipe's language.

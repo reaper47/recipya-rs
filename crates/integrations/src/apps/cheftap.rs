@@ -54,7 +54,7 @@ impl From<ChefTapRecipe> for Recipe {
 
         Self {
             r#type: AtType::Recipe.to_opt(),
-            is_based_on: to_is_based_on(&r.source.clone().unwrap_or_default()),
+            is_based_on: to_is_based_on(r.source.as_deref().unwrap_or_default()),
             cook_time: r
                 .cook_time
                 .map(|s| vec![DurationOrText::Text(s)])

@@ -61,27 +61,20 @@ pub struct Ingredient {
 impl fmt::Display for Ingredient {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(s) = self.original_text.as_ref() {
-            write!(f, "{s}")
-        } else {
-            let res = [
-                self.amount.to_string(),
-                self.unit
-                    .as_ref()
-                    .map(|u| u.name.clone())
-                    .unwrap_or_default(),
-                self.food
-                    .as_ref()
-                    .map(|f| f.name.clone())
-                    .unwrap_or_default(),
-            ]
-            .iter()
-            .filter(|s| !s.is_empty())
-            .map(String::as_str)
-            .collect::<Vec<_>>()
-            .join(" ");
-
-            write!(f, "{res}")
+            return write!(f, "{s}");
         }
+
+        let res = [
+            self.amount.to_string().as_str(),
+            self.unit.as_ref().map_or("", |u| u.name.as_str()),
+            self.food.as_ref().map_or("", |f| f.name.as_str()),
+        ]
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ");
+
+        write!(f, "{res}")
     }
 }
 

@@ -22,6 +22,7 @@ use schema_org::{
     AtType, DurationOrText, Energy, Mass, NutritionInformation, Recipe, at_context,
     field::{RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipeYieldFieldEnum},
 };
+use support::strings::SplitFirstOwned;
 
 use crate::{
     Error, Result,
@@ -285,10 +286,7 @@ impl TryFrom<RecipeXML<'_>> for Recipe {
         }
 
         let categories = r.recipe_header.category.split('|').collect_vec();
-        let (cat, keywords) = match categories.as_slice() {
-            [first, rest @ ..] => (Some(first).filter(|s| !s.trim().is_empty()), rest.to_vec()),
-            [] => (None, vec![]),
-        };
+        let (cat, keywords) = categories.split_first_owned();
 
         let r#yield = r
             .recipe_header
@@ -536,16 +534,15 @@ fn parse_title<'s>(input: &mut &'s str) -> ModalResult<Cow<'s, str>> {
 
 fn parse_category<'s>(input: &mut &'s str) -> ModalResult<CategoryComponents<'s>> {
     parse_metadata_line(input, "Category: ").map(|s| {
-        let parts = s.split('|').collect_vec();
-        match parts.as_slice() {
-            [first, rest @ ..] => (
-                Some(Cow::Owned(first.to_string())),
-                rest.iter()
-                    .map(|s: &&str| Cow::Owned(s.to_string()))
-                    .collect_vec(),
-            ),
-            [] => (None, Vec::new()),
-        }
+        let (category, keywords) = s.split('|').collect_vec().split_first_owned();
+
+        (
+            category.map(|s| Cow::Owned(s.trim().to_string())),
+            keywords
+                .into_iter()
+                .map(|s| Cow::Owned(s.trim().to_string()))
+                .collect_vec(),
+        )
     })
 }
 

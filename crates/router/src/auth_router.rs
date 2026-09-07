@@ -786,11 +786,11 @@ mod tests {
 
         const BASE_URI: &str = "/auth/register";
 
-        fn a_register_form() -> RegisterForm {
+        fn a_register_form<'a>() -> RegisterForm {
             RegisterForm {
-                email: "new_user@example.com".to_string(),
-                password: "12345678".to_string(),
-                password_confirm: "12345678".to_string(),
+                email: "new_user@example.com".into(),
+                password: "12345678".into(),
+                password_confirm: "12345678".into(),
             }
         }
 
@@ -849,8 +849,8 @@ mod tests {
             let _ = server
                 .post("/auth/login")
                 .form(&LoginForm {
-                    email: form.email.clone(),
-                    password: form.password.clone(),
+                    email: form.email.to_string(),
+                    password: form.password.to_string(),
                     remember_me: Some(false),
                 })
                 .await;

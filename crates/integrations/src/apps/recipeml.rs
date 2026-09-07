@@ -10,6 +10,7 @@ use schema_org::{
     AtType, Recipe,
     field::{RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum},
 };
+use support::strings::SplitFirstOwned;
 
 use crate::helpers::to_yield;
 use crate::{Error, Result};
@@ -79,28 +80,23 @@ pub struct Directions {
 
 impl From<RecipeXML> for Recipe {
     fn from(r: RecipeXML) -> Self {
-        let (category, keywords) = match r
+        let (category, keywords) = r
             .head
             .categories
             .into_iter()
             .map(|c| c.cat)
             .collect::<Vec<_>>()
-            .as_slice()
-        {
-            [first, rest @ ..] => (Some(first.clone()), Some(rest.to_vec())),
-            [] => (None, None),
-        };
+            .split_first_owned();
 
         Self {
             r#type: AtType::Recipe.to_opt(),
             context: at_context(),
             name: vec![r.head.title],
             recipe_category: category.map_or(Vec::new(), |s| vec![s]),
-            keywords: keywords.map_or(Vec::new(), |v| {
-                v.into_iter()
-                    .map(RecipeKeywordsFieldEnum::TextOrURL)
-                    .collect()
-            }),
+            keywords: keywords
+                .into_iter()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .collect(),
             recipe_yield: to_yield(
                 r.head
                     .r#yield

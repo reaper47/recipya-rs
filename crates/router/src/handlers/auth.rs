@@ -161,7 +161,7 @@ pub async fn forgot_password_post_handler(
             };
 
             tokio::spawn(async move {
-                if let Err(err) = email.send(&payload) {
+                if let Err(err) = email.send(payload) {
                     error!("Could not send email 'Reset password': {:?}", err);
                 }
             });
@@ -306,7 +306,7 @@ pub async fn login_post_handler(
         return res;
     }
 
-    let user = match User::get_user_by_email(&state.mm, String::from(&form.email)).await {
+    let user = match User::get_user_by_email(&state.mm, &form.email).await {
         Ok(user) => match user {
             None => {
                 let mut res = Error::LoginFailUsernameNotFound.into_response();
@@ -466,9 +466,11 @@ pub async fn register_post_handler(
             return res;
         }
 
-        match User::get_user_by_email(&state.mm, form.email.clone()).await {
+        match User::get_user_by_email(&state.mm, &form.email).await {
             Ok(Some(_)) => Redirect::to("/recipes").into_response(),
             Ok(_) => {
+                let username = form.email.clone();
+
                 let user = match User::new(&state.mm, form.to_user()).await {
                     Ok(id) => id,
                     Err(err) => {
@@ -505,14 +507,14 @@ pub async fn register_post_handler(
                     drop(config);
 
                     tokio::spawn(async move {
-                        service.send(&Email {
+                        service.send(Email {
                             to: user.email,
                             subject: "Verify your email address".into(),
                             body: String::new(),
                             template: Some(Template::Intro),
                             data: Some(Data {
                                 token: token_entry.token,
-                                username: form.email,
+                                username,
                                 url: base_url,
                             }),
                         })

@@ -59,17 +59,13 @@ impl From<CooklangRecipe> for Recipe {
                 .description
                 .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
                 .unwrap_or_default(),
-            is_based_on: r
-                .source
-                .clone()
-                .map(|s| {
-                    if s.parse::<Url>().is_ok() {
-                        vec![RecipeIsBasedOnFieldEnum::URL(s)]
-                    } else {
-                        vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]
-                    }
-                })
-                .unwrap_or_default(),
+            is_based_on: r.source.as_deref().map_or(Vec::new(), |s| {
+                if s.parse::<Url>().is_ok() {
+                    vec![RecipeIsBasedOnFieldEnum::URL(s.into())]
+                } else {
+                    vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(s)]
+                }
+            }),
             keywords: r
                 .tags
                 .into_iter()
@@ -146,7 +142,25 @@ impl CookLang {
             .errors()
             .for_each(|err| error!(?err, "Cooklang parsing error"));
 
-        let metadata = recipe.metadata.clone().map;
+        let author = recipe.metadata.author();
+        let title = recipe.metadata.title().unwrap_or(file_name).to_string();
+        let description = recipe.metadata.description().map(String::from);
+        let locale = recipe.metadata.locale().map(|(lang, _)| String::from(lang));
+        let servings = recipe.metadata.servings();
+        let source = recipe.metadata.source();
+        let tags = recipe
+            .metadata
+            .tags()
+            .unwrap_or_default()
+            .iter()
+            .map(|s| {
+                s.trim_end_matches(']')
+                    .to_owned()
+                    .trim_start_matches('[')
+                    .to_string()
+            })
+            .collect::<Vec<_>>();
+        let metadata = recipe.metadata.map;
 
         let category = metadata
             .get("category")
@@ -193,15 +207,9 @@ impl CookLang {
             .and_then(|c| c.as_str())
             .map(String::from);
 
-        let total_time = time
-            .clone()
-            .or_else(|| time.clone())
-            .or_else(|| time_required.clone())
-            .or_else(|| duration.clone())
-            .filter(|_| time.is_some() || time_required.is_some() || duration.is_some())
-            .map_or((0, 15), |v| {
-                parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 15))
-            });
+        let total_time = time.or(time_required).or(duration).map_or((0, 15), |v| {
+            parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 15))
+        });
 
         let prep_time = metadata
             .get("prep time")
@@ -213,13 +221,9 @@ impl CookLang {
             .and_then(|c| c.as_str())
             .map(String::from);
 
-        let prep = prep_time
-            .clone()
-            .or_else(|| time_prep.clone())
-            .filter(|_| prep_time.is_some() || time_prep.is_some())
-            .map_or(total_time, |v| {
-                parse_hours_minutes(&mut v.as_str()).unwrap_or(total_time)
-            });
+        let prep = prep_time.or(time_prep).map_or(total_time, |v| {
+            parse_hours_minutes(&mut v.as_str()).unwrap_or(total_time)
+        });
 
         let cook_time = metadata
             .get("cook time")
@@ -231,29 +235,19 @@ impl CookLang {
             .and_then(|c| c.as_str())
             .map(String::from);
 
-        let cook = cook_time
-            .clone()
-            .or_else(|| time_cook.clone())
-            .filter(|_| cook_time.is_some() || time_cook.is_some())
-            .map_or((0, 30), |v| {
-                parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 30))
-            });
+        let cook = cook_time.or(time_cook).map_or((0, 30), |v| {
+            parse_hours_minutes(&mut v.as_str()).unwrap_or((0, 30))
+        });
 
         let cooklang_recipe = CooklangRecipe {
-            author: recipe
-                .metadata
-                .author()
-                .map(|s| s.name().unwrap_or_default().into()),
-            name: recipe.metadata.title().unwrap_or(file_name).to_string(),
-            category: category
-                .clone()
-                .or_else(|| course.clone())
-                .filter(|_| category.is_some() || course.is_some()),
+            author: author.map(|s| s.name().unwrap_or_default().into()),
+            name: title,
+            category: category.or(course),
             cuisine: metadata
                 .get("cuisine")
                 .and_then(|c| c.as_str())
                 .map(String::from),
-            description: recipe.metadata.description().map(String::from),
+            description,
             diet: metadata
                 .get("diet")
                 .and_then(|v| v.as_str())
@@ -262,15 +256,11 @@ impl CookLang {
                 .get("difficulty")
                 .and_then(|c| c.as_str())
                 .map(String::from),
-            locale: recipe.metadata.locale().map(|(lang, _)| String::from(lang)),
+            locale: locale,
             images: image
-                .clone()
-                .or_else(|| images.clone())
-                .or_else(|| picture.clone())
-                .or_else(|| pictures.clone())
-                .filter(|_| {
-                    image.is_some() || images.is_some() || picture.is_some() || pictures.is_some()
-                })
+                .or(images)
+                .or(picture)
+                .or(pictures)
                 .map(|s| {
                     s.trim_end_matches(']')
                         .to_owned()
@@ -321,9 +311,7 @@ impl CookLang {
                     }
                 })
                 .collect(),
-            servings: recipe
-                .metadata
-                .servings()
+            servings: servings
                 .map(|v| {
                     v.as_number().map(|v| {
                         i16::try_from(v)
@@ -334,23 +322,10 @@ impl CookLang {
                     })
                 })
                 .unwrap_or_default(),
-            source: recipe
-                .metadata
-                .source()
+            source: source
                 .map(|v| v.url().or_else(|| v.name()).map(String::from))
                 .unwrap_or_default(),
-            tags: recipe
-                .metadata
-                .tags()
-                .unwrap_or_default()
-                .iter()
-                .map(|s| {
-                    s.trim_end_matches(']')
-                        .to_owned()
-                        .trim_start_matches('[')
-                        .to_string()
-                })
-                .collect::<Vec<_>>(),
+            tags,
             times: Times {
                 prep_seconds: (prep.0 * 60 * 60 + prep.1 * 60).cast_signed(),
                 cook_seconds: (cook.0 * 60 * 60 + cook.1 * 60).cast_signed(),

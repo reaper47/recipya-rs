@@ -134,14 +134,11 @@ impl User {
     }
 
     /// Finds a user by their email address.
-    pub async fn get_user_by_email(
-        mm: &ModelManager,
-        user_email: impl Into<String>,
-    ) -> Result<Option<Self>> {
+    pub async fn get_user_by_email(mm: &ModelManager, user_email: &str) -> Result<Option<Self>> {
         use schema::users::dsl::{email, users};
 
         let user = users
-            .filter(email.eq(user_email.into()))
+            .filter(email.eq(user_email))
             .select(Self::as_select())
             .first::<Self>(&mut mm.pool.get().await?)
             .await
@@ -167,9 +164,9 @@ impl User {
     /// Finds user authentication data by email.
     pub async fn get_user_auth_by_email(
         mm: &ModelManager,
-        user_email: impl Into<String>,
+        user_email: &str,
     ) -> Result<Option<UserForAuth>> {
-        match Self::get_user_by_email(mm, user_email.into()).await? {
+        match Self::get_user_by_email(mm, user_email).await? {
             Some(user) => Ok(Some(UserForAuth {
                 id: user.id,
                 email: user.email,

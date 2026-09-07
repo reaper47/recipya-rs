@@ -7,6 +7,8 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
+use itertools::Itertools;
+use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{alphanumeric1, dec_int, line_ending, multispace0, space0, space1};
 use winnow::combinator::{
@@ -108,19 +110,15 @@ impl From<RecipeComponents<'_>> for Recipe {
             .filter(|&s| !s.trim().is_empty())
             .map(std::string::ToString::to_string)
             .collect::<Vec<_>>()
-            .as_slice()
+            .split_first_owned()
         {
-            [first, rest @ ..] => (
-                first.clone(),
-                rest.iter().map(|s| s.trim().to_string()).collect(),
-            ),
-            [] => match r.keywords.as_slice() {
-                [first, rest @ ..] => (
-                    first.to_string(),
-                    rest.iter().copied().map(str::to_string).collect::<Vec<_>>(),
-                ),
-                [] => (String::new(), Vec::new()),
-            },
+            (Some(category), v) => (Some(category), v),
+            (None, _) => r
+                .keywords
+                .into_iter()
+                .map(|s| s.trim().to_string())
+                .collect_vec()
+                .split_first_owned(),
         };
 
         Self {
@@ -136,7 +134,7 @@ impl From<RecipeComponents<'_>> for Recipe {
             ),
             keywords: keywords
                 .into_iter()
-                .map(RecipeKeywordsFieldEnum::TextOrURL)
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.trim().into()))
                 .collect(),
             name: vec![r.title.into()],
             nutrition: r
@@ -147,11 +145,7 @@ impl From<RecipeComponents<'_>> for Recipe {
                 .prep_time
                 .map(|t| vec![DurationOrText::Text(t.into())])
                 .unwrap_or_default(),
-            recipe_category: if category.is_empty() {
-                vec![]
-            } else {
-                vec![category]
-            },
+            recipe_category: category.map_or(Vec::new(), |s| vec![s]),
             recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions: r.instructions.to_sections(),
             recipe_yield: to_yield(i64::from(r.r#yield)),

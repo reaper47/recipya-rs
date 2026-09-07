@@ -110,7 +110,7 @@ impl RecipeClient for TandoorRecipeClient {
         let token = self.login_helper(credentials).await?;
 
         Ok(Self {
-            host: self.host.clone(),
+            host: self.host,
             client: Client::builder()
                 .default_headers(assemble_token_header(&AuthType::Bearer, &token)?)
                 .build()?,

@@ -269,7 +269,7 @@ pub async fn mw_refresh_token(
                 && let Ok(Some(user)) = User::get_user_by_id(&state.mm, user_id).await
             {
                 tokio::spawn(async move {
-                    service.send(&Email {
+                    service.send(Email {
                         to: user.email,
                         subject: "Security Alert: Suspicious Activity Detected".into(),
                         body: String::new(),

@@ -82,7 +82,7 @@ pub async fn delete_user_handler(
             return Error::EntityNotFound { entity: "user" }.into_response();
         }
         Err(err) => {
-            error!(?user_id, err, "Error fetching user with id");
+            error!(?user_id, ?err, "Error fetching user with id");
             broadcast_error(&state, caller_user_id, "Failed to fetch user.").await;
             return Error::Database.into_response();
         }
@@ -94,7 +94,7 @@ pub async fn delete_user_handler(
     }
 
     if let Err(err) = User::delete(&state.mm, user_id).await {
-        error!(?user_id, err, "Could not delete user with id");
+        error!(?user_id, ?err, "Could not delete user with id");
         broadcast_error(&state, caller_user_id, "Failed to delete user.").await;
         return Error::DeleteUser.into_response();
     }

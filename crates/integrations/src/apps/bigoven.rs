@@ -137,10 +137,9 @@ fn transform_ingredient_types<'a>(
                 }
                 IngredientType::Section(ing) => {
                     if let Some(section) = current_section {
-                        result.push((section, items.clone()));
-                        items.clear();
+                        result.push((section, std::mem::take(&mut items)));
                     }
-                    current_section = Some(ing.name.to_string());
+                    current_section = Some(ing.name);
                 }
             }
         }
@@ -205,7 +204,7 @@ impl From<BigOvenRecipe> for Recipe {
     #[allow(clippy::cast_precision_loss)]
     #[allow(clippy::cast_possible_truncation)]
     fn from(r: BigOvenRecipe) -> Self {
-        let url = Url::parse(&r.source.clone().unwrap_or_default()).ok();
+        let url = Url::parse(&r.source.unwrap_or_default()).ok();
 
         Self {
             r#type: AtType::Recipe.to_opt(),

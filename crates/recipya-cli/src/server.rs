@@ -112,7 +112,7 @@ fn copy_assets_to_fs() -> Result<()> {
 }
 
 async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
-    let admin_email: String = "admin@autologin.com".into();
+    let admin_email = "admin@autologin.com".to_string();
 
     match User::get_user_by_email(mm, &admin_email).await {
         Ok(Some(_)) => {
@@ -126,19 +126,21 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
                 .map(char::from)
                 .collect::<String>();
 
+            let created_msg = format!(
+                "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
+            );
+
             match User::new(
                 mm,
                 UserForCreate {
-                    email: admin_email.clone(),
-                    password_clear: password.clone(),
+                    email: admin_email,
+                    password_clear: password,
                 },
             )
             .await
             {
                 Ok(user) => {
-                    info!(
-                        "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
-                    );
+                    info!(created_msg);
                     if let Err(err) = EmailVerificationToken::verify_user_email(mm, user.id).await {
                         error!(?err, "Error confirming autologin user");
                         return Err(Error::Server(err.to_string()));

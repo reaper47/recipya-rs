@@ -297,7 +297,7 @@ async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<Ex
 
     let paper_size = PaperSize::get(&state.mm, settings.paper_size_id)
         .await
-        .inspect_err(|err| error!(user = ?user.id, ?err, "Failed to get paper size"))
+        .inspect_err(|err| error!(user = ?user_id, ?err, "Failed to get paper size"))
         .map_err(|_| {
             let state = state.clone();
             tokio::spawn(async move {

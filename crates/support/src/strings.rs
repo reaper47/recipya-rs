@@ -11,6 +11,18 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::impl_display_as_debug;
 
+pub trait SplitFirstOwned<T> {
+    fn split_first_owned(self) -> (Option<T>, Vec<T>);
+}
+
+impl<T> SplitFirstOwned<T> for Vec<T> {
+    fn split_first_owned(self) -> (Option<T>, Vec<T>) {
+        let mut iter = self.into_iter();
+        let first = iter.next();
+        (first, iter.collect())
+    }
+}
+
 /// Attempts to convert a buffer to UTF-8 if not already in this encoding.
 pub fn auto_convert_to_utf8(buffer: &[u8]) -> String {
     if let Ok(content) = from_utf8(buffer) {

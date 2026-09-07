@@ -131,7 +131,7 @@ impl RecipeClient for MealieRecipeClient {
         let token = self.login_helper(credentials).await?;
 
         Ok(Self {
-            host: self.host.clone(),
+            host: self.host,
             client: Client::builder()
                 .default_headers(assemble_token_header(&AuthType::Bearer, &token)?)
                 .build()?,
@@ -179,7 +179,6 @@ impl RecipeClient for MealieRecipeClient {
     async fn logout(self) -> Result<Self> {
         info!("Mealie API: Logging out");
 
-        let host = self.host.clone();
         let res = self.client.post(self.host.logout_url()).send().await?;
 
         if res.status().is_client_error() {
@@ -191,7 +190,7 @@ impl RecipeClient for MealieRecipeClient {
         }
 
         Ok(Self {
-            host,
+            host: self.host,
             client: Client::new(),
         })
     }
@@ -462,7 +461,7 @@ impl MealieRecipeClient {
                 .unwrap_or_default(),
             author: user
                 .author()
-                .map(|s: String| vec![RecipeAuthorFieldEnum::new_person(&s)])
+                .map(|s: &str| vec![RecipeAuthorFieldEnum::new_person(s)])
                 .unwrap_or_default(),
             image: self
                 .fetch_recipe_image(recipe.id, recipe.image)

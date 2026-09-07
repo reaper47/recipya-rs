@@ -58,7 +58,7 @@ impl EmailClient {
     }
 
     /// Sends an email using the configured email provider.
-    pub fn send(&self, email: &Email) -> Result<()> {
+    pub fn send(&self, email: Email) -> Result<()> {
         self.service.send_email(email)
     }
 
@@ -74,16 +74,16 @@ enum EmailService {
 }
 
 trait EmailSender {
-    fn send_email(&self, email: &Email) -> Result<()>;
+    fn send_email(&self, email: Email) -> Result<()>;
     fn test_connection(&self) -> bool;
 }
 
 impl EmailSender for EmailService {
-    fn send_email(&self, email: &Email) -> Result<()> {
+    fn send_email(&self, email: Email) -> Result<()> {
         let mut email_to_send = Email {
-            to: email.to.clone(),
-            subject: email.subject.clone(),
-            body: email.body.clone(),
+            to: email.to,
+            subject: email.subject,
+            body: email.body,
             template: None,
             data: None,
         };
@@ -116,7 +116,7 @@ impl EmailSender for EmailService {
         }
 
         match self {
-            Self::Smtp(sender) => sender.send_email(&email_to_send),
+            Self::Smtp(sender) => sender.send_email(email_to_send),
         }
     }
 

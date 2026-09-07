@@ -225,7 +225,7 @@ impl FsSupport for AppFs {
 
     fn upload_image(&self, path: &Path, file_name: Uuid, output_path: &Path) {
         if let Err(err) = self.convert_image(path, file_name.to_string(), output_path) {
-            error!(?filename, ?err, "Error converting image to WebP");
+            error!(?file_name, ?err, "Error converting image to WebP");
         }
     }
 

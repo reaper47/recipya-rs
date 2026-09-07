@@ -116,7 +116,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_missing_fields_defaults_ok() -> Result<()> {
+        async fn test_add_manual_missing_fields_defaults_ok() -> Result<()> {
             let (server, state) = build_server_logged_in(default_config()).await?;
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),

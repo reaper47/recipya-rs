@@ -53,7 +53,7 @@ fn render_add_recipe_manual(
                             label .w-full {
                                 input required type="text" name="title" placeholder="Title of the recipe*"
                                     autocomplete="off" class="input w-full text-center rounded-t-lg rounded-b-none bg-base-200"
-                                    value=[view.map(|v| v.recipe_details.recipe.name.clone())];
+                                    value=[view.map(|v| v.recipe_details.recipe.name.as_str())];
                             }
                         }
                         div {
@@ -141,7 +141,7 @@ fn render_categories(view: Option<&ViewRecipe>, categories: Vec<Category>) -> Ma
             input #category type="text" list="categories" name="category"
                 class="input input-sm w-11/12" placeholder="Breakfast"
                 autocomplete="off"
-                value=(view.map_or_else(String::new, |v| v.recipe_details.category.clone()));
+                value=(view.map_or_else(|| "", |v| &v.recipe_details.category));
             datalist id="categories" {
                 @for c in categories {
                     option { (c.name) }
@@ -155,7 +155,7 @@ fn render_description(view: Option<&ViewRecipe>) -> Markup {
     html! {
         textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none" {
             (
-                view.map_or_else(String::new, |v| v.recipe_details.recipe.description.as_ref().map_or_else(String::new, Clone::clone))
+                view.map_or_else(|| "", |v| v.recipe_details.recipe.description.as_ref().map_or_else(|| "", |v| v.as_ref()))
             )
         }
     }
