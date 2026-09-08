@@ -169,8 +169,8 @@ mod tests {
             let mut got = parse(buf)?;
 
             let mut want = results::example1();
-            want.sort_by_key(|r| (*r.name.first().as_ref().unwrap()).clone());
-            got.sort_by_key(|r| (*r.name.first().as_ref().unwrap()).clone());
+            want.sort_by_key(|r| (*r.name.first().unwrap()).clone());
+            got.sort_by_key(|r| (*r.name.first().unwrap()).clone());
             for (got_item, want_item) in got.iter_mut().zip(want.iter()) {
                 got_item.image = want_item.image.clone();
             }
@@ -181,6 +181,7 @@ mod tests {
 
     mod files {
         use std::io::Cursor;
+
         use test_fixtures::open_test_file;
 
         pub fn example1() -> Cursor<Vec<u8>> {

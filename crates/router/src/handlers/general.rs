@@ -127,7 +127,7 @@ pub async fn fetch_handler(
     }
 
     let client = reqwest::Client::new();
-    let res = match client.get(parsed).send().await {
+    let mut res = match client.get(parsed).send().await {
         Ok(r) => r,
         Err(err) => {
             error!(?err, "Failed to fetch URL");
@@ -136,7 +136,7 @@ pub async fn fetch_handler(
         }
     };
 
-    let content_type = res.headers().get(CONTENT_TYPE).cloned();
+    let content_type = res.headers_mut().remove(CONTENT_TYPE);
 
     let body = match res.bytes().await {
         Ok(b) => b,

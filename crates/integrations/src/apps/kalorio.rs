@@ -67,7 +67,7 @@ pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
                     _ => 2,
                 };
 
-                if let Some(Ingredient::Line(prev)) = ingredients.get(i - idx).cloned() {
+                if let Some(Ingredient::Line(prev)) = ingredients.get(i - idx) {
                     let combined = format!("{prev} [{current}]");
                     ingredients[i - idx] = Ingredient::Line(Cow::Owned(combined));
                     ingredients.remove(i);

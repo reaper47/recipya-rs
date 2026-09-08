@@ -4,6 +4,7 @@ use std::io::{BufRead, Read, Seek};
 use std::path::Path;
 
 use humantime::parse_duration;
+use itertools::Itertools;
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use tracing::error;
@@ -136,14 +137,14 @@ impl From<CookmateRecipe<'_>> for Recipe {
             .items
             .into_iter()
             .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>();
+            .collect_vec();
         let num_comments = comments.len();
 
         let mut keywords = categories
             .map(|(_, b)| {
                 b.iter()
                     .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_lowercase()))
-                    .collect::<Vec<_>>()
+                    .collect_vec()
             })
             .unwrap_or_default();
 
@@ -151,7 +152,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
             &r.tags
                 .into_iter()
                 .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_lowercase()))
-                .collect::<Vec<_>>(),
+                .collect_vec(),
         );
 
         Self {
@@ -203,7 +204,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                 .into_iter()
                 .filter(|image| !image.trim().is_empty())
                 .map(|s| RecipeImageFieldEnum::URL(s.to_string()))
-                .collect::<Vec<_>>(),
+                .collect_vec(),
             is_based_on: if r.source.is_empty() {
                 to_is_based_on(&r.url)
             } else {
@@ -255,7 +256,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                             ..Default::default()
                         }))
                     })
-                    .collect::<Vec<_>>(),
+                    .collect_vec(),
             )
             .filter(|v| !v.is_empty())
             .unwrap_or_default(),
@@ -342,12 +343,8 @@ where
     let notes = doc
         .select(&Selector::parse("span[itemprop='note']").unwrap())
         .fold(List::new(), |mut acc, el| {
-            acc.items.extend(
-                el.text()
-                    .map(str::trim)
-                    .map(Cow::Borrowed)
-                    .collect::<Vec<_>>(),
-            );
+            acc.items
+                .extend(el.text().map(str::trim).map(Cow::Borrowed).collect_vec());
             acc
         });
 
@@ -375,12 +372,8 @@ where
         nutrition: doc
             .select(&Selector::parse("span[itemprop='nutrition']").unwrap())
             .fold(List::new(), |mut acc, el| {
-                acc.items.extend(
-                    el.text()
-                        .map(str::trim)
-                        .map(Cow::Borrowed)
-                        .collect::<Vec<_>>(),
-                );
+                acc.items
+                    .extend(el.text().map(str::trim).map(Cow::Borrowed).collect_vec());
                 acc
             }),
         rating: doc
@@ -401,12 +394,12 @@ where
             .select(&Selector::parse("span[itemprop='recipeCategory']").unwrap())
             .map(|el| el.text().collect::<String>())
             .map(Cow::Owned)
-            .collect::<Vec<_>>(),
+            .collect_vec(),
         tags: doc
             .select(&Selector::parse("span[itemprop='recipeTag']").unwrap())
             .map(|el| el.text().collect::<String>())
             .map(Cow::Owned)
-            .collect::<Vec<_>>(),
+            .collect_vec(),
         ..Default::default()
     };
 
@@ -484,7 +477,7 @@ mod tests {
                     a.image = b.image.clone();
                     a
                 })
-                .collect::<Vec<_>>();
+                .collect_vec();
             pretty_assertions::assert_eq!(got, want);
             Ok(())
         }

@@ -492,7 +492,6 @@ fn parse_nutrition(block: &str) -> NutritionInformation {
         parts
             .iter()
             .find(|s| s.trim().ends_with(suffix))
-            .cloned()
             .map_or(Vec::new(), |s| {
                 vec![Mass::new(s.trim().trim_end_matches(suffix).trim())]
             })
@@ -502,7 +501,6 @@ fn parse_nutrition(block: &str) -> NutritionInformation {
         calories: parts
             .iter()
             .find(|s| s.starts_with("Per Serving:"))
-            .cloned()
             .map_or(Vec::new(), |s| {
                 vec![Energy::new({
                     let s = s.trim_start_matches("Per Serving:");

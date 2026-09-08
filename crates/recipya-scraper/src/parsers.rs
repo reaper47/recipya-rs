@@ -56,12 +56,11 @@ impl Parser<'_> {
             .filter_map(|el| {
                 let json = el.inner_html().split_whitespace().join(" ");
 
-                let value: serde_json::Value = serde_json::from_str(&json).ok()?;
-                let object = value
-                    .as_array()
-                    .and_then(|arr| arr.first())
-                    .cloned()
-                    .unwrap_or(value);
+                let value: Value = serde_json::from_str(&json).ok()?;
+                let object = match value {
+                    Value::Array(mut arr) if !arr.is_empty() => arr.remove(0),
+                    other => other,
+                };
                 let type_recipe = AtType::Recipe.to_opt();
 
                 let is_recipe_type = |obj: &Value| match obj.get("@type") {

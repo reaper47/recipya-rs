@@ -306,7 +306,7 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                     let name = prop.name.first().cloned().unwrap_or_default();
 
                     let unit = {
-                        let code = prop.unit_code.first().cloned().unwrap_or_default().clone();
+                        let code = prop.unit_code.first().cloned().unwrap_or_default();
 
                         let text = if let Some(s) = prop.value.first().map(|v| match v {
                             PropertyValueValueFieldEnum::QuantitativeValue(q) => {

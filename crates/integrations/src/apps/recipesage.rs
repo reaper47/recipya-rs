@@ -331,7 +331,6 @@ impl From<Recipe> for RecipeSage {
                     RecipeRecipeYieldFieldEnum::QuantitativeValue(v) => v
                         .value
                         .first()
-                        .cloned()
                         .map(|v| match v {
                             QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => {
                                 s.parse::<i16>().ok().unwrap_or_default()
