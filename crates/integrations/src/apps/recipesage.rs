@@ -486,7 +486,7 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
                 to_is_based_on(&r.source)
             },
             keywords: categories
-                .map(|(_, b)| b.iter().map(|s| s.title.clone()).collect::<Vec<_>>())
+                .map(|(_, b)| b.iter().map(|s| s.title.as_ref()).collect::<Vec<_>>())
                 .map(|v| {
                     v.into_iter()
                         .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))

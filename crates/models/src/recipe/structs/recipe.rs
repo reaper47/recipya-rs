@@ -364,12 +364,14 @@ impl From<RecipeDetails> for schema_org::Recipe {
 
 impl From<RecipeForCreate> for RecipeDetails {
     fn from(recipe_c: RecipeForCreate) -> Self {
+        let language = recipe_c.detect_language().code().to_string();
+
         Self {
             recipe: Recipe {
-                name: recipe_c.name.clone(),
-                description: recipe_c.description.clone(),
+                name: recipe_c.name,
+                description: recipe_c.description,
                 r#yield: recipe_c.r#yield.unwrap_or(4),
-                language: recipe_c.detect_language().code().to_string(),
+                language,
                 measurement_system_id: 1,
                 source: recipe_c.source,
                 ..Default::default()

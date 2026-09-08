@@ -152,9 +152,8 @@ impl From<MealMasterRecipe> for Recipe {
             nutrition: r.nutrition.map(|n| vec![n]).unwrap_or_default(),
             recipe_category: r
                 .category
-                .as_ref()
                 .filter(|s| !s.is_empty())
-                .map_or_else(Vec::new, |c| vec![c.clone()]),
+                .map_or_else(Vec::new, |c| vec![c]),
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: to_yield(i64::from(r.yield_)),

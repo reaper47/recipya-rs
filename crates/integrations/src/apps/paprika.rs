@@ -27,7 +27,7 @@ where
     r.read_to_end(&mut content)?;
 
     let path = temp_dir().join(format!("example-{}.paprikarecipes", Uuid::new_v4()));
-    let mut file = File::create(path.clone())?;
+    let mut file = File::create(&path)?;
     file.write_all(content.as_slice())?;
 
     let recipes = RecipeSet::from_file(path)?
@@ -84,7 +84,7 @@ impl ToRecipeSchema for Recipe {
                     temp_dir().to_str().unwrap_or_default(),
                     Uuid::new_v4()
                 );
-                match File::create(path.clone()) {
+                match File::create(&path) {
                     Ok(mut file) => {
                         if file.write_all(&bytes).is_ok() {
                             Some(path)

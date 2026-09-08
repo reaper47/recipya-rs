@@ -309,7 +309,7 @@ where
             .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
         {
             let tmp_path = temp_dir().join(&file_name);
-            let mut tmp_file = File::create(tmp_path.clone())?;
+            let mut tmp_file = File::create(&tmp_path)?;
             io::copy(&mut file, &mut tmp_file)?;
             images.insert(file_name, tmp_path);
         }
