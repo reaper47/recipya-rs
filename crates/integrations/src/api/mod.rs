@@ -155,7 +155,7 @@ impl Api {
                         let nc = Arc::clone(&nextcloud);
 
                         async move {
-                            match nc.fetch_recipe(id.clone()).await {
+                            match nc.fetch_recipe(id.as_str()).await {
                                 Ok(recipe) => Ok((id, recipe)),
                                 Err(err) => Err(err),
                             }

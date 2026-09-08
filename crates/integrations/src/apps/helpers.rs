@@ -6,6 +6,7 @@ use std::io::{self, Cursor};
 use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
 
+use itertools::Itertools;
 use tracing::log::warn;
 use url::Url;
 use uuid::Uuid;
@@ -92,7 +93,7 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
             .into_iter()
             .map(|element| match element {
                 RecipeRecipeIngredientFieldEnum::ItemList(list) => {
-                    let lines = list
+                    let mut lines = list
                         .item_list_element
                         .into_iter()
                         .filter_map(|l| match l {
@@ -102,30 +103,23 @@ impl ToSections<'_> for Vec<Ingredient<'_>> {
                             ItemListItemListElementFieldEnum::ListItem(_)
                             | ItemListItemListElementFieldEnum::Thing(_) => None,
                         })
-                        .collect::<Vec<_>>();
+                        .collect_vec();
 
                     let merged = (0..lines.len())
                         .filter_map(|i| {
-                            let line = &lines[i];
-
-                            if line.ends_with(';') && i + 2 < lines.len() {
-                                Some((i, format!("{} {}", line, lines[i + 2])))
+                            if lines[i].ends_with(';') && i + 2 < lines.len() {
+                                Some(format!("{} {}", lines[i], lines[i + 2]))
                             } else if i > 1 && lines[i - 2].ends_with(';') {
                                 None
                             } else {
-                                Some((i, line.clone()))
+                                Some(std::mem::take(&mut lines[i]))
                             }
                         })
-                        .map(|(_, s)| s)
-                        .collect::<Vec<_>>();
+                        .collect_vec();
 
                     RecipeRecipeIngredientFieldEnum::new_section(
                         list.name[0].trim(),
-                        merged
-                            .iter()
-                            .map(String::as_str)
-                            .collect::<Vec<_>>()
-                            .as_slice(),
+                        merged.iter().map(String::as_str).collect_vec().as_slice(),
                     )
                 }
                 RecipeRecipeIngredientFieldEnum::PropertyValue(v) => {
@@ -216,7 +210,7 @@ where
 
         if format == FileFormat::Jpg || format == FileFormat::Png {
             let tmp_path = temp_dir().join(format!("{}.jpg", Uuid::new_v4()));
-            let mut tmp_file = File::create(tmp_path.clone())?;
+            let mut tmp_file = File::create(&tmp_path)?;
             io::copy(&mut file, &mut tmp_file)?;
 
             if let Some(name) = Path::new(&file_name).file_name().and_then(|s| s.to_str()) {

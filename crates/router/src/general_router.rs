@@ -242,12 +242,12 @@ mod tests {
         #[tokio::test]
         async fn test_download_file_missing_on_disk_ok() -> Result<()> {
             let (server, state) = build_server_logged_in(default_config()).await?;
-            let user = User::all(&state.mm).await?[0].clone();
+            let user_id = User::all(&state.mm).await?[0].id;
             let token = Uuid::new_v4();
             Download::create(
                 &state.mm,
                 DownloadForCreate {
-                    user_id: user.id,
+                    user_id,
                     token,
                     file_path: PathBuf::from("/tmp/nonexistent_export.zip"),
                 },

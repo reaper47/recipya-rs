@@ -617,19 +617,19 @@ mod tests {
         #[tokio::test]
         async fn test_get_page_first_page_ok() -> Result<()> {
             let (_, state) = build_server_anonymous(default_config()).await?;
-            let user = User::all(&state.mm).await?[0].clone();
-            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let mut expected = Vec::with_capacity(15);
             for i in 0..15 {
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
-                let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+                let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
                 expected.push(recipe.name);
             }
 
             let recipes = Recipe::get_page(
                 &state.mm,
-                user.id,
+                user_id,
                 &SearchParams {
                     page: Some(1),
                     ..Default::default()
@@ -872,19 +872,19 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_categories_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
-        let user = User::all(&state.mm).await?[0].clone();
-        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let category1 = String::from("late snack");
         let category2 = String::from("dinner");
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.category = Some(category1.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.name = "Hello".to_string();
         recipe.category = Some(category2.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-        let categories = Recipe::fetch_categories(&state.mm, user.id).await?;
+        let categories = Recipe::fetch_categories(&state.mm, user_id).await?;
 
         pretty_assertions::assert_eq!(categories, vec![category2, category1]);
         Ok(())
@@ -893,19 +893,19 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_cuisines_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
-        let user = User::all(&state.mm).await?[0].clone();
-        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let cuisine1 = String::from("italian");
         let cuisine2 = String::from("mexican");
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.cuisine = Some(cuisine1.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let (mut recipe, _) = a_complete_recipe_for_create();
         recipe.name = "Hello".to_string();
         recipe.cuisine = Some(cuisine2.clone());
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-        let got = Recipe::fetch_cuisines(&state.mm, user.id).await?;
+        let got = Recipe::fetch_cuisines(&state.mm, user_id).await?;
 
         pretty_assertions::assert_eq!(got, vec![cuisine1, cuisine2]);
         Ok(())
@@ -914,12 +914,12 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_ingredients_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
-        let user = User::all(&state.mm).await?[0].clone();
-        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-        let ingredients = Recipe::fetch_ingredients(&state.mm, user.id).await?;
+        let ingredients = Recipe::fetch_ingredients(&state.mm, user_id).await?;
 
         pretty_assertions::assert_eq!(
             ingredients,
@@ -936,12 +936,12 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_keywords_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
-        let user = User::all(&state.mm).await?[0].clone();
-        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-        let keywords = Recipe::fetch_keywords(&state.mm, user.id).await?;
+        let keywords = Recipe::fetch_keywords(&state.mm, user_id).await?;
 
         pretty_assertions::assert_eq!(
             keywords,
@@ -953,12 +953,12 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_tools_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
-        let user = User::all(&state.mm).await?[0].clone();
-        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-        let tools = Recipe::fetch_tools(&state.mm, user.id).await?;
+        let tools = Recipe::fetch_tools(&state.mm, user_id).await?;
 
         pretty_assertions::assert_eq!(tools, vec!["frying pan".to_string(), "wok".to_string(),]);
         Ok(())
@@ -967,12 +967,12 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_sources_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
-        let user = User::all(&state.mm).await?[0].clone();
-        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let settings = UserSettingDetails::get(&state.mm, user_id).await?;
         let (recipe, _) = a_complete_recipe_for_create();
-        let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+        let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-        let sources = Recipe::fetch_sources(&state.mm, user.id).await?;
+        let sources = Recipe::fetch_sources(&state.mm, user_id).await?;
 
         pretty_assertions::assert_eq!(sources, vec!["www.allrecipes.com".to_string(),]);
         Ok(())

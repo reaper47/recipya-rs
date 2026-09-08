@@ -159,8 +159,7 @@ where
             .collect(),
         is_based_on: source
             .clone()
-            .map(|s| vec![RecipeIsBasedOnFieldEnum::URL(s)])
-            .unwrap_or_default(),
+            .map_or(Vec::new(), |s| vec![RecipeIsBasedOnFieldEnum::URL(s)]),
         keywords: keywords
             .into_iter()
             .map(RecipeKeywordsFieldEnum::TextOrURL)
@@ -170,54 +169,42 @@ where
             r#type: AtType::NutritionInformation.to_opt(),
             calories: nutrition
                 .calories_kcal
-                .map(|c| vec![Energy::new(c.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |c| vec![Energy::new(c.to_string())]),
             carbohydrate_content: nutrition
                 .total_carbohydrates
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             cholesterol_content: nutrition
                 .cholesterol_mg
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             fat_content: nutrition
                 .total_fat_g
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             fiber_content: nutrition
                 .fiber_g
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             protein_content: nutrition
                 .protein_g
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             saturated_fat_content: nutrition
                 .saturated_fat_g
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
-            serving_size: nutrition.serving_size.map(|s| vec![s]).unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
+            serving_size: nutrition.serving_size.map_or(Vec::new(), |s| vec![s]),
             sodium_content: nutrition
                 .sodium_mg
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             sugar_content: nutrition
                 .sugars_g
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             trans_fat_content: nutrition
                 .trans_fat_g
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             unsaturated_fat_content: nutrition
                 .unsaturated_fat_g
-                .map(|v| vec![Mass::new(v.to_string())])
-                .unwrap_or_default(),
+                .map_or(Vec::new(), |v| vec![Mass::new(v.to_string())]),
             ..Default::default()
         })
         .filter(|n| n != &NutritionInformation::default())
-        .map(|n| vec![n])
-        .unwrap_or_default(),
+        .map_or(Vec::new(), |n| vec![n]),
         prep_time: seconds_to_duration(i32::try_from(crouton.duration * 60).unwrap_or_default()),
         recipe_category: category.map(|c| vec![c]).unwrap_or_default(),
         recipe_ingredient: crouton

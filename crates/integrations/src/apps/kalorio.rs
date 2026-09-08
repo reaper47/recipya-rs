@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
+use itertools::Itertools;
 use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{line_ending, space0, space1};
@@ -113,7 +114,7 @@ where
     let mut recipes = parse_txt(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
-        .collect::<Vec<_>>();
+        .collect_vec();
 
     let is_based_on = recipes.last().map(|r| r.is_based_on.clone());
 

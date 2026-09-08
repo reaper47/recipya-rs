@@ -40,7 +40,7 @@ pub trait Authenticated<C: RecipeClient>: Send + Sync {
     /// Fetches a recipe from the connected host.
     async fn fetch_recipe(
         &self,
-        id: String,
+        id: &str,
     ) -> std::result::Result<schema_org::Recipe, (String, Error)>;
 }
 
@@ -94,11 +94,11 @@ impl<C: RecipeClient> Authenticated<C> for Nextcloud<AuthenticatedState, C> {
 
     async fn fetch_recipe(
         &self,
-        id: String,
+        id: &str,
     ) -> std::result::Result<schema_org::Recipe, (String, Error)> {
         match self.recipe_client.fetch_recipe(&id).await {
             Ok(recipe) => Ok(recipe),
-            Err(err) => Err((id, err)),
+            Err(err) => Err((id.to_string(), err)),
         }
     }
 }

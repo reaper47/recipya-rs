@@ -297,17 +297,16 @@ where
 {
     let content = read_file(r)?;
     let content = content.replace('\0', "");
-    let buf = Cursor::new(content.as_str());
 
     Ok(match parse_accuchef_recipe(&mut content.as_str()) {
         Ok(r) => r.into_iter().map(Recipe::from).collect(),
-        Err(_) => match mastercook::parse_mxp(buf.clone()) {
+        Err(_) => match mastercook::parse_mxp(Cursor::new(content.as_str())) {
             Ok(r) => r,
             Err(err) => {
                 warn!(
                     "Failed to parse AccuChef recipes with mastercook::parse_mxp, trying mealmaster::mxp: {err}"
                 );
-                match mealmaster::parse(buf) {
+                match mealmaster::parse(Cursor::new(content.as_str())) {
                     Ok(r) if !r.is_empty() => r,
                     _ => parse_txt_basic(&mut content.as_str())?
                         .into_iter()
