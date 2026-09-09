@@ -270,7 +270,7 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                         .collect();
 
                     sections.push(SectionItem {
-                        title: list.name.first().cloned().unwrap_or_default(),
+                        title: list.name.into_iter().next().unwrap_or_default(),
                         items,
                     });
                 }
@@ -303,10 +303,10 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                         })
                         .unwrap_or_default();
 
-                    let name = prop.name.first().cloned().unwrap_or_default();
+                    let name = prop.name.into_iter().next().unwrap_or_default();
 
                     let unit = {
-                        let code = prop.unit_code.first().cloned().unwrap_or_default();
+                        let code = prop.unit_code.into_iter().next().unwrap_or_default();
 
                         let text = if let Some(s) = prop.value.first().map(|v| match v {
                             PropertyValueValueFieldEnum::QuantitativeValue(q) => {
@@ -316,7 +316,11 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                         }) {
                             s
                         } else {
-                            prop.unit_text.first().cloned().unwrap_or_default().clone()
+                            prop.unit_text
+                                .into_iter()
+                                .next()
+                                .unwrap_or_default()
+                                .clone()
                         };
 
                         if code.is_empty() { text } else { code }
@@ -452,7 +456,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                             }),
                             ItemListItemListElementFieldEnum::ListItem(item) => Some(Item {
                                 id: None,
-                                text: item.text.first().cloned().unwrap_or_default(),
+                                text: item.text.into_iter().next().unwrap_or_default(),
                                 duration_seconds: None,
                             }),
                             ItemListItemListElementFieldEnum::Thing(_) => None,
@@ -460,7 +464,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                         .collect();
 
                     sections.push(SectionItem {
-                        title: list.name.first().cloned().unwrap_or_default(),
+                        title: list.name.into_iter().next().unwrap_or_default(),
                         items,
                     });
                 }
@@ -472,7 +476,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                         });
                     }
                     sections.push(SectionItem {
-                        title: work.name.first().cloned().unwrap_or_default(),
+                        title: work.name.into_iter().next().unwrap_or_default(),
                         items: work
                             .text
                             .into_iter()
@@ -492,7 +496,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
                     });
                 }
                 RecipeRecipeInstructionsFieldEnum::HowToStep(how_to_step) => {
-                    if let Some(text) = how_to_step.text.first().cloned() {
+                    if let Some(text) = how_to_step.text.into_iter().next() {
                         current_items.push(Item {
                             id: None,
                             text,

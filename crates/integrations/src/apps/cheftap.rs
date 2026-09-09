@@ -141,19 +141,14 @@ where
 
     let title = doc
         .select(&Selector::parse("h1").unwrap())
+        .next()
         .map(|el| el.text().collect::<String>().trim().to_string())
-        .collect::<Vec<_>>()
-        .first()
-        .cloned()
         .unwrap_or_default();
 
     let source = doc
         .select(&Selector::parse("a").unwrap())
-        .map(|el| el.attr("href"))
-        .collect::<Vec<_>>()
-        .first()
-        .copied()
-        .unwrap_or_default()
+        .next()
+        .and_then(|el| el.attr("href"))
         .map(String::from);
 
     let mut recipe = ChefTapRecipe {

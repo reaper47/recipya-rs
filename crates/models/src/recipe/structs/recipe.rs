@@ -584,7 +584,8 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             system::MeasurementSystem::from(ingredients.items_as_text()).id();
         let nutrition = schema
             .nutrition
-            .first()
+            .iter()
+            .next()
             .map(NutritionDetailsForCreate::from)
             .unwrap_or_default();
 

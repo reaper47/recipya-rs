@@ -104,10 +104,7 @@ pub async fn add_manual_recipe_post_handler(
         )
         .await;
 
-        fs_support.upload_videos(
-            form.videos.values().cloned().collect(),
-            &state.data_dir.videos,
-        );
+        fs_support.upload_videos(form.videos.into_values().collect(), &state.data_dir.videos);
         videos
     };
 

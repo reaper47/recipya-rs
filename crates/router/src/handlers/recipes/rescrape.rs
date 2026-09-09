@@ -303,7 +303,7 @@ pub async fn recrape_recipe_put_handler(
         && let Some(source) = sources.first()
         && source == "new"
     {
-        recipe.keywords = map.get("keywords").cloned().unwrap_or_default();
+        recipe.keywords = map.remove("keywords").unwrap_or_default();
     }
 
     if map
@@ -375,8 +375,7 @@ pub async fn recrape_recipe_put_handler(
         && source == "new"
     {
         recipe.tools = map
-            .get("tools")
-            .cloned()
+            .remove("tools")
             .unwrap_or_default()
             .into_iter()
             .map(|t| ToolForCreate {
@@ -444,9 +443,8 @@ pub async fn recrape_recipe_put_handler(
         };
 
         let serving_size = map
-            .get("serving-size")
-            .and_then(|v| v.first())
-            .cloned()
+            .remove("serving-size")
+            .and_then(|v| v.into_iter().next())
             .unwrap_or_default();
 
         recipe.nutrition = NutritionDetailsForCreate {

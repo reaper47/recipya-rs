@@ -178,7 +178,7 @@ impl AppState {
         }
     }
     /// Gets a recipe from the cache if present.
-    pub async fn get_cached_recipe(&self, key: RecipeCacheKey) -> Option<ViewRecipe> {
+    pub async fn get_cached_recipe(&self, key: RecipeCacheKey) -> Option<Arc<ViewRecipe>> {
         let mut cache = self.recipe_cache.lock().await;
         cache.get(&key).cloned()
     }
@@ -186,7 +186,7 @@ impl AppState {
     /// Inserts the recipe into the cache.
     pub async fn cache_recipe(&self, key: RecipeCacheKey, recipe: &ViewRecipe) {
         let mut cache = self.recipe_cache.lock().await;
-        cache.put(key, recipe.clone());
+        cache.put(key, Arc::new(recipe.clone()));
     }
 
     /// Removes an entry from the cache.

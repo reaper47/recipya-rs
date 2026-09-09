@@ -54,7 +54,7 @@ pub async fn reports_handler(
                     .view
                     .map(|v| {
                         if &v == "latest" {
-                            reports.first().cloned()
+                            reports.into_iter().next()
                         } else {
                             None
                         }

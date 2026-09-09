@@ -148,10 +148,8 @@ pub async fn edit_recipe_put_handler(
         }))
         .await;
 
-        Arc::clone(&state.fs_support).upload_videos(
-            form.videos.values().cloned().collect(),
-            &state.data_dir.videos,
-        );
+        Arc::clone(&state.fs_support)
+            .upload_videos(form.videos.into_values().collect(), &state.data_dir.videos);
         videos
     };
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{OriginalUri, Path, Query, State},
     http::HeaderMap,
@@ -109,7 +111,7 @@ pub async fn view_recipe_handler(
 ) -> Result<impl IntoResponse> {
     let cache_key = (user.id, recipe_id);
     let mut view_recipe = if let Some(recipe) = state.get_cached_recipe(cache_key).await {
-        recipe
+        Arc::unwrap_or_clone(recipe)
     } else {
         let Ok(recipe) = Recipe::get(&state.mm, user.id, recipe_id).await else {
             return Ok(templates::general::simple(

@@ -223,8 +223,7 @@ where
         ));
     }
 
-    let title = blocks.first().cloned().unwrap_or_default();
-    blocks.remove(0);
+    let title = blocks.remove(0);
 
     let yield_idx = blocks
         .iter()

@@ -219,11 +219,7 @@ mod tests {
             let expected_name = &want[0].name;
 
             // identify the recipe to compare with the reference recipe
-            let got_recipe: Recipe = got
-                .iter()
-                .find(|r| &r.name == expected_name)
-                .cloned()
-                .unwrap();
+            let got_recipe: Recipe = got.into_iter().find(|r| &r.name == expected_name).unwrap();
             let want_recipe = &want[0];
 
             pretty_assertions::assert_eq!(got_recipe.name, want_recipe.name);

@@ -281,29 +281,27 @@ impl From<Recipe> for RecipeSage {
     fn from(r: Recipe) -> Self {
         Self {
             rating: None,
-            category: r.recipe_category.first().cloned(),
+            category: r.recipe_category.into_iter().next(),
             description: r
                 .description
                 .into_iter()
+                .next()
                 .map(|s| match s {
                     RecipeDescriptionFieldEnum::Text(s) => s,
                     RecipeDescriptionFieldEnum::TextObject(obj) => {
-                        obj.text.first().cloned().unwrap_or_default()
+                        obj.text.into_iter().next().unwrap_or_default()
                     }
                 })
-                .filter(|s| !s.is_empty())
-                .collect::<Vec<_>>()
-                .first()
-                .cloned(),
+                .filter(|s| !s.is_empty()),
             ingredients: r.recipe_ingredient,
             instructions: r.recipe_instructions,
             source: r
                 .is_based_on
-                .first()
-                .cloned()
+                .into_iter()
+                .next()
                 .map(|s| match s {
                     RecipeIsBasedOnFieldEnum::CreativeWork(obj) => {
-                        obj.is_based_on.first().cloned().map(|s| match s {
+                        obj.is_based_on.into_iter().next().map(|s| match s {
                             CreativeWorkIsBasedOnFieldEnum::CreativeWork(_)
                             | CreativeWorkIsBasedOnFieldEnum::Product(_) => String::new(),
                             CreativeWorkIsBasedOnFieldEnum::URL(s) => s,
@@ -315,15 +313,15 @@ impl From<Recipe> for RecipeSage {
                 .unwrap_or_default(),
             notes: r
                 .comment
-                .first()
-                .cloned()
+                .into_iter()
+                .next()
                 .map(|v| v.text)
                 .filter(|s| !s.is_empty())
                 .unwrap_or_default()
-                .first()
-                .cloned(),
+                .into_iter()
+                .next(),
             nutrition: None,
-            title: r.name.first().cloned().unwrap_or_default(),
+            title: r.name.into_iter().next().unwrap_or_default(),
             r#yield: r
                 .recipe_yield
                 .first()
@@ -353,21 +351,21 @@ impl From<Recipe> for RecipeSage {
                 .into_iter()
                 .map(|k| match k {
                     RecipeKeywordsFieldEnum::DefinedTerm(t) => {
-                        t.name.first().cloned().unwrap_or_default()
+                        t.name.into_iter().next().unwrap_or_default()
                     }
                     RecipeKeywordsFieldEnum::TextOrURL(s) => s,
                 })
                 .collect(),
-            url: r.url.first().map(Into::into),
-            prep_time: r.prep_time.first().cloned().map(|s| match s {
+            url: r.url.into_iter().next(),
+            prep_time: r.prep_time.into_iter().next().map(|s| match s {
                 schema_org::DurationOrText::Text(s) => s,
                 schema_org::DurationOrText::Duration(_) => String::new(),
             }),
-            total_time: r.total_time.first().cloned().map(|s| match s {
+            total_time: r.total_time.into_iter().next().map(|s| match s {
                 schema_org::DurationOrText::Text(s) => s,
                 schema_org::DurationOrText::Duration(_) => String::new(),
             }),
-            image: r.image.first().cloned().map(|s| match s {
+            image: r.image.into_iter().next().map(|s| match s {
                 schema_org::field::FieldEnum22::URL(u) => u,
                 schema_org::field::FieldEnum22::ImageObject(_) => String::new(),
             }),

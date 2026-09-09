@@ -240,7 +240,7 @@ impl From<RecipeRtk> for CsvRecord<'_> {
             video: (!r.video.is_empty()).then_some(Cow::Owned(r.video)),
             source: (!r.url.is_empty()).then_some(Cow::Owned(r.url)),
             original_picture: (!r.pictures.is_empty())
-                .then(|| Cow::Owned(r.pictures.first().cloned().unwrap_or_default())),
+                .then(|| Cow::Owned(r.pictures.into_iter().next().unwrap_or_default())),
         }
     }
 }
