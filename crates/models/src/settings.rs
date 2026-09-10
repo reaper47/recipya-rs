@@ -6,10 +6,9 @@ use time_tz::{TimeZone, Tz, timezones};
 use uuid::Uuid;
 
 use math::cooking::units::system::MeasurementSystem;
+use nutrition::{NutritionDataSource, tables::NutritionSource};
 use repository::{ModelManager, schema};
 
-use crate::nutrition::NutritionDataSource;
-use crate::nutrition::tables::NutritionSource;
 use crate::paper::{PaperSize, PaperSizes};
 use crate::{Error, Result};
 

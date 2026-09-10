@@ -8,7 +8,7 @@ pub mod nutrition_data_for_tests {
     use zip::{ZipArchive, ZipWriter};
 
     use crate::Result;
-    use crate::nutrition::fdc::parser::FdcFetcher;
+    use crate::fdc::parser::FdcFetcher;
 
     pub const FDC_FF_DATASET_1: &str = "ff dataset 1";
     pub const FDC_FF_DATASET_2: &str = "ff dataset 2";

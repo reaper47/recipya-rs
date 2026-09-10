@@ -19,16 +19,12 @@ use zip::ZipArchive;
 use repository::{ModelManager, schema};
 
 use crate::{
-    Error, Result,
-    nutrition::{
-        NutritionDataSource,
-        fdc::srlegacy_food::{SrLegacyRoot, SrlegacyFood},
-        states::{DataFetchedState, DataNotFetchedState},
-        tables::{
-            self, FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert,
-            FdcFoodPortionForInsert, FdcNutrientForInsert, FoundationFoodForInsert,
-            NutritionSource,
-        },
+    Error, NutritionDataSource, Result,
+    fdc::srlegacy_food::{SrLegacyRoot, SrlegacyFood},
+    states::{DataFetchedState, DataNotFetchedState},
+    tables::{
+        self, FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert, FdcFoodPortionForInsert,
+        FdcNutrientForInsert, FoundationFoodForInsert, NutritionSource,
     },
 };
 
@@ -548,7 +544,7 @@ mod tests {
     use test_utils::create_app_state;
 
     use super::*;
-    use crate::nutrition::testdata::nutrition_data::nutrition_data_for_tests::*;
+    use crate::testdata::nutrition_data::nutrition_data_for_tests::*;
 
     type Result<T> = core::result::Result<T, Error>;
     type Error = Box<dyn std::error::Error>;

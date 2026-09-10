@@ -8,8 +8,9 @@ use diesel::data_types::PgInterval;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
-
 use itertools::Itertools;
+
+use nutrition::NutritionDataSource;
 use repository::schema;
 use support::regexp::time::TimeParser;
 use support::strings::normalise_vulgar_fractions;
@@ -17,7 +18,6 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::Result;
-use crate::nutrition::NutritionDataSource;
 use crate::recipe::structs::bold::BoldInstructionIndex;
 use crate::recipe::structs::media::{AdditionalImageForInsert, VideoForCreate, VideoForInsert};
 use crate::recipe::structs::nutrition::{

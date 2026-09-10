@@ -16,9 +16,9 @@ use models::Recipe;
 use models::data::{AboutData, Data};
 use models::download::{Download, DownloadForCreate};
 use models::export::ExportData;
-use models::nutrition::NutritionDataSource;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
+use nutrition::NutritionDataSource;
 use repository::ModelManager;
 use templates::settings::{EmailSettingsForView, SettingsForView};
 

@@ -31,6 +31,8 @@ pub enum Error {
     #[from]
     Config(config::Error),
     #[from]
+    Nutrition(nutrition::Error),
+    #[from]
     Scraper(recipya_scraper::Error),
     #[from]
     Repository(repository::Error),

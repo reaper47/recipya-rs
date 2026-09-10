@@ -3379,6 +3379,7 @@ dependencies = [
  "krilla",
  "lru",
  "math",
+ "nutrition",
  "paste",
  "pdf",
  "pretty_assertions",
@@ -3606,6 +3607,35 @@ checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
  "libm",
+]
+
+[[package]]
+name = "nutrition"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "derive_more",
+ "diesel",
+ "diesel-async",
+ "ingredient",
+ "math",
+ "pretty_assertions",
+ "repository",
+ "reqwest",
+ "scraper",
+ "serde",
+ "serde_json",
+ "simd-json",
+ "strum 0.28.0",
+ "strum_macros 0.28.0",
+ "support",
+ "test-db",
+ "test-utils",
+ "time",
+ "tokio",
+ "tracing",
+ "uuid",
+ "zip 8.6.0",
 ]
 
 [[package]]
@@ -4602,6 +4632,7 @@ dependencies = [
  "dotenvy",
  "lexopt",
  "models",
+ "nutrition",
  "openssl",
  "pq-sys",
  "rand 0.10.2",
@@ -4845,6 +4876,7 @@ dependencies = [
  "math",
  "mime_guess",
  "models",
+ "nutrition",
  "pretty_assertions",
  "rand 0.10.2",
  "recipya-scraper",
@@ -5849,6 +5881,7 @@ dependencies = [
  "math",
  "maud",
  "models",
+ "nutrition",
  "pretty_assertions",
  "serde_json",
  "strum 0.28.0",

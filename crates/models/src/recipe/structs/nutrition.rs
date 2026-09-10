@@ -2,10 +2,9 @@ use std::ops::Not;
 
 use diesel::prelude::*;
 
+use nutrition::NutritionComponents;
 use repository::schema;
 use schema_org::{Energy, Mass, NutritionInformation};
-
-use crate::nutrition::NutritionComponents;
 
 /// Holds details about nutrition information for a recipe.
 #[derive(Clone, Debug, Default, PartialEq)]

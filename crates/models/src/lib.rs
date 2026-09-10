@@ -3,7 +3,6 @@ mod error;
 pub mod data;
 pub mod download;
 pub mod export;
-pub mod nutrition;
 pub mod paper;
 pub mod params;
 pub mod recipe;

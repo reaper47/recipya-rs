@@ -1,5 +1,5 @@
 [package]
-name = "models"
+name = "nutrition"
 publish = false
 version.workspace = true
 
@@ -16,31 +16,13 @@ rust-version.workspace = true
 
 [dependencies]
 async-trait.workspace = true
-auth.workspace = true
-axum.workspace = true
-bitflags = "2.11.1"
-config.workspace = true
 derive_more.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
-diesel_full_text_search.workspace = true
-futures.workspace = true
-humantime.workspace = true
-indexmap.workspace = true
-infer.workspace = true
 ingredient = "0.3.0"
-iso8601.workspace = true
-itertools.workspace = true
-krilla.workspace = true
-lru.workspace = true
 math.workspace = true
-nutrition.workspace = true
-paste = "1.0.15"
-pdf = { path = "../pdf" }
-recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
-schema-org.workspace = true
 scraper.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -48,20 +30,13 @@ simd-json = "0.18.0"
 strum.workspace = true
 strum_macros.workspace = true
 support.workspace = true
-tempfile = "3.27.0"
 time.workspace = true
-time-tz.workspace = true
-tokio.workspace = true
 tracing.workspace = true
-url.workspace = true
 uuid.workspace = true
-whatlang.workspace = true
-winnow.workspace = true
 zip.workspace = true
 
 [dev-dependencies]
-app.workspace = true
 pretty_assertions.workspace = true
-test-utils.workspace = true
 test-db.workspace = true
-test-fixtures.workspace = true
+test-utils.workspace = true
+tokio.workspace = true

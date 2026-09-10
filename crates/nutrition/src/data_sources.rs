@@ -2,21 +2,18 @@ use std::{borrow::Cow, str::FromStr};
 
 use diesel_async::AsyncPgConnection;
 use ingredient::{Ingredient, IngredientParser};
-use math::cooking::units::{traits::UnitOperations, unit::Unit, unitless::units::Unitless};
 use strum::{EnumIter, EnumString, IntoEnumIterator as _};
 use support::strings::insert_space_after_leading_number;
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
+use math::cooking::units::{traits::UnitOperations, unit::Unit, unitless::units::Unitless};
 use repository::{ModelManager, schema};
 
 use crate::{
-    Error, Result,
-    nutrition::{
-        CalculatedNutrition, NutritionComponents,
-        fdc::parser::{
-            DataFetched as _, DataNotFetched as _, FdcClient, FdcParser, SRLegacyFoodDetails,
-        },
+    CalculatedNutrition, Error, NutritionComponents, Result,
+    fdc::parser::{
+        DataFetched as _, DataNotFetched as _, FdcClient, FdcParser, SRLegacyFoodDetails,
     },
 };
 
@@ -366,7 +363,7 @@ mod tests {
     use test_db::default_config;
     use test_utils::create_app_state;
 
-    use crate::nutrition::{NutritionDataSource, all_nutrition_sources};
+    use crate::{NutritionDataSource, all_nutrition_sources};
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -410,7 +407,7 @@ mod tests {
     }
 
     mod tests_calculate_nutrition_per_100g {
-        use crate::nutrition::{
+        use crate::{
             CalculatedNutrition, NutritionComponents,
             fdc::parser::{DataFetched as _, DataNotFetched as _, FdcParser},
             states::DataFetchedState,

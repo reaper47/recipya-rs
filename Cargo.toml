@@ -44,6 +44,7 @@ krilla = "0.8.2"
 lru = "0.18.0"
 math = { path = "./crates/math" }
 models = { path = "./crates/models" }
+nutrition = { path = "crates/nutrition" }
 pretty_assertions = "1.4.1"
 rand = "0.10.1"
 recipya-scraper = { path = "crates/recipya-scraper" }

@@ -24,6 +24,7 @@ diesel.workspace = true
 dotenvy.workspace = true
 lexopt = "0.3.2"
 models.workspace = true
+nutrition.workspace = true
 rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true

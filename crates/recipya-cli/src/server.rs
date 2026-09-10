@@ -11,10 +11,10 @@ use app::jobs::clean_media;
 use app::state::AppState;
 use config::{AutologinState, Config, DataDir};
 use models::{
-    nutrition::NutritionDataSource,
     tokens::EmailVerificationToken,
     user::{User, UserForCreate},
 };
+use nutrition::NutritionDataSource;
 use recipya_scraper::AppHttpClient;
 use repository::ModelManager;
 use router::copy_to_fs;

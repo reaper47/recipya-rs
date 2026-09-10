@@ -21,6 +21,7 @@ markdown = "1.0.0"
 math.workspace = true
 maud = { version = "0.27.0", features = ["axum"] }
 models.workspace = true
+nutrition.workspace = true
 serde_json.workspace = true
 strum.workspace = true
 support.workspace = true
