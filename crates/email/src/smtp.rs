@@ -36,7 +36,7 @@ impl EmailSender for SmtpEmailSender {
             .from(from.clone())
             .reply_to(from)
             .to(to)
-            .subject(&email.subject)
+            .subject(email.subject)
             .header(ContentType::TEXT_HTML)
             .body(email.body)?;
 

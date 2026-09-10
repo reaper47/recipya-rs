@@ -127,10 +127,10 @@ impl From<RecipeXML> for Recipe {
                         .filter(|s| !s.is_empty())
                         .collect::<Vec<_>>();
 
-                    match div.title {
-                        Some(title) if title.text.is_some() => {
+                    match div.title.and_then(|t| t.text) {
+                        Some(s) => {
                             vec![RecipeRecipeIngredientFieldEnum::new_section(
-                                &title.text.unwrap(),
+                                &s,
                                 ingredients
                                     .iter()
                                     .map(String::as_str)
@@ -138,7 +138,7 @@ impl From<RecipeXML> for Recipe {
                                     .as_slice(),
                             )]
                         }
-                        _ => ingredients
+                        None => ingredients
                             .into_iter()
                             .map(RecipeRecipeIngredientFieldEnum::Text)
                             .collect(),

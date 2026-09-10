@@ -40,7 +40,6 @@ pub async fn add_recipe_import_api_handler(
 fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uuid) {
     tokio::spawn(async move {
         let api = form.api.to_string();
-        let state = state.clone();
         let start_time = Instant::now();
 
         state
@@ -112,27 +111,27 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
                         total = num_recipes;
                     }
 
-                    match err {
-                        Error::Model(DuplicateEntityWithID(id)) if recipe_name.is_some() => {
+                    match (err, recipe_name) {
+                        (Error::Model(DuplicateEntityWithID(id)), Some(name)) => {
                             report_logs.push(ReportLogForCreate::warning(
                                 seq_num,
-                                &recipe_name.unwrap_or_default(),
+                                &name,
                                 Some(id),
                                 "Recipe exists",
                                 exec_time_ms,
                             ));
                         }
-                        Error::Model(err) if recipe_name.is_some() => {
+                        (Error::Model(err), Some(name)) => {
                             report_logs.push(ReportLogForCreate::error(
                                 seq_num,
-                                &recipe_name.unwrap_or_default(),
+                                &name,
                                 None,
                                 "ImportApiModelFail",
                                 &err.to_string(),
                                 exec_time_ms,
                             ));
                         }
-                        _ => {
+                        (err, _) => {
                             report_logs.push(ReportLogForCreate::error(
                                 seq_num,
                                 &format!("{api} - id '{recipe_api_id}'"),

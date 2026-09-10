@@ -330,7 +330,7 @@ pub async fn upload_note_image(
             _ => return err_json(StatusCode::UNSUPPORTED_MEDIA_TYPE, "typeNotAllowed"),
         };
 
-        if let Ok(tmp_path) = state.fs_support.upload_to_temp(bytes.clone()).await {
+        if let Ok(tmp_path) = state.fs_support.upload_to_temp(bytes).await {
             let filename = Uuid::new_v4();
 
             state

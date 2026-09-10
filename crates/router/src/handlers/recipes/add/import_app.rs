@@ -49,11 +49,10 @@ pub async fn add_recipe_import_app_handler(
 
 fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
     tokio::spawn(async move {
-        let app = form.app.to_string();
-        let state = state.clone();
+        let app = form.app.clone();
         let start_time = Arc::new(Instant::now());
 
-        let mut recipes = match parse_recipes(&state, form.clone(), user_id).await {
+        let mut recipes = match parse_recipes(&state, form, user_id).await {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
@@ -89,7 +88,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
         )
         .await;
 
-        let report_type = match form.app {
+        let report_type = match app {
             integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
             integrations::App::BigOven => ReportTypeFull::app(TertiaryReportType::bigoven()),
             integrations::App::ChefTap => ReportTypeFull::app(TertiaryReportType::cheftap()),
@@ -142,7 +141,15 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
             user_id,
         );
-        broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
+        broadcast_import_done_toast(
+            &state,
+            recipe_ids,
+            num_recipes,
+            report,
+            app.to_string(),
+            user_id,
+        )
+        .await;
     });
 }
 
@@ -202,7 +209,7 @@ async fn parse_recipes(
                     .data_dir
                     .debug
                     .join(format!("{}_{}", Uuid::new_v4(), form.file_name));
-            fs::write(saved_file.clone(), &form.file_data).await?;
+            fs::write(&saved_file, &form.file_data).await?;
             error!(?saved_file, "Saved file to for debugging purposes");
 
             return Err(err);

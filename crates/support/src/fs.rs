@@ -137,7 +137,7 @@ impl FsSupport for AppFs {
             return Err(Error::SoftwareNotInstalled);
         }
 
-        let tasks = input_paths.clone().into_iter().map(|temp_path| {
+        let tasks = input_paths.into_iter().map(|temp_path| {
             let output_path = output_dir
                 .join(temp_path.file_name().unwrap_or_default())
                 .with_extension("webm");

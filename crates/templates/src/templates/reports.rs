@@ -187,39 +187,18 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                             td { (&log.error_reason.as_deref().unwrap_or("-")) }
                             td { (log.format_duration()) }
                             td {
-                                @if &primary_report_type.name == "website" {
-                                    @match log.level.name.as_ref() {
-                                        "success" if log.recipe_id.is_some() => {
-                                            button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                                "View"
-                                            }
+                                @match (log.level.name.as_ref(), log.recipe_id) {
+                                    ("success", Some(id)) | ("warning", Some(id)) => {
+                                        button class="btn btn-xs" hx-get=(format!("/recipes/{id}")) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
+                                            "View"
                                         }
-                                        "warning" if log.recipe_id.is_some() => {
-                                            button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                                "View"
-                                            }
-                                        }
-                                        "error" => {
-                                            button class="btn btn-xs" hx-post="/recipes/add/website" hx-swap="none" hx-vals=(format!("{{\"urls\": \"{}\"}}", log.entity_name)) {
-                                                "Retry"
-                                            }
-                                        }
-                                        _ => { "" }
                                     }
-                                } @else {
-                                    @match log.level.name.as_ref() {
-                                        "success" if log.recipe_id.is_some() => {
-                                            button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                                "View"
-                                            }
+                                    ("error", _) if &primary_report_type.name == "website" => {
+                                        button class="btn btn-xs" hx-post="/recipes/add/website" hx-swap="none" hx-vals=(format!("{{\"urls\": \"{}\"}}", log.entity_name)) {
+                                            "Retry"
                                         }
-                                        "warning" if log.recipe_id.is_some() => {
-                                            button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                                "View"
-                                            }
-                                        }
-                                        _ => { "" }
                                     }
+                                    _ => { "" }
                                 }
                             }
                         }
@@ -262,39 +241,18 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                             }
                         }
                         div class="shrink-0" {
-                            @if &primary_report_type.name == "website" {
-                                @match log.level.name.as_ref() {
-                                    "success" if log.recipe_id.is_some() => {
-                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                            "View"
-                                        }
+                            @match (log.level.name.as_ref(), log.recipe_id) {
+                                ("success", Some(id)) | ("warning", Some(id)) => {
+                                    button class="btn btn-xs" hx-get=(format!("/recipes/{id}")) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
+                                        "View"
                                     }
-                                    "warning" if log.recipe_id.is_some() => {
-                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                            "View"
-                                        }
-                                    }
-                                    "error" => {
-                                        button class="btn btn-xs" hx-post="/recipes/add/website" hx-swap="none" hx-vals=(format!("{{\"urls\": \"{}\"}}", log.entity_name)) {
-                                            "Retry"
-                                        }
-                                    }
-                                    _ => { "" }
                                 }
-                            } @else {
-                                @match log.level.name.as_ref() {
-                                    "success" if log.recipe_id.is_some() => {
-                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                            "View"
-                                        }
+                                ("error", _) if &primary_report_type.name == "website" => {
+                                    button class="btn btn-xs" hx-post="/recipes/add/website" hx-swap="none" hx-vals=(format!("{{\"urls\": \"{}\"}}", log.entity_name)) {
+                                        "Retry"
                                     }
-                                    "warning" if log.recipe_id.is_some() => {
-                                        button class="btn btn-xs" hx-get=(format!("/recipes/{}", log.recipe_id.unwrap_or_default())) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
-                                            "View"
-                                        }
-                                    }
-                                    _ => { "" }
                                 }
+                                _ => { "" }
                             }
                         }
                     }
