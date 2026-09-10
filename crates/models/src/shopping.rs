@@ -97,11 +97,11 @@ pub struct ShoppingListItemForCreate {
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::shopping_list_items)]
-struct ShoppingListItemForInsert {
+struct ShoppingListItemForInsert<'a> {
     shopping_list_id: Uuid,
-    ingredient: String,
-    quantity: Option<String>,
-    notes: Option<String>,
+    ingredient: &'a str,
+    quantity: Option<&'a str>,
+    notes: Option<&'a str>,
     shopping_list_label_id: Option<i64>,
 }
 
@@ -128,10 +128,10 @@ impl ShoppingListItemForUpdate {
 
 #[derive(Debug, AsChangeset)]
 #[diesel(table_name = schema::shopping_list_items)]
-struct ShoppingListItemForUpdateInternal {
-    ingredient: Option<String>,
-    quantity: Option<String>,
-    notes: Option<String>,
+struct ShoppingListItemForUpdateInternal<'a> {
+    ingredient: Option<&'a str>,
+    quantity: Option<&'a str>,
+    notes: Option<&'a str>,
     shopping_list_label_id: Option<i64>,
     position: Option<i32>,
     is_checked: Option<bool>,
@@ -648,9 +648,9 @@ impl ShoppingList {
         let item: ShoppingListItem = diesel::insert_into(schema::shopping_list_items::table)
             .values(&ShoppingListItemForInsert {
                 shopping_list_id: list_id,
-                ingredient: item_c.ingredient,
-                quantity: item_c.quantity,
-                notes: item_c.notes,
+                ingredient: item_c.ingredient.as_str(),
+                quantity: item_c.quantity.as_deref(),
+                notes: item_c.notes.as_deref(),
                 shopping_list_label_id: label_id,
             })
             .returning(ShoppingListItem::as_select())
@@ -700,9 +700,9 @@ impl ShoppingList {
             .iter()
             .map(|item| ShoppingListItemForInsert {
                 shopping_list_id: self.id,
-                ingredient: item.ingredient.clone(),
-                quantity: item.quantity.clone(),
-                notes: item.notes.clone(),
+                ingredient: item.ingredient.as_str(),
+                quantity: item.quantity.as_deref(),
+                notes: item.notes.as_deref(),
                 shopping_list_label_id: None,
             })
             .collect::<Vec<_>>();
@@ -1043,9 +1043,9 @@ impl ShoppingList {
         let item = diesel::update(schema::shopping_list_items::table)
             .filter(schema::shopping_list_items::id.eq(item_id))
             .set(&ShoppingListItemForUpdateInternal {
-                ingredient: item_u.ingredient,
-                quantity: item_u.quantity.filter(|s| !s.is_empty()),
-                notes: item_u.notes,
+                ingredient: item_u.ingredient.as_deref(),
+                quantity: item_u.quantity.filter(|s| !s.is_empty()).as_deref(),
+                notes: item_u.notes.as_deref(),
                 shopping_list_label_id: label_id,
                 position: item_u.position,
                 is_checked: item_u.is_checked,

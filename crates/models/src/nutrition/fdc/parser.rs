@@ -277,14 +277,13 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                 .await?;
 
             let fdc_nutrients_map: HashMap<(String, String), i64> = fdc_nutrients
-                .clone()
                 .into_iter()
                 .map(|(id, name, unit_name)| ((name, unit_name), id))
                 .collect();
 
             // fdc_foods_fdc_nutrients
             let mut ids = Vec::new();
-            for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids.clone()) {
+            for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids.as_slice()) {
                 ff.food_nutrients.iter().for_each(|food_nutrient| {
                     let food_nutrient = food_nutrient.clone();
 
@@ -296,7 +295,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                         .unwrap();
 
                     ids.push((
-                        fdc_food_db_id,
+                        *fdc_food_db_id,
                         id,
                         food_nutrient.amount,
                         food_nutrient.min.unwrap_or_default(),
@@ -333,7 +332,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                         .iter()
                         .map(|portion| FdcFoodPortionForInsert {
                             value: portion.value,
-                            modifier: portion.modifier.clone().into_owned(),
+                            modifier: portion.modifier.to_string(),
                             gram_weight: portion.gram_weight,
                             amount: portion.amount,
                         })

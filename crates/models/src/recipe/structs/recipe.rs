@@ -584,8 +584,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             system::MeasurementSystem::from(ingredients.items_as_text()).id();
         let nutrition = schema
             .nutrition
-            .iter()
-            .next()
+            .first()
             .map(NutritionDetailsForCreate::from)
             .unwrap_or_default();
 
@@ -669,8 +668,8 @@ pub struct Ingredient {
 /// Represents the insertion of an ingredient-recipe association into the database.
 #[derive(Insertable)]
 #[diesel(table_name = schema::ingredients)]
-pub(crate) struct IngredientForInsert {
-    pub name: String,
+pub(crate) struct IngredientForInsert<'a> {
+    pub name: &'a str,
 }
 
 /// Represents the association between an ingredient and a recipe in the

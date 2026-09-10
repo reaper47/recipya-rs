@@ -326,7 +326,9 @@ impl TandoorRecipeClient {
             date_created: vec![recipe.created_at.to_string()],
             keywords: keywords
                 .iter()
-                .map(|k| RecipeKeywordsFieldEnum::TextOrURL(k.name.clone()))
+                .map(|k| &k.name)
+                .cloned()
+                .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
             aggregate_rating: recipe
                 .rating

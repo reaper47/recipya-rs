@@ -7,7 +7,7 @@ use app::state::AppState;
 use crate::handlers::static_files::static_files_handler;
 
 /// Defines the routes for serving static files.
-pub fn static_files_routes(state: AppState) -> Router<AppState> {
+pub fn static_files_routes(state: &AppState) -> Router<AppState> {
     Router::new()
         .route("/android-chrome-192x192.png", get(static_files_handler))
         .route("/android-chrome-512x512.png", get(static_files_handler))
@@ -20,12 +20,12 @@ pub fn static_files_routes(state: AppState) -> Router<AppState> {
         .route("/safari-pinned-tab.svg", get(static_files_handler))
         .route("/site.webmanifest", get(static_files_handler))
         .route("/public/{*file}", get(static_files_handler))
-        .nest_service("/data/images", ServeDir::new(state.data_dir.images.root))
+        .nest_service("/data/images", ServeDir::new(&state.data_dir.images.root))
         .nest_service(
             "/data/images/thumbnails",
-            ServeDir::new(state.data_dir.images.thumbnails),
+            ServeDir::new(&state.data_dir.images.thumbnails),
         )
-        .nest_service("/data/videos", ServeDir::new(state.data_dir.videos))
+        .nest_service("/data/videos", ServeDir::new(&state.data_dir.videos))
 }
 
 #[cfg(test)]
@@ -37,7 +37,7 @@ mod tests {
     use tower::ServiceExt;
 
     use config::Config;
-    use test_db::{default_config, test_database_url};
+    use test_db::{db_url, default_config};
     use test_utils::create_app_state;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -45,11 +45,11 @@ mod tests {
     #[tokio::test]
     async fn test_static_files_routes_ok() -> Result<()> {
         let config = Config {
-            database_url: test_database_url(),
+            database_url: db_url().clone(),
             ..default_config()
         };
         let state = create_app_state(config).await;
-        let app = static_files_routes(state.clone()).with_state(state);
+        let app = static_files_routes(&state).with_state(state);
 
         for (path, want_status) in [
             (

@@ -16,7 +16,7 @@ pub trait SplitFirstOwned<T> {
 }
 
 impl<T> SplitFirstOwned<T> for Vec<T> {
-    fn split_first_owned(self) -> (Option<T>, Vec<T>) {
+    fn split_first_owned(self) -> (Option<T>, Self) {
         let mut iter = self.into_iter();
         let first = iter.next();
         (first, iter.collect())

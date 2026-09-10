@@ -225,12 +225,13 @@ impl MealieRecipe {
             .recipe_category
             .iter()
             .flatten()
-            .map(|c| c.name.clone());
+            .map(|c| &c.name)
+            .cloned();
 
         (
             categories.next().into_iter().collect(),
             categories
-                .chain(self.tags.iter().flatten().map(|tag| tag.name.clone()))
+                .chain(self.tags.iter().flatten().map(|tag| &tag.name).cloned())
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
         )

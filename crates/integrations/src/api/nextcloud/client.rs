@@ -96,7 +96,7 @@ impl<C: RecipeClient> Authenticated<C> for Nextcloud<AuthenticatedState, C> {
         &self,
         id: &str,
     ) -> std::result::Result<schema_org::Recipe, (String, Error)> {
-        match self.recipe_client.fetch_recipe(&id).await {
+        match self.recipe_client.fetch_recipe(id).await {
             Ok(recipe) => Ok(recipe),
             Err(err) => Err((id.to_string(), err)),
         }

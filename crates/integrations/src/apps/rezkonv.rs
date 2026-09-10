@@ -328,11 +328,11 @@ fn parse_ingredient_block<'s>(input: &mut &'s str) -> WResult<Vec<Ingredient<'s>
                             last_line.to_mut().push(' ');
                             last_line.to_mut().push_str(&line[1..]);
                         } else {
-                            acc.push(item.clone());
+                            acc.push(item);
                         }
                     }
                     Ingredient::Section(_) | Ingredient::Line(_) => {
-                        acc.push(item.clone());
+                        acc.push(item);
                     }
                 }
 

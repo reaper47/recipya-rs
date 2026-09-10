@@ -158,7 +158,7 @@ impl From<RecipeComponents<'_>> for Recipe {
             },
             prep_time: seconds_to_duration(prep_secs),
             recipe_category: category
-                .map(|c| c.trim())
+                .map(str::trim)
                 .filter(|c| !c.is_empty())
                 .map_or(Vec::new(), |c| vec![c.into()]),
             recipe_ingredient: r

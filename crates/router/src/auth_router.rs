@@ -786,7 +786,7 @@ mod tests {
 
         const BASE_URI: &str = "/auth/register";
 
-        fn a_register_form<'a>() -> RegisterForm {
+        fn a_register_form() -> RegisterForm {
             RegisterForm {
                 email: "new_user@example.com".into(),
                 password: "12345678".into(),
@@ -849,8 +849,8 @@ mod tests {
             let _ = server
                 .post("/auth/login")
                 .form(&LoginForm {
-                    email: form.email.to_string(),
-                    password: form.password.to_string(),
+                    email: form.email.clone(),
+                    password: form.password.clone(),
                     remember_me: Some(false),
                 })
                 .await;

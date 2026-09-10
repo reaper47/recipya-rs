@@ -122,10 +122,11 @@ fn migrate_recipe(v: &mut Value) {
                 }
             }
             Value::Array(items) => {
-                let mut parts: Vec<Value> = Vec::new();
+                let items = std::mem::take(items);
+                let mut parts = Vec::new();
 
-                for item in items.iter() {
-                    if let Value::String(s) = item {
+                for item in items {
+                    if let Value::String(s) = &item {
                         parts.extend(
                             s.split(',')
                                 .map(str::trim)
@@ -133,7 +134,7 @@ fn migrate_recipe(v: &mut Value) {
                                 .map(|part| Value::String(part.to_string())),
                         );
                     } else {
-                        parts.push(item.clone());
+                        parts.push(item);
                     }
                 }
 
@@ -149,19 +150,20 @@ fn migrate_recipe(v: &mut Value) {
                 *tool_value = migrate_tool_string(name);
             }
             Value::Array(items) => {
+                let items = std::mem::take(items);
                 let migrated_items = items
-                    .iter()
+                    .into_iter()
                     .map(|item| match item {
-                        Value::String(name) => migrate_tool_string(name),
-                        Value::Object(tool) => migrate_tool_object(tool.clone()),
-                        _ => item.clone(),
+                        Value::String(name) => migrate_tool_string(&name),
+                        Value::Object(tool) => migrate_tool_object(tool),
+                        _ => item,
                     })
                     .collect();
 
                 *tool_value = Value::Array(migrated_items);
             }
             Value::Object(tool) => {
-                *tool_value = migrate_tool_object(tool.clone());
+                *tool_value = migrate_tool_object(std::mem::take(tool));
             }
             _ => {}
         }

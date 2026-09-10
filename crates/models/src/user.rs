@@ -392,8 +392,8 @@ mod tests {
 
             let got = User::all(&state.mm)
                 .await?
-                .iter()
-                .map(|u| u.email.clone())
+                .into_iter()
+                .map(|u| u.email)
                 .collect::<Vec<_>>();
 
             pretty_assertions::assert_eq!(got, vec![user1.email, user2.email]);

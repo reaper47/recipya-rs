@@ -43,7 +43,7 @@ impl SectionComponents {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct SectionItem {
     pub title: String,
     pub items: Vec<Item>,
@@ -316,11 +316,7 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                         }) {
                             s
                         } else {
-                            prop.unit_text
-                                .into_iter()
-                                .next()
-                                .unwrap_or_default()
-                                .clone()
+                            prop.unit_text.into_iter().next().unwrap_or_default()
                         };
 
                         if code.is_empty() { text } else { code }
@@ -517,10 +513,7 @@ impl From<Vec<RecipeRecipeInstructionsFieldEnum>> for SectionComponents {
         if sections.is_empty() {
             Self::Flat(Vec::new())
         } else if sections.len() == 1 && sections[0].title.is_empty() {
-            sections
-                .first()
-                .map(|section| Self::Flat(section.items.clone()))
-                .unwrap_or_default()
+            Self::Flat(sections.into_iter().next().unwrap_or_default().items)
         } else {
             Self::Grouped(sections)
         }
@@ -599,6 +592,6 @@ pub(crate) struct Section {
 #[derive(Insertable)]
 #[diesel(table_name = schema::sections)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub(crate) struct SectionForInsert {
-    pub name: String,
+pub(crate) struct SectionForInsert<'a> {
+    pub name: &'a str,
 }

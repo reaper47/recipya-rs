@@ -183,8 +183,8 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                                     _         => "badge-info",
                                 })) { (log.level.name) }
                             }
-                            td { (&log.error_code.as_deref().unwrap_or_else(|| "-")) }
-                            td { (&log.error_reason.as_deref().unwrap_or_else(|| "-")) }
+                            td { (&log.error_code.as_deref().unwrap_or("-")) }
+                            td { (&log.error_reason.as_deref().unwrap_or("-")) }
                             td { (log.format_duration()) }
                             td {
                                 @if &primary_report_type.name == "website" {
@@ -250,14 +250,14 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                     }
                     div class="flex justify-between items-center gap-2" {
                         div class="flex flex-col gap-1 text-xs text-base-content/60" {
-                            @let reason = log.error_reason.as_deref().unwrap_or_else(|| "-");
+                            @let reason = log.error_reason.as_deref().unwrap_or("-");
                             span hidden=[if reason == "-" { Some("") } else { None }] {
                                 "Reason: " (reason)
                             }
                             span {
                                 "Duration: " (log.format_duration())
                                 @if log.error_code.is_some() {
-                                    " · Code: " (&log.error_code.as_deref().unwrap_or_else(|| "-"))
+                                    " · Code: " (&log.error_code.as_deref().unwrap_or("-"))
                                 }
                             }
                         }

@@ -50,7 +50,7 @@ impl Recipe {
             recipe.r#yield = n;
         }
         if recipe.source != new_recipe.source {
-            recipe.source = new_recipe.source.clone();
+            recipe.source.clone_from(&new_recipe.source);
         }
         if recipe.rating != new_recipe.rating {
             recipe.rating = new_recipe.rating;
@@ -154,7 +154,8 @@ impl Recipe {
                     let new_ingredients = new_recipe
                         .ingredients
                         .iter()
-                        .map(|ing| ing.text.clone())
+                        .cloned()
+                        .map(|ing| ing.text)
                         .collect_vec();
 
                     insert_instructions(
@@ -215,6 +216,7 @@ impl Recipe {
 
                 // Times
                 let times = new_recipe.times.clone().unwrap_or_default();
+
                 let old_times_for_insert = TimesForInsert {
                     recipe_id,
                     prep_seconds: old_recipe.times.prep_seconds,
@@ -222,12 +224,8 @@ impl Recipe {
                 };
                 let new_times_for_insert = TimesForInsert {
                     recipe_id,
-                    prep_seconds: new_recipe
-                        .times
-                        .clone()
-                        .unwrap_or_else(|| times.clone())
-                        .prep_seconds,
-                    cook_seconds: new_recipe.times.clone().unwrap_or(times).cook_seconds,
+                    prep_seconds: times.prep_seconds,
+                    cook_seconds: times.cook_seconds,
                 };
                 if old_times_for_insert != new_times_for_insert {
                     diesel::update(

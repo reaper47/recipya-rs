@@ -74,9 +74,9 @@ pub async fn change_password_post_handler(
 /// Handles account confirmation once the user clicks their confirm button.
 pub async fn verify_email_handler(
     State(state): State<AppState>,
-    Query(query): Query<HashMap<String, String>>,
+    Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token = match get_token_from_query(&query) {
+    let token = match get_token_from_query(&mut query) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
@@ -113,10 +113,8 @@ pub async fn verify_email_handler(
     templates::general::simple("Success", "Your account has been verified.").into_response()
 }
 
-fn get_token_from_query(query: &HashMap<String, String>) -> Result<String> {
-    query
-        .get("token")
-        .map_or_else(|| Err(Error::NoToken), |token| Ok(token.clone()))
+fn get_token_from_query(query: &mut HashMap<String, String>) -> Result<String> {
+    query.remove("token").ok_or(Error::NoToken)
 }
 
 /// Renders the forgot password request page.
@@ -178,9 +176,9 @@ pub async fn forgot_password_post_handler(
 /// Renders the forgot password reset page.
 pub async fn forgot_password_reset_handler(
     State(state): State<AppState>,
-    Query(query): Query<HashMap<String, String>>,
+    Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token = match get_token_from_query(&query) {
+    let token = match get_token_from_query(&mut query) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };

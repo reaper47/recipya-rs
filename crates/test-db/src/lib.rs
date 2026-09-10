@@ -1,6 +1,6 @@
-use std::{env, time::Duration};
+use std::{env, sync::OnceLock, time::Duration};
 
-use diesel::{Connection, sql_query};
+use diesel::{Connection, deserialize::QueryableByName, sql_query};
 use diesel_async::{
     AsyncConnection, AsyncPgConnection, RunQueryDsl,
     pooled_connection::{AsyncDieselConnectionManager, ManagerConfig, bb8},
@@ -9,6 +9,7 @@ use diesel_migrations::MigrationHarness;
 use futures_util::FutureExt;
 use tokio::sync::OnceCell;
 use url::Url;
+use uuid::Uuid;
 
 use config::{Config, States};
 use repository::{DbPool, MIGRATIONS, ModelManager, make_db_pool};
@@ -19,13 +20,14 @@ const TEMPLATE_DB: &str = "recipya_test_template";
 
 const TEST_DATABASE_NAME: &str = "recipya_test";
 
-/// Provides a default config for the tests.
-pub fn default_config() -> Config {
-    Config {
-        base_url: "http://localhost:8078".into(),
-        database_url: test_database_url(),
-        states: States::default(),
-    }
+const DB_SWEEP_LOCK_ID: i64 = 918_273_646;
+
+const TEMPLATE_LOCK_ID: i64 = 918_273_645;
+
+#[derive(QueryableByName)]
+struct DbName {
+    #[diesel(sql_type = diesel::sql_types::Text)]
+    datname: String,
 }
 
 /// The database URL used for connecting to the database in test environments.
@@ -33,17 +35,29 @@ pub fn default_config() -> Config {
 /// # Panics
 ///
 /// Panics if the `DATABASE_URL` environment variable is not set.
-pub fn test_database_url() -> String {
+pub fn db_url() -> &'static String {
+    static INSTANCE: OnceLock<String> = OnceLock::new();
+
+    INSTANCE.get_or_init(test_database_url)
+}
+
+/// Provides a default config for the tests.
+pub fn default_config() -> Config {
+    Config {
+        base_url: "http://localhost:8078".into(),
+        database_url: db_url().clone(),
+        states: States::default(),
+    }
+}
+
+fn test_database_url() -> String {
     setup_env();
 
-    let base = env::var("DATABASE_URL")
-        .expect("Environment variable 'DATABASE_URL' to be set")
-        .trim_end_matches('/')
-        .trim_end_matches("/recipya")
-        .to_string();
+    let db_url = env::var("DATABASE_URL").expect("Environment variable 'DATABASE_URL' to be set");
+    let base = db_url.trim_end_matches('/').trim_end_matches("/recipya");
 
     if base.ends_with("/recipya_test") {
-        base
+        base.to_string()
     } else {
         format!("{base}/recipya_test")
     }
@@ -57,6 +71,7 @@ pub fn test_database_url() -> String {
 pub fn setup_env() {
     let _ = dotenvy::dotenv();
 
+    // SAFETY:
     unsafe {
         std::env::set_var("APP_ENV", "test");
     }
@@ -99,8 +114,10 @@ impl TestDb {
     pub async fn new(config: Option<Config>) -> Result<(Self, Config)> {
         use diesel_async::RunQueryDsl;
 
-        let (db_name, db_url) = generate_db()?;
         let admin_url = admin_database_url();
+        sweep_stale_test_databases(&admin_url).await?;
+
+        let (db_name, db_url) = generate_db()?;
         ensure_template_exists(&admin_url).await?;
 
         {
@@ -144,7 +161,49 @@ fn admin_database_url() -> String {
     std::env::var("DATABASE_URL").expect("DATABASE_URL not set")
 }
 
-const TEMPLATE_LOCK_ID: i64 = 918_273_645;
+/// AI usage:
+///
+/// Assisted by Claude *Sonnet 5* because I struggled with deleting schemas
+/// without user intervention to prevent database bloat.
+async fn sweep_stale_test_databases(admin_url: &str) -> Result<()> {
+    let pool = make_db_pool(admin_url).await?;
+    let mut conn = pool.get().await?;
+
+    sql_query(format!("SELECT pg_advisory_lock({DB_SWEEP_LOCK_ID})"))
+        .execute(&mut conn)
+        .await?;
+
+    let result = async {
+        let stale: Vec<DbName> = sql_query(format!(
+            "SELECT datname FROM pg_database WHERE datname LIKE '{TEST_DATABASE_NAME}\\_%'"
+        ))
+        .load(&mut conn)
+        .await?;
+
+        for row in stale {
+            sql_query(format!(
+                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity \
+                 WHERE datname = '{0}' AND pid <> pg_backend_pid() \
+                 AND backend_start < now() - interval '10 minutes'",
+                row.datname
+            ))
+            .execute(&mut conn)
+            .await?;
+
+            sql_query(format!("DROP DATABASE IF EXISTS \"{}\"", row.datname))
+                .execute(&mut conn)
+                .await?;
+        }
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    }
+    .await;
+
+    sql_query(format!("SELECT pg_advisory_unlock({DB_SWEEP_LOCK_ID})"))
+        .execute(&mut conn)
+        .await?;
+
+    result
+}
 
 /// AI usage:
 ///
@@ -167,9 +226,9 @@ async fn ensure_template_exists(admin_url: &str) -> Result<()> {
         url.set_path(TEMPLATE_DB);
         tokio::task::spawn_blocking(move || {
             diesel::PgConnection::establish(url.as_ref())
-                .expect("connect to template db")
+                .expect("Connect to template db")
                 .run_pending_migrations(MIGRATIONS)
-                .expect("migrate template db");
+                .expect("Migrate template db");
         })
         .await?;
 
@@ -192,15 +251,50 @@ async fn ensure_template_exists(admin_url: &str) -> Result<()> {
 pub async fn test_model_manager() -> ModelManager {
     let (_, config) = init_test_db().await;
     let url = &config.database_url;
+    let schema = format!("test_{}", Uuid::new_v4().simple());
+
+    {
+        let schema = schema.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut conn = diesel::PgConnection::establish(&url).expect("Connect for schema setup");
+
+            diesel::RunQueryDsl::execute(
+                diesel::sql_query(format!("CREATE SCHEMA \"{schema}\"")),
+                &mut conn,
+            )
+            .expect("Create schema");
+
+            diesel::RunQueryDsl::execute(
+                diesel::sql_query(format!("SET search_path TO \"{schema}\", public")),
+                &mut conn,
+            )
+            .expect("Set search_path");
+
+            conn.run_pending_migrations(MIGRATIONS)
+                .expect("Migrate schema");
+        })
+        .await
+        .expect("Schema setup task failed");
+    }
 
     let mut cfg = ManagerConfig::<AsyncPgConnection>::default();
-
-    cfg.custom_setup = Box::new(|url| {
+    let schema_for_setup = schema.clone();
+    cfg.custom_setup = Box::new(move |url| {
+        let schema = schema_for_setup.clone();
         async move {
             let mut conn = AsyncPgConnection::establish(url).await?;
+
+            diesel_async::RunQueryDsl::execute(
+                sql_query(format!("SET search_path TO \"{schema}\", public")),
+                &mut conn,
+            )
+            .await
+            .expect("Set search_path");
+
             conn.begin_test_transaction()
                 .await
                 .expect("BEGIN test transaction");
+
             Ok(conn)
         }
         .boxed()
@@ -220,14 +314,11 @@ pub async fn test_model_manager() -> ModelManager {
 
 /// Generates a unique test database name and URL.
 pub fn generate_db() -> Result<(String, String)> {
-    let db_name = format!("{TEST_DATABASE_NAME}_{}", uuid::Uuid::new_v4().simple());
-    let db_url = test_db_url(&db_name)?;
+    let db_name = TEST_DATABASE_NAME.to_string();
+    let db_url = {
+        let mut url = Url::parse(&admin_database_url())?;
+        url.set_path(&db_name);
+        url.to_string()
+    };
     Ok((db_name, db_url))
-}
-
-fn test_db_url(db_name: &str) -> Result<String> {
-    let base_url = admin_database_url();
-    let mut url = Url::parse(&base_url)?;
-    url.set_path(db_name);
-    Ok(url.to_string())
 }

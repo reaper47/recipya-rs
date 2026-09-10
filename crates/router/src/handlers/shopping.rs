@@ -253,7 +253,7 @@ pub async fn shopping_list_export_handler(
     };
 
     let token = Uuid::new_v4();
-    let dl_c = DownloadForCreate::new(user.id, token, path);
+    let dl_c = DownloadForCreate::new(user.id, token, &path);
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
         error!(user = ?user.id, ?err, "Failed to create download");

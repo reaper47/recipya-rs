@@ -113,16 +113,13 @@ impl Recipe {
             )
             .await?;
 
-        let futures = rows
-            .into_iter()
-            .map(|(recipe, category, cuisine, keywords, times)| {
-                let mm = mm.clone();
-                async move {
+        let futures =
+            rows.into_iter()
+                .map(|(recipe, category, cuisine, keywords, times)| async move {
                     let mut conn = mm.pool.get().await?;
                     fetch_recipe_details(&mut conn, recipe, category, cuisine, keywords, times)
                         .await
-                }
-            });
+                });
 
         futures::future::try_join_all(futures).await
     }
@@ -569,23 +566,23 @@ mod tests {
         async fn test_count_ok() -> Result<()> {
             let (_, state) = build_server_anonymous(default_config()).await?;
             let all_users = User::all(&state.mm).await?;
-            let user = all_users[0].clone();
-            let user2 = all_users[1].clone();
-            let settings1 = UserSettingDetails::get(&state.mm, user.id).await?;
-            let settings2 = UserSettingDetails::get(&state.mm, user2.id).await?;
+            let user_id = all_users[0].id;
+            let user2_id = all_users[1].id;
+            let settings1 = UserSettingDetails::get(&state.mm, user_id).await?;
+            let settings2 = UserSettingDetails::get(&state.mm, user2_id).await?;
             for i in 0..5 {
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name.push_str(i.to_string().as_str());
-                let _ = Recipe::create(&state.mm, user.id, &recipe, &settings1).await?;
+                let _ = Recipe::create(&state.mm, user_id, &recipe, &settings1).await?;
             }
             for i in 0..10 {
                 let (mut recipe, _) = a_complete_recipe_for_create();
                 recipe.name.push_str((i + 1002).to_string().as_str());
-                let _ = Recipe::create(&state.mm, user2.id, &recipe, &settings2).await?;
+                let _ = Recipe::create(&state.mm, user2_id, &recipe, &settings2).await?;
             }
 
-            let count_user1 = Recipe::count(&state.mm, user.id).await?;
-            let count_user2 = Recipe::count(&state.mm, user2.id).await?;
+            let count_user1 = Recipe::count(&state.mm, user_id).await?;
+            let count_user2 = Recipe::count(&state.mm, user2_id).await?;
 
             assert_eq!(count_user1, 5);
             assert_eq!(count_user2, 10);

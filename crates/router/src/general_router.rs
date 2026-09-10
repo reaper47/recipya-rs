@@ -222,7 +222,7 @@ mod tests {
             let token = Uuid::new_v4();
             Download::create(
                 &state.mm,
-                DownloadForCreate::new(user_id, token, PathBuf::from(&file_path)),
+                DownloadForCreate::new(user_id, token, &file_path),
             )
             .await?;
 
@@ -319,9 +319,9 @@ mod tests {
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.name = "Test Recipe".into();
             recipe.cuisine = Some("Italian".into());
-            let user = User::all(&state.mm).await?[0].clone();
-            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
-            let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&url("cui:")).await;
 
@@ -421,10 +421,10 @@ mod tests {
         }
 
         async fn insert_basic_recipe(state: &AppState) -> Result<i64> {
-            let user = User::all(&state.mm).await?[0].clone();
-            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             Ok(recipe_id)
         }
     }

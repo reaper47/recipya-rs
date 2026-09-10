@@ -43,9 +43,10 @@ pub async fn server() -> Result<()> {
         error!(?err, "Autologin enabled. Error initializing autologin user");
     }
 
+    let state_clone = state.clone();
     start_cron_jobs(
-        Arc::new(state.clone().mm),
-        Arc::new(state.clone().data_dir),
+        Arc::new(state_clone.mm),
+        Arc::new(state_clone.data_dir),
         Arc::clone(&state.fs_support),
     )
     .await?;
@@ -55,9 +56,9 @@ pub async fn server() -> Result<()> {
         NutritionDataSource::update_all(&mm).await;
     });
 
-    let router = router(state.clone())?
+    let router = router(&state)?
         .layer(CookieManagerLayer::new())
-        .with_state(state.clone());
+        .with_state(state);
 
     let listener = TcpListener::bind("0.0.0.0:8078").await?;
     info!("Serving at http://{}", listener.local_addr()?);

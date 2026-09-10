@@ -256,7 +256,7 @@ impl CookLang {
                 .get("difficulty")
                 .and_then(|c| c.as_str())
                 .map(String::from),
-            locale: locale,
+            locale,
             images: image
                 .or(images)
                 .or(picture)

@@ -116,7 +116,7 @@ where
         .map(Recipe::from)
         .collect_vec();
 
-    let is_based_on = recipes.last().map(|r| r.is_based_on.clone());
+    let is_based_on = recipes.last().map(|r| &r.is_based_on).cloned();
 
     if let Some(based_on) = is_based_on {
         for r in &mut recipes {

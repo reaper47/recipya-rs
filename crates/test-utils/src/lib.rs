@@ -172,7 +172,7 @@ pub async fn get_token(mm: ModelManager) -> Result<String> {
 /// Prepares the router for the test server with the given database URL.
 async fn prepare_router(config: Config) -> Result<(Router<()>, AppState)> {
     let state = create_app_state(config).await;
-    let app = router(state.clone())?
+    let app = router(&state)?
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 

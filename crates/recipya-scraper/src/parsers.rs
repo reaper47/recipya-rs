@@ -79,20 +79,23 @@ impl Parser<'_> {
                         .ok();
                 }
 
-                object
-                    .get("@graph")
-                    .and_then(|g| g.as_array())
-                    .and_then(|graph| {
-                        graph
-                            .iter()
-                            .find(|item| is_recipe_type(item))
-                            .and_then(|item| {
-                                serde_json::from_value::<Recipe>(item.clone())
-                                    .inspect_err(|err| {
-                                        error!(url = self.url, ?err, "Parsing failed");
-                                    })
-                                    .ok()
+                let Value::Object(mut map) = object else {
+                    return None;
+                };
+                let graph = map.remove("@graph")?;
+                let Value::Array(items) = graph else {
+                    return None;
+                };
+
+                items
+                    .into_iter()
+                    .find(|item| is_recipe_type(item))
+                    .and_then(|item| {
+                        serde_json::from_value::<Recipe>(item)
+                            .inspect_err(|err| {
+                                error!(url = self.url, ?err, "Parsing failed");
                             })
+                            .ok()
                     })
             })
             .find_map(|recipe| {

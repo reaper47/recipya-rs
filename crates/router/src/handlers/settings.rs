@@ -191,7 +191,7 @@ pub async fn export_data_post_handler(
     };
 
     let token = Uuid::new_v4();
-    let dl_c = DownloadForCreate::new(user.id, token, file_path);
+    let dl_c = DownloadForCreate::new(user.id, token, &file_path);
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
         error!(user = ?user.id, ?err, "Failed to create download");

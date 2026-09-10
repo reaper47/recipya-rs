@@ -436,7 +436,7 @@ impl MealieRecipeClient {
                             author: comment
                                 .user
                                 .author()
-                                .map(|s| vec![CommentAuthorFieldEnum::new_person(&s)])
+                                .map(|s| vec![CommentAuthorFieldEnum::new_person(s)])
                                 .unwrap_or_default(),
                             ..Default::default()
                         })
