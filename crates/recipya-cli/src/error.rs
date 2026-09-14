@@ -7,6 +7,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[allow(unused)]
 #[derive(Debug, From)]
 pub enum Error {
+    Sandbox,
     Server(String),
 
     #[from]
@@ -21,6 +22,12 @@ pub enum Error {
     Repository(diesel::result::Error),
     #[from]
     SetGlobalDefault(tracing::subscriber::SetGlobalDefaultError),
+    #[cfg(target_os = "linux")]
+    #[from]
+    Ruleset(landlock::RulesetError),
+    #[cfg(target_os = "linux")]
+    #[from]
+    PathFd(landlock::PathFdError),
 
     #[from]
     Config(config::Error),

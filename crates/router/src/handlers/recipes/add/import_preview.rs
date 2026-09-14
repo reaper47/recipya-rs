@@ -38,12 +38,14 @@ pub async fn add_recipe_import_preview_handler(
                 formatted_times,
             };
 
+            let autologin = state.config.read().await.states.autologin;
+
             match templates::recipes::view_recipe_helper(
                 &Arc::clone(&state.fs_support),
                 &state.data_dir,
                 &Data {
                     states: States {
-                        autologin: state.config.read().await.states.autologin,
+                        autologin,
                         ..Default::default()
                     },
                     is_admin: user.is_admin,

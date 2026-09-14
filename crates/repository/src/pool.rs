@@ -69,7 +69,7 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
     );
 
     let conn = &mut diesel::PgConnection::establish(&db_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {db_url}"));
+        .unwrap_or_else(|err| panic!("Error connecting to {db_url}: {err}"));
 
     let res = sql_query("SELECT COUNT(*) as count FROM pg_database WHERE datname = $1")
         .bind::<Text, _>(db_name)

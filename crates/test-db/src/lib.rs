@@ -256,7 +256,7 @@ pub async fn test_model_manager() -> ModelManager {
     {
         let schema = schema.clone();
         tokio::task::spawn_blocking(move || {
-            let mut conn = diesel::PgConnection::establish(&url).expect("Connect for schema setup");
+            let mut conn = diesel::PgConnection::establish(url).expect("Connect for schema setup");
 
             diesel::RunQueryDsl::execute(
                 diesel::sql_query(format!("CREATE SCHEMA \"{schema}\"")),

@@ -287,15 +287,13 @@ impl From<CookmlRecipe<'_>> for Recipe {
 
         Self {
             r#type: AtType::Recipe.to_opt(),
-            aggregate_rating: if let Some(q) = quality {
+            aggregate_rating: quality.map_or_else(Vec::new, |q| {
                 vec![AggregateRating {
                     r#type: AtType::Review.to_opt(),
                     rating_value: vec![AggregateRatingRatingValueFieldEnum::Number(q)],
                     ..Default::default()
                 }]
-            } else {
-                vec![]
-            },
+            }),
             author: r
                 .head
                 .createuser

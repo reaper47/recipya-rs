@@ -188,7 +188,7 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                             td { (log.format_duration()) }
                             td {
                                 @match (log.level.name.as_ref(), log.recipe_id) {
-                                    ("success", Some(id)) | ("warning", Some(id)) => {
+                                    ("success" | "warning", Some(id)) => {
                                         button class="btn btn-xs" hx-get=(format!("/recipes/{id}")) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
                                             "View"
                                         }
@@ -242,7 +242,7 @@ pub fn render_report(primary_report_type: &ReportTypePrimary, logs: &[ViewReport
                         }
                         div class="shrink-0" {
                             @match (log.level.name.as_ref(), log.recipe_id) {
-                                ("success", Some(id)) | ("warning", Some(id)) => {
+                                ("success" | "warning", Some(id)) => {
                                     button class="btn btn-xs" hx-get=(format!("/recipes/{id}")) hx-target="#content" hx-trigger="mousedown" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" {
                                         "View"
                                     }
