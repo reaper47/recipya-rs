@@ -54,8 +54,6 @@ impl UnitOperations for Length {
 
 #[cfg(test)]
 mod tests {
-    use std::f64;
-
     use approx::assert_relative_eq;
 
     use super::*;
