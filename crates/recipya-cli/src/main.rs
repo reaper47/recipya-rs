@@ -9,7 +9,7 @@ use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
 
 use repository::create_database_if_not_exists;
-use support::{fs::get_base_dir, software};
+use support::software;
 
 use error::Result;
 use server::server;
@@ -145,6 +145,7 @@ fn sandbox_helper() -> Result<()> {
         ABI, Access, AccessFs, PathBeneath, PathFd, Ruleset, RulesetAttr, RulesetCreatedAttr,
     };
     use procfs::sys::kernel::Version;
+    use support::fs::get_base_dir;
 
     let version = Version::current().unwrap();
 
