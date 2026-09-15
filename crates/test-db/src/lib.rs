@@ -314,11 +314,17 @@ pub async fn test_model_manager() -> ModelManager {
 
 /// Generates a unique test database name and URL.
 pub fn generate_db() -> Result<(String, String)> {
-    let db_name = TEST_DATABASE_NAME.to_string();
+    let db_name = if std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("CI").is_ok() {
+        format!("{TEST_DATABASE_NAME}_{}", Uuid::new_v4().simple())
+    } else {
+        TEST_DATABASE_NAME.to_string()
+    };
+
     let db_url = {
         let mut url = Url::parse(&admin_database_url())?;
         url.set_path(&db_name);
         url.to_string()
     };
+
     Ok((db_name, db_url))
 }
