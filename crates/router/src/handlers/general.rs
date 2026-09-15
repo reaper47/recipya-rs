@@ -1,5 +1,4 @@
 use std::fmt::Write;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
 
 use axum::Json;
@@ -13,9 +12,7 @@ use models::paper::PaperSize;
 use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use serde_json::{Value, json};
 use tokio::fs;
-use tokio::net::lookup_host;
-use tokio_util::bytes;
-use tokio_util::io::ReaderStream;
+use tokio_util::{bytes, io::ReaderStream};
 use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
@@ -25,6 +22,7 @@ use models::Recipe;
 use models::download::Download;
 use models::params::{DownloadParams, FetchParams, SearchParams};
 use models::user::User;
+use support::net::resolve_and_validate;
 
 use crate::handlers::message::broadcast_error;
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
@@ -120,14 +118,28 @@ pub async fn fetch_handler(
         }
     };
 
-    if let Err(reason) = resolve_and_validate(&parsed).await {
-        warn!("Fetch handler blocked '{parsed}' by SSRF guard: {reason}");
-        broadcast_error(&state, user.id, "Invalid URL").await;
-        return StatusCode::BAD_REQUEST.into_response();
-    }
+    let url = match resolve_and_validate(parsed).await {
+        Ok(u) => u,
+        Err(err) => {
+            const MESSAGE: &str = "Fetch handler blocked by SSRF guard";
+            match err {
+                support::net::Error::DNSResolution(url) => {
+                    warn!(?url, reason = "DNS Resolution", MESSAGE);
+                }
+                support::net::Error::ForbiddenIP(url) => {
+                    warn!(?url, reason = "Forbidden IP", MESSAGE);
+                }
+                support::net::Error::MissingHost(url) => {
+                    warn!(?url, reason = "Missing Host", MESSAGE);
+                }
+            }
+            broadcast_error(&state, user.id, "Invalid URL").await;
+            return StatusCode::BAD_REQUEST.into_response();
+        }
+    };
 
     let client = reqwest::Client::new();
-    let mut res = match client.get(parsed).send().await {
+    let mut res = match client.get(url).send().await {
         Ok(r) => r,
         Err(err) => {
             error!(?err, "Failed to fetch URL");
@@ -153,74 +165,6 @@ pub async fn fetch_handler(
     }
 
     res
-}
-
-async fn resolve_and_validate(url: &Url) -> Result<()> {
-    let host = url.host_str().ok_or(Error::MissingHost)?;
-    if let Ok(ip) = host.parse::<IpAddr>() {
-        if is_forbidden_ip(ip) {
-            return Err(Error::ForbiddenIP);
-        }
-        return Ok(());
-    }
-
-    let port = url.port_or_known_default().unwrap_or(80);
-    let addrs: Vec<IpAddr> = lookup_host((host, port))
-        .await
-        .map_err(|_| Error::DNSResolution)?
-        .map(|s| s.ip())
-        .collect();
-
-    if addrs.is_empty() {
-        return Err(Error::DNSResolution);
-    }
-
-    if addrs.iter().any(|ip| is_forbidden_ip(*ip)) {
-        return Err(Error::ForbiddenIP);
-    }
-
-    Ok(())
-}
-
-fn is_forbidden_ip(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(v4) => is_forbidden_v4(v4),
-        IpAddr::V6(v6) => is_forbidden_v6(v6),
-    }
-}
-
-const fn is_forbidden_v4(ip: Ipv4Addr) -> bool {
-    matches!(
-        ip.octets(),
-        [127 | 10 | 0 | 224..=239 | 240..=255, ..]  // Loopback, private, unspecified, multicast, reserved
-        | [172, 16..=31, ..]                        // Private 172.16.0.0/12
-        | [192, 168, ..]                            // Private 192.168.0.0/16
-        | [169, 254, ..]                            // Link-local + metadata (169.254.169.254)
-        | [100, 64..=127, ..]                       // CGN 100.64.0.0/10
-        | [198, 18..=19, ..]                        // Benchmarking
-        | [192, 0, 2, _]                            // TEST-NET-1
-        | [198, 51, 100, _]                         // TEST-NET-2
-        | [203, 0, 113, _]                          // TEST-NET-3
-    )
-}
-
-fn is_forbidden_v6(ip: Ipv6Addr) -> bool {
-    if ip == Ipv6Addr::LOCALHOST || ip == Ipv6Addr::UNSPECIFIED {
-        return true;
-    }
-
-    let segs = ip.segments();
-    matches!(segs[0],
-        // Link-local fe80::/10
-        0xfe80..=0xfebf |
-        // Unique-local fc00::/7 (includes fd00::/8)
-        0xfc00..=0xfdff |
-        // Multicast ff00::/8
-        0xff00..=0xffff
-    ) ||
-    // IPv4-mapped ::ffff:0:0/96
-    ip.to_ipv4_mapped()
-        .is_some_and(is_forbidden_v4)
 }
 
 pub async fn paper_sizes_handler(

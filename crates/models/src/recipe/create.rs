@@ -225,8 +225,9 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_add_category {
-        use super::*;
+        use std::assert_matches;
 
+        use super::*;
         use crate::user::User;
 
         #[tokio::test]
@@ -250,7 +251,7 @@ mod tests {
 
             let res = Recipe::add_category(&state.mm, category, user_id).await;
 
-            assert!(matches!(res, Err(Error::Diesel(_))));
+            assert_matches!(res, Err(Error::Diesel(_)));
             Ok(())
         }
 

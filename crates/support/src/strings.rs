@@ -466,6 +466,8 @@ mod tests {
     }
 
     mod tests_find_indexes {
+        use std::assert_matches;
+
         use super::*;
 
         fn recipe1_ingredients<'a>() -> Vec<&'a str> {
@@ -488,14 +490,14 @@ mod tests {
         fn test_empty_text() {
             let got = find_indexes(&[], &["hello"]);
 
-            assert!(matches!(got, Err(Error::InvalidInput)));
+            assert_matches!(got, Err(Error::InvalidInput));
         }
 
         #[test]
         fn test_empty_targets() {
             let got = find_indexes(&["hello"], &[]);
 
-            assert!(matches!(got, Err(Error::InvalidInput)));
+            assert_matches!(got, Err(Error::InvalidInput));
         }
 
         #[test]

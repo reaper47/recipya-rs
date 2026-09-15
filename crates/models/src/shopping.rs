@@ -1252,6 +1252,8 @@ impl ShareShoppingList {
 
 #[cfg(test)]
 mod tests {
+    use std::assert_matches;
+
     use time::{Duration, OffsetDateTime};
 
     use test_db::default_config;
@@ -1383,7 +1385,7 @@ mod tests {
 
         let res = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await;
 
-        assert!(matches!(res, Err(Error::EntityNotFound { .. })));
+        assert_matches!(res, Err(Error::EntityNotFound { .. }));
         Ok(())
     }
 
@@ -1395,7 +1397,7 @@ mod tests {
 
         let got_res = ShoppingList::create(&state.mm, "WINTERSUN", user_id).await;
 
-        assert!(matches!(got_res, Err(Error::Diesel(_))));
+        assert_matches!(got_res, Err(Error::Diesel(_)));
         Ok(())
     }
 
@@ -1924,7 +1926,7 @@ mod tests {
 
                 let res = ShareShoppingList::new(&state.mm, list_id, user_id, None).await;
 
-                assert!(matches!(res, Ok(got) if got.id == share.id));
+                assert_matches!(res, Ok(got) if got.id == share.id);
                 Ok(())
             }
         }
@@ -2134,7 +2136,7 @@ mod tests {
                 let mut text = Vec::new();
                 let res = list.write_text(&mut text);
 
-                assert!(matches!(res, Err(Error::EmptyInput)));
+                assert_matches!(res, Err(Error::EmptyInput));
             }
 
             #[test]
@@ -2176,7 +2178,7 @@ mod tests {
                 let mut text = Vec::new();
                 let res = list.write_markdown(&mut text);
 
-                assert!(matches!(res, Err(Error::EmptyInput)));
+                assert_matches!(res, Err(Error::EmptyInput));
             }
 
             #[test]

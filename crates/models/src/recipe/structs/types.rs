@@ -100,13 +100,15 @@ mod tests {
     use super::*;
 
     mod tests_source {
+        use std::assert_matches;
+
         use super::*;
 
         #[test]
         fn test_source_new_is_url() {
             let source = Source::new("https://www.example.com");
 
-            assert!(matches!(source, Source::Url(_)));
+            assert_matches!(source, Source::Url(_));
             assert_eq!(source.as_str(), "https://www.example.com");
         }
 
@@ -114,36 +116,36 @@ mod tests {
         fn test_source_new_invalid_url() {
             let source = Source::new("not a url");
 
-            assert!(matches!(source, Source::Other(_)));
+            assert_matches!(source, Source::Other(_));
             assert_eq!(source.as_str(), "not a url");
         }
 
         #[test]
         fn test_source_new_handles_various_schemes() {
             let http = Source::new("http://example.com");
-            assert!(matches!(http, Source::Url(_)));
+            assert_matches!(http, Source::Url(_));
 
             let https = Source::new("https://example.com");
-            assert!(matches!(https, Source::Url(_)));
+            assert_matches!(https, Source::Url(_));
 
             let ftp = Source::new("ftp://example.com");
-            assert!(matches!(ftp, Source::Url(_)));
+            assert_matches!(ftp, Source::Url(_));
         }
 
         #[test]
         fn test_source_new_partial_urls_is_other() {
             let source = Source::new("www.example.com");
-            assert!(matches!(source, Source::Other(_)));
+            assert_matches!(source, Source::Other(_));
 
             let source2 = Source::new("example.com");
-            assert!(matches!(source2, Source::Other(_)));
+            assert_matches!(source2, Source::Other(_));
         }
 
         #[test]
         fn test_source_default() {
             let source = Source::default();
 
-            assert!(matches!(source, Source::Other(_)));
+            assert_matches!(source, Source::Other(_));
             assert_eq!(source.as_str(), "");
         }
 
@@ -168,17 +170,17 @@ mod tests {
         #[test]
         fn test_source_from_string() {
             let source: Source = String::from("https://example.com").into();
-            assert!(matches!(source, Source::Url(_)));
+            assert_matches!(source, Source::Url(_));
 
             let source2: Source = String::from("not a url").into();
-            assert!(matches!(source2, Source::Other(_)));
+            assert_matches!(source2, Source::Other(_));
         }
 
         #[test]
         fn test_source_from_option_string() {
             let source: Source = Some(String::from("https://example.com")).into();
 
-            assert!(matches!(source, Source::Url(_)));
+            assert_matches!(source, Source::Url(_));
             assert_eq!(source.as_str(), "https://example.com");
         }
 
@@ -187,7 +189,7 @@ mod tests {
             let opt: Option<String> = None;
             let source: Source = opt.into();
 
-            assert!(matches!(source, Source::Other(_)));
+            assert_matches!(source, Source::Other(_));
             assert_eq!(source.as_str(), "");
         }
 

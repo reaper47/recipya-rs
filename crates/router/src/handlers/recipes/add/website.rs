@@ -12,7 +12,9 @@ use axum::{
     extract::{State, ws::Message},
     response::IntoResponse,
 };
+use futures::{StreamExt, stream};
 use futures_util::lock::Mutex;
+use itertools::Itertools;
 use rand::RngExt;
 use reqwest::StatusCode;
 use tokio::{sync::mpsc, time::Instant};
@@ -30,6 +32,7 @@ use models::{
     },
     settings::UserSettingDetails,
 };
+use support::net::resolve_and_validate;
 
 use crate::{
     Error,
@@ -120,18 +123,25 @@ pub async fn add_website_post_handler(
     State(state): State<AppState>,
     Form(form): Form<RecipeScrapeForm>,
 ) -> impl IntoResponse {
-    let mut urls = form
+    let mut candidates = form
         .urls
         .lines()
         .filter_map(|line| Url::parse(line.trim_end_matches('/')).ok())
-        .collect::<Vec<_>>();
+        .collect_vec();
+    candidates.sort();
+    candidates.dedup();
+
+    let urls = stream::iter(candidates)
+        .map(|u| async move { resolve_and_validate(u).await.ok() })
+        .buffered(8)
+        .filter_map(|o| async move { o })
+        .collect::<Vec<_>>()
+        .await;
 
     if urls.is_empty() {
         broadcast_error(&state, user.id, "No valid URLs found.").await;
         return Error::InvalidPayload.into_response();
     }
-    urls.sort();
-    urls.dedup();
 
     scrape_recipes(state, urls, user.id);
 
