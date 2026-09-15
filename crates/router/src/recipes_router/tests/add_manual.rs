@@ -348,7 +348,7 @@ mod tests {
                 }
             }
 
-            let times = recipe.times.expect("Should have times");
+            let times = recipe.times.expect("should have times");
             pretty_assertions::assert_eq!(
                 got,
                 RecipeDetails {
@@ -356,7 +356,7 @@ mod tests {
                         id: recipe_id,
                         name: recipe.name,
                         description: recipe.description,
-                        image: Some(got.recipe.image.expect("A main image")),
+                        image: Some(got.recipe.image.expect("main image")),
                         r#yield: 6,
                         language: "eng".into(),
                         measurement_system_id: 2,
@@ -369,7 +369,7 @@ mod tests {
                         user_id,
                     },
                     additional_images: got.additional_images.clone(),
-                    category: recipe.category.expect("Should have category"),
+                    category: recipe.category.expect("should have category"),
                     cuisine: recipe.cuisine,
                     ingredients: match recipe.ingredients {
                         SectionComponents::Grouped(section_items) =>
@@ -502,7 +502,7 @@ mod tests {
                         user_id,
                         ..Default::default()
                     },
-                    category: recipe.category.expect("Should have category"),
+                    category: recipe.category.expect("should have category"),
                     ingredients: match recipe.ingredients {
                         SectionComponents::Grouped(section_items) =>
                             SectionComponents::Grouped(section_items),

@@ -41,7 +41,7 @@ pub fn auth_config() -> &'static AuthConfig {
         if std::env::var("APP_ENV").as_deref() == Ok("test") {
             AuthConfig::for_test()
         } else {
-            AuthConfig::load_from_file().expect("Failed to load auth config")
+            AuthConfig::load_from_file().expect("failed to load auth config")
         }
     })
 }
@@ -108,10 +108,10 @@ impl AuthConfig {
     fn decode_keys(mut self) -> Self {
         self.decoded_password_key = URL_SAFE_NO_PAD
             .decode(&self.password_key)
-            .expect("Invalid auth config password key");
+            .expect("invalid auth config password key");
         self.decoded_token_key = URL_SAFE_NO_PAD
             .decode(&self.token_key)
-            .expect("Invalid auth config token key");
+            .expect("invalid auth config token key");
         self
     }
 
@@ -122,8 +122,8 @@ impl AuthConfig {
             jwt_secret: URL_SAFE_NO_PAD.encode(generate_key()),
             decoded_password_key: URL_SAFE_NO_PAD
                 .decode(&password_key)
-                .expect("Valid password key"),
-            decoded_token_key: URL_SAFE_NO_PAD.decode(&token_key).expect("Valid token key"),
+                .expect("valid password key"),
+            decoded_token_key: URL_SAFE_NO_PAD.decode(&token_key).expect("valid token key"),
             password_key,
             token_key,
             token_duration_sec: 1800.0,

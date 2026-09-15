@@ -60,7 +60,7 @@ pub async fn create_app_state(config: Config) -> AppState {
         error!(?err, "Could not initialise app state");
         err
     })
-    .expect("Failed to initialise app state")
+    .expect("failed to initialise app state")
 }
 
 /// Builds a test server with anonymous access (no user logged in).
@@ -88,7 +88,7 @@ pub async fn build_server_logged_in(app_config: Config) -> Result<(TestServer, A
 
     let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
         .await?
-        .expect("User should be in database");
+        .expect("user should be in database");
 
     let token = generate_access_token(&user.id)?;
 
@@ -128,7 +128,7 @@ async fn build_server_ws_helper(
 
     let user = User::get_user_by_email(&state.mm, auth_email)
         .await?
-        .expect("User should be in database");
+        .expect("user should be in database");
 
     let mut server = TestServer::new_with_config(routes, config);
 
@@ -164,7 +164,7 @@ pub async fn get_token(mm: ModelManager) -> Result<String> {
 
     let user = User::get_user_by_email(&mm, email)
         .await?
-        .expect("User not found");
+        .expect("user not found");
 
     Ok(generate_access_token(&user.id)?)
 }

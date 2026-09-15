@@ -103,8 +103,8 @@ pub fn open_test_file(filename: &str) -> Cursor<Vec<u8>> {
         .join("data")
         .join(filename);
 
-    let mut file = File::open(path).expect("File to exist");
+    let mut file = File::open(path).expect("file to exist");
     let mut buf = Vec::new();
-    file.read_to_end(&mut buf).expect("Failed to read file");
+    file.read_to_end(&mut buf).expect("failed to read file");
     Cursor::new(buf)
 }

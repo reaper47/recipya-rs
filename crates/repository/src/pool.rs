@@ -65,7 +65,7 @@ struct CountResult {
 pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result::Error> {
     let db_url = format!(
         "{}/{db_name}",
-        std::env::var("DATABASE_URL").expect("Environment variable 'DATABASE_URL' not set")
+        std::env::var("DATABASE_URL").expect("environment variable 'DATABASE_URL' not set")
     );
 
     let conn = &mut diesel::PgConnection::establish(&db_url)

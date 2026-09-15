@@ -62,7 +62,7 @@ mod tests {
         let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
         let an_image = Uuid::new_v4();
         let now = {
-            let dt = OffsetDateTime::from_unix_timestamp(1_643_609_600).expect("Invalid timestamp");
+            let dt = OffsetDateTime::from_unix_timestamp(1_643_609_600).expect("invalid timestamp");
             PrimitiveDateTime::new(dt.date(), dt.time())
         };
         let today = OffsetDateTime::now_utc();
@@ -162,7 +162,7 @@ mod tests {
     async fn test_get_timeline_event_exists_ok() -> Result<()> {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let now = {
-            let dt = OffsetDateTime::from_unix_timestamp(1_543_609_500).expect("Invalid timestamp");
+            let dt = OffsetDateTime::from_unix_timestamp(1_543_609_500).expect("invalid timestamp");
             PrimitiveDateTime::new(dt.date(), dt.time())
         };
         let user_id = User::all(&state.mm).await?[0].id;

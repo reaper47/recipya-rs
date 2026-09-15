@@ -205,14 +205,14 @@ async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
             .await
-            .expect("Failed to install Ctrl+C handler");
+            .expect("failed to install Ctrl+C handler");
     };
 
     let terminate = async {
         cfg_select! {
             unix => {
                 signal::unix::signal(signal::unix::SignalKind::terminate())
-                    .expect("Failed to install signal handler.")
+                    .expect("failed to install signal handler")
                     .recv()
                     .await;
             },
@@ -226,4 +226,6 @@ async fn shutdown_signal() {
         () = ctrl_c => {},
         _ = terminate => {}
     }
+
+    tracing::info!("Received termination signal shutting down");
 }

@@ -53,7 +53,7 @@ pub fn default_config() -> Config {
 fn test_database_url() -> String {
     setup_env();
 
-    let db_url = env::var("DATABASE_URL").expect("Environment variable 'DATABASE_URL' to be set");
+    let db_url = env::var("DATABASE_URL").expect("environment variable 'DATABASE_URL' to be set");
     let base = db_url.trim_end_matches('/').trim_end_matches("/recipya");
 
     if base.ends_with("/recipya_test") {
@@ -136,9 +136,9 @@ impl TestDb {
             let migration_url = db_url.clone();
             tokio::task::spawn_blocking(move || {
                 diesel::PgConnection::establish(&migration_url)
-                    .expect("Failed to connect for migrations")
+                    .expect("failed to connect for migrations")
                     .run_pending_migrations(MIGRATIONS)
-                    .expect("Failed to run migrations");
+                    .expect("failed to run migrations");
             })
             .await
             .expect("Migration task failed");
@@ -228,7 +228,7 @@ async fn ensure_template_exists(admin_url: &str) -> Result<()> {
             diesel::PgConnection::establish(url.as_ref())
                 .expect("Connect to template db")
                 .run_pending_migrations(MIGRATIONS)
-                .expect("Migrate template db");
+                .expect("migrate template db");
         })
         .await?;
 
@@ -256,25 +256,25 @@ pub async fn test_model_manager() -> ModelManager {
     {
         let schema = schema.clone();
         tokio::task::spawn_blocking(move || {
-            let mut conn = diesel::PgConnection::establish(url).expect("Connect for schema setup");
+            let mut conn = diesel::PgConnection::establish(url).expect("connect for schema setup");
 
             diesel::RunQueryDsl::execute(
                 diesel::sql_query(format!("CREATE SCHEMA \"{schema}\"")),
                 &mut conn,
             )
-            .expect("Create schema");
+            .expect("create schema");
 
             diesel::RunQueryDsl::execute(
                 diesel::sql_query(format!("SET search_path TO \"{schema}\", public")),
                 &mut conn,
             )
-            .expect("Set search_path");
+            .expect("set search_path");
 
             conn.run_pending_migrations(MIGRATIONS)
-                .expect("Migrate schema");
+                .expect("migrate schema");
         })
         .await
-        .expect("Schema setup task failed");
+        .expect("schema setup task failed");
     }
 
     let mut cfg = ManagerConfig::<AsyncPgConnection>::default();
@@ -289,7 +289,7 @@ pub async fn test_model_manager() -> ModelManager {
                 &mut conn,
             )
             .await
-            .expect("Set search_path");
+            .expect("set search_path");
 
             conn.begin_test_transaction()
                 .await

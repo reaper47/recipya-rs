@@ -110,7 +110,7 @@ fn parse_args() -> std::result::Result<Args, lexopt::Error> {
 fn init_crypto() {
     ring::default_provider()
         .install_default()
-        .expect("Failed to install crypto provider");
+        .expect("failed to install crypto provider");
 }
 
 fn init_tracing() -> Result<()> {

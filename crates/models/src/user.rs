@@ -595,7 +595,7 @@ mod tests {
 
         let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
-            .expect("Test user should have been present");
+            .expect("test user should have been present");
         pretty_assertions::assert_eq!(user.email, TEST_USER_EMAIL);
         Ok(())
     }
@@ -671,7 +671,7 @@ mod tests {
 
         let got_user = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
 
         pretty_assertions::assert_eq!(user.email, got_user.email);
         Ok(())
@@ -684,7 +684,7 @@ mod tests {
 
         let got_user = User::get_user_auth_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
 
         pretty_assertions::assert_eq!(user.email, got_user.email);
         Ok(())
@@ -712,7 +712,7 @@ mod tests {
 
         let password_after = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present")
+            .expect("user should have been present")
             .password_hash;
         pretty_assertions::assert_ne!(password_before, password_after);
         Ok(())
@@ -728,7 +728,7 @@ mod tests {
 
         let user = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
         let password_after = user.password_hash;
         pretty_assertions::assert_ne!(password_before, password_after);
         Ok(())
@@ -743,7 +743,7 @@ mod tests {
 
         let user = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
         pretty_assertions::assert_eq!(user.is_remember_me, true);
         Ok(())
     }

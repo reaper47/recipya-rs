@@ -738,7 +738,7 @@ mod tests {
             );
             let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
                 .await?
-                .expect("Expected user");
+                .expect("expected user");
             pretty_assertions::assert_eq!(user.is_remember_me, false);
             Ok(())
         }

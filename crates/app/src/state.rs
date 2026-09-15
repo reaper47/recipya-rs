@@ -54,7 +54,7 @@ impl AppState {
             fs_support,
             mm: ModelManager::new(config.database_url).await?,
             recipe_cache: Arc::new(Mutex::new(RecipeCache::new(
-                NonZeroUsize::new(1000).expect("LRU to be initialized"),
+                NonZeroUsize::new(1000).expect("lru to be initialized"),
             ))),
             scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
             subscribers: Arc::new(Mutex::new(HashMap::new())),
@@ -84,7 +84,7 @@ impl AppState {
             fs_support,
             mm,
             recipe_cache: Arc::new(Mutex::new(RecipeCache::new(
-                NonZeroUsize::new(1000).expect("LRU to be initialized"),
+                NonZeroUsize::new(1000).expect("lru to be initialized"),
             ))),
             scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
             subscribers: Arc::new(Mutex::new(HashMap::new())),

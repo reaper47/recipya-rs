@@ -225,7 +225,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let report = ReportForCreate::new(
             ReportTypeFull::website(),
             Arc::try_unwrap(fetch_ctx.report_logs)
-                .expect("Report logs arc still has multiple owners")
+                .expect("report logs arc still has multiple owners")
                 .into_inner(),
             items,
             i64::try_from(total_exec_time.elapsed().as_millis()).unwrap_or_default(),

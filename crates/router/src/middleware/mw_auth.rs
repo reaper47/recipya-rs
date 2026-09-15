@@ -99,7 +99,7 @@ where
             let admin = User::get_first_admin(&app_state.mm)
                 .await
                 .map_err(|_| AuthRejection::unauthorized(&Error::NoUser))?
-                .expect("At least one admin user should be in the database");
+                .expect("at least one admin user should be in the database");
 
             return Ok(Self(admin));
         }

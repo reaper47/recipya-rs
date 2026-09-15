@@ -11,7 +11,7 @@ pub fn generate_sponsors_image() {
         .arg("install")
         .current_dir(&web_dir)
         .status()
-        .expect("Failed to run `npm install`");
+        .expect("failed to run `npm install`");
 
     if !npm_install.success() {
         error!("`npm install` failed");
@@ -22,7 +22,7 @@ pub fn generate_sponsors_image() {
         .args(["sponsorkit", "-o", "out"])
         .current_dir(web_dir)
         .status()
-        .expect("Failed to run `npx sponsorkit`");
+        .expect("failed to run `npx sponsorkit`");
 
     if !sponsorkit.success() {
         error!("npx sponsorkit` command failed");
