@@ -137,10 +137,9 @@ fn transform_ingredient_types<'a>(
                 }
                 IngredientType::Section(ing) => {
                     if let Some(section) = current_section {
-                        result.push((section, items.clone()));
-                        items.clear();
+                        result.push((section, std::mem::take(&mut items)));
                     }
-                    current_section = Some(ing.name.to_string());
+                    current_section = Some(ing.name);
                 }
             }
         }
@@ -165,7 +164,9 @@ fn transform_ingredient_types<'a>(
                         i32::try_from(num_items)
                             .inspect_err(|err| {
                                 error!(
-                                    "Failed to convert number of items '{num_items}' to i32: {err}"
+                                    ?err,
+                                    ?num_items,
+                                    "Failed to convert number of items to i32"
                                 );
                             })
                             .unwrap_or_default(),
@@ -203,7 +204,7 @@ impl From<BigOvenRecipe> for Recipe {
     #[allow(clippy::cast_precision_loss)]
     #[allow(clippy::cast_possible_truncation)]
     fn from(r: BigOvenRecipe) -> Self {
-        let url = Url::parse(&r.source.clone().unwrap_or_default()).ok();
+        let url = Url::parse(&r.source.unwrap_or_default()).ok();
 
         Self {
             r#type: AtType::Recipe.to_opt(),

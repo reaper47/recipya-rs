@@ -37,10 +37,7 @@ pub async fn timeline_event_get_edit_handler(
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
-            error!(
-                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{}': {err}",
-                user.id
-            );
+            error!(?timeline_id, ?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
             broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
@@ -65,10 +62,7 @@ pub async fn timeline_put_handler(
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
-            error!(
-                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{}': {err}",
-                user.id
-            );
+            error!(?timeline_id, ?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
             broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
@@ -98,7 +92,7 @@ pub async fn timeline_put_handler(
     let new_event = match RecipeTimeline::edit(&state.mm, user.id, &new_event_params).await {
         Ok(t) => t,
         Err(err) => {
-            error!("Failed to edit timeline event '{new_event_params:?}': {err}");
+            error!(?new_event_params, ?err, "Failed to edit timeline event");
             broadcast_error(&state, user.id, "Failed to edit timeline event.").await;
             return Error::Database.into_response();
         }
@@ -122,10 +116,7 @@ pub async fn timeline_get_handler(
     let recipe = match Recipe::get_recipe_only(&state.mm, user.id, recipe_id).await {
         Ok(recipe) => recipe,
         Err(err) => {
-            error!(
-                "Error fetching recipe '{recipe_id}' for user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
             broadcast_error(&state, user.id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
@@ -138,10 +129,7 @@ pub async fn timeline_get_handler(
     let events = match RecipeTimeline::all(&state.mm, recipe_id, user.id).await {
         Ok(components) => components.into_iter().map(Event::from).collect::<Vec<_>>(),
         Err(err) => {
-            error!(
-                "Error fetching timeline components for recipe '{recipe_id}' of user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error fetching timeline components");
             broadcast_error(&state, user.id, "Failed to fetch timeline components.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
@@ -188,10 +176,7 @@ pub async fn timeline_post_handler(
     )
     .await
     {
-        error!(
-            "Error creating timeline event for recipe with id '{recipe_id}' and user '{}': {err}",
-            user.id
-        );
+        error!(?recipe_id, user = ?user.id, ?err, "Error creating timeline event");
         broadcast_error(&state, user.id, "Could not create timeline event.").await;
         return Error::Database.into_response();
     }
@@ -214,10 +199,7 @@ pub async fn timeline_event_get_handler(
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
-            error!(
-                "Error fetching timeline event with id '{timeline_id}' for recipe with id '{recipe_id}' and user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
             broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }

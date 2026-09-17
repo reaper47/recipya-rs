@@ -364,12 +364,14 @@ impl From<RecipeDetails> for schema_org::Recipe {
 
 impl From<RecipeForCreate> for RecipeDetails {
     fn from(recipe_c: RecipeForCreate) -> Self {
+        let language = recipe_c.detect_language().code().to_string();
+
         Self {
             recipe: Recipe {
-                name: recipe_c.name.clone(),
-                description: recipe_c.description.clone(),
+                name: recipe_c.name,
+                description: recipe_c.description,
                 r#yield: recipe_c.r#yield.unwrap_or(4),
-                language: recipe_c.detect_language().code().to_string(),
+                language,
                 measurement_system_id: 1,
                 source: recipe_c.source,
                 ..Default::default()
@@ -388,7 +390,7 @@ impl From<RecipeForCreate> for RecipeDetails {
                 .map(|(idx, t)| {
                     let mut tool = ToolRecipe::from(&t);
                     tool.tool_order = i16::try_from(idx)
-                        .inspect_err(|err| error!("Failed to convert tool index to i16: {err}"))
+                        .inspect_err(|err| error!(?err, "Failed to convert tool index to i16"))
                         .unwrap_or_default();
                     tool
                 })
@@ -427,13 +429,14 @@ pub struct RecipeForCreate {
 impl RecipeForCreate {
     /// Returns the first image UUID if available and a vector of the remaining image UUIDs.
     pub fn first_and_rest_images(&self) -> (Option<Uuid>, Vec<Uuid>) {
-        match self.images.as_slice() {
-            [first, rest @ ..] => (
-                Some(*first).filter(|u| !u.is_nil()),
-                rest.iter().copied().filter(|u| !u.is_nil()).collect(),
-            ),
-            [] => (None, Vec::new()),
-        }
+        let Some((first, rest)) = self.images.split_first() else {
+            return (None, Vec::new());
+        };
+
+        (
+            Some(*first).filter(|u| !u.is_nil()),
+            rest.iter().copied().filter(|u| !u.is_nil()).collect(),
+        )
     }
 
     /// Determines the recipe's language.
@@ -574,7 +577,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
         let original_ingredients = schema.recipe_ingredient.clone();
         let ingredients = SectionComponents::try_from(original_ingredients)
             .inspect_err(|err| {
-                error!("Failed to parse ingredients: {err}");
+                error!(?err, "Failed to parse ingredients");
             })
             .unwrap_or_default();
         let measurement_system_id =
@@ -665,8 +668,8 @@ pub struct Ingredient {
 /// Represents the insertion of an ingredient-recipe association into the database.
 #[derive(Insertable)]
 #[diesel(table_name = schema::ingredients)]
-pub(crate) struct IngredientForInsert {
-    pub name: String,
+pub(crate) struct IngredientForInsert<'a> {
+    pub name: &'a str,
 }
 
 /// Represents the association between an ingredient and a recipe in the

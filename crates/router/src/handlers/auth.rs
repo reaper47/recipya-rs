@@ -74,9 +74,9 @@ pub async fn change_password_post_handler(
 /// Handles account confirmation once the user clicks their confirm button.
 pub async fn verify_email_handler(
     State(state): State<AppState>,
-    Query(query): Query<HashMap<String, String>>,
+    Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token = match get_token_from_query(&query) {
+    let token = match get_token_from_query(&mut query) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
@@ -93,7 +93,7 @@ pub async fn verify_email_handler(
 
     if verification_token.is_expired() {
         if let Err(err) = EmailVerificationToken::delete(&state.mm, &token).await {
-            error!("Failed to delete email verification token '{token}': {err}");
+            error!(?token, ?err, "Failed to delete email verification token");
             return Error::Database.into_response();
         }
         return Error::Gone.into_response();
@@ -106,17 +106,15 @@ pub async fn verify_email_handler(
     }
 
     if let Err(err) = EmailVerificationToken::delete(&state.mm, &token).await {
-        error!("Failed to delete email verification token '{token}': {err}");
+        error!(?token, ?err, "Failed to delete email verification token");
         return Error::Database.into_response();
     }
 
     templates::general::simple("Success", "Your account has been verified.").into_response()
 }
 
-fn get_token_from_query(query: &HashMap<String, String>) -> Result<String> {
-    query
-        .get("token")
-        .map_or_else(|| Err(Error::NoToken), |token| Ok(token.clone()))
+fn get_token_from_query(query: &mut HashMap<String, String>) -> Result<String> {
+    query.remove("token").ok_or(Error::NoToken)
 }
 
 /// Renders the forgot password request page.
@@ -161,7 +159,7 @@ pub async fn forgot_password_post_handler(
             };
 
             tokio::spawn(async move {
-                if let Err(err) = email.send(&payload) {
+                if let Err(err) = email.send(payload) {
                     error!("Could not send email 'Reset password': {:?}", err);
                 }
             });
@@ -178,9 +176,9 @@ pub async fn forgot_password_post_handler(
 /// Renders the forgot password reset page.
 pub async fn forgot_password_reset_handler(
     State(state): State<AppState>,
-    Query(query): Query<HashMap<String, String>>,
+    Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let token = match get_token_from_query(&query) {
+    let token = match get_token_from_query(&mut query) {
         Ok(token) => token,
         Err(err) => return err.into_response(),
     };
@@ -189,7 +187,7 @@ pub async fn forgot_password_reset_handler(
         Ok(Some(v)) => {
             if v.is_expired() {
                 if let Err(err) = PasswordResetToken::delete(&state.mm, &v.token).await {
-                    error!("Failed to delete expired token '{token}': {err}");
+                    error!(?token, ?err, "Failed to delete expired token");
                     return Error::Database.into_response();
                 }
 
@@ -209,7 +207,7 @@ pub async fn forgot_password_reset_handler(
             Error::Database.into_response()
         }
         Err(err) => {
-            error!("Failed to find the token '{token}' in the database: {err}");
+            error!(?token, ?err, "Failed to find the token in the database");
             Error::Database.into_response()
         }
     }
@@ -245,8 +243,9 @@ pub async fn forgot_password_reset_post_handler(
         }
         Err(err) => {
             error!(
-                "Failed to find the token '{}' in the database: {err}",
-                form.token
+                token = form.token,
+                ?err,
+                "Failed to find the token in the database",
             );
             return Error::Database.into_response();
         }
@@ -255,14 +254,14 @@ pub async fn forgot_password_reset_post_handler(
     let user_id = entry.user_id;
 
     if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
-        error!("Failed to update password for user '{user_id}': {err}",);
+        error!(?user_id, ?err, "Failed to update password for user",);
         let mut res = Error::Form.into_response();
         add_hx_message(&mut res, &MessageHtmx::error("Failed to update password."));
         return res;
     }
 
     if let Err(err) = PasswordResetToken::delete_all_for_user(&state.mm, user_id).await {
-        error!("Failed to delete expired token '{user_id}': {err}");
+        error!(?user_id, ?err, "Failed to delete expired token");
         return Error::Database.into_response();
     }
 
@@ -305,7 +304,7 @@ pub async fn login_post_handler(
         return res;
     }
 
-    let user = match User::get_user_by_email(&state.mm, String::from(&form.email)).await {
+    let user = match User::get_user_by_email(&state.mm, &form.email).await {
         Ok(user) => match user {
             None => {
                 let mut res = Error::LoginFailUsernameNotFound.into_response();
@@ -329,10 +328,10 @@ pub async fn login_post_handler(
         Ok(status) => status,
         Err(err) => {
             error!(
-                user = user.id.to_string(),
+                user = ?user.id,
                 ?form,
                 ?err,
-                "Password validation failed for user"
+                "Password validation failed"
             );
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
             add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
@@ -365,10 +364,7 @@ pub async fn login_post_handler(
                 &mut res,
                 &MessageHtmx::error("Failed to generate access token."),
             );
-            error!(
-                "Failed to generate access token for user {}: {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?err, "Failed to generate access token");
             return res;
         }
     };
@@ -386,10 +382,7 @@ pub async fn login_post_handler(
                 &mut res,
                 &MessageHtmx::error("Failed to generate refresh token."),
             );
-            error!(
-                "Failed to generate refresh token for user {}: {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?err, "Failed to generate refresh token");
             return res;
         }
     };
@@ -418,7 +411,7 @@ pub async fn logout_post_handler(
     if let Some(user) = user
         && let Err(err) = User::update_remember_me(&state.mm, user.id, false).await
     {
-        error!("Could not update remember_me for user {}: {err}", user.id);
+        error!(user = ?user.id, ?err, "Could not update remember_me");
     }
 
     clear_auth_cookies(&cookies);
@@ -471,13 +464,15 @@ pub async fn register_post_handler(
             return res;
         }
 
-        match User::get_user_by_email(&state.mm, form.email.clone()).await {
+        match User::get_user_by_email(&state.mm, &form.email).await {
             Ok(Some(_)) => Redirect::to("/recipes").into_response(),
             Ok(_) => {
+                let username = form.email.clone();
+
                 let user = match User::new(&state.mm, form.to_user()).await {
                     Ok(id) => id,
                     Err(err) => {
-                        error!("Error creating user: {}", err);
+                        error!(?err, "Error creating user");
                         let mut res = Error::Model(err).into_response();
                         add_hx_message(
                             &mut res,
@@ -496,7 +491,7 @@ pub async fn register_post_handler(
                     {
                         Ok(entry) => entry,
                         Err(err) => {
-                            error!("Error creating email verification token: {err}");
+                            error!(?err, "Error creating email verification token");
                             let mut res = Error::Model(err).into_response();
                             add_hx_message(
                                 &mut res,
@@ -510,14 +505,14 @@ pub async fn register_post_handler(
                     drop(config);
 
                     tokio::spawn(async move {
-                        service.send(&Email {
+                        service.send(Email {
                             to: user.email,
                             subject: "Verify your email address".into(),
                             body: String::new(),
                             template: Some(Template::Intro),
                             data: Some(Data {
                                 token: token_entry.token,
-                                username: form.email,
+                                username,
                                 url: base_url,
                             }),
                         })
@@ -527,7 +522,7 @@ pub async fn register_post_handler(
                 (StatusCode::SEE_OTHER, [("HX-Redirect", "/auth/login")]).into_response()
             }
             Err(err) => {
-                error!("Failed to fetch user from database: {err}");
+                error!(?err, "Failed to fetch user from database");
 
                 let mut res = Error::FailFetch.into_response();
                 add_hx_message(
@@ -571,7 +566,7 @@ pub async fn user_delete_handler(
                 .into_response()
         }
         Err(err) => {
-            error!("Could not delete user with id {}: {err}", user.id);
+            error!(user = ?user.id, ?err, "Could not delete user with id");
             Error::DeleteUser.into_response()
         }
     }

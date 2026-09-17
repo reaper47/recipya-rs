@@ -192,10 +192,8 @@ pub struct MealieRecipeComment {
 }
 
 impl MealieRecipeComment {
-    pub fn author(&self) -> Option<String> {
-        self.full_name
-            .clone()
-            .map_or_else(|| self.username.clone(), Some)
+    pub fn author(&self) -> Option<&str> {
+        self.full_name.as_deref().or(self.username.as_deref())
     }
 }
 
@@ -227,14 +225,13 @@ impl MealieRecipe {
             .recipe_category
             .iter()
             .flatten()
-            .map(|c| c.name.clone());
-
-        let category = categories.next().map(|c| vec![c]).unwrap_or_default();
+            .map(|c| &c.name)
+            .cloned();
 
         (
-            category,
+            categories.next().into_iter().collect(),
             categories
-                .chain(self.tags.iter().flatten().map(|tag| tag.name.clone()))
+                .chain(self.tags.iter().flatten().map(|tag| &tag.name).cloned())
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
         )
@@ -242,14 +239,10 @@ impl MealieRecipe {
 }
 
 impl MealieUser {
-    pub fn author(&self) -> Option<String> {
-        self.full_name.clone().map_or_else(
-            || {
-                self.username
-                    .clone()
-                    .map_or_else(|| self.email.clone(), Some)
-            },
-            Some,
-        )
+    pub fn author(&self) -> Option<&str> {
+        self.full_name
+            .as_deref()
+            .or(self.username.as_deref())
+            .or(self.email.as_deref())
     }
 }

@@ -157,12 +157,7 @@ mod tests {
         user_id: Uuid,
         recipe_id: i64,
     ) -> ShareRecipe {
-        let mut conn = state
-            .mm
-            .pool
-            .get()
-            .await
-            .expect("a connection from the pool");
+        let mut conn = state.mm.pool.get().await.expect("connection from the pool");
 
         schema::shares_recipes::table
             .filter(
@@ -172,6 +167,6 @@ mod tests {
             )
             .first::<ShareRecipe>(&mut conn)
             .await
-            .expect("a share recipe must have been fetched")
+            .expect("share recipe must have been fetched")
     }
 }

@@ -26,7 +26,7 @@ impl SmtpEmailSender {
 }
 
 impl EmailSender for SmtpEmailSender {
-    fn send_email(&self, email: &Email) -> Result<()> {
+    fn send_email(&self, email: Email) -> Result<()> {
         let from: Mailbox = format!("Recipya <{}>", email_config().smtp_from_email)
             .parse()
             .map_err(|_| Error::MissingConfig)?;
@@ -36,9 +36,9 @@ impl EmailSender for SmtpEmailSender {
             .from(from.clone())
             .reply_to(from)
             .to(to)
-            .subject(&email.subject)
+            .subject(email.subject)
             .header(ContentType::TEXT_HTML)
-            .body(email.body.clone())?;
+            .body(email.body)?;
 
         let username = &email_config().smtp_username;
         let password = &email_config().smtp_password;
@@ -54,16 +54,16 @@ impl EmailSender for SmtpEmailSender {
             }
             Err(err) => {
                 error!(
-                    "Failed to set up relay {}: {:?}",
-                    email_config().smtp_host,
-                    err
+                    config = email_config().smtp_host,
+                    ?err,
+                    "Failed to set up relay"
                 );
                 return Err(Error::General(err.to_string()));
             }
         };
 
         if let Err(err) = mailer.send(&email) {
-            error!("Send email failed: {:?}", err);
+            error!(?err, "Send email failed");
             return Err(Error::General(err.to_string()));
         }
 

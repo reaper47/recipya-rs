@@ -37,7 +37,7 @@ pub async fn broadcast_import_done_toast(
     state.hide_broadcast(user_id).await;
 
     let num_success = i64::try_from(recipe_ids.len())
-        .inspect_err(|err| error!("Failed to cast num success '{}': {err}", recipe_ids.len()))
+        .inspect_err(|err| error!(len = recipe_ids.len(), ?err, "Failed to cast num success"))
         .unwrap_or(i64::MAX);
     let num_skipped = num_recipes - num_success;
 
@@ -64,7 +64,7 @@ pub async fn broadcast_import_done_toast(
     }
 
     if let Err(err) = report.insert(&state.mm).await {
-        error!("Error inserting report into the database: {err}");
+        error!(?err, "Error inserting report into the database");
     }
 }
 
@@ -76,7 +76,7 @@ pub async fn fetch_categories_keywords(
     let categories = match User::categories(&state.mm, user_id).await {
         Ok(categories) => categories,
         Err(err) => {
-            error!("Error fetching recipe categories: {err}");
+            error!(?err, "Error fetching recipe categories");
             broadcast_error(state, user_id, "Error fetching recipe categories.").await;
             return Err(Error::Database);
         }
@@ -85,7 +85,7 @@ pub async fn fetch_categories_keywords(
     let keywords = match User::keywords(&state.mm, user_id).await {
         Ok(keywords) => keywords,
         Err(err) => {
-            error!("Error fetching recipe keywords: {err}");
+            error!(?err, "Error fetching recipe keywords");
             broadcast_error(state, user_id, "Error fetching recipe keywords.").await;
             return Err(Error::Database);
         }
@@ -264,7 +264,7 @@ pub async fn fetch_view_recipe(
     let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
         Ok(recipe) => recipe,
         Err(err) => {
-            error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}");
+            error!(?recipe_id, ?user_id, ?err, "Error fetching recipe");
             broadcast_error(state, user_id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
@@ -283,7 +283,7 @@ pub async fn fetch_view_recipe(
     let formatted_times = match FormattedTimes::from_times(&recipe.times) {
         Ok(formatted_times) => formatted_times,
         Err(err) => {
-            error!("Failed to format times for recipe '{recipe_id}': {err}");
+            error!(?recipe_id, ?err, "Failed to format times for recipe");
             return Err(Error::BadTimeFormat);
         }
     };

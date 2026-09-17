@@ -99,7 +99,7 @@ where
             let admin = User::get_first_admin(&app_state.mm)
                 .await
                 .map_err(|_| AuthRejection::unauthorized(&Error::NoUser))?
-                .expect("At least one admin user should be in the database");
+                .expect("at least one admin user should be in the database");
 
             return Ok(Self(admin));
         }
@@ -239,7 +239,7 @@ pub async fn mw_refresh_token(
                 return Ok(Redirect::to("/auth/login").into_response());
             }
             Err(err) => {
-                error!("Database error finding refresh token: {err}");
+                error!(?err, "Database error finding refresh token");
                 return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }
         };
@@ -257,19 +257,19 @@ pub async fn mw_refresh_token(
 
         if refresh_token_entry.is_used {
             error!("TOKEN REUSE DETECTED!");
-            error!("Token: {token}");
-            error!("User ID: {user_id}");
-            error!("Originally used at: {:?}", refresh_token_entry.used_at);
+            error!(?token, "Token");
+            error!(?user_id, "User ID");
+            error!(used_at = ?refresh_token_entry.used_at, "Originally used at");
 
             if let Err(err) = RefreshToken::delete_all_for_user(&state.mm, user_id).await {
-                error!("Failed to delete all refresh tokens for user: {err}");
+                error!(?err, "Failed to delete all refresh tokens for user");
             }
 
             if let Some(service) = state.email_service
                 && let Ok(Some(user)) = User::get_user_by_id(&state.mm, user_id).await
             {
                 tokio::spawn(async move {
-                    service.send(&Email {
+                    service.send(Email {
                         to: user.email,
                         subject: "Security Alert: Suspicious Activity Detected".into(),
                         body: String::new(),
@@ -284,7 +284,7 @@ pub async fn mw_refresh_token(
         }
 
         if let Err(err) = RefreshToken::mark_as_used(&state.mm, token).await {
-            error!("Failed to mark refresh token as used: {err}");
+            error!(?err, "Failed to mark refresh token as used");
             clear_auth_cookies(&cookies);
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
@@ -297,7 +297,7 @@ pub async fn mw_refresh_token(
         {
             Ok(entry) => entry,
             Err(err) => {
-                error!("Failed to create new refresh token: {err}");
+                error!(?err, "Failed to create new refresh token");
                 clear_auth_cookies(&cookies);
                 return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }
@@ -306,7 +306,7 @@ pub async fn mw_refresh_token(
         let access_token = match generate_access_token(&refresh_token_entry.user_id) {
             Ok(token) => token,
             Err(err) => {
-                error!("Failed to generate access token: {err}");
+                error!(?err, "Failed to generate access token");
                 clear_auth_cookies(&cookies);
                 return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }

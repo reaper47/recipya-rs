@@ -12,7 +12,7 @@ use tracing::error;
 use wreq::Client;
 use wreq_util::Emulation;
 
-use support::fs::MockFs;
+use support::{fs::MockFs, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
 
 use crate::{ENABLE_JS, client::HttpClient};
 use crate::{FORBIDDEN, websites::Website};
@@ -75,7 +75,7 @@ pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
         fs::File::create(path)
             .unwrap()
             .write(&fetch_html(url).await?)
-            .inspect_err(|err| error!("Could not write {website}: {err}"))
+            .inspect_err(|err| error!(?website, ?err, "Could not write"))
             .unwrap();
     }
 
@@ -93,7 +93,10 @@ async fn fetch_html(url: &str) -> Result<Bytes> {
     let text = String::from_utf8_lossy(&bytes_vec);
 
     if is_client_error || text.contains(ENABLE_JS) || text.contains(FORBIDDEN) {
-        let client = Client::builder().emulation(Emulation::Chrome145).build()?;
+        let client = Client::builder()
+            .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
+            .emulation(Emulation::Chrome145)
+            .build()?;
         let resp = client.get(url).send().await?;
         Ok(resp.bytes().await?)
     } else {
@@ -172,11 +175,11 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
                 fs::File::create(path)
                     .unwrap()
                     .write(&res.bytes().await?)
-                    .inspect_err(|err| error!("Could not write {website}: {err}"))
+                    .inspect_err(|err| error!(?website, ?err, "Could not write"))
                     .unwrap();
             }
             Err(err) => {
-                error!("Could not fetch {website}: {err}");
+                error!(?website, ?err, "Could not fetch");
             }
         }
     }

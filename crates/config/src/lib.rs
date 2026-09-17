@@ -22,7 +22,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             base_url: "http://localhost:8078".into(),
-            database_url: "postgres://postgres:postgres@localhost:5432/recipya".into(),
+            database_url: "postgres://postgres:postgres@localhost:5432".into(),
             states: States::default(),
         }
     }
@@ -31,21 +31,9 @@ impl Default for Config {
 impl Config {
     /// Populates the Config's fields from the environment variables.
     pub fn load_from_env() -> Result<Self> {
-        let database_url = {
-            let base = get_env_on_load("DATABASE_URL")?
-                .trim_end_matches('/')
-                .to_string();
-
-            if base.ends_with("/recipya") {
-                base
-            } else {
-                format!("{base}/recipya")
-            }
-        };
-
         Ok(Self {
             base_url: get_env_on_load("RECIPYA_BASE_URL")?,
-            database_url,
+            database_url: format!("{}/recipya", get_env_on_load("DATABASE_URL")?),
             states: States {
                 autologin: AutologinState::from(get_env_on_load("RECIPYA_IS_AUTOLOGIN")? == "true"),
                 demo: DemoState::from(get_env_on_load("RECIPYA_IS_DEMO")? == "true"),

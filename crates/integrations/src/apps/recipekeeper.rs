@@ -10,6 +10,7 @@ use schema_org::{
     at_context,
     field::{RecipeImageFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeYieldFieldEnum},
 };
+use support::strings::SplitFirstOwned;
 
 use crate::{
     Result,
@@ -193,18 +194,11 @@ where
     Ok(doc
         .select(&Selector::parse("div.recipe-details").unwrap())
         .map(|div| {
-            let (main_category, mut keywords) = match div
+            let (main_category, mut keywords) = div
                 .select(&sel_course)
                 .map(|el| el.text().collect::<String>())
                 .collect::<Vec<_>>()
-                .as_slice()
-            {
-                [first, rest @ ..] => (
-                    Some(first.clone()).filter(|s| !s.trim().is_empty()),
-                    rest.to_vec(),
-                ),
-                [] => (None, vec![]),
-            };
+                .split_first_owned();
 
             let other_keywords = div
                 .select(&sel_cat)

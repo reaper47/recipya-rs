@@ -11,10 +11,10 @@ use app::jobs::clean_media;
 use app::state::AppState;
 use config::{AutologinState, Config, DataDir};
 use models::{
-    nutrition::NutritionDataSource,
     tokens::EmailVerificationToken,
     user::{User, UserForCreate},
 };
+use nutrition::NutritionDataSource;
 use recipya_scraper::AppHttpClient;
 use repository::ModelManager;
 use router::copy_to_fs;
@@ -40,12 +40,13 @@ pub async fn server() -> Result<()> {
     if config.states.autologin == AutologinState::On
         && let Err(err) = init_autologin_user(&state.mm).await
     {
-        error!("Autologin enabled. Error initializing autologin user: {err}");
+        error!(?err, "Autologin enabled. Error initializing autologin user");
     }
 
+    let state_clone = state.clone();
     start_cron_jobs(
-        Arc::new(state.clone().mm),
-        Arc::new(state.clone().data_dir),
+        Arc::new(state_clone.mm),
+        Arc::new(state_clone.data_dir),
         Arc::clone(&state.fs_support),
     )
     .await?;
@@ -55,9 +56,9 @@ pub async fn server() -> Result<()> {
         NutritionDataSource::update_all(&mm).await;
     });
 
-    let router = router(state.clone())?
+    let router = router(&state)?
         .layer(CookieManagerLayer::new())
-        .with_state(state.clone());
+        .with_state(state);
 
     let listener = TcpListener::bind("0.0.0.0:8078").await?;
     info!("Serving at http://{}", listener.local_addr()?);
@@ -112,7 +113,7 @@ fn copy_assets_to_fs() -> Result<()> {
 }
 
 async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
-    let admin_email: String = "admin@autologin.com".into();
+    let admin_email = "admin@autologin.com".to_string();
 
     match User::get_user_by_email(mm, &admin_email).await {
         Ok(Some(_)) => {
@@ -126,21 +127,23 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
                 .map(char::from)
                 .collect::<String>();
 
+            let created_msg = format!(
+                "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
+            );
+
             match User::new(
                 mm,
                 UserForCreate {
-                    email: admin_email.clone(),
-                    password_clear: password.clone(),
+                    email: admin_email,
+                    password_clear: password,
                 },
             )
             .await
             {
                 Ok(user) => {
-                    info!(
-                        "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
-                    );
+                    info!(created_msg);
                     if let Err(err) = EmailVerificationToken::verify_user_email(mm, user.id).await {
-                        error!("Error confirming autologin user: {err}");
+                        error!(?err, "Error confirming autologin user");
                         return Err(Error::Server(err.to_string()));
                     }
                     Ok(())
@@ -174,7 +177,7 @@ async fn start_cron_jobs(
 
             Box::pin(async move {
                 if let Err(err) = clean_media(mm, data_dir, fs_support).await {
-                    error!("CleanMedia: Failed to run job: {err}");
+                    error!(?err, "CleanMedia: Failed to run job");
                 }
             })
         })?)
@@ -202,14 +205,14 @@ async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
             .await
-            .expect("Failed to install Ctrl+C handler");
+            .expect("failed to install Ctrl+C handler");
     };
 
     let terminate = async {
         cfg_select! {
             unix => {
                 signal::unix::signal(signal::unix::SignalKind::terminate())
-                    .expect("Failed to install signal handler.")
+                    .expect("failed to install signal handler")
                     .recv()
                     .await;
             },
@@ -223,4 +226,6 @@ async fn shutdown_signal() {
         () = ctrl_c => {},
         _ = terminate => {}
     }
+
+    tracing::info!("Received termination signal shutting down");
 }

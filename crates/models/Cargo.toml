@@ -34,6 +34,7 @@ itertools.workspace = true
 krilla.workspace = true
 lru.workspace = true
 math.workspace = true
+nutrition.workspace = true
 paste = "1.0.15"
 pdf = { path = "../pdf" }
 recipya-scraper.workspace = true

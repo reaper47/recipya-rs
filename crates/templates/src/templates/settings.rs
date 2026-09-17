@@ -7,10 +7,10 @@ use config::{DemoState, States};
 use math::cooking::units::system::MeasurementSystem;
 use models::Recipe;
 use models::data::Data;
-use models::nutrition::NutritionDataSource;
 use models::recipe::structs::recipe::Category;
 use models::settings::{Theme, UserSettingDetails};
 use models::user::User;
+use nutrition::NutritionDataSource;
 
 use crate::templates::common::cancel_submit_form_actions;
 use crate::templates::icons::{

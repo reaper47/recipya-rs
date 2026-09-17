@@ -152,11 +152,11 @@ impl ReportForCreate {
                     .map(|log| ReportLogForInsert {
                         report_id,
                         seq_num: log.seq_num,
-                        entity_name: log.entity_name.clone(),
+                        entity_name: log.entity_name.as_str(),
                         recipe_id: log.recipe_id,
                         level_id: log.level_id,
-                        error_code: log.error_code.clone(),
-                        error_reason: log.error_reason.clone(),
+                        error_code: log.error_code.as_deref(),
+                        error_reason: log.error_reason.as_deref(),
                         exec_time_ms: log.exec_time_ms,
                     })
                     .collect::<Vec<_>>(),

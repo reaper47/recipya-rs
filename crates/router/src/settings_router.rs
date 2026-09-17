@@ -353,7 +353,7 @@ mod tests {
     }
 
     mod tests_nutrition {
-        use models::nutrition::NutritionDataSource;
+        use nutrition::NutritionDataSource;
 
         use super::*;
         use crate::schemas::settings::NutritionSourcePayload;

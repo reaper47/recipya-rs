@@ -82,18 +82,18 @@ mod tests {
 
         let got = PaperSize::get_all(&state.mm).await?;
 
-        let keys: Vec<String> = got.keys().cloned().collect();
+        let keys: Vec<&String> = got.keys().collect();
         pretty_assertions::assert_eq!(
             keys,
             vec![
-                "Standard US Sizes".to_string(),
-                "US Envelope Sizes".to_string(),
-                "ISO Envelopes".to_string(),
-                "ISO A Sizes".to_string(),
-                "ISO B Sizes".to_string(),
-                "ISO C Sizes".to_string(),
-                "North American ANSI Sizes".to_string(),
-                "North American ARCH Sizes".to_string(),
+                &"Standard US Sizes".to_string(),
+                &"US Envelope Sizes".to_string(),
+                &"ISO Envelopes".to_string(),
+                &"ISO A Sizes".to_string(),
+                &"ISO B Sizes".to_string(),
+                &"ISO C Sizes".to_string(),
+                &"North American ANSI Sizes".to_string(),
+                &"North American ARCH Sizes".to_string(),
             ]
         );
         Ok(())

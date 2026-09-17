@@ -4,6 +4,7 @@ use std::io::{BufRead, Read, Seek};
 use std::path::Path;
 
 use humantime::parse_duration;
+use itertools::Itertools;
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use tracing::error;
@@ -136,14 +137,14 @@ impl From<CookmateRecipe<'_>> for Recipe {
             .items
             .into_iter()
             .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>();
+            .collect_vec();
         let num_comments = comments.len();
 
         let mut keywords = categories
             .map(|(_, b)| {
                 b.iter()
                     .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_lowercase()))
-                    .collect::<Vec<_>>()
+                    .collect_vec()
             })
             .unwrap_or_default();
 
@@ -151,7 +152,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
             &r.tags
                 .into_iter()
                 .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_lowercase()))
-                .collect::<Vec<_>>(),
+                .collect_vec(),
         );
 
         Self {
@@ -177,7 +178,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                 .collect(),
             comment_count: vec![
                 i32::try_from(num_comments)
-                    .inspect_err(|err| error!("Failed to convert comment_count to i32: {err}"))
+                    .inspect_err(|err| error!(?err, "Failed to convert comment_count to i32"))
                     .unwrap_or_default(),
             ]
             .into_iter()
@@ -187,8 +188,9 @@ impl From<CookmateRecipe<'_>> for Recipe {
                 Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
                 Err(err) => {
                     error!(
-                        "Failed to parse cook time '{}' of an AccuChef recipe: {err}",
-                        r.cooktime
+                        cooktime = ?r.cooktime,
+                        ?err,
+                        "Failed to parse cook time of an AccuChef recipe",
                     );
                     vec![]
                 }
@@ -202,7 +204,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                 .into_iter()
                 .filter(|image| !image.trim().is_empty())
                 .map(|s| RecipeImageFieldEnum::URL(s.to_string()))
-                .collect::<Vec<_>>(),
+                .collect_vec(),
             is_based_on: if r.source.is_empty() {
                 to_is_based_on(&r.url)
             } else {
@@ -218,10 +220,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
             prep_time: match parse_duration(&r.preptime) {
                 Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
                 Err(err) => {
-                    error!(
-                        "Failed to parse prep time '{}' of a CookMate XML recipe: {err}",
-                        r.preptime
-                    );
+                    error!(preptime = ?r.preptime, ?err, "Failed to parse prep time of a CookMate XML recipe");
                     vec![]
                 }
             },
@@ -257,7 +256,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                             ..Default::default()
                         }))
                     })
-                    .collect::<Vec<_>>(),
+                    .collect_vec(),
             )
             .filter(|v| !v.is_empty())
             .unwrap_or_default(),
@@ -344,12 +343,8 @@ where
     let notes = doc
         .select(&Selector::parse("span[itemprop='note']").unwrap())
         .fold(List::new(), |mut acc, el| {
-            acc.items.extend(
-                el.text()
-                    .map(str::trim)
-                    .map(Cow::Borrowed)
-                    .collect::<Vec<_>>(),
-            );
+            acc.items
+                .extend(el.text().map(str::trim).map(Cow::Borrowed).collect_vec());
             acc
         });
 
@@ -377,12 +372,8 @@ where
         nutrition: doc
             .select(&Selector::parse("span[itemprop='nutrition']").unwrap())
             .fold(List::new(), |mut acc, el| {
-                acc.items.extend(
-                    el.text()
-                        .map(str::trim)
-                        .map(Cow::Borrowed)
-                        .collect::<Vec<_>>(),
-                );
+                acc.items
+                    .extend(el.text().map(str::trim).map(Cow::Borrowed).collect_vec());
                 acc
             }),
         rating: doc
@@ -403,12 +394,12 @@ where
             .select(&Selector::parse("span[itemprop='recipeCategory']").unwrap())
             .map(|el| el.text().collect::<String>())
             .map(Cow::Owned)
-            .collect::<Vec<_>>(),
+            .collect_vec(),
         tags: doc
             .select(&Selector::parse("span[itemprop='recipeTag']").unwrap())
             .map(|el| el.text().collect::<String>())
             .map(Cow::Owned)
-            .collect::<Vec<_>>(),
+            .collect_vec(),
         ..Default::default()
     };
 
@@ -461,7 +452,7 @@ mod tests {
             let mut got = parse_backup(buf)?;
 
             let want = results::xml_recipes();
-            assert!(match got[4].image[0].clone() {
+            assert!(match &got[4].image[0] {
                 schema_org::field::FieldEnum22::ImageObject(_) => false,
                 schema_org::field::FieldEnum22::URL(u) =>
                     u.starts_with("/tmp") || u.contains(r"\Temp\"),
@@ -481,12 +472,12 @@ mod tests {
             let want = results::xml2_recipes();
             let want = want
                 .into_iter()
-                .zip(got.clone())
+                .zip(&got)
                 .map(|(mut a, b)| {
-                    a.image = b.image;
+                    a.image = b.image.clone();
                     a
                 })
-                .collect::<Vec<_>>();
+                .collect_vec();
             pretty_assertions::assert_eq!(got, want);
             Ok(())
         }

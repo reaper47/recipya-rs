@@ -25,6 +25,7 @@ schema-org.workspace = true
 scraper.workspace = true
 serde_json.workspace = true
 support.workspace = true
+tokio.workspace = true
 tracing.workspace = true
 unicode-normalization = "0.1.25"
 url.workspace = true

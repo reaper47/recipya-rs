@@ -225,17 +225,18 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod tests_add_category {
-        use super::*;
+        use std::assert_matches;
 
+        use super::*;
         use crate::user::User;
 
         #[tokio::test]
         async fn test_create_new_ok() -> Result<()> {
             let (_, state) = build_server_logged_in(default_config()).await?;
-            let user = User::all(&state.mm).await?[0].clone();
+            let user_id = User::all(&state.mm).await?[0].id;
             let category = "fish";
 
-            Recipe::add_category(&state.mm, category, user.id).await?;
+            Recipe::add_category(&state.mm, category, user_id).await?;
 
             assert_category(state, category).await?;
             Ok(())
@@ -244,13 +245,13 @@ mod tests {
         #[tokio::test]
         async fn test_create_new_duplicate_err() -> Result<()> {
             let (_, state) = build_server_logged_in(default_config()).await?;
-            let user = User::all(&state.mm).await?[0].clone();
+            let user_id = User::all(&state.mm).await?[0].id;
             let category = "fish";
-            Recipe::add_category(&state.mm, category, user.id).await?;
+            Recipe::add_category(&state.mm, category, user_id).await?;
 
-            let res = Recipe::add_category(&state.mm, category, user.id).await;
+            let res = Recipe::add_category(&state.mm, category, user_id).await;
 
-            assert!(matches!(res, Err(Error::Diesel(_))));
+            assert_matches!(res, Err(Error::Diesel(_)));
             Ok(())
         }
 

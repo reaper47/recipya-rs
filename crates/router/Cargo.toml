@@ -1,6 +1,8 @@
 [package]
 name = "router"
-version = "0.0.0"
+version.workspace = true
+publish = false
+
 authors.workspace = true
 categories.workspace = true
 description.workspace = true
@@ -15,7 +17,6 @@ rust-version.workspace = true
 [dependencies]
 app.workspace = true
 axum-extra = { version = "0.12.6", features = ["cookie", "form"] }
-axum-test = { workspace = true }
 auth.workspace = true
 axum.workspace = true
 axum-htmx = "0.8.1"
@@ -33,7 +34,8 @@ iso8601.workspace = true
 itertools.workspace = true
 math.workspace = true
 mime_guess = "2.0.5"
-models = { workspace = true }
+models.workspace = true
+nutrition.workspace = true
 rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
@@ -42,7 +44,6 @@ rust-embed = { version = "8.11.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
-serde_qs = "1.1.1"
 strum_macros.workspace = true
 support.workspace = true
 templates.workspace = true
@@ -57,7 +58,7 @@ uuid.workspace = true
 validator.workspace = true
 
 [dev-dependencies]
-auth = { workspace = true, features = ["test-helpers"] }
+auth.workspace = true
 axum-test.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true

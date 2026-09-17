@@ -56,12 +56,11 @@ impl Parser<'_> {
             .filter_map(|el| {
                 let json = el.inner_html().split_whitespace().join(" ");
 
-                let value: serde_json::Value = serde_json::from_str(&json).ok()?;
-                let object = value
-                    .as_array()
-                    .and_then(|arr| arr.first())
-                    .cloned()
-                    .unwrap_or(value);
+                let value: Value = serde_json::from_str(&json).ok()?;
+                let object = match value {
+                    Value::Array(mut arr) if !arr.is_empty() => arr.remove(0),
+                    other => other,
+                };
                 let type_recipe = AtType::Recipe.to_opt();
 
                 let is_recipe_type = |obj: &Value| match obj.get("@type") {
@@ -75,34 +74,28 @@ impl Parser<'_> {
                 if is_recipe_type(&object) {
                     return serde_json::from_value::<Recipe>(object)
                         .inspect_err(|err| {
-                            error!(
-                                error = err.to_string(),
-                                url = self.url,
-                                json = json,
-                                "Error parsing schema"
-                            );
+                            error!(?err, url = self.url, ?json, "Error parsing schema");
                         })
                         .ok();
                 }
 
-                object
-                    .get("@graph")
-                    .and_then(|g| g.as_array())
-                    .and_then(|graph| {
-                        graph
-                            .iter()
-                            .find(|item| is_recipe_type(item))
-                            .and_then(|item| {
-                                serde_json::from_value::<Recipe>(item.clone())
-                                    .inspect_err(|err| {
-                                        error!(
-                                            url = self.url,
-                                            error = err.to_string(),
-                                            "Parsing failed"
-                                        );
-                                    })
-                                    .ok()
+                let Value::Object(mut map) = object else {
+                    return None;
+                };
+                let graph = map.remove("@graph")?;
+                let Value::Array(items) = graph else {
+                    return None;
+                };
+
+                items
+                    .into_iter()
+                    .find(|item| is_recipe_type(item))
+                    .and_then(|item| {
+                        serde_json::from_value::<Recipe>(item)
+                            .inspect_err(|err| {
+                                error!(url = self.url, ?err, "Parsing failed");
                             })
+                            .ok()
                     })
             })
             .find_map(|recipe| {

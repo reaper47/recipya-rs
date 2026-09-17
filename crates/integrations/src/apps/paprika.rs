@@ -27,7 +27,7 @@ where
     r.read_to_end(&mut content)?;
 
     let path = temp_dir().join(format!("example-{}.paprikarecipes", Uuid::new_v4()));
-    let mut file = File::create(path.clone())?;
+    let mut file = File::create(&path)?;
     file.write_all(content.as_slice())?;
 
     let recipes = RecipeSet::from_file(path)?
@@ -42,9 +42,9 @@ where
 impl ToRecipeSchema for Recipe {
     #[allow(clippy::too_many_lines)]
     fn to_recipe_schema(&self) -> schema_org::Recipe {
-        let (category, keywords) = match self.categories.as_slice() {
-            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
-            [] => (None, Vec::new()),
+        let (category, keywords) = match self.categories.split_first() {
+            Some((category, keywords)) => (Some(category.clone()), keywords.to_vec()),
+            None => (None, Vec::new()),
         };
 
         let instructions: Vec<RecipeRecipeInstructionsFieldEnum> = std::iter::once(
@@ -84,7 +84,7 @@ impl ToRecipeSchema for Recipe {
                     temp_dir().to_str().unwrap_or_default(),
                     Uuid::new_v4()
                 );
-                match File::create(path.clone()) {
+                match File::create(&path) {
                     Ok(mut file) => {
                         if file.write_all(&bytes).is_ok() {
                             Some(path)
@@ -93,7 +93,7 @@ impl ToRecipeSchema for Recipe {
                         }
                     }
                     Err(err) => {
-                        error!("Failed to create file for paprika photo: {err}");
+                        error!(?err, "Failed to create file for paprika photo");
                         None
                     }
                 }
@@ -169,8 +169,8 @@ mod tests {
             let mut got = parse(buf)?;
 
             let mut want = results::example1();
-            want.sort_by_key(|r| (*r.name.first().as_ref().unwrap()).clone());
-            got.sort_by_key(|r| (*r.name.first().as_ref().unwrap()).clone());
+            want.sort_by_key(|r| (*r.name.first().unwrap()).clone());
+            got.sort_by_key(|r| (*r.name.first().unwrap()).clone());
             for (got_item, want_item) in got.iter_mut().zip(want.iter()) {
                 got_item.image = want_item.image.clone();
             }
@@ -181,6 +181,7 @@ mod tests {
 
     mod files {
         use std::io::Cursor;
+
         use test_fixtures::open_test_file;
 
         pub fn example1() -> Cursor<Vec<u8>> {

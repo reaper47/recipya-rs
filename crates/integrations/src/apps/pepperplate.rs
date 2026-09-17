@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::io::{Read, Seek};
 
 use itertools::Itertools;
+use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{line_ending, multispace0, multispace1, till_line_ending};
 use winnow::combinator::{delimited, opt, preceded, separated};
@@ -39,10 +40,7 @@ struct RecipeComponents<'a> {
 impl From<RecipeComponents<'_>> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: RecipeComponents) -> Self {
-        let (cat, keywords) = match r.categories.unwrap_or_default().as_slice() {
-            [first, rest @ ..] => (Some(*first).filter(|s| !s.trim().is_empty()), rest.to_vec()),
-            [] => (None, vec![]),
-        };
+        let (cat, keywords) = r.categories.unwrap_or_default().split_first_owned();
 
         let notes = r.notes.unwrap_or_default();
 

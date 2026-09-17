@@ -24,6 +24,7 @@ diesel.workspace = true
 dotenvy.workspace = true
 lexopt = "0.3.2"
 models.workspace = true
+nutrition.workspace = true
 rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
@@ -39,3 +40,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 [target.'x86_64-unknown-linux-musl'.dependencies]
 openssl = { version = "0.10.81", features = ["vendored"] }
 pq-sys = { version = "0.7.5", features = ["bundled"] }
+
+[target.'cfg(unix)'.dependencies]
+landlock = "0.4.7"
+procfs = { version = "0.18", default-features = false }

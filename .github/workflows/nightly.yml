@@ -133,6 +133,13 @@ jobs:
           echo "PQ_INCLUDE_DIR=$pgPath\include" >> $env:GITHUB_ENV
           echo "$pgPath\bin" >> $env:GITHUB_PATH
 
+      - name: Install Miri
+        run: |
+          rustup toolchain install nightly --component miri
+          cargo +nightly miri setup
+      - name: Test with Miri
+        run: cargo +nightly miri test -p app -p email -p math -p pdf -p recipya-cli -p repository -p schema-org -p templates -p test-db -p test-fixtures -p test-models -p test-utils
+
       - name: Build Binary
         if: ${{ !matrix.use_docker }}
         run: cargo build -r --target ${{ matrix.target }}

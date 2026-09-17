@@ -202,15 +202,15 @@ fn main() {
     let dest_path = Path::new(out_dir).join("generated_websites.rs");
     let num_websites = file_content.count;
 
-    fs::write(&dest_path, file_content.generate()).expect("Failed to write generated_websites.rs");
+    fs::write(&dest_path, file_content.generate()).expect("failed to write generated_websites.rs");
 
     println!("Generated {num_websites} website variants");
 }
 
 fn fetch_websites() -> Config {
     let mut content = String::with_capacity(32 * 1024);
-    for entry in fs::read_dir("data/").expect("Failed to read data/ directory") {
-        let entry = entry.expect("Failed to read entry");
+    for entry in fs::read_dir("data/").expect("failed to read data/ directory") {
+        let entry = entry.expect("failed to read entry");
         let path = entry.path();
         if path.extension().and_then(|e| e.to_str()) == Some("toml") {
             content.push_str(
@@ -220,5 +220,5 @@ fn fetch_websites() -> Config {
         }
     }
 
-    toml::from_str(&content).expect("Failed to parse data/websites.toml")
+    toml::from_str(&content).expect("failed to parse data/websites.toml")
 }

@@ -1,0 +1,21 @@
+# This file contains the Caddy configuration to host Recipya as a reverse proxy.
+#
+# Change domain.com to your domain name. For example, recipya.ca is hosted at recipya.ca.
+# The first line is thus `domain.com, www.domain.com {`
+#
+
+domain.com, www.domain.com {
+        encode zstd gzip
+        reverse_proxy 127.0.0.1:8078 {
+            health_uri /health/ready
+        }
+
+        header /static/* Cache-Control "public, max-age=86400"
+
+        log {
+                output file /var/log/caddy/domain.com.access.log
+                format json {
+                        time_format iso8601
+                }
+        }
+}

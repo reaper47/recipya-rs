@@ -180,12 +180,13 @@ impl FromStr for Unit {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use Length::*;
     use Mass::*;
     use Temperature::*;
     use Volume::*;
     use approx::assert_relative_eq;
+
+    use super::*;
 
     mod tests_display {
         use super::*;
@@ -581,8 +582,6 @@ mod tests {
     }
 
     mod tests_value {
-        use std::f64;
-
         use super::*;
 
         #[test]
@@ -806,8 +805,6 @@ mod tests {
     }
 
     mod tests_with_value {
-        use std::f64;
-
         use super::*;
 
         #[test]

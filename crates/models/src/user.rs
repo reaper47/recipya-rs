@@ -134,14 +134,11 @@ impl User {
     }
 
     /// Finds a user by their email address.
-    pub async fn get_user_by_email(
-        mm: &ModelManager,
-        user_email: impl Into<String>,
-    ) -> Result<Option<Self>> {
+    pub async fn get_user_by_email(mm: &ModelManager, user_email: &str) -> Result<Option<Self>> {
         use schema::users::dsl::{email, users};
 
         let user = users
-            .filter(email.eq(user_email.into()))
+            .filter(email.eq(user_email))
             .select(Self::as_select())
             .first::<Self>(&mut mm.pool.get().await?)
             .await
@@ -167,9 +164,9 @@ impl User {
     /// Finds user authentication data by email.
     pub async fn get_user_auth_by_email(
         mm: &ModelManager,
-        user_email: impl Into<String>,
+        user_email: &str,
     ) -> Result<Option<UserForAuth>> {
-        match Self::get_user_by_email(mm, user_email.into()).await? {
+        match Self::get_user_by_email(mm, user_email).await? {
             Some(user) => Ok(Some(UserForAuth {
                 id: user.id,
                 email: user.email,
@@ -395,8 +392,8 @@ mod tests {
 
             let got = User::all(&state.mm)
                 .await?
-                .iter()
-                .map(|u| u.email.clone())
+                .into_iter()
+                .map(|u| u.email)
                 .collect::<Vec<_>>();
 
             pretty_assertions::assert_eq!(got, vec![user1.email, user2.email]);
@@ -598,7 +595,7 @@ mod tests {
 
         let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
-            .expect("Test user should have been present");
+            .expect("test user should have been present");
         pretty_assertions::assert_eq!(user.email, TEST_USER_EMAIL);
         Ok(())
     }
@@ -674,7 +671,7 @@ mod tests {
 
         let got_user = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
 
         pretty_assertions::assert_eq!(user.email, got_user.email);
         Ok(())
@@ -687,7 +684,7 @@ mod tests {
 
         let got_user = User::get_user_auth_by_email(&state.mm, TEST_USER_EMAIL)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
 
         pretty_assertions::assert_eq!(user.email, got_user.email);
         Ok(())
@@ -715,7 +712,7 @@ mod tests {
 
         let password_after = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present")
+            .expect("user should have been present")
             .password_hash;
         pretty_assertions::assert_ne!(password_before, password_after);
         Ok(())
@@ -731,7 +728,7 @@ mod tests {
 
         let user = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
         let password_after = user.password_hash;
         pretty_assertions::assert_ne!(password_before, password_after);
         Ok(())
@@ -746,7 +743,7 @@ mod tests {
 
         let user = User::get_user_by_id(&state.mm, user.id)
             .await?
-            .expect("User should have been present");
+            .expect("user should have been present");
         pretty_assertions::assert_eq!(user.is_remember_me, true);
         Ok(())
     }

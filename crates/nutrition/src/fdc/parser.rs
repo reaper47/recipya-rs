@@ -19,16 +19,12 @@ use zip::ZipArchive;
 use repository::{ModelManager, schema};
 
 use crate::{
-    Error, Result,
-    nutrition::{
-        NutritionDataSource,
-        fdc::srlegacy_food::{SrLegacyRoot, SrlegacyFood},
-        states::{DataFetchedState, DataNotFetchedState},
-        tables::{
-            self, FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert,
-            FdcFoodPortionForInsert, FdcNutrientForInsert, FoundationFoodForInsert,
-            NutritionSource,
-        },
+    Error, NutritionDataSource, Result,
+    fdc::srlegacy_food::{SrLegacyRoot, SrlegacyFood},
+    states::{DataFetchedState, DataNotFetchedState},
+    tables::{
+        self, FdcFoodFdcNutrientForInsert, FdcFoodPortionFdcFoodForInsert, FdcFoodPortionForInsert,
+        FdcNutrientForInsert, FoundationFoodForInsert, NutritionSource,
     },
 };
 
@@ -178,7 +174,11 @@ impl<C: FdcFetcher> DataNotFetched<C> for FdcParser<'_, DataNotFetchedState> {
         let mut bytes = Vec::with_capacity(
             usize::try_from(file.size())
                 .inspect_err(|err| {
-                    error!("Failed to cast file size to usize '{}': {err}", file.size());
+                    error!(
+                        file_size = file.size(),
+                        ?err,
+                        "Failed to cast file size to usize"
+                    );
                 })
                 .unwrap_or_default(),
         );
@@ -273,14 +273,13 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                 .await?;
 
             let fdc_nutrients_map: HashMap<(String, String), i64> = fdc_nutrients
-                .clone()
                 .into_iter()
                 .map(|(id, name, unit_name)| ((name, unit_name), id))
                 .collect();
 
             // fdc_foods_fdc_nutrients
             let mut ids = Vec::new();
-            for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids.clone()) {
+            for (ff, fdc_food_db_id) in foundation_foods.iter().zip(fdc_foods_ids.as_slice()) {
                 ff.food_nutrients.iter().for_each(|food_nutrient| {
                     let food_nutrient = food_nutrient.clone();
 
@@ -292,7 +291,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                         .unwrap();
 
                     ids.push((
-                        fdc_food_db_id,
+                        *fdc_food_db_id,
                         id,
                         food_nutrient.amount,
                         food_nutrient.min.unwrap_or_default(),
@@ -329,7 +328,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                         .iter()
                         .map(|portion| FdcFoodPortionForInsert {
                             value: portion.value,
-                            modifier: portion.modifier.clone().into_owned(),
+                            modifier: portion.modifier.to_string(),
                             gram_weight: portion.gram_weight,
                             amount: portion.amount,
                         })
@@ -375,7 +374,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
             Ok(())
         })
         .await
-        .inspect_err(|err| error!("Failed to push data into database: {err}"))?;
+        .inspect_err(|err| error!(?err, "Failed to push data into database"))?;
 
         Ok(())
     }
@@ -545,7 +544,7 @@ mod tests {
     use test_utils::create_app_state;
 
     use super::*;
-    use crate::nutrition::testdata::nutrition_data::nutrition_data_for_tests::*;
+    use crate::testdata::nutrition_data::nutrition_data_for_tests::*;
 
     type Result<T> = core::result::Result<T, Error>;
     type Error = Box<dyn std::error::Error>;

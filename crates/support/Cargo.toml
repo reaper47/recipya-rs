@@ -28,6 +28,7 @@ regex.workspace = true
 time = { workspace = true, features = ["formatting", "parsing"] }
 tokio.workspace = true
 tracing.workspace = true
+url.workspace = true
 uuid.workspace = true
 webp = "0.3.1"
 whatlang.workspace = true

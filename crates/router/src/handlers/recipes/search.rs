@@ -40,7 +40,7 @@ pub async fn search_recipes_handler(
                             formatted_times,
                         })
                         .map_err(async |err| {
-                            error!("Error formatting times for recipe: {err}");
+                            error!(?err, "Error formatting times for recipe");
                             Error::Database
                         })
                 })
@@ -54,10 +54,7 @@ pub async fn search_recipes_handler(
             }
         }
         Err(err) => {
-            error!(
-                "(search_recipes_handler) Error fetching recipes for user '{}' with search params '{search_params:?}': {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?search_params, ?err, "(search_recipes_handler) Error fetching recipes with search params");
             broadcast_error(&state, user.id, "Error fetching recipes.").await;
             return Err(Error::Database);
         }

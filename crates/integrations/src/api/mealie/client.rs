@@ -4,6 +4,9 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 use reqwest::Client;
+use tracing::{error, info};
+use uuid::Uuid;
+
 use schema_org::field::{
     CommentAuthorFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
     RecipeImageFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
@@ -14,8 +17,7 @@ use schema_org::{
     at_context,
 };
 use support::fs::new_fs_support;
-use tracing::{error, info};
-use uuid::Uuid;
+use support::time::DEFAULT_HTTP_CONNECTION_TIMEOUT;
 
 use super::host::Host;
 use crate::api::mealie::structs::{
@@ -131,8 +133,9 @@ impl RecipeClient for MealieRecipeClient {
         let token = self.login_helper(credentials).await?;
 
         Ok(Self {
-            host: self.host.clone(),
+            host: self.host,
             client: Client::builder()
+                .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
                 .default_headers(assemble_token_header(&AuthType::Bearer, &token)?)
                 .build()?,
         })
@@ -179,7 +182,6 @@ impl RecipeClient for MealieRecipeClient {
     async fn logout(self) -> Result<Self> {
         info!("Mealie API: Logging out");
 
-        let host = self.host.clone();
         let res = self.client.post(self.host.logout_url()).send().await?;
 
         if res.status().is_client_error() {
@@ -191,7 +193,7 @@ impl RecipeClient for MealieRecipeClient {
         }
 
         Ok(Self {
-            host,
+            host: self.host,
             client: Client::new(),
         })
     }
@@ -437,7 +439,7 @@ impl MealieRecipeClient {
                             author: comment
                                 .user
                                 .author()
-                                .map(|s| vec![CommentAuthorFieldEnum::new_person(&s)])
+                                .map(|s| vec![CommentAuthorFieldEnum::new_person(s)])
                                 .unwrap_or_default(),
                             ..Default::default()
                         })
@@ -462,7 +464,7 @@ impl MealieRecipeClient {
                 .unwrap_or_default(),
             author: user
                 .author()
-                .map(|s: String| vec![RecipeAuthorFieldEnum::new_person(&s)])
+                .map(|s: &str| vec![RecipeAuthorFieldEnum::new_person(s)])
                 .unwrap_or_default(),
             image: self
                 .fetch_recipe_image(recipe.id, recipe.image)

@@ -221,7 +221,7 @@ where
     R: Read,
 {
     let recipe: Recipe = serde_json::from_reader(r).map_err(|err| {
-        error!("Failed to read Umami JSON file: {err}");
+        error!(?err, "Failed to read Umami JSON file");
         Error::Parse(err.to_string())
     })?;
     Ok(vec![recipe])

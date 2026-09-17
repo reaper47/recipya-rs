@@ -1,5 +1,4 @@
 use std::fmt::Write;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
 
 use axum::Json;
@@ -9,13 +8,11 @@ use axum::extract::{Multipart, Query, State, WebSocketUpgrade};
 use axum::http::{Response, StatusCode};
 use axum::response::{Html, IntoResponse, Redirect};
 use futures_util::StreamExt;
-use models::paper::PaperSize;
 use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
+use serde::Serialize;
 use serde_json::{Value, json};
 use tokio::fs;
-use tokio::net::lookup_host;
-use tokio_util::bytes;
-use tokio_util::io::ReaderStream;
+use tokio_util::{bytes, io::ReaderStream};
 use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
@@ -23,14 +20,34 @@ use uuid::Uuid;
 use app::state::AppState;
 use models::Recipe;
 use models::download::Download;
+use models::paper::PaperSize;
 use models::params::{DownloadParams, FetchParams, SearchParams};
 use models::user::User;
+use support::net::resolve_and_validate;
 
 use crate::handlers::message::broadcast_error;
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::{Error, Result};
 
 const MAX_IMAGE_SIZE: usize = 10 * 1024 * 1024;
+
+/// Response structure for health checks.
+#[derive(Serialize)]
+pub struct HealthResponse {
+    pub status: Status,
+    pub database: bool,
+    pub email: Status,
+    pub version: &'static str,
+}
+
+/// Status of the health check.
+#[derive(Serialize, Clone)]
+pub enum Status {
+    Healthy,
+    Degraded,
+    Unhealthy,
+    Disabled,
+}
 
 /// Handles the index page.
 pub async fn index_handler(OptionalAuth(user): OptionalAuth) -> Redirect {
@@ -55,10 +72,7 @@ pub async fn download_handler(
             return StatusCode::NOT_FOUND.into_response();
         }
         Err(err) => {
-            error!(
-                "Failed to find download token '{token}' for user {}: {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?token, ?err, "Failed to find download token");
             broadcast_error(&state, user.id, "Failed to find download token.").await;
             return StatusCode::NOT_FOUND.into_response();
         }
@@ -77,10 +91,7 @@ pub async fn download_handler(
     let file = match tokio::fs::File::open(&file_path).await {
         Ok(f) => f,
         Err(err) => {
-            error!(
-                "Failed to open file '{file_path}' for user {}: {err}",
-                user.id
-            );
+            error!(?file_path, user = ?user.id, ?err, "Failed to open file");
             broadcast_error(&state, user.id, "Failed to open export file.").await;
             return Error::Fs.into_response();
         }
@@ -90,10 +101,7 @@ pub async fn download_handler(
     let file_path = file_path.clone();
     let stream = ReaderStream::new(file).chain(futures::stream::once(async move {
         if let Err(err) = Download::delete_by_token(&mm, token, file_path).await {
-            error!(
-                "Failed to delete download token '{token}' for user {}: {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?token, ?err, "Failed to delete download token");
         }
         Ok(bytes::Bytes::new())
     }));
@@ -108,7 +116,7 @@ pub async fn download_handler(
     {
         Ok(res) => res,
         Err(err) => {
-            error!("Failed to create response for user {}: {err}", user.id);
+            error!(user = ?user.id, ?err, "Failed to create response");
             broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Error::Fs.into_response()
         }
@@ -129,28 +137,42 @@ pub async fn fetch_handler(
         }
     };
 
-    if let Err(reason) = resolve_and_validate(&parsed).await {
-        warn!("Fetch handler blocked '{parsed}' by SSRF guard: {reason}");
-        broadcast_error(&state, user.id, "Invalid URL").await;
-        return StatusCode::BAD_REQUEST.into_response();
-    }
+    let url = match resolve_and_validate(parsed).await {
+        Ok(u) => u,
+        Err(err) => {
+            const MESSAGE: &str = "Fetch handler blocked by SSRF guard";
+            match err {
+                support::net::Error::DNSResolution(url) => {
+                    warn!(?url, reason = "DNS Resolution", MESSAGE);
+                }
+                support::net::Error::ForbiddenIP(url) => {
+                    warn!(?url, reason = "Forbidden IP", MESSAGE);
+                }
+                support::net::Error::MissingHost(url) => {
+                    warn!(?url, reason = "Missing Host", MESSAGE);
+                }
+            }
+            broadcast_error(&state, user.id, "Invalid URL").await;
+            return StatusCode::BAD_REQUEST.into_response();
+        }
+    };
 
     let client = reqwest::Client::new();
-    let res = match client.get(parsed).send().await {
+    let mut res = match client.get(url).send().await {
         Ok(r) => r,
         Err(err) => {
-            error!("Failed to fetch URL: {err}");
+            error!(?err, "Failed to fetch URL");
             broadcast_error(&state, user.id, "Could not fetch URL").await;
             return StatusCode::BAD_REQUEST.into_response();
         }
     };
 
-    let content_type = res.headers().get(CONTENT_TYPE).cloned();
+    let content_type = res.headers_mut().remove(CONTENT_TYPE);
 
     let body = match res.bytes().await {
         Ok(b) => b,
         Err(err) => {
-            error!("Failed to read response: {err}");
+            error!(?err, "Failed to read response");
             broadcast_error(&state, user.id, "Could not read response").await;
             return StatusCode::BAD_GATEWAY.into_response();
         }
@@ -164,74 +186,49 @@ pub async fn fetch_handler(
     res
 }
 
-async fn resolve_and_validate(url: &Url) -> Result<()> {
-    let host = url.host_str().ok_or(Error::MissingHost)?;
-    if let Ok(ip) = host.parse::<IpAddr>() {
-        if is_forbidden_ip(ip) {
-            return Err(Error::ForbiddenIP);
+/// Handler for live health checks.
+pub async fn health_live_handler() -> &'static str {
+    "OK"
+}
+
+/// Handler for ready health checks.
+pub async fn health_ready_handler(
+    OptionalAuth(_): OptionalAuth,
+    State(state): State<AppState>,
+) -> (StatusCode, Json<HealthResponse>) {
+    let is_db_ok = state.mm.ping().await;
+
+    let email_status = state.email_service.map_or(Status::Disabled, |email| {
+        if email.test_connection() {
+            Status::Healthy
+        } else {
+            Status::Unhealthy
         }
-        return Ok(());
-    }
+    });
 
-    let port = url.port_or_known_default().unwrap_or(80);
-    let addrs: Vec<IpAddr> = lookup_host((host, port))
-        .await
-        .map_err(|_| Error::DNSResolution)?
-        .map(|s| s.ip())
-        .collect();
+    let status = match (is_db_ok, email_status.clone()) {
+        (true, Status::Healthy | Status::Disabled) => Status::Healthy,
+        (true, Status::Unhealthy) | (false, Status::Healthy) => Status::Unhealthy,
+        _ => Status::Degraded,
+    };
 
-    if addrs.is_empty() {
-        return Err(Error::DNSResolution);
-    }
+    let status_code = match status {
+        Status::Healthy => StatusCode::OK,
+        Status::Degraded | Status::Unhealthy | Status::Disabled => StatusCode::SERVICE_UNAVAILABLE,
+    };
 
-    if addrs.iter().any(|ip| is_forbidden_ip(*ip)) {
-        return Err(Error::ForbiddenIP);
-    }
-
-    Ok(())
-}
-
-fn is_forbidden_ip(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(v4) => is_forbidden_v4(v4),
-        IpAddr::V6(v6) => is_forbidden_v6(v6),
-    }
-}
-
-const fn is_forbidden_v4(ip: Ipv4Addr) -> bool {
-    matches!(
-        ip.octets(),
-        [127 | 10 | 0 | 224..=239 | 240..=255, ..]  // Loopback, private, unspecified, multicast, reserved
-        | [172, 16..=31, ..]                        // Private 172.16.0.0/12
-        | [192, 168, ..]                            // Private 192.168.0.0/16
-        | [169, 254, ..]                            // Link-local + metadata (169.254.169.254)
-        | [100, 64..=127, ..]                       // CGN 100.64.0.0/10
-        | [198, 18..=19, ..]                        // Benchmarking
-        | [192, 0, 2, _]                            // TEST-NET-1
-        | [198, 51, 100, _]                         // TEST-NET-2
-        | [203, 0, 113, _]                          // TEST-NET-3
+    (
+        status_code,
+        Json(HealthResponse {
+            status,
+            database: is_db_ok,
+            email: email_status,
+            version: env!("CARGO_PKG_VERSION"),
+        }),
     )
 }
 
-fn is_forbidden_v6(ip: Ipv6Addr) -> bool {
-    if ip == Ipv6Addr::LOCALHOST || ip == Ipv6Addr::UNSPECIFIED {
-        return true;
-    }
-
-    let segs = ip.segments();
-    matches!(segs[0],
-        // Link-local fe80::/10
-        0xfe80..=0xfebf |
-        // Unique-local fc00::/7 (includes fd00::/8)
-        0xfc00..=0xfdff |
-        // Multicast ff00::/8
-        0xff00..=0xffff
-    ) ||
-    // IPv4-mapped ::ffff:0:0/96
-    ip.to_ipv4_mapped()
-        .is_some_and(is_forbidden_v4)
-}
-
+/// Handler for fetching paper sizes.
 pub async fn paper_sizes_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -239,7 +236,7 @@ pub async fn paper_sizes_handler(
     let papers = match PaperSize::get_all(&state.mm).await {
         Ok(papers) => papers,
         Err(err) => {
-            error!("Failed to get paper sizes: {err}");
+            error!(?err, "Failed to get paper sizes");
             broadcast_error(&state, user.id, "Failed to fetch paper sizes").await;
             return Error::Database.into_response();
         }
@@ -301,10 +298,7 @@ pub async fn search_suggestions_handler(
                     acc
                 }),
             Err(err) => {
-                error!(
-                    "(search_suggestions_handler) Error fetching items '{q}' for user '{}': {err}",
-                    user.id,
-                );
+                error!(?q, user = ?user.id, ?err, "(search_suggestions_handler) Error fetching items");
                 broadcast_error(&state, user.id, "Error fetching components.").await;
                 return Err(Error::Database);
             }
@@ -331,7 +325,7 @@ pub async fn upload_note_image(
             Ok(b) if b.len() <= MAX_IMAGE_SIZE => b,
             Ok(_) => return err_json(StatusCode::PAYLOAD_TOO_LARGE, "fileTooLarge"),
             Err(err) => {
-                error!("Error reading file: {err}");
+                error!(?err, "Error reading file");
                 return err_json(StatusCode::BAD_REQUEST, "importError");
             }
         };
@@ -342,7 +336,7 @@ pub async fn upload_note_image(
             _ => return err_json(StatusCode::UNSUPPORTED_MEDIA_TYPE, "typeNotAllowed"),
         };
 
-        if let Ok(tmp_path) = state.fs_support.upload_to_temp(bytes.clone()).await {
+        if let Ok(tmp_path) = state.fs_support.upload_to_temp(bytes).await {
             let filename = Uuid::new_v4();
 
             state
@@ -350,7 +344,7 @@ pub async fn upload_note_image(
                 .upload_image(&tmp_path, filename, &state.data_dir.images.notes);
 
             if let Err(err) = fs::remove_file(tmp_path).await {
-                error!("Error removing temporary file '{filename}': {err}");
+                error!(?filename, ?err, "Error removing temporary file");
             }
 
             let result = json!({
@@ -396,7 +390,7 @@ pub async fn user_initials_handler(
             .next()
             .map_or_else(|| "A".into(), |first| first.to_string()),
         Ok(None) => {
-            error!("User {} does not exist", user.id);
+            error!(user = ?user.id, "User does not exist");
             "A".into()
         }
         Err(err) => {

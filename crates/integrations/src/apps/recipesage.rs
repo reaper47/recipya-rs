@@ -281,29 +281,27 @@ impl From<Recipe> for RecipeSage {
     fn from(r: Recipe) -> Self {
         Self {
             rating: None,
-            category: r.recipe_category.first().cloned(),
+            category: r.recipe_category.into_iter().next(),
             description: r
                 .description
                 .into_iter()
+                .next()
                 .map(|s| match s {
                     RecipeDescriptionFieldEnum::Text(s) => s,
                     RecipeDescriptionFieldEnum::TextObject(obj) => {
-                        obj.text.first().cloned().unwrap_or_default()
+                        obj.text.into_iter().next().unwrap_or_default()
                     }
                 })
-                .filter(|s| !s.is_empty())
-                .collect::<Vec<_>>()
-                .first()
-                .cloned(),
+                .filter(|s| !s.is_empty()),
             ingredients: r.recipe_ingredient,
             instructions: r.recipe_instructions,
             source: r
                 .is_based_on
-                .first()
-                .cloned()
+                .into_iter()
+                .next()
                 .map(|s| match s {
                     RecipeIsBasedOnFieldEnum::CreativeWork(obj) => {
-                        obj.is_based_on.first().cloned().map(|s| match s {
+                        obj.is_based_on.into_iter().next().map(|s| match s {
                             CreativeWorkIsBasedOnFieldEnum::CreativeWork(_)
                             | CreativeWorkIsBasedOnFieldEnum::Product(_) => String::new(),
                             CreativeWorkIsBasedOnFieldEnum::URL(s) => s,
@@ -315,15 +313,15 @@ impl From<Recipe> for RecipeSage {
                 .unwrap_or_default(),
             notes: r
                 .comment
-                .first()
-                .cloned()
+                .into_iter()
+                .next()
                 .map(|v| v.text)
                 .filter(|s| !s.is_empty())
                 .unwrap_or_default()
-                .first()
-                .cloned(),
+                .into_iter()
+                .next(),
             nutrition: None,
-            title: r.name.first().cloned().unwrap_or_default(),
+            title: r.name.into_iter().next().unwrap_or_default(),
             r#yield: r
                 .recipe_yield
                 .first()
@@ -331,7 +329,6 @@ impl From<Recipe> for RecipeSage {
                     RecipeRecipeYieldFieldEnum::QuantitativeValue(v) => v
                         .value
                         .first()
-                        .cloned()
                         .map(|v| match v {
                             QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => {
                                 s.parse::<i16>().ok().unwrap_or_default()
@@ -354,21 +351,21 @@ impl From<Recipe> for RecipeSage {
                 .into_iter()
                 .map(|k| match k {
                     RecipeKeywordsFieldEnum::DefinedTerm(t) => {
-                        t.name.first().cloned().unwrap_or_default()
+                        t.name.into_iter().next().unwrap_or_default()
                     }
                     RecipeKeywordsFieldEnum::TextOrURL(s) => s,
                 })
                 .collect(),
-            url: r.url.first().map(Into::into),
-            prep_time: r.prep_time.first().cloned().map(|s| match s {
+            url: r.url.into_iter().next(),
+            prep_time: r.prep_time.into_iter().next().map(|s| match s {
                 schema_org::DurationOrText::Text(s) => s,
                 schema_org::DurationOrText::Duration(_) => String::new(),
             }),
-            total_time: r.total_time.first().cloned().map(|s| match s {
+            total_time: r.total_time.into_iter().next().map(|s| match s {
                 schema_org::DurationOrText::Text(s) => s,
                 schema_org::DurationOrText::Duration(_) => String::new(),
             }),
-            image: r.image.first().cloned().map(|s| match s {
+            image: r.image.into_iter().next().map(|s| match s {
                 schema_org::field::FieldEnum22::URL(u) => u,
                 schema_org::field::FieldEnum22::ImageObject(_) => String::new(),
             }),
@@ -435,7 +432,7 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
         let active_time_secs = match humantime::parse_duration(&r.active_time) {
             Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
             Err(err) => {
-                error!("Failed to parse prep time of a RecipeSage recipe: {err}");
+                error!(?err, "Failed to parse prep time of a RecipeSage recipe");
                 15 * 60
             }
         };
@@ -443,7 +440,7 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
         let total_time_secs = match humantime::parse_duration(&r.total_time) {
             Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
             Err(err) => {
-                error!("Failed to total time of a RecipeSage recipe: {err}");
+                error!(?err, "Failed to total time of a RecipeSage recipe");
                 30 * 60
             }
         };
@@ -486,7 +483,7 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
                 to_is_based_on(&r.source)
             },
             keywords: categories
-                .map(|(_, b)| b.iter().map(|s| s.title.clone()).collect::<Vec<_>>())
+                .map(|(_, b)| b.iter().map(|s| s.title.as_ref()).collect::<Vec<_>>())
                 .map(|v| {
                     v.into_iter()
                         .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
@@ -533,7 +530,7 @@ where
     R: Read + BufRead,
 {
     let root: RecipeSageXMLData = quick_xml::de::from_reader(r).map_err(|err| {
-        error!("Failed to read RecipeSage XML file: {err}");
+        error!(?err, "Failed to read RecipeSage XML file");
         Error::Parse(err.to_string())
     })?;
 
@@ -555,7 +552,7 @@ where
             if let Ok(root) = serde_json::from_str::<JsonRoot>(&buf) {
                 Ok(root.recipes)
             } else {
-                error!("Failed to read RecipeSage JSON file: {err}");
+                error!(?err, "Failed to read RecipeSage JSON file");
                 Err(Error::Parse(err.to_string()))
             }
         }

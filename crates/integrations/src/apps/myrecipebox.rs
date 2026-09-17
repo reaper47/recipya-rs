@@ -240,7 +240,7 @@ impl From<RecipeRtk> for CsvRecord<'_> {
             video: (!r.video.is_empty()).then_some(Cow::Owned(r.video)),
             source: (!r.url.is_empty()).then_some(Cow::Owned(r.url)),
             original_picture: (!r.pictures.is_empty())
-                .then(|| Cow::Owned(r.pictures.first().cloned().unwrap_or_default())),
+                .then(|| Cow::Owned(r.pictures.into_iter().next().unwrap_or_default())),
         }
     }
 }
@@ -278,7 +278,7 @@ where
         let recipe: CsvRecord = match result {
             Ok(r) => r,
             Err(err) => {
-                error!("Failed to parse Mr. Cook CSV entry: {err}");
+                error!(?err, "Failed to parse Mr. Cook CSV entry");
                 continue;
             }
         };
@@ -309,7 +309,7 @@ where
             .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
         {
             let tmp_path = temp_dir().join(&file_name);
-            let mut tmp_file = File::create(tmp_path.clone())?;
+            let mut tmp_file = File::create(&tmp_path)?;
             io::copy(&mut file, &mut tmp_file)?;
             images.insert(file_name, tmp_path);
         }

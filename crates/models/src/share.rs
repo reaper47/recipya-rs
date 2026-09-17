@@ -98,6 +98,8 @@ mod tests {
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
     mod test_new {
+        use std::assert_matches;
+
         use test_utils::create_app_state;
         use time::{Duration, OffsetDateTime};
 
@@ -178,7 +180,7 @@ mod tests {
 
             let res = ShareRecipe::new(&state.mm, recipe_id, user_id, None).await;
 
-            assert!(matches!(res, Ok(got) if got.id == share.id));
+            assert_matches!(res, Ok(got) if got.id == share.id);
             Ok(())
         }
 

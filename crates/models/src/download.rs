@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -55,11 +55,11 @@ impl From<DownloadForCreate> for DownloadForInsert {
 
 impl DownloadForCreate {
     /// Creates a new download item for creation.
-    pub const fn new(user_id: Uuid, token: Uuid, file_path: PathBuf) -> Self {
+    pub fn new(user_id: Uuid, token: Uuid, file_path: &Path) -> Self {
         Self {
             user_id,
             token,
-            file_path,
+            file_path: file_path.to_path_buf(),
         }
     }
 }
@@ -117,7 +117,7 @@ mod tests {
     }
 
     fn a_download_for_create(user_id: Uuid) -> DownloadForCreate {
-        DownloadForCreate::new(user_id, Uuid::new_v4(), test_file_path())
+        DownloadForCreate::new(user_id, Uuid::new_v4(), &test_file_path())
     }
 
     #[tokio::test]
@@ -137,7 +137,7 @@ mod tests {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let token = Uuid::new_v4();
-        let dl_c = DownloadForCreate::new(user_id, token, test_file_path());
+        let dl_c = DownloadForCreate::new(user_id, token, &test_file_path());
         Download::create(&state.mm, dl_c).await?;
 
         let dl = Download::find_by_token(&state.mm, token).await?;
@@ -167,7 +167,7 @@ mod tests {
         let file_path = test_file_path();
         tokio::fs::write(&file_path, b"dummy content").await?;
         let token = Uuid::new_v4();
-        let dl_c = DownloadForCreate::new(user_id, token, file_path.clone());
+        let dl_c = DownloadForCreate::new(user_id, token, &file_path);
         Download::create(&state.mm, dl_c).await?;
 
         Download::delete_by_token(&state.mm, token, file_path.to_string_lossy().into_owned())
@@ -183,7 +183,7 @@ mod tests {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let token = Uuid::new_v4();
-        let dl_c = DownloadForCreate::new(user_id, token, PathBuf::from("/tmp/nonexistent.zip"));
+        let dl_c = DownloadForCreate::new(user_id, token, &PathBuf::from("/tmp/nonexistent.zip"));
         Download::create(&state.mm, dl_c).await?;
 
         let res =

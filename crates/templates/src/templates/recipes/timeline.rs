@@ -136,7 +136,7 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
                         h2 class="card-title" {
                             (event.title)
                         }
-                        @if let Some(s) = event.comment.clone() {
+                        @if let Some(s) = event.comment.as_deref() {
                             p {
                                 (s)
                             }
@@ -163,7 +163,7 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
                 p .text-center.pb-2 {
                     (event.date)
                 }
-                @if let Some(image) = event.image.clone() {
+                @if let Some(image) = event.image.as_deref() {
                     figure {
                         img src=(image) alt="Timeline event" class="w-full lg:w-60 h-60 object-cover rounded-lg";
                     }

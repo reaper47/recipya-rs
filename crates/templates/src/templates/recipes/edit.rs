@@ -419,18 +419,18 @@ fn render_nutrition(view: &ViewRecipe) -> Markup {
 
                 @let nutrition = view.recipe_details.nutrition.per_serving.as_ref();
                 @for (name, name_attr, placeholder, value) in [
-                    ("Serving size", "serving-size", "1/4 cup (45g)", nutrition.map_or_else(|| "-".into(), |nutrition| nutrition.serving_size.clone())),
-                    ("Calories", "calories-per-serving", "368kcal", format_nutrition(nutrition.and_then(|n| n.nutrition.calories_kcal.map(Into::into)), " kcal")),
-                    ("Total carbs", "total-carbohydrates-per-serving", "35g", format_nutrition(nutrition.and_then(|n| n.nutrition.total_carbohydrates), "g")),
-                    ("Sugars", "sugars-per-serving", "3g", format_nutrition(nutrition.and_then(|n| n.nutrition.sugars_g), "g")),
-                    ("Protein", "protein-per-serving", "21g", format_nutrition(nutrition.and_then(|n| n.nutrition.protein_g), "g")),
-                    ("Total fat", "total-fat-per-serving", "15g", format_nutrition(nutrition.and_then(|n| n.nutrition.total_fat_g), "g")),
-                    ("Saturated fat", "saturated-fat-per-serving", "1.8g", format_nutrition(nutrition.and_then(|n| n.nutrition.saturated_fat_g), "g")),
-                    ("Unsaturated fat", "unsaturated-fat-per-serving", "1.8g", format_nutrition(nutrition.and_then(|n| n.nutrition.unsaturated_fat_g), "g")),
-                    ("Trans fat", "trans-fat-per-serving", "1.8g", format_nutrition(nutrition.and_then(|n| n.nutrition.trans_fat_g), "g")),
-                    ("Cholesterol", "cholesterol-per-serving", "1.1mg", format_nutrition(nutrition.and_then(|n| n.nutrition.cholesterol_mg), "mg")),
-                    ("Sodium", "sodium-per-serving", "100mg", format_nutrition(nutrition.and_then(|n| n.nutrition.sodium_mg), "mg")),
-                    ("Fiber", "fiber-per-serving", "8g", format_nutrition(nutrition.and_then(|n| n.nutrition.fiber_g), "g")),
+                    ("Serving size", "serving-size", "1/4 cup (45g)", nutrition.map_or_else(|| "-", |nutrition| nutrition.serving_size.as_ref())),
+                    ("Calories", "calories-per-serving", "368kcal", &format_nutrition(nutrition.and_then(|n| n.nutrition.calories_kcal.map(Into::into)), " kcal")),
+                    ("Total carbs", "total-carbohydrates-per-serving", "35g", &format_nutrition(nutrition.and_then(|n| n.nutrition.total_carbohydrates), "g")),
+                    ("Sugars", "sugars-per-serving", "3g", &format_nutrition(nutrition.and_then(|n| n.nutrition.sugars_g), "g")),
+                    ("Protein", "protein-per-serving", "21g", &format_nutrition(nutrition.and_then(|n| n.nutrition.protein_g), "g")),
+                    ("Total fat", "total-fat-per-serving", "15g", &format_nutrition(nutrition.and_then(|n| n.nutrition.total_fat_g), "g")),
+                    ("Saturated fat", "saturated-fat-per-serving", "1.8g", &format_nutrition(nutrition.and_then(|n| n.nutrition.saturated_fat_g), "g")),
+                    ("Unsaturated fat", "unsaturated-fat-per-serving", "1.8g", &format_nutrition(nutrition.and_then(|n| n.nutrition.unsaturated_fat_g), "g")),
+                    ("Trans fat", "trans-fat-per-serving", "1.8g", &format_nutrition(nutrition.and_then(|n| n.nutrition.trans_fat_g), "g")),
+                    ("Cholesterol", "cholesterol-per-serving", "1.1mg", &format_nutrition(nutrition.and_then(|n| n.nutrition.cholesterol_mg), "mg")),
+                    ("Sodium", "sodium-per-serving", "100mg", &format_nutrition(nutrition.and_then(|n| n.nutrition.sodium_mg), "mg")),
+                    ("Fiber", "fiber-per-serving", "8g", &format_nutrition(nutrition.and_then(|n| n.nutrition.fiber_g), "g")),
                 ] {
                     tr data-nutrition-type="per-serving" .hidden {
                         td { (name) }
@@ -470,7 +470,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             }
             label {
                 input type="text" name="time-prep"
-                    value=(if view.formatted_times.prep_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.prep_edit.clone() })
+                    value=(if view.formatted_times.prep_edit.is_empty() { "00:15:00" } else { &view.formatted_times.prep_edit })
                     class="input input-sm max-w-24 html-duration-picker";
             }
         }
@@ -480,7 +480,7 @@ fn render_times(view: &ViewRecipe) -> Markup {
             }
             label {
                 input type="text" name="time-cook"
-                    value=(if view.formatted_times.cook_edit.is_empty() { "00:15:00".to_string() } else { view.formatted_times.cook_edit.clone() })
+                    value=(if view.formatted_times.cook_edit.is_empty() { "00:15:00" } else { &view.formatted_times.cook_edit })
                     class="input input-sm max-w-24 html-duration-picker";
             }
         }

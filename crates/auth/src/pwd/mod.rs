@@ -98,7 +98,7 @@ mod tests {
         };
 
         let pwd_hashed = hash_for_scheme("01", &fx_to_hash)?;
-        let pwd_validate = validate_pwd(fx_to_hash.clone(), &pwd_hashed).await?;
+        let pwd_validate = validate_pwd(fx_to_hash, &pwd_hashed).await?;
 
         assert!(
             matches!(pwd_validate, SchemeStatus::Outdated),

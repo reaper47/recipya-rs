@@ -1,4 +1,5 @@
 mod data_sources;
+mod error;
 mod testdata;
 
 pub mod fdc;
@@ -6,6 +7,7 @@ pub mod states;
 pub mod tables;
 
 pub use data_sources::*;
+pub use error::{Error, Result};
 
 /// Represents calculated nutritional information per 100g and per serving.
 #[derive(Debug, Default, PartialEq)]

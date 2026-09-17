@@ -75,7 +75,8 @@ impl BoldInstructionIndex {
             .map_err(|err| Error::Support(err.to_string()))?;
 
         let instructions = instructions.into_iter().collect_vec();
-        let instruction_strings = instructions.iter().map(|(s, _)| s.clone()).collect_vec();
+        let (instruction_strings, instruction_ids): (Vec<String>, Vec<i64>) =
+            instructions.into_iter().unzip();
         let instruction_refs = instruction_strings.iter().map(String::as_str).collect_vec();
 
         let ingredient_strings = ingredients
@@ -94,10 +95,7 @@ impl BoldInstructionIndex {
         let bolds = strings::find_indexes(instruction_refs.as_slice(), ingredient_refs.as_slice())
             .map_err(|err| Error::Support(err.to_string()))?;
 
-        let values = instructions
-            .into_iter()
-            .map(|(_, id)| id)
-            .collect_vec()
+        let values = instruction_ids
             .into_iter()
             .zip(bolds)
             .flat_map(|(instruction_id, bold)| {

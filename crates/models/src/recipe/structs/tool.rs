@@ -25,7 +25,7 @@ pub struct ToolForCreate {
 
 impl From<HowToTool> for ToolForCreate {
     fn from(value: HowToTool) -> Self {
-        let s = value.name.first().cloned().unwrap_or_default();
+        let s = value.name.into_iter().next().unwrap_or_default();
 
         let quantity = extract_number(&s).unwrap_or(1);
 

@@ -51,10 +51,7 @@ pub async fn scale_recipe_handler(
             recipe
         }
         Err(err) => {
-            error!(
-                "Error fetching recipe '{recipe_id}' for user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
             broadcast_error(&state, user.id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),

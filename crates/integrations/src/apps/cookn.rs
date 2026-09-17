@@ -376,10 +376,11 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
                     .next()
                     .map(|el| el.text().collect::<String>());
 
-                if let Some(p) = prefix.clone()
-                    && p.chars().all(|c: char| c.is_space() || c.is_uppercase())
+                if prefix
+                    .as_deref()
+                    .is_some_and(|p| p.chars().all(|c: char| c.is_space() || c.is_uppercase()))
                 {
-                    Ingredient::Section(Cow::Owned(p))
+                    Ingredient::Section(Cow::Owned(prefix.unwrap_or_default()))
                 } else {
                     Ingredient::Line(Cow::Owned(
                         [quantity, unit, prefix, food, suffix]

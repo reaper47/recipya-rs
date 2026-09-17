@@ -63,11 +63,11 @@ pub struct RecipeTimelineForCreate {
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::recipe_timelines)]
-struct TimelineForInsert {
+struct TimelineForInsert<'a> {
     recipe_id: i64,
     user_id: Uuid,
-    title: String,
-    comment: Option<String>,
+    title: &'a str,
+    comment: Option<&'a str>,
     rating: Option<i16>,
     image: Option<Uuid>,
     created_at: Option<PrimitiveDateTime>,
@@ -99,8 +99,8 @@ impl RecipeTimeline {
             .values(&TimelineForInsert {
                 recipe_id,
                 user_id,
-                title: timeline_c.title.clone(),
-                comment: timeline_c.comment.clone(),
+                title: timeline_c.title.as_str(),
+                comment: timeline_c.comment.as_deref(),
                 rating: timeline_c.rating,
                 image: timeline_c.image,
                 created_at: timeline_c.created_at,
@@ -184,20 +184,20 @@ mod tests {
         #[tokio::test]
         async fn test_timeline_all_ok() -> Result<()> {
             let (_, state) = build_server_anonymous(default_config()).await?;
-            let user1 = User::all(&state.mm).await?[0].clone();
-            let user2 = insert_other_user(&state, "slava@ukraini.ua").await?;
-            let settings1 = UserSettingDetails::get(&state.mm, user1.id).await?;
-            let settings2 = UserSettingDetails::get(&state.mm, user2.id).await?;
+            let user1_id = User::all(&state.mm).await?[0].id;
+            let user2_id = insert_other_user(&state, "slava@ukraini.ua").await?.id;
+            let settings1 = UserSettingDetails::get(&state.mm, user1_id).await?;
+            let settings2 = UserSettingDetails::get(&state.mm, user2_id).await?;
             let recipe_id1 = Recipe::create(
                 &state.mm,
-                user1.id,
+                user1_id,
                 &a_complete_recipe_for_create().0,
                 &settings1,
             )
             .await?;
             let recipe_id2 = Recipe::create(
                 &state.mm,
-                user2.id,
+                user2_id,
                 &a_complete_recipe_for_create().0,
                 &settings2,
             )
@@ -205,7 +205,7 @@ mod tests {
             RecipeTimeline::create(
                 &state.mm,
                 recipe_id1,
-                user1.id,
+                user1_id,
                 &RecipeTimelineForCreate::default(),
             )
             .await?;
@@ -213,7 +213,7 @@ mod tests {
             RecipeTimeline::create(
                 &state.mm,
                 recipe_id1,
-                user1.id,
+                user1_id,
                 &RecipeTimelineForCreate {
                     title: "A title".into(),
                     comment: Some("A comment".into()),
@@ -229,12 +229,12 @@ mod tests {
             RecipeTimeline::create(
                 &state.mm,
                 recipe_id2,
-                user2.id,
+                user2_id,
                 &RecipeTimelineForCreate::default(),
             )
             .await?;
 
-            let got = RecipeTimeline::all(&state.mm, recipe_id1, user1.id).await?;
+            let got = RecipeTimeline::all(&state.mm, recipe_id1, user1_id).await?;
 
             pretty_assertions::assert_eq!(got.len(), 2);
             Ok(())
@@ -289,8 +289,8 @@ mod tests {
                     id: timeline_id,
                     recipe_id,
                     user_id: user.id,
-                    title: timeline_c.title.clone(),
-                    comment: timeline_c.comment.clone(),
+                    title: timeline_c.title,
+                    comment: timeline_c.comment,
                     rating: timeline_c.rating,
                     image: None,
                     created_at: timeline_c.created_at.unwrap(),

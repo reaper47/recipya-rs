@@ -8,7 +8,7 @@ macro_rules! time_regexes {
     ($($lang:ident => $regex:expr),* $(,)?) => {
         $(
             static $lang: LazyLock<Regex> = LazyLock::new(|| {
-                    Regex::new($regex).expect(concat!("Failed to compile ", stringify!($lang)))
+                    Regex::new($regex).expect(concat!("failed to compile ", stringify!($lang)))
             });
         )*
     };

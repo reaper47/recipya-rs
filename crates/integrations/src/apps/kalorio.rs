@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
+use itertools::Itertools;
+use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{line_ending, space0, space1};
 use winnow::combinator::{alt, delimited, opt, preceded, repeat, separated, seq, terminated};
@@ -65,7 +67,7 @@ pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
                     _ => 2,
                 };
 
-                if let Some(Ingredient::Line(prev)) = ingredients.get(i - idx).cloned() {
+                if let Some(Ingredient::Line(prev)) = ingredients.get(i - idx) {
                     let combined = format!("{prev} [{current}]");
                     ingredients[i - idx] = Ingredient::Line(Cow::Owned(combined));
                     ingredients.remove(i);
@@ -79,10 +81,7 @@ pub fn fix_ingredients(ingredients: &mut Vec<Ingredient>) {
 
 impl From<KalorioTextRecipe> for Recipe {
     fn from(r: KalorioTextRecipe) -> Self {
-        let (category, keywords) = match r.keywords.as_slice() {
-            [first, rest @ ..] => (Some(first.clone()), rest.to_vec()),
-            [] => (None, Vec::new()),
-        };
+        let (category, keywords) = r.keywords.split_first_owned();
 
         Self {
             r#type: AtType::Recipe.to_opt(),
@@ -115,9 +114,9 @@ where
     let mut recipes = parse_txt(&mut content.as_str())?
         .into_iter()
         .map(Recipe::from)
-        .collect::<Vec<_>>();
+        .collect_vec();
 
-    let is_based_on = recipes.last().map(|r| r.is_based_on.clone());
+    let is_based_on = recipes.last().map(|r| &r.is_based_on).cloned();
 
     if let Some(based_on) = is_based_on {
         for r in &mut recipes {

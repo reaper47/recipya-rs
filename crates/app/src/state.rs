@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
+use std::time::Duration;
 
 use axum::extract::ws::{Message, WebSocket};
 use tokio::sync::{Mutex, RwLock};
+use tokio::time::timeout;
 use url::Url;
 use uuid::Uuid;
 
@@ -54,7 +56,7 @@ impl AppState {
             fs_support,
             mm: ModelManager::new(config.database_url).await?,
             recipe_cache: Arc::new(Mutex::new(RecipeCache::new(
-                NonZeroUsize::new(1000).expect("LRU to be initialized"),
+                NonZeroUsize::new(1000).expect("lru to be initialized"),
             ))),
             scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
             subscribers: Arc::new(Mutex::new(HashMap::new())),
@@ -84,7 +86,7 @@ impl AppState {
             fs_support,
             mm,
             recipe_cache: Arc::new(Mutex::new(RecipeCache::new(
-                NonZeroUsize::new(1000).expect("LRU to be initialized"),
+                NonZeroUsize::new(1000).expect("lru to be initialized"),
             ))),
             scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
             subscribers: Arc::new(Mutex::new(HashMap::new())),
@@ -142,9 +144,6 @@ impl AppState {
 
     /// Broadcasts a message to all active WebSocket subscribers of a given user.
     pub async fn broadcast(&self, message: Message, user_id: Uuid) {
-        use std::time::Duration;
-        use tokio::time::timeout;
-
         let send_timeout = Duration::from_secs(10);
 
         let connections = {
@@ -178,7 +177,7 @@ impl AppState {
         }
     }
     /// Gets a recipe from the cache if present.
-    pub async fn get_cached_recipe(&self, key: RecipeCacheKey) -> Option<ViewRecipe> {
+    pub async fn get_cached_recipe(&self, key: RecipeCacheKey) -> Option<Arc<ViewRecipe>> {
         let mut cache = self.recipe_cache.lock().await;
         cache.get(&key).cloned()
     }
@@ -186,7 +185,7 @@ impl AppState {
     /// Inserts the recipe into the cache.
     pub async fn cache_recipe(&self, key: RecipeCacheKey, recipe: &ViewRecipe) {
         let mut cache = self.recipe_cache.lock().await;
-        cache.put(key, recipe.clone());
+        cache.put(key, Arc::new(recipe.clone()));
     }
 
     /// Removes an entry from the cache.

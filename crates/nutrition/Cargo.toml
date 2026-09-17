@@ -1,0 +1,42 @@
+[package]
+name = "nutrition"
+publish = false
+version.workspace = true
+
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+derive_more.workspace = true
+diesel.workspace = true
+diesel-async.workspace = true
+ingredient = "0.3.0"
+math.workspace = true
+repository.workspace = true
+reqwest.workspace = true
+scraper.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+simd-json = "0.18.0"
+strum.workspace = true
+strum_macros.workspace = true
+support.workspace = true
+time.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+zip.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+test-db.workspace = true
+test-utils.workspace = true
+tokio.workspace = true

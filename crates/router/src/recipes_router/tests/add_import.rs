@@ -8,9 +8,7 @@ mod tests {
     use serde_json::json;
     use test_db::default_config;
     use test_fixtures::{HIDDEN_WS_NOTIFICATION, assert_html, assert_ws_message, open_test_file};
-    use test_utils::{
-        assert_must_be_logged_in, build_server_logged_in, build_server_ws,
-    };
+    use test_utils::{assert_must_be_logged_in, build_server_logged_in, build_server_ws};
 
     use crate::recipes_router::params::PreviewForm;
 
@@ -325,7 +323,10 @@ mod tests {
 
             res.assert_status_ok();
             let user_id = User::all(&state.mm).await?[0].id;
-            let recipe_id = Recipe::all(&state.mm, user_id).await?.last().map_or(1, |r| r.id);
+            let recipe_id = Recipe::all(&state.mm, user_id)
+                .await?
+                .last()
+                .map_or(1, |r| r.id);
             let reports = ViewReport::fetch_all(&state.mm, 1, user_id).await?;
             res.assert_header(axum_htmx::HX_REDIRECT, format!("/recipes/{recipe_id}"));
             assert_eq!(reports.len(), 1);

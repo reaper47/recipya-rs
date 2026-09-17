@@ -41,7 +41,7 @@ pub fn auth_config() -> &'static AuthConfig {
         if std::env::var("APP_ENV").as_deref() == Ok("test") {
             AuthConfig::for_test()
         } else {
-            AuthConfig::load_from_file().expect("Failed to load auth config")
+            AuthConfig::load_from_file().expect("failed to load auth config")
         }
     })
 }
@@ -73,7 +73,7 @@ impl AuthConfig {
 
         warn!("Auth config not found, generating a new one");
         fs::create_dir_all(&data_dir).map_err(|err| {
-            error!("Failed to create auth config directory: {err}");
+            error!(?err, "Failed to create auth config directory");
             Error::ConfigFileWriteFailed
         })?;
 
@@ -87,12 +87,12 @@ impl AuthConfig {
         let tmp_path = config_path.with_extension("tmp");
 
         fs::write(&tmp_path, &json).map_err(|err| {
-            error!("Failed to write auth config: {err}");
+            error!(?err, "Failed to write auth config");
             Error::ConfigFileWriteFailed
         })?;
 
         if let Err(err) = fs::rename(&tmp_path, &config_path) {
-            error!("Failed to rename auth config (race condition): {err}");
+            error!(?err, "Failed to rename auth config (race condition)");
             let s = fs::read_to_string(&config_path).map_err(|_| Error::ConfigFileWriteFailed)?;
             return Self::from_str(&s);
         }
@@ -108,10 +108,10 @@ impl AuthConfig {
     fn decode_keys(mut self) -> Self {
         self.decoded_password_key = URL_SAFE_NO_PAD
             .decode(&self.password_key)
-            .expect("Invalid auth config password key");
+            .expect("invalid auth config password key");
         self.decoded_token_key = URL_SAFE_NO_PAD
             .decode(&self.token_key)
-            .expect("Invalid auth config token key");
+            .expect("invalid auth config token key");
         self
     }
 
@@ -122,8 +122,8 @@ impl AuthConfig {
             jwt_secret: URL_SAFE_NO_PAD.encode(generate_key()),
             decoded_password_key: URL_SAFE_NO_PAD
                 .decode(&password_key)
-                .expect("Valid password key"),
-            decoded_token_key: URL_SAFE_NO_PAD.decode(&token_key).expect("Valid token key"),
+                .expect("valid password key"),
+            decoded_token_key: URL_SAFE_NO_PAD.decode(&token_key).expect("valid token key"),
             password_key,
             token_key,
             token_duration_sec: 1800.0,

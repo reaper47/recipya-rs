@@ -12,11 +12,13 @@ use axum::{
     extract::{State, ws::Message},
     response::IntoResponse,
 };
+use futures::{StreamExt, stream};
 use futures_util::lock::Mutex;
+use itertools::Itertools;
 use rand::RngExt;
 use reqwest::StatusCode;
 use tokio::{sync::mpsc, time::Instant};
-use tracing::error;
+use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -30,6 +32,7 @@ use models::{
     },
     settings::UserSettingDetails,
 };
+use support::net::resolve_and_validate;
 
 use crate::{
     Error,
@@ -51,6 +54,17 @@ struct FetchWebsiteContext {
     total: i64,
 }
 
+impl From<&FetchWebsiteContext> for Items {
+    fn from(ctx: &FetchWebsiteContext) -> Self {
+        Self {
+            total: i32::try_from(ctx.total).unwrap_or(0),
+            success: i32::try_from(ctx.count_success.load(Ordering::SeqCst)).unwrap_or(0),
+            skipped: i32::try_from(ctx.count_warning.load(Ordering::SeqCst)).unwrap_or(0),
+            failed: i32::try_from(ctx.count_error.load(Ordering::SeqCst)).unwrap_or(0),
+        }
+    }
+}
+
 impl FetchWebsiteContext {
     fn new(num_websites: usize, _user_id: Uuid) -> Self {
         Self {
@@ -61,7 +75,7 @@ impl FetchWebsiteContext {
             report_logs: Arc::new(Mutex::new(Vec::new())),
             total: num_websites
                 .try_into()
-                .inspect_err(|err| error!("Failed to cast total '{num_websites}' to i64: {err}"))
+                .inspect_err(|err| error!(?num_websites, ?err, "Failed to cast total to i64"))
                 .unwrap_or(i64::MAX),
         }
     }
@@ -120,18 +134,25 @@ pub async fn add_website_post_handler(
     State(state): State<AppState>,
     Form(form): Form<RecipeScrapeForm>,
 ) -> impl IntoResponse {
-    let mut urls = form
+    let mut candidates = form
         .urls
         .lines()
         .filter_map(|line| Url::parse(line.trim_end_matches('/')).ok())
-        .collect::<Vec<_>>();
+        .collect_vec();
+    candidates.sort();
+    candidates.dedup();
+
+    let urls = stream::iter(candidates)
+        .map(|u| async move { resolve_and_validate(u).await.ok() })
+        .buffered(8)
+        .filter_map(|o| async move { o })
+        .collect::<Vec<_>>()
+        .await;
 
     if urls.is_empty() {
         broadcast_error(&state, user.id, "No valid URLs found.").await;
         return Error::InvalidPayload.into_response();
     }
-    urls.sort();
-    urls.dedup();
 
     scrape_recipes(state, urls, user.id);
 
@@ -142,7 +163,7 @@ pub async fn add_website_post_handler(
 fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
     tokio::spawn(async move {
         let num_urls = urls.len();
-        let (tx, mut rx) = mpsc::channel::<()>(num_urls);
+        let (tx, mut rx) = mpsc::channel::<()>(num_urls.min(64));
         let fetch_ctx = FetchWebsiteContext::new(num_urls, user_id);
         let total_exec_time = Instant::now();
 
@@ -156,8 +177,21 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             let tx = tx.clone();
             let fetch_ctx = fetch_ctx.clone();
             let state = state.clone();
+            let semaphore = state.scraper.semaphore.clone();
 
             tokio::spawn(async move {
+                let _permit = match semaphore.acquire().await {
+                    Ok(p) => p,
+                    Err(err) => {
+                        warn!(?err, "Failed to acquire scrape semaphore, aborting work");
+                        for _ in host_urls {
+                            fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
+                            let _ = tx.send(()).await;
+                        }
+                        return;
+                    }
+                };
+
                 let mut host_urls = host_urls.into_iter().peekable();
 
                 while let Some((idx, url)) = host_urls.next() {
@@ -177,7 +211,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         let num_urls = num_urls
             .try_into()
             .inspect_err(|err| {
-                error!("Failed to convert num_urls '{num_urls}' to i64: {err}");
+                error!(?num_urls, ?err, "Failed to convert num_urls to i64");
             })
             .unwrap_or(i64::MAX);
 
@@ -202,20 +236,13 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         }
 
         state.hide_broadcast(user_id).await;
-
-        let items = Items {
-            total: i32::try_from(fetch_ctx.total).unwrap_or(0),
-            success: i32::try_from(fetch_ctx.count_success.load(Ordering::SeqCst)).unwrap_or(0),
-            skipped: i32::try_from(fetch_ctx.count_warning.load(Ordering::SeqCst)).unwrap_or(0),
-            failed: i32::try_from(fetch_ctx.count_error.load(Ordering::SeqCst)).unwrap_or(0),
-        };
-
+        let items = Items::from(&fetch_ctx);
         fetch_ctx.send_toast_after_processing(&state, user_id).await;
 
         let report = ReportForCreate::new(
             ReportTypeFull::website(),
             Arc::try_unwrap(fetch_ctx.report_logs)
-                .expect("Report logs arc still has multiple owners")
+                .expect("report logs arc still has multiple owners")
                 .into_inner(),
             items,
             i64::try_from(total_exec_time.elapsed().as_millis()).unwrap_or_default(),
@@ -225,7 +252,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         match report.insert(&state.mm).await {
             Ok(_) => state.broadcast_trigger("refreshReports", user_id).await,
             Err(err) => {
-                error!("Error inserting website report into the database: {err}");
+                error!(?err, "Error inserting website report into the database");
             }
         }
     });
@@ -268,7 +295,7 @@ async fn process_recipe_url(
                 }
                 Err(err) => {
                     fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
-                    error!("Error inserting recipe into database '{url}': {err}");
+                    error!(?url, ?err, "Error inserting recipe into database");
                     match err {
                         models::Error::DuplicateEntityWithID(id) => {
                             fetch_ctx.recipe_ids.lock().await.push(id);
@@ -304,7 +331,7 @@ async fn process_recipe_url(
         }
         Err(err) => {
             fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
-            error!("Error fetching recipe '{url}': {err}");
+            error!(?url, ?err, "Error fetching recipe");
             fetch_ctx
                 .report_logs
                 .lock()

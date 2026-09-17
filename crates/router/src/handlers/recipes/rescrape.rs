@@ -56,7 +56,7 @@ pub async fn recrape_recipe_handler(
                 (RecipeForCreate::from(r), is_precalculated)
             }
             Err(err) => {
-                error!("Error fetching recipe '{recipe_id}' for user '{user_id}': {err}",);
+                error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
                 broadcast_error(&state, user_id, "Recipe not found.").await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
@@ -68,7 +68,7 @@ pub async fn recrape_recipe_handler(
     let new_recipe_c = match state.scraper.scrape(old_recipe_c.source.as_str()).await {
         Ok(r) => schema_to_recipe_for_create(&state, r).await,
         Err(err) => {
-            error!("Error scraping recipe '{recipe_id}' for user '{user_id}': {err}");
+            error!(?recipe_id, user = ?user.id, ?err, "Error scraping recipe");
             broadcast_error(
                 &state,
                 user.id,
@@ -138,10 +138,7 @@ pub async fn recrape_recipe_put_handler(
     let mut recipe = match Recipe::get(&state.mm, user.id, recipe_id).await {
         Ok(r) => RecipeForCreate::from(r),
         Err(err) => {
-            error!(
-                "Error fetching recipe '{recipe_id}' for user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
             broadcast_error(&state, user.id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
@@ -306,7 +303,7 @@ pub async fn recrape_recipe_put_handler(
         && let Some(source) = sources.first()
         && source == "new"
     {
-        recipe.keywords = map.get("keywords").cloned().unwrap_or_default();
+        recipe.keywords = map.remove("keywords").unwrap_or_default();
     }
 
     if map
@@ -378,8 +375,7 @@ pub async fn recrape_recipe_put_handler(
         && source == "new"
     {
         recipe.tools = map
-            .get("tools")
-            .cloned()
+            .remove("tools")
             .unwrap_or_default()
             .into_iter()
             .map(|t| ToolForCreate {
@@ -447,9 +443,8 @@ pub async fn recrape_recipe_put_handler(
         };
 
         let serving_size = map
-            .get("serving-size")
-            .and_then(|v| v.first())
-            .cloned()
+            .remove("serving-size")
+            .and_then(|v| v.into_iter().next())
             .unwrap_or_default();
 
         recipe.nutrition = NutritionDetailsForCreate {
@@ -466,10 +461,7 @@ pub async fn recrape_recipe_put_handler(
             state.remove_cached_recipe((user.id, recipe_id)).await;
         }
         Err(err) => {
-            error!(
-                "Failed to update recipe '{recipe_id}' user '{}': {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
             broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Err(Error::Database);
         }

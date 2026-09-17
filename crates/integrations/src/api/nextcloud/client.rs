@@ -3,6 +3,8 @@ use std::{marker::PhantomData, path::PathBuf};
 use async_trait::async_trait;
 use base64::{Engine as _, engine::general_purpose};
 use reqwest::Client;
+use tracing::info;
+
 use schema_org::{
     AtType, DurationOrText, NutritionInformation, at_context,
     field::{
@@ -11,8 +13,7 @@ use schema_org::{
         RecipeRecipeYieldFieldEnum, RecipeToolFieldEnum,
     },
 };
-use support::fs::new_fs_support;
-use tracing::info;
+use support::{fs::new_fs_support, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
 
 use crate::{
     Error, Result,
@@ -40,7 +41,7 @@ pub trait Authenticated<C: RecipeClient>: Send + Sync {
     /// Fetches a recipe from the connected host.
     async fn fetch_recipe(
         &self,
-        id: String,
+        id: &str,
     ) -> std::result::Result<schema_org::Recipe, (String, Error)>;
 }
 
@@ -94,11 +95,11 @@ impl<C: RecipeClient> Authenticated<C> for Nextcloud<AuthenticatedState, C> {
 
     async fn fetch_recipe(
         &self,
-        id: String,
+        id: &str,
     ) -> std::result::Result<schema_org::Recipe, (String, Error)> {
-        match self.recipe_client.fetch_recipe(&id).await {
+        match self.recipe_client.fetch_recipe(id).await {
             Ok(recipe) => Ok(recipe),
-            Err(err) => Err((id, err)),
+            Err(err) => Err((id.to_string(), err)),
         }
     }
 }
@@ -118,6 +119,7 @@ impl RecipeClient for NextcloudRecipeClient {
         Ok(Self {
             host: self.host,
             client: Client::builder()
+                .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
                 .default_headers(assemble_token_header(&AuthType::Basic, &token)?)
                 .build()?,
         })

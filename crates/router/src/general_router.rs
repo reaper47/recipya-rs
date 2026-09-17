@@ -6,8 +6,9 @@ use axum::routing::{get, post};
 use app::state::AppState;
 
 use crate::handlers::general::{
-    download_handler, fetch_handler, index_handler, paper_sizes_handler,
-    search_suggestions_handler, upload_note_image, user_initials_handler, ws_handler,
+    download_handler, fetch_handler, health_live_handler, health_ready_handler, index_handler,
+    paper_sizes_handler, search_suggestions_handler, upload_note_image, user_initials_handler,
+    ws_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
 
@@ -28,6 +29,8 @@ pub fn general_routes(state: &AppState) -> Router<AppState> {
 
     Router::new()
         .route("/", get(index_handler))
+        .route("/health/live", get(health_live_handler))
+        .route("/health/ready", get(health_ready_handler))
         .merge(protected)
 }
 
@@ -222,7 +225,7 @@ mod tests {
             let token = Uuid::new_v4();
             Download::create(
                 &state.mm,
-                DownloadForCreate::new(user_id, token, PathBuf::from(&file_path)),
+                DownloadForCreate::new(user_id, token, &file_path),
             )
             .await?;
 
@@ -242,12 +245,12 @@ mod tests {
         #[tokio::test]
         async fn test_download_file_missing_on_disk_ok() -> Result<()> {
             let (server, state) = build_server_logged_in(default_config()).await?;
-            let user = User::all(&state.mm).await?[0].clone();
+            let user_id = User::all(&state.mm).await?[0].id;
             let token = Uuid::new_v4();
             Download::create(
                 &state.mm,
                 DownloadForCreate {
-                    user_id: user.id,
+                    user_id,
                     token,
                     file_path: PathBuf::from("/tmp/nonexistent_export.zip"),
                 },
@@ -319,9 +322,9 @@ mod tests {
             let (mut recipe, _) = a_complete_recipe_for_create();
             recipe.name = "Test Recipe".into();
             recipe.cuisine = Some("Italian".into());
-            let user = User::all(&state.mm).await?[0].clone();
-            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
-            let _ = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+            let _ = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
             let res = server.get(&url("cui:")).await;
 
@@ -421,10 +424,10 @@ mod tests {
         }
 
         async fn insert_basic_recipe(state: &AppState) -> Result<i64> {
-            let user = User::all(&state.mm).await?[0].clone();
-            let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+            let user_id = User::all(&state.mm).await?[0].id;
+            let settings = UserSettingDetails::get(&state.mm, user_id).await?;
             let (recipe, _) = a_complete_recipe_for_create();
-            let recipe_id = Recipe::create(&state.mm, user.id, &recipe, &settings).await?;
+            let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
             Ok(recipe_id)
         }
     }

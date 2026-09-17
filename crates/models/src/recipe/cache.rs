@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use lru::LruCache;
 use uuid::Uuid;
 
@@ -7,4 +9,4 @@ use crate::data::ViewRecipe;
 pub type RecipeCacheKey = (Uuid, i64); // (user_id, recipe_id)
 
 /// The type of the LRU cache used to cache user recipes.
-pub type RecipeCache = LruCache<RecipeCacheKey, ViewRecipe>;
+pub type RecipeCache = LruCache<RecipeCacheKey, Arc<ViewRecipe>>;

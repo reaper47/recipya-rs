@@ -125,7 +125,7 @@ where
         let recipe: CuisineRecipe = match result {
             Ok(r) => r,
             Err(err) => {
-                error!("Failed to parse Computer Cuisine Deluxe entry: {err}");
+                error!(?err, "Failed to parse Computer Cuisine Deluxe entry");
                 continue;
             }
         };

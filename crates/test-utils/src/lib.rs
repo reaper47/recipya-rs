@@ -57,10 +57,10 @@ pub async fn create_app_state(config: Config) -> AppState {
         Arc::new(MockFs),
     )
     .map_err(|err| {
-        error!("Could not initialise app state: {err}");
+        error!(?err, "Could not initialise app state");
         err
     })
-    .expect("Failed to initialise app state")
+    .expect("failed to initialise app state")
 }
 
 /// Builds a test server with anonymous access (no user logged in).
@@ -80,7 +80,7 @@ pub async fn build_server_anonymous(app_config: Config) -> Result<(TestServer, A
 ///
 /// Panics if the test user is not found in the database.
 pub async fn build_server_logged_in(app_config: Config) -> Result<(TestServer, AppState)> {
-    let (routes, state) = prepare_router(app_config.clone()).await?;
+    let (routes, state) = prepare_router(app_config).await?;
     let config = TestServerConfig {
         save_cookies: true,
         ..TestServerConfig::default()
@@ -88,7 +88,7 @@ pub async fn build_server_logged_in(app_config: Config) -> Result<(TestServer, A
 
     let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
         .await?
-        .expect("User should be in database");
+        .expect("user should be in database");
 
     let token = generate_access_token(&user.id)?;
 
@@ -119,7 +119,7 @@ async fn build_server_ws_helper(
     app_config: Config,
     auth_email: &str,
 ) -> Result<(TestServer, TestWebSocket, AppState)> {
-    let (routes, state) = prepare_router(app_config.clone()).await?;
+    let (routes, state) = prepare_router(app_config).await?;
     let config = TestServerConfig {
         save_cookies: true,
         transport: Some(Transport::HttpRandomPort),
@@ -128,12 +128,12 @@ async fn build_server_ws_helper(
 
     let user = User::get_user_by_email(&state.mm, auth_email)
         .await?
-        .expect("User should be in database");
+        .expect("user should be in database");
 
     let mut server = TestServer::new_with_config(routes, config);
 
     let token = generate_access_token(&user.id)?;
-    let mut cookie = Cookie::new(AUTH_TOKEN, token.clone());
+    let mut cookie = Cookie::new(AUTH_TOKEN, token);
     cookie.set_http_only(true);
     cookie.set_path("/");
     server.add_cookie(cookie);
@@ -149,12 +149,12 @@ async fn build_server_ws_helper(
 ///
 /// Panics if the user cannot be found after creation.
 pub async fn get_token(mm: ModelManager) -> Result<String> {
-    let email = "confirm@test.com".to_string();
+    let email = "confirm@test.com";
 
     User::new_with_hash(
         &mm,
         UserForCreate {
-            email: email.clone(),
+            email: email.to_string(),
             password_clear: "12345678".to_string(),
         },
         get_password_salt(),
@@ -162,9 +162,9 @@ pub async fn get_token(mm: ModelManager) -> Result<String> {
     )
     .await?;
 
-    let user = User::get_user_by_email(&mm, &email)
+    let user = User::get_user_by_email(&mm, email)
         .await?
-        .expect("User not found");
+        .expect("user not found");
 
     Ok(generate_access_token(&user.id)?)
 }
@@ -172,7 +172,7 @@ pub async fn get_token(mm: ModelManager) -> Result<String> {
 /// Prepares the router for the test server with the given database URL.
 async fn prepare_router(config: Config) -> Result<(Router<()>, AppState)> {
     let state = create_app_state(config).await;
-    let app = router(state.clone())?
+    let app = router(&state)?
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 

@@ -34,14 +34,14 @@ pub struct ReportLogForCreate {
 
 #[derive(Insertable)]
 #[diesel(table_name = schema::reports_logs)]
-pub struct ReportLogForInsert {
+pub struct ReportLogForInsert<'a> {
     pub seq_num: i32,
     pub report_id: i64,
-    pub entity_name: String,
+    pub entity_name: &'a str,
     pub recipe_id: Option<i64>,
     pub level_id: i16,
-    pub error_code: Option<String>,
-    pub error_reason: Option<String>,
+    pub error_code: Option<&'a str>,
+    pub error_reason: Option<&'a str>,
     pub exec_time_ms: i64,
 }
 

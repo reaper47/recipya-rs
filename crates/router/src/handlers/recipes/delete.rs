@@ -22,10 +22,7 @@ pub async fn delete_recipe_handler(
             (StatusCode::NO_CONTENT, [(HX_REDIRECT, "/")]).into_response()
         }
         Err(err) => {
-            error!(
-                "Error deleting recipe {recipe_id} for user {}: {err}",
-                user.id
-            );
+            error!(?recipe_id, user = ?user.id, ?err, "Error deleting recipe");
             broadcast_error(&state, user.id, "Recipe could not be deleted.").await;
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }

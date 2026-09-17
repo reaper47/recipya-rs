@@ -4,6 +4,7 @@ use std::io::{Read, Seek};
 use itertools::Itertools;
 use scraper::{ElementRef, Html, Selector};
 use serde::Deserialize;
+use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space1, till_line_ending};
 use winnow::combinator::{alt, delimited, not, opt, peek, preceded, repeat, terminated};
@@ -61,13 +62,7 @@ impl From<RecipeYaml> for Recipe {
         );
         keywords = keywords.into_iter().unique().collect();
 
-        let (cat, keywords) = match keywords.as_slice() {
-            [first, rest @ ..] => (
-                Some(first.clone()).filter(|s| !s.trim().is_empty()),
-                rest.to_vec(),
-            ),
-            [] => (None, vec![]),
-        };
+        let (cat, keywords) = keywords.split_first_owned();
 
         Self {
             r#type: AtType::Recipe.to_opt(),
@@ -138,7 +133,9 @@ impl From<RecipeYaml> for Recipe {
                     if nut.is_empty() { vec![] } else { vec![nut] }
                 })
                 .unwrap_or_default(),
-            recipe_category: cat.map(|c| vec![c]).unwrap_or_default(),
+            recipe_category: cat
+                .filter(|c| !c.is_empty())
+                .map_or(Vec::new(), |c| vec![c]),
             recipe_ingredient: r
                 .ingredients
                 .into_iter()

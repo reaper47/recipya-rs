@@ -69,17 +69,19 @@ where
     Ok(value.and_then(|v| match v {
         Value::String(s) => Some(s),
         Value::Array(arr) => {
-            let strings: Vec<String> = arr
+            let mut strings: Vec<String> = arr
                 .into_iter()
                 .filter_map(|v| v.as_str().map(str::to_owned))
                 .collect();
 
-            let first = strings.first().cloned();
+            let idx = strings
+                .iter()
+                .position(|s| s.eq_ignore_ascii_case("recipe"));
 
-            strings
-                .into_iter()
-                .find(|s| s.to_lowercase() == "recipe")
-                .or(first)
+            match idx {
+                Some(i) => Some(strings.swap_remove(i)),
+                None => strings.into_iter().next(),
+            }
         }
         _ => None,
     }))

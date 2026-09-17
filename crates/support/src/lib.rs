@@ -3,6 +3,7 @@ mod macros;
 pub mod b64;
 pub mod envs;
 pub mod fs;
+pub mod net;
 pub mod numbers;
 pub mod regexp;
 pub mod software;

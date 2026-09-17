@@ -7,6 +7,8 @@ use tracing::error;
 use wreq::header::LOCATION;
 use wreq_util::Emulation;
 
+use support::time::DEFAULT_HTTP_CONNECTION_TIMEOUT;
+
 use crate::websites::Website;
 use crate::{ENABLE_JS, Error, FORBIDDEN, Result};
 
@@ -31,6 +33,7 @@ impl Default for AppHttpClient {
         Self {
             client: reqwest::Client::default(),
             client_wreq: wreq::Client::builder()
+                .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
                 .emulation(Emulation::Chrome145)
                 .build()
                 .expect("wreq client to be initialized"),
@@ -61,7 +64,7 @@ impl HttpClient for AppHttpClient {
             if !wres.status().is_success() {
                 let status = wres.status();
                 let bytes = wres.bytes().await?;
-                error!("Failed to scrape '{url}' - HTTP error: {status} (body: {bytes:?})");
+                error!(?url, ?status, body = ?bytes, "Failed to scrape");
                 return Err(Error::Fetch(format!("HTTP error: {status}")));
             }
 

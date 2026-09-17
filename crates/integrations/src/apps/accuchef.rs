@@ -128,13 +128,11 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                     match parse_duration(&s) {
                         Ok(d) => i32::try_from(d.as_secs())
                             .inspect_err(|err| {
-                                error!(
-                                    "Failed to parse prep time '{d:?}' of an AccuChef recipe: {err}"
-                                );
+                                error!(?d, ?err, "Failed to parse prep time of an AccuChef recipe");
                             })
                             .unwrap_or_default(),
                         Err(err) => {
-                            error!("Failed to parse prep time of an AccuChef recipe: {err}");
+                            error!(?err, "Failed to parse prep time of an AccuChef recipe");
                             15 * 60
                         }
                     }
@@ -225,8 +223,7 @@ where
         ));
     }
 
-    let title = blocks.first().cloned().unwrap_or_default();
-    blocks.remove(0);
+    let title = blocks.remove(0);
 
     let yield_idx = blocks
         .iter()
@@ -299,17 +296,16 @@ where
 {
     let content = read_file(r)?;
     let content = content.replace('\0', "");
-    let buf = Cursor::new(content.clone());
 
     Ok(match parse_accuchef_recipe(&mut content.as_str()) {
         Ok(r) => r.into_iter().map(Recipe::from).collect(),
-        Err(_) => match mastercook::parse_mxp(buf.clone()) {
+        Err(_) => match mastercook::parse_mxp(Cursor::new(content.as_str())) {
             Ok(r) => r,
             Err(err) => {
                 warn!(
                     "Failed to parse AccuChef recipes with mastercook::parse_mxp, trying mealmaster::mxp: {err}"
                 );
-                match mealmaster::parse(buf) {
+                match mealmaster::parse(Cursor::new(content.as_str())) {
                     Ok(r) if !r.is_empty() => r,
                     _ => parse_txt_basic(&mut content.as_str())?
                         .into_iter()
@@ -495,7 +491,6 @@ fn parse_nutrition(block: &str) -> NutritionInformation {
         parts
             .iter()
             .find(|s| s.trim().ends_with(suffix))
-            .cloned()
             .map_or(Vec::new(), |s| {
                 vec![Mass::new(s.trim().trim_end_matches(suffix).trim())]
             })
@@ -505,7 +500,6 @@ fn parse_nutrition(block: &str) -> NutritionInformation {
         calories: parts
             .iter()
             .find(|s| s.starts_with("Per Serving:"))
-            .cloned()
             .map_or(Vec::new(), |s| {
                 vec![Energy::new({
                     let s = s.trim_start_matches("Per Serving:");

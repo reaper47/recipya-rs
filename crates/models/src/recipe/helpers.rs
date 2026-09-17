@@ -8,7 +8,9 @@ use diesel::data_types::PgInterval;
 use diesel::prelude::*;
 use diesel::upsert::excluded;
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use itertools::Itertools;
 
+use nutrition::NutritionDataSource;
 use repository::schema;
 use support::regexp::time::TimeParser;
 use support::strings::normalise_vulgar_fractions;
@@ -16,7 +18,6 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::Result;
-use crate::nutrition::NutritionDataSource;
 use crate::recipe::structs::bold::BoldInstructionIndex;
 use crate::recipe::structs::media::{AdditionalImageForInsert, VideoForCreate, VideoForInsert};
 use crate::recipe::structs::nutrition::{
@@ -132,24 +133,22 @@ where
     }
 
     let mut seen = HashSet::new();
+    let mut ingredient_names = Vec::new();
     let mut unique_ingredients = Vec::new();
 
     for (name, section_id, idx, section_order) in all_ingredients {
         if seen.insert(name.clone()) {
-            unique_ingredients.push((name, section_id, idx, section_order));
+            let name_idx = ingredient_names.len();
+            ingredient_names.push(name);
+            unique_ingredients.push((name_idx, section_id, idx, section_order));
         }
     }
-
-    let ingredient_names = unique_ingredients
-        .iter()
-        .map(|(name, _, _, _)| name.clone())
-        .collect::<Vec<_>>();
 
     let ingredients_with_ids: Vec<(i64, String)> = diesel::insert_into(schema::ingredients::table)
         .values(
             &ingredient_names
                 .iter()
-                .map(|s| IngredientForInsert { name: s.clone() })
+                .map(|s| IngredientForInsert { name: s.as_str() })
                 .collect::<Vec<_>>(),
         )
         .on_conflict(schema::ingredients::name)
@@ -168,7 +167,8 @@ where
         .values(
             &unique_ingredients
                 .iter()
-                .filter_map(|(name, section_id, item_order, section_order)| {
+                .filter_map(|(name_idx, section_id, item_order, section_order)| {
+                    let name = &ingredient_names[*name_idx];
                     name_to_id
                         .get(name)
                         .map(|&ingredient_id| IngredientRecipeForInsert {
@@ -178,16 +178,18 @@ where
                             section_order: i16::try_from(*section_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast ingredients section order '{}': {err}",
-                                        *section_order
+                                        order = *section_order,
+                                        ?err,
+                                        "Failed to cast ingredients section order",
                                     );
                                 })
                                 .unwrap_or_default(),
                             item_order: i16::try_from(*item_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast ingredients item order '{}': {err}",
-                                        *item_order
+                                        order = *item_order,
+                                        ?err,
+                                        "Failed to cast ingredients item order",
                                     );
                                 })
                                 .unwrap_or_default(),
@@ -219,9 +221,9 @@ where
             for (section_idx, section) in sections.iter().enumerate() {
                 let section_id = *sections_map.get(&section.title).unwrap_or(&1);
                 for (idx, item) in section.items.iter().enumerate() {
-                    let duration = time_parser.parse_max_time_seconds(&item.text);
+                    let duration = time_parser.parse_max_time_seconds(item.text.as_str());
                     all_instructions.push((
-                        item.text.clone(),
+                        item.text.as_str(),
                         duration,
                         section_id,
                         idx,
@@ -233,7 +235,7 @@ where
         SectionComponents::Flat(items) => {
             for (idx, item) in items.iter().enumerate() {
                 let duration = time_parser.parse_max_time_seconds(&item.text);
-                all_instructions.push((item.text.clone(), duration, 1, idx, 0));
+                all_instructions.push((item.text.as_str(), duration, 1, idx, 0));
             }
         }
     }
@@ -242,7 +244,7 @@ where
     let mut unique_instructions = Vec::new();
 
     for (name, duration, section_id, idx, section_order) in all_instructions {
-        if seen.insert(name.clone()) {
+        if seen.insert(name) {
             unique_instructions.push((name, duration, section_id, idx, section_order));
         }
     }
@@ -252,7 +254,7 @@ where
             &unique_instructions
                 .iter()
                 .map(|(name, duration, _, _, _)| InstructionForInsert {
-                    name: name.clone(),
+                    name: name.to_string(),
                     duration_seconds: *duration,
                 })
                 .collect::<Vec<_>>(),
@@ -277,7 +279,7 @@ where
                 .iter()
                 .filter_map(|(name, _, section_id, item_order, section_order)| {
                     name_to_id
-                        .get(name)
+                        .get(*name)
                         .map(|&instruction_id| InstructionRecipeForInsert {
                             instruction_id,
                             recipe_id,
@@ -285,16 +287,18 @@ where
                             section_order: i16::try_from(*section_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast instructions section order '{}': {err}",
-                                        *section_order
+                                        order = *section_order,
+                                        ?err,
+                                        "Failed to cast instructions section order",
                                     );
                                 })
                                 .unwrap_or_default(),
                             item_order: i16::try_from(*item_order)
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast instructions item order '{}': {err}",
-                                        *item_order
+                                        order = *item_order,
+                                        ?err,
+                                        "Failed to cast instructions item order",
                                     );
                                 })
                                 .unwrap_or_default(),
@@ -503,7 +507,7 @@ where
 
     let sections_for_insert = ordered_titles
         .iter()
-        .map(|name| SectionForInsert { name: name.clone() })
+        .map(|name| SectionForInsert { name })
         .collect::<Vec<_>>();
 
     if sections_for_insert.is_empty() {
@@ -531,42 +535,56 @@ pub async fn insert_tools<C>(
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
-    let mut uniques = HashSet::new();
-
-    if !tools.is_empty() {
-        let tool_recipes: Vec<_> = diesel::insert_into(schema::tools::table)
-            .values(
-                tools
-                    .iter()
-                    .map(|tool| ToolForInsert {
-                        name: tool.name.to_lowercase(),
-                    })
-                    .filter(|s| uniques.insert(s.name.clone()))
-                    .collect::<Vec<_>>(),
-            )
-            .on_conflict(schema::tools::name)
-            .do_update()
-            .set(schema::tools::name.eq(excluded(schema::tools::name)))
-            .returning((schema::tools::id, schema::tools::name))
-            .get_results::<(i64, String)>(&mut conn)
-            .await?
-            .into_iter()
-            .enumerate()
-            .map(|(idx, (id, _))| ToolRecipeForInsert {
-                tool_id: id,
-                recipe_id,
-                quantity: tools.get(idx).map_or(1, |x| x.quantity),
-                tool_order: i16::try_from(idx)
-                    .inspect_err(|err| error!("Failed to cast tool order '{idx}': {err}"))
-                    .unwrap_or_default(),
-            })
-            .collect::<Vec<_>>();
-
-        diesel::insert_into(schema::tools_recipes::table)
-            .values(&tool_recipes)
-            .execute(&mut conn)
-            .await?;
+    if tools.is_empty() {
+        return Ok(());
     }
+
+    let mut uniques = HashSet::new();
+    let deduped: Vec<&ToolForCreate> = tools
+        .iter()
+        .filter(|tool| uniques.insert(tool.name.to_lowercase()))
+        .collect();
+
+    let name_to_id: HashMap<String, i64> = diesel::insert_into(schema::tools::table)
+        .values(
+            deduped
+                .iter()
+                .map(|tool| ToolForInsert {
+                    name: tool.name.to_lowercase(),
+                })
+                .collect_vec(),
+        )
+        .on_conflict(schema::tools::name)
+        .do_update()
+        .set(schema::tools::name.eq(excluded(schema::tools::name)))
+        .returning((schema::tools::id, schema::tools::name))
+        .get_results::<(i64, String)>(&mut conn)
+        .await?
+        .into_iter()
+        .map(|(id, name)| (name, id))
+        .collect();
+
+    let tool_recipes = deduped
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, tool)| {
+            name_to_id
+                .get(&tool.name.to_lowercase())
+                .map(|&tool_id| ToolRecipeForInsert {
+                    tool_id,
+                    recipe_id,
+                    quantity: tool.quantity,
+                    tool_order: i16::try_from(idx)
+                        .inspect_err(|err| error!(?idx, ?err, "Failed to cast tool order"))
+                        .unwrap_or_default(),
+                })
+        })
+        .collect_vec();
+
+    diesel::insert_into(schema::tools_recipes::table)
+        .values(&tool_recipes)
+        .execute(&mut conn)
+        .await?;
 
     Ok(())
 }
@@ -591,8 +609,9 @@ where
                             let days = i32::try_from(duration.whole_days())
                                 .inspect_err(|err| {
                                     error!(
-                                        "Failed to cast num days '{}': {err}",
-                                        duration.whole_days()
+                                        days = duration.whole_days(),
+                                        ?err,
+                                        "Failed to cast num days",
                                     );
                                 })
                                 .unwrap_or_default();
@@ -601,8 +620,9 @@ where
                                 i64::try_from(duration.whole_microseconds())
                                     .inspect_err(|err| {
                                         error!(
-                                            "Failed to cast num microseconds '{}': {err}",
-                                            duration.whole_microseconds()
+                                            ms = duration.whole_microseconds(),
+                                            ?err,
+                                            "Failed to cast num microseconds",
                                         );
                                     })
                                     .unwrap_or_default(),
@@ -610,8 +630,9 @@ where
                                 i32::try_from(duration.whole_weeks() * 100_000 / 434_524)
                                     .inspect_err(|err| {
                                         error!(
-                                            "Failed to cast num weeks '{}': {err}",
-                                            duration.whole_weeks()
+                                            weeks = duration.whole_weeks(),
+                                            ?err,
+                                            "Failed to cast num weeks",
                                         );
                                     })
                                     .unwrap_or_default(),
@@ -649,9 +670,9 @@ pub async fn save_media_field<S: BuildHasher>(
         .map_err(|_| InvalidBoundary::default())?;
 
     if mime.starts_with("video/") {
-        videos.insert(filename.to_string(), path.clone());
+        videos.insert(filename.to_string(), path);
     } else {
-        images.insert(filename.to_string(), path.clone());
+        images.insert(filename.to_string(), path);
     }
     Ok(())
 }

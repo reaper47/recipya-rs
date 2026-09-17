@@ -738,7 +738,7 @@ mod tests {
             );
             let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
                 .await?
-                .expect("Expected user");
+                .expect("expected user");
             pretty_assertions::assert_eq!(user.is_remember_me, false);
             Ok(())
         }
@@ -788,9 +788,9 @@ mod tests {
 
         fn a_register_form() -> RegisterForm {
             RegisterForm {
-                email: "new_user@example.com".to_string(),
-                password: "12345678".to_string(),
-                password_confirm: "12345678".to_string(),
+                email: "new_user@example.com".into(),
+                password: "12345678".into(),
+                password_confirm: "12345678".into(),
             }
         }
 

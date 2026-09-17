@@ -116,7 +116,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn test_missing_fields_defaults_ok() -> Result<()> {
+        async fn test_add_manual_missing_fields_defaults_ok() -> Result<()> {
             let (server, state) = build_server_logged_in(default_config()).await?;
             let recipe = RecipeForCreate {
                 name: "Best Chinese Kale".to_string(),
@@ -158,7 +158,9 @@ mod tests {
             let recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;
             let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             if let SectionComponents::Flat(instructions) = &mut got.instructions {
-                for i in instructions.iter_mut() { i.id = None; }
+                for i in instructions.iter_mut() {
+                    i.id = None;
+                }
             }
             pretty_assertions::assert_eq!(got.category, "breakfast");
             Ok(())
@@ -202,7 +204,9 @@ mod tests {
             let recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;
             let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             if let SectionComponents::Flat(instructions) = &mut got.instructions {
-                for i in instructions.iter_mut() { i.id = None; }
+                for i in instructions.iter_mut() {
+                    i.id = None;
+                }
             }
             pretty_assertions::assert_eq!(
                 got.keywords,
@@ -214,10 +218,7 @@ mod tests {
             );
             pretty_assertions::assert_eq!(
                 got.instructions,
-                SectionComponents::Flat(vec![
-                    Item::new("Mix the apples"),
-                    Item::new("Eat"),
-                ]),
+                SectionComponents::Flat(vec![Item::new("Mix the apples"), Item::new("Eat"),]),
             );
             pretty_assertions::assert_eq!(
                 got.tools,
@@ -342,10 +343,12 @@ mod tests {
             let recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;
             let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             if let SectionComponents::Flat(instructions) = &mut got.instructions {
-                for item in instructions.iter_mut() { item.id = None; }
+                for item in instructions.iter_mut() {
+                    item.id = None;
+                }
             }
 
-            let times = recipe.times.expect("Should have times");
+            let times = recipe.times.expect("should have times");
             pretty_assertions::assert_eq!(
                 got,
                 RecipeDetails {
@@ -353,7 +356,7 @@ mod tests {
                         id: recipe_id,
                         name: recipe.name,
                         description: recipe.description,
-                        image: Some(got.recipe.image.expect("A main image")),
+                        image: Some(got.recipe.image.expect("main image")),
                         r#yield: 6,
                         language: "eng".into(),
                         measurement_system_id: 2,
@@ -366,7 +369,7 @@ mod tests {
                         user_id,
                     },
                     additional_images: got.additional_images.clone(),
-                    category: recipe.category.expect("Should have category"),
+                    category: recipe.category.expect("should have category"),
                     cuisine: recipe.cuisine,
                     ingredients: match recipe.ingredients {
                         SectionComponents::Grouped(section_items) =>
@@ -454,9 +457,9 @@ mod tests {
                     ),
                     SectionItem::new(
                         "Execution",
-                        vec![
-                            Item::new("Add whip cream and whisk the fruits until smooth")
-                        ],
+                        vec![Item::new(
+                            "Add whip cream and whisk the fruits until smooth",
+                        )],
                     ),
                 ]),
                 ingredients: SectionComponents::Grouped(vec![
@@ -478,7 +481,9 @@ mod tests {
             let recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;
             let mut got = Recipe::get(&state.mm, user_id, recipe_id).await?;
             if let SectionComponents::Grouped(instructions) = &mut got.instructions {
-                for section in instructions.iter_mut() { section.items.iter_mut().for_each(|item| item.id = None); }
+                for section in instructions.iter_mut() {
+                    section.items.iter_mut().for_each(|item| item.id = None);
+                }
             }
             pretty_assertions::assert_eq!(
                 got,
@@ -497,7 +502,7 @@ mod tests {
                         user_id,
                         ..Default::default()
                     },
-                    category: recipe.category.expect("Should have category"),
+                    category: recipe.category.expect("should have category"),
                     ingredients: match recipe.ingredients {
                         SectionComponents::Grouped(section_items) =>
                             SectionComponents::Grouped(section_items),

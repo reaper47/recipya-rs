@@ -22,7 +22,7 @@ pub async fn post_recipe_categories_handler(
     }
 
     if let Err(err) = Recipe::add_category(&state.mm, &category, user.id).await {
-        error!("Error adding recipe category: {err}");
+        error!(?err, "Error adding recipe category");
         broadcast_error(&state, user.id, "Failed to add recipe category.").await;
         return Error::Database.into_response();
     }
@@ -48,7 +48,7 @@ pub async fn delete_recipe_categories_handler(
     }
 
     if let Err(err) = Recipe::delete_recipe_category(&state.mm, &category, user.id).await {
-        error!("Error deleting recipe category: {err}");
+        error!(?err, "Error deleting recipe category");
         broadcast_error(&state, user.id, "Failed to delete recipe category.").await;
         return Error::Database.into_response();
     }

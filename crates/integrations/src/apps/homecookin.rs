@@ -274,9 +274,8 @@ where
     R: Read + Seek,
 {
     let content = read_file(r)?;
-    let cursor = Cursor::new(content.clone());
 
-    let recipes = match mealmaster::parse(cursor) {
+    let recipes = match mealmaster::parse(Cursor::new(content.as_str())) {
         Ok(r) => r,
         Err(_) => parse_txt_helper(&mut content.as_str())?
             .into_iter()

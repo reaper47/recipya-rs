@@ -49,11 +49,10 @@ pub async fn add_recipe_import_app_handler(
 
 fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
     tokio::spawn(async move {
-        let app = form.app.to_string();
-        let state = state.clone();
+        let app = form.app.clone();
         let start_time = Arc::new(Instant::now());
 
-        let mut recipes = match parse_recipes(&state, form.clone(), user_id).await {
+        let mut recipes = match parse_recipes(&state, form, user_id).await {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
@@ -77,7 +76,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
         let num_recipes = recipes
             .len()
             .try_into()
-            .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
+            .inspect_err(|err| error!(len = recipes.len(), ?err, "Failed to cast recipes length"))
             .unwrap_or(i64::MAX);
 
         let state = Arc::new(state);
@@ -89,7 +88,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
         )
         .await;
 
-        let report_type = match form.app {
+        let report_type = match app {
             integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
             integrations::App::BigOven => ReportTypeFull::app(TertiaryReportType::bigoven()),
             integrations::App::ChefTap => ReportTypeFull::app(TertiaryReportType::cheftap()),
@@ -142,7 +141,15 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
             user_id,
         );
-        broadcast_import_done_toast(&state, recipe_ids, num_recipes, report, app, user_id).await;
+        broadcast_import_done_toast(
+            &state,
+            recipe_ids,
+            num_recipes,
+            report,
+            app.to_string(),
+            user_id,
+        )
+        .await;
     });
 }
 
@@ -195,15 +202,15 @@ async fn parse_recipes(
     let recipes = match form.parse_recipes() {
         Ok(r) => r,
         Err(err) => {
-            error!("Failed to parse recipes: {err}");
+            error!(?err, "Failed to parse recipes");
 
             let saved_file =
                 state
                     .data_dir
                     .debug
                     .join(format!("{}_{}", Uuid::new_v4(), form.file_name));
-            fs::write(saved_file.clone(), &form.file_data).await?;
-            error!("Saved file to '{:?}' for debugging purposes", saved_file);
+            fs::write(&saved_file, &form.file_data).await?;
+            error!(?saved_file, "Saved file to for debugging purposes");
 
             return Err(err);
         }
@@ -226,7 +233,7 @@ async fn push_recipes_to_db(
     let num_recipes_usize = recipes.len();
     let num_recipes = num_recipes_usize
         .try_into()
-        .inspect_err(|err| error!("Failed to cast recipes length '{}': {err}", recipes.len()))
+        .inspect_err(|err| error!(len = recipes.len(), ?err, "Failed to cast recipes length"))
         .unwrap_or(i64::MAX);
     let user_settings = Arc::new(
         UserSettingDetails::get(&state.mm, user_id)
@@ -298,7 +305,7 @@ async fn push_recipes_to_db(
                 }
                 report_logs.push(result.log);
             }
-            Err(err) => error!("push_recipe failed: {err}"),
+            Err(err) => error!(?err, "push_recipe failed"),
         }
     }
 
@@ -339,7 +346,7 @@ async fn push_recipe(
             )
         }
         Err(err) => {
-            error!("Error saving recipe '{}': {err}", recipe_c.name);
+            error!(name = recipe_c.name, ?err, "Error saving recipe");
             (
                 None,
                 ReportLogForCreate::error(

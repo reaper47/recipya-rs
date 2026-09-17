@@ -1351,7 +1351,7 @@ impl<'de> Deserialize<'de> for FieldEnum48 {
                 }
 
                 Err(serde::de::Error::custom(format!(
-                    "cannot deserialize FieldEnum48 from {value}"
+                    "Cannot deserialize FieldEnum48 from {value}"
                 )))
             }
         }

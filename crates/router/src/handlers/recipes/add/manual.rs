@@ -104,10 +104,7 @@ pub async fn add_manual_recipe_post_handler(
         )
         .await;
 
-        fs_support.upload_videos(
-            form.videos.values().cloned().collect(),
-            &state.data_dir.videos,
-        );
+        fs_support.upload_videos(form.videos.into_values().collect(), &state.data_dir.videos);
         videos
     };
 
@@ -145,10 +142,7 @@ pub async fn add_manual_recipe_post_handler(
     {
         Ok(id) => id,
         Err(err) => {
-            error!(
-                "Failed to add recipe to collection for user '{}': {err}",
-                user.id
-            );
+            error!(user = ?user.id, ?err, "Failed to add recipe to collection");
             broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }

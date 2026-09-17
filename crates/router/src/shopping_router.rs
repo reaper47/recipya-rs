@@ -452,12 +452,7 @@ mod tests {
             list_id: Uuid,
             user_id: Uuid,
         ) -> ShareShoppingList {
-            let mut conn = state
-                .mm
-                .pool
-                .get()
-                .await
-                .expect("a connection from the pool");
+            let mut conn = state.mm.pool.get().await.expect("connection from the pool");
 
             schema::shares_shopping_lists::table
                 .filter(
@@ -467,7 +462,7 @@ mod tests {
                 )
                 .first::<ShareShoppingList>(&mut conn)
                 .await
-                .expect("a share shopping list must have been fetched")
+                .expect("share shopping list must have been fetched")
         }
 
         #[tokio::test]

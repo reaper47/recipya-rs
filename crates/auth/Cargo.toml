@@ -14,9 +14,6 @@ readme.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-[features]
-test-helpers = []
-
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
 base64.workspace = true

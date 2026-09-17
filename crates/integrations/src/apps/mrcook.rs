@@ -203,7 +203,7 @@ where
         let recipe: CsvRecord = match result {
             Ok(r) => r,
             Err(err) => {
-                error!("Failed to parse Mr. Cook CSV entry: {err}");
+                error!(?err, "Failed to parse Mr. Cook CSV entry");
                 continue;
             }
         };
