@@ -13,7 +13,6 @@ RUN apt-get update && \
     pax-utils \
     ca-certificates \
     perl \
-    perl-base \
     clang \
     cmake \
     && rm -rf /var/lib/apt/lists/*
@@ -39,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl3 \
     libpq5 \
     libgssapi-krb5-2 \
+    curl \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
@@ -52,6 +52,8 @@ RUN useradd -r -u 65532 -s /bin/false recipya && \
     mkdir -p /home/recipya/.local/share/Recipya && \
     chown -R recipya:recipya /home/recipya
 USER recipya:recipya
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD curl -f http://localhost:8078/health/ready || exit 1
 
 EXPOSE 8078
 CMD ["/usr/local/bin/recipya", "server"]

@@ -23,4 +23,12 @@ impl ModelManager {
             pool: make_db_pool(&database_url.into()).await?,
         })
     }
+
+    /// Checks whether the database can be reached.
+    pub async fn ping(&self) -> bool {
+        let Ok(_) = self.pool.get().await else {
+            return false;
+        };
+        true
+    }
 }

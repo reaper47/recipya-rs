@@ -1,0 +1,27 @@
+This file enumerates the steps to run Recipya in a Pod.
+Please consult the quadlets subdirectory if you want to run Recipya using systemd instead.
+
+$ podman pod create --name recipya-rs -p 8078:8078 -p 5432:5432
+
+$ podman volume create recipya-rs-db
+$ podman volume create recipya-rs-data
+
+$ podman run -d --pod recipya-rs --name recipya-rs-db --restart unless-stopped -e POSTGRES_DB=recipya -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -v recipya-rs-db:/var/lib/postgresql reaper99/recipya-rs-db:latest
+
+$ podman run -d --pod recipya-rs --name recipya-rs-app --restart unless-stopped \
+    --env-file ./.env \
+    -v recipya-rs-data:/home/recipya/.local/share/Recipya \
+    --health-cmd "curl -f http://localhost:8078/health/ready || exit 1" \
+    --health-interval 30s \
+    --health-timeout 10s \
+    --health-start-period 5s \
+    --health-retries 3 \
+    reaper99/recipya-rs:latest
+
+To manage pod:
+$ podman pod stop recipya-rs
+$ podman pod start recipya-rs
+$ podman pod restart recipya-rs
+$ podman pod logs recipya-rs
+$ podman pod stats recipya-rs
+$ podman pod rm recipya-rs

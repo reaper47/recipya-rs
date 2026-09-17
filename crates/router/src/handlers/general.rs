@@ -8,8 +8,8 @@ use axum::extract::{Multipart, Query, State, WebSocketUpgrade};
 use axum::http::{Response, StatusCode};
 use axum::response::{Html, IntoResponse, Redirect};
 use futures_util::StreamExt;
-use models::paper::PaperSize;
 use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
+use serde::Serialize;
 use serde_json::{Value, json};
 use tokio::fs;
 use tokio_util::{bytes, io::ReaderStream};
@@ -20,6 +20,7 @@ use uuid::Uuid;
 use app::state::AppState;
 use models::Recipe;
 use models::download::Download;
+use models::paper::PaperSize;
 use models::params::{DownloadParams, FetchParams, SearchParams};
 use models::user::User;
 use support::net::resolve_and_validate;
@@ -29,6 +30,24 @@ use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::{Error, Result};
 
 const MAX_IMAGE_SIZE: usize = 10 * 1024 * 1024;
+
+/// Response structure for health checks.
+#[derive(Serialize)]
+pub struct HealthResponse {
+    pub status: Status,
+    pub database: bool,
+    pub email: Status,
+    pub version: &'static str,
+}
+
+/// Status of the health check.
+#[derive(Serialize, Clone)]
+pub enum Status {
+    Healthy,
+    Degraded,
+    Unhealthy,
+    Disabled,
+}
 
 /// Handles the index page.
 pub async fn index_handler(OptionalAuth(user): OptionalAuth) -> Redirect {
@@ -167,6 +186,53 @@ pub async fn fetch_handler(
     res
 }
 
+/// Handler for live health checks.
+pub async fn health_live_handler() -> &'static str {
+    "OK"
+}
+
+/// Handler for ready health checks.
+pub async fn health_ready_handler(
+    OptionalAuth(_): OptionalAuth,
+    State(state): State<AppState>,
+) -> (StatusCode, Json<HealthResponse>) {
+    let is_db_ok = state.mm.ping().await;
+
+    let email_status = match state.email_service {
+        Some(email) => {
+            if email.test_connection() {
+                Status::Healthy
+            } else {
+                Status::Unhealthy
+            }
+        }
+        None => Status::Disabled,
+    };
+
+    let status = match (is_db_ok, email_status.clone()) {
+        (true, Status::Healthy) | (true, Status::Disabled) => Status::Healthy,
+        (true, Status::Unhealthy) | (false, Status::Healthy) => Status::Unhealthy,
+        _ => Status::Degraded,
+    };
+
+    let status_code = match status {
+        Status::Healthy => StatusCode::OK,
+        Status::Degraded => StatusCode::OK,
+        Status::Unhealthy | Status::Disabled => StatusCode::SERVICE_UNAVAILABLE,
+    };
+
+    (
+        status_code,
+        Json(HealthResponse {
+            status,
+            database: is_db_ok,
+            email: email_status,
+            version: env!("CARGO_PKG_VERSION"),
+        }),
+    )
+}
+
+/// Handler for fetching paper sizes.
 pub async fn paper_sizes_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,

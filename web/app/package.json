@@ -15,10 +15,14 @@
     "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
     "copyfiles": "^2.4.1",
-    "daisyui": "^5.7.20",
+    "daisyui": "^5.7.38",
     "esbuild": "^0.28.2",
-    "mjml": "^5.4.0",
+    "mjml": "^5.4.1",
     "tailwindcss": "^4.3.3",
     "uglify-js": "^3.19.3"
+  },
+  "allowScripts": {
+    "@parcel/watcher": true,
+    "esbuild@0.28.2": true
   }
 }

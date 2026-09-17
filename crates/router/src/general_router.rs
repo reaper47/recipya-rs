@@ -6,8 +6,9 @@ use axum::routing::{get, post};
 use app::state::AppState;
 
 use crate::handlers::general::{
-    download_handler, fetch_handler, index_handler, paper_sizes_handler,
-    search_suggestions_handler, upload_note_image, user_initials_handler, ws_handler,
+    download_handler, fetch_handler, health_live_handler, health_ready_handler, index_handler,
+    paper_sizes_handler, search_suggestions_handler, upload_note_image, user_initials_handler,
+    ws_handler,
 };
 use crate::middleware::mw_auth::mw_refresh_token;
 
@@ -28,6 +29,8 @@ pub fn general_routes(state: &AppState) -> Router<AppState> {
 
     Router::new()
         .route("/", get(index_handler))
+        .route("/health/live", get(health_live_handler))
+        .route("/health/ready", get(health_ready_handler))
         .merge(protected)
 }
 
