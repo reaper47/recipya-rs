@@ -1,13 +1,13 @@
 use axum::{
     extract::{OriginalUri, Query, State},
-    http::HeaderMap,
     response::IntoResponse,
 };
-use config::States;
+use axum_htmx::HxRequest;
 use iso8601::DateTime;
 use tracing::error;
 
 use app::state::AppState;
+use config::States;
 use models::{
     Recipe,
     data::{AboutData, Data, PaginationData, SearchbarData, ViewRecipe},
@@ -17,13 +17,13 @@ use models::{
 
 use crate::{
     Error, Result,
-    handlers::{get_settings, helpers::is_hx_request, message::broadcast_error},
+    handlers::{get_settings, message::broadcast_error},
     middleware::mw_auth::RequireAuth,
 };
 
 /// Handles searching recipes.
 pub async fn search_recipes_handler(
-    headers: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
     RequireAuth(user): RequireAuth,
@@ -78,12 +78,12 @@ pub async fn search_recipes_handler(
                 autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&headers),
+            is_hx_request,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
                 recipes.len().try_into().unwrap_or(i64::MAX),
-                headers.get(axum_htmx::HX_REQUEST).is_some(),
+                is_hx_request,
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
             recipes,

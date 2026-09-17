@@ -2,17 +2,17 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Path, State},
-    http::{HeaderMap, HeaderValue},
+    http::HeaderValue,
     response::IntoResponse,
 };
-use axum_htmx::HX_REDIRECT;
-use config::States;
+use axum_htmx::{HX_REDIRECT, HxRequest};
 use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
+use config::States;
 use models::{
     Error::EntityNotFound,
     Recipe,
@@ -22,16 +22,13 @@ use models::{data::Data, recipe::structs::media::VideoForCreate};
 
 use crate::{
     Error, Result,
-    handlers::{
-        get_settings, helpers::is_hx_request, message::broadcast_error,
-        recipes::common::fetch_view_recipe,
-    },
+    handlers::{get_settings, message::broadcast_error, recipes::common::fetch_view_recipe},
     middleware::mw_auth::RequireAuth,
 };
 
 /// Handles a recipe's edit page.
 pub async fn edit_recipe_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
@@ -62,7 +59,7 @@ pub async fn edit_recipe_handler(
                 autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             recipes: vec![recipe],
             ..Default::default()
         },

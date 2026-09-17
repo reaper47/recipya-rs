@@ -1,8 +1,8 @@
 use axum::{
     extract::{OriginalUri, Path, Query, State},
-    http::HeaderMap,
     response::IntoResponse,
 };
+use axum_htmx::HxRequest;
 use config::States;
 use serde::Deserialize;
 
@@ -13,11 +13,7 @@ use models::{
 };
 use tracing::error;
 
-use crate::{
-    Result,
-    handlers::{get_settings, helpers::is_hx_request},
-    middleware::mw_auth::RequireAuth,
-};
+use crate::{Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
 
 #[derive(Deserialize)]
 pub struct ReportsParams {
@@ -28,7 +24,7 @@ pub struct ReportsParams {
 
 /// Handles the reports page.
 pub async fn reports_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
     Query(params): Query<ReportsParams>,
     RequireAuth(user): RequireAuth,
@@ -47,7 +43,7 @@ pub async fn reports_handler(
                 autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             reports: Some(ReportsData {
                 reports: reports.clone(),
                 selected: params
@@ -71,7 +67,7 @@ pub async fn reports_handler(
 
 /// Handles fetching and rendering the report.
 pub async fn report_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
     RequireAuth(user): RequireAuth,
     Path(report_id): Path<i64>,
@@ -80,8 +76,6 @@ pub async fn report_handler(
     let report = ViewReport::fetch(&state.mm, report_id, user.id)
         .await
         .inspect_err(|err| tracing::error!(?err, report_id, "Failed to fetch report"))?;
-
-    let is_hx_request = is_hx_request(&header_map);
 
     if is_hx_request {
         Ok(

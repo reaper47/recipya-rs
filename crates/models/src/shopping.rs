@@ -590,11 +590,7 @@ struct QueryableLabel {
 
 impl ShoppingList {
     /// Creates a new shopping list with the given title for the given user.
-    pub async fn create(
-        mm: &ModelManager,
-        title: impl Into<String>,
-        user_id: Uuid,
-    ) -> Result<Uuid> {
+    pub async fn create(mm: &ModelManager, title: &str, user_id: Uuid) -> Result<Uuid> {
         Ok(diesel::insert_into(schema::shopping_lists::table)
             .values(&ShoppingListForInsert {
                 name: title.into(),
@@ -1308,7 +1304,7 @@ mod tests {
     async fn test_get_shopping_list_by_id_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
 
         let list = ShoppingList::get(&state.mm, list_id, user_id).await?;
 
@@ -1321,7 +1317,7 @@ mod tests {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         for i in 0..3 {
-            let _ = ShoppingList::create(&state.mm, format!("List {i}"), user_id).await?;
+            let _ = ShoppingList::create(&state.mm, &format!("List {i}"), user_id).await?;
         }
 
         let lists = ShoppingList::get_all(&state.mm, user_id).await?;
@@ -1342,7 +1338,7 @@ mod tests {
     async fn test_add_item_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
 
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
@@ -1405,7 +1401,7 @@ mod tests {
     async fn test_duplicate_shopping_list_label_name_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
 
         let item1 = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
         let item2 = ShoppingList::add_item(&state.mm, list_id, other_meat_item(), user_id).await?;
@@ -1462,7 +1458,7 @@ mod tests {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let recipe1 = a_complete_recipe_for_create().0;
         let recipe_id = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
         let mut recipe2 = a_complete_recipe_for_create().0;
@@ -1526,7 +1522,7 @@ mod tests {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let list = ShoppingList::get(&state.mm, list_id, user_id).await?;
         let recipe1 = a_complete_recipe_for_create().0;
         let recipe_id = Recipe::create(&state.mm, user_id, &recipe1, &settings).await?;
@@ -1588,7 +1584,7 @@ mod tests {
     async fn test_delete_item_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         ShoppingList::delete_item(&state.mm, list_id, item.id, user_id).await?;
@@ -1602,7 +1598,7 @@ mod tests {
     async fn test_update_item_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
         let new_item = other_meat_item();
 
@@ -1647,7 +1643,7 @@ mod tests {
     async fn test_item_toggle_check_item_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         ShoppingList::update_item(
@@ -1678,7 +1674,7 @@ mod tests {
     async fn test_update_shopping_list_name_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let original_list = ShoppingList::get_all(&state.mm, user_id).await?[0].clone();
 
         ShoppingList::update_title(&state.mm, list_id, "New Title", user_id).await?;
@@ -1692,7 +1688,7 @@ mod tests {
     async fn test_delete_shopping_list_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         ShoppingList::delete(&state.mm, list_id, user_id).await?;
@@ -1708,7 +1704,7 @@ mod tests {
     async fn test_get_item_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         let got = ShoppingList::get_item(&state.mm, list_id, item.id, user_id).await?;
@@ -1732,7 +1728,7 @@ mod tests {
     async fn test_labels_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
         let _ = ShoppingList::add_item(
             &state.mm,
@@ -1752,7 +1748,7 @@ mod tests {
     async fn test_get_or_insert_label_label_exists_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let _ = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         let got = ShoppingList::get_or_insert_label(&state.mm, "No label", user_id).await?;
@@ -1765,7 +1761,7 @@ mod tests {
     async fn test_get_or_insert_label_label_not_exists_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         let got = ShoppingList::get_or_insert_label(&state.mm, "Veggies", user_id).await?;
@@ -1778,7 +1774,7 @@ mod tests {
     async fn test_update_item_labels_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         ShoppingList::update_item_labels(&state.mm, list_id, item.label_id, 1, user_id).await?;
@@ -1792,7 +1788,7 @@ mod tests {
     async fn test_toggle_check_item_once_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         ShoppingList::toggle_item_check(&state.mm, item.id).await?;
@@ -1806,7 +1802,7 @@ mod tests {
     async fn test_toggle_check_item_twice_ok() -> Result<()> {
         let (_, state) = build_server_anonymous(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
-        let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+        let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
         let item = ShoppingList::add_item(&state.mm, list_id, a_meat_item(), user_id).await?;
 
         ShoppingList::toggle_item_check(&state.mm, item.id).await?;
@@ -1866,7 +1862,7 @@ mod tests {
                 let state = create_app_state(default_config()).await;
                 let user_id = add_user(&state.mm).await?.id;
                 insert_recipe(&state, user_id).await?;
-                let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+                let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
 
                 let got = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
 
@@ -1891,7 +1887,7 @@ mod tests {
                 let state = create_app_state(default_config()).await;
                 let user_id = add_user(&state.mm).await?.id;
                 insert_recipe(&state, user_id).await?;
-                let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+                let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
                 let expires_at = {
                     let dt = OffsetDateTime::now_utc() + Duration::days(14);
                     PrimitiveDateTime::new(dt.date(), dt.time())
@@ -1921,7 +1917,7 @@ mod tests {
                 let state = create_app_state(default_config()).await;
                 let user_id = add_user(&state.mm).await?.id;
                 insert_recipe(&state, user_id).await?;
-                let list_id = ShoppingList::create(&state.mm, a_list_name(), user_id).await?;
+                let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
                 let share = ShareShoppingList::new(&state.mm, list_id, user_id, None).await?;
 
                 let res = ShareShoppingList::new(&state.mm, list_id, user_id, None).await;
@@ -1939,7 +1935,7 @@ mod tests {
                 let state = create_app_state(default_config()).await;
                 let user = add_user(&state.mm).await?;
                 insert_recipe(&state, user.id).await?;
-                let list_id = ShoppingList::create(&state.mm, a_list_name(), user.id).await?;
+                let list_id = ShoppingList::create(&state.mm, &a_list_name(), user.id).await?;
                 let shared = ShareShoppingList::new(&state.mm, list_id, user.id, None).await?;
 
                 let (got, _) = ShareShoppingList::get_by_link(&state.mm, shared.link).await?;

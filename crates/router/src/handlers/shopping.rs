@@ -4,10 +4,9 @@ use std::str::FromStr;
 use axum::Form;
 use axum::body::Body;
 use axum::extract::{OriginalUri, Path, Query};
-use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
-use axum_htmx::{HX_PROMPT, HX_TRIGGER};
+use axum_htmx::{HX_TRIGGER, HxPrompt, HxRequest};
 use itertools::izip;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
@@ -37,7 +36,6 @@ use models::view::ViewMode;
 use templates::shopping::AddShoppingIngredient;
 
 use crate::handlers::get_settings;
-use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{broadcast_error, broadcast_success, broadcast_warning};
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::recipes_router::params::ShareRecipeForm;
@@ -49,7 +47,7 @@ pub const SHOPPING_VIEW_COOKIE_NAME: &str = "view:shopping-list";
 
 /// Handles fetching the user's shopping lists.
 pub async fn shopping_lists_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
@@ -96,7 +94,7 @@ pub async fn shopping_lists_handler(
                 autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             shopping: Some(ShoppingData {
                 labels,
                 shopping_lists,
@@ -112,7 +110,7 @@ pub async fn shopping_lists_handler(
 
 /// Handles GET requests to retrieve a shopping list.
 pub async fn shopping_list_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
@@ -125,8 +123,6 @@ pub async fn shopping_list_handler(
             return Error::Database.into_response();
         }
     };
-
-    let is_hx_request = is_hx_request(&header_map);
 
     match get_view_mode_from_cookie(&cookies) {
         ViewMode::Edit | ViewMode::Print => {
@@ -335,7 +331,7 @@ pub async fn shopping_list_print_handler(
 
 /// Handles GET requests to view a shopping list.
 pub async fn shopping_list_view_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
@@ -356,8 +352,6 @@ pub async fn shopping_list_view_handler(
         params.mode.to_string(),
         state.config.read().await.states.production == ProductionState::On,
     );
-
-    let is_hx_request = is_hx_request(&header_map);
 
     match params.mode {
         ViewMode::Edit => templates::shopping::render_shopping_list_view_edit(&list, is_hx_request),
@@ -503,21 +497,20 @@ pub async fn shopping_list_label_put_handler(
 
 /// Handles POST requests to create a new shopping list.
 pub async fn shopping_lists_post_handler(
-    header_map: HeaderMap,
+    HxPrompt(hx_prompt): HxPrompt,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
-    let Some(title) = header_map
-        .get(HX_PROMPT)
-        .map(|h| h.to_str().ok().unwrap_or_default().trim())
+    let Some(title) = hx_prompt
+        .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
     else {
         broadcast_warning(&state, user.id, "List title must not be empty.").await;
         return Error::InvalidPayload.into_response();
     };
 
-    let list_id = match ShoppingList::create(&state.mm, title, user.id).await {
+    let list_id = match ShoppingList::create(&state.mm, &title, user.id).await {
         Ok(id) => id,
         Err(err) => {
             error!(?err, "Failed to create shopping list");
@@ -779,7 +772,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
 
     let list_id = match Uuid::parse_str(&payload.list) {
         Ok(id) => id,
-        Err(_) => match ShoppingList::create(&state.mm, payload.list, user.id).await {
+        Err(_) => match ShoppingList::create(&state.mm, &payload.list, user.id).await {
             Ok(list) => list,
             Err(err) => {
                 error!(?err, "Failed to create new shopping list");

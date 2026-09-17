@@ -1,17 +1,16 @@
 use axum::Form;
 use axum::body::Body;
 use axum::extract::State;
-use axum::http::{HeaderMap, Response, StatusCode};
+use axum::http::{Response, StatusCode};
 use axum::response::IntoResponse;
-use axum_htmx::{HX_CURRENT_URL, HX_TRIGGER};
-use config::{DemoState, States};
+use axum_htmx::{HX_TRIGGER, HxCurrentUrl, HxRequest};
 use iso8601::DateTime;
 use serde_json::json;
 use tracing::error;
-use url::Url;
 use uuid::Uuid;
 
 use app::state::AppState;
+use config::{DemoState, States};
 use models::Recipe;
 use models::data::{AboutData, Data};
 use models::download::{Download, DownloadForCreate};
@@ -23,7 +22,6 @@ use repository::ModelManager;
 use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::Error;
-use crate::handlers::helpers::is_hx_request;
 use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
@@ -34,7 +32,7 @@ use crate::schemas::settings::{
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
@@ -91,7 +89,7 @@ pub async fn settings_handler(
                 autologin: config.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             // TODO: Populate AboutData with good values.
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             ..Default::default()
@@ -117,7 +115,7 @@ pub async fn settings_handler(
 /// Handles exporting data for the target user.
 pub async fn export_data_handler(
     RequireAuth(user): RequireAuth,
-    headers: HeaderMap,
+    HxCurrentUrl(hx_current_url): HxCurrentUrl,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let recipes = match Recipe::all(&state.mm, user.id).await {
@@ -134,21 +132,17 @@ pub async fn export_data_handler(
         return StatusCode::NOT_FOUND.into_response();
     }
 
-    let current_url = headers
-        .get(HX_CURRENT_URL)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|s| Url::parse(s).ok())
-        .map_or_else(
-            || "/".into(),
-            |u| {
-                format!(
-                    "{}://{}{}",
-                    u.scheme(),
-                    u.host_str().unwrap_or(""),
-                    u.port().map(|p| format!(":{p}")).unwrap_or_default()
-                )
-            },
-        );
+    let current_url = hx_current_url.map_or_else(
+        || "/".into(),
+        |u| {
+            format!(
+                "{}://{}{}",
+                u.scheme_str().unwrap_or_default(),
+                u.host().unwrap_or_default(),
+                u.port().map(|p| format!(":{p}")).unwrap_or_default()
+            )
+        },
+    );
 
     templates::settings::render_export_data_dialog_recipes(&current_url, recipes).into_response()
 }

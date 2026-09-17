@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::HeaderMap, response::IntoResponse};
-use axum_htmx::HX_REDIRECT;
-use config::States;
+use axum::{extract::State, response::IntoResponse};
+use axum_htmx::{HX_REDIRECT, HxRequest};
 use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
+use config::States;
 use math::cooking::units::system;
 use models::{
     Recipe,
@@ -23,15 +23,14 @@ use models::{
 use crate::{
     Error, Result,
     handlers::{
-        get_settings, helpers::is_hx_request, message::broadcast_error,
-        recipes::common::fetch_categories_keywords,
+        get_settings, message::broadcast_error, recipes::common::fetch_categories_keywords,
     },
     middleware::mw_auth::RequireAuth,
 };
 
 /// Handles rendering the form to add a recipe manually.
 pub async fn add_manual_recipe_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -52,7 +51,7 @@ pub async fn add_manual_recipe_handler(
                 autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             ..Default::default()
         },
         &settings,

@@ -1,12 +1,12 @@
 use axum::extract::{OriginalUri, Path, State};
-use axum::http::HeaderMap;
 use axum::response::IntoResponse;
-use config::States;
+use axum_htmx::HxRequest;
 use iso8601::DateTime;
 use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
+use config::States;
 use models::Error::EntityNotFound;
 use models::data::{AboutData, Data, ShareData, ShoppingData, ViewRecipe};
 use models::settings::UserSettingDetails;
@@ -15,12 +15,11 @@ use models::shopping::ShareShoppingList;
 use models::time::FormattedTimes;
 
 use crate::Error;
-use crate::handlers::helpers::is_hx_request;
 use crate::middleware::mw_auth::OptionalAuth;
 
 /// Renders the shared recipe.
 pub async fn share_recipe_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
     OptionalAuth(user): OptionalAuth,
@@ -63,7 +62,7 @@ pub async fn share_recipe_handler(
                         autologin: state.config.read().await.states.autologin,
                         ..Default::default()
                     },
-                    is_hx_request: is_hx_request(&header_map),
+                    is_hx_request,
                     about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
                     share: Some(ShareData {
                         is_shared: true,
@@ -88,7 +87,7 @@ pub async fn share_recipe_handler(
                     autologin: state.config.read().await.states.autologin,
                     ..Default::default()
                 },
-                is_hx_request: is_hx_request(&header_map),
+                is_hx_request,
                 about: AboutData {
                     is_update_available: false,
                     is_check_update: false,
@@ -120,7 +119,7 @@ pub async fn share_recipe_handler(
 
 /// Renders the shared shopping list.
 pub async fn share_shopping_list_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
     OptionalAuth(user): OptionalAuth,
@@ -152,7 +151,7 @@ pub async fn share_shopping_list_handler(
                 autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             share: Some(ShareData {
                 is_shared: true,
