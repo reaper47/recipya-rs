@@ -123,7 +123,6 @@ pub async fn reports_list_handler(
 ) -> Result<impl IntoResponse> {
     let page = params.page.unwrap_or(1);
     let reports = ViewReport::fetch_all(&state.mm, page, user.id).await?;
-    // dbg!(&page, &reports);
     let report_id = params.selected.unwrap_or(1);
     let report = ViewReport::fetch(&state.mm, report_id, user.id)
         .await

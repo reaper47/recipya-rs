@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
+use std::time::Duration;
 
 use axum::extract::ws::{Message, WebSocket};
 use tokio::sync::{Mutex, RwLock};
+use tokio::time::timeout;
 use url::Url;
 use uuid::Uuid;
 
@@ -142,9 +144,6 @@ impl AppState {
 
     /// Broadcasts a message to all active WebSocket subscribers of a given user.
     pub async fn broadcast(&self, message: Message, user_id: Uuid) {
-        use std::time::Duration;
-        use tokio::time::timeout;
-
         let send_timeout = Duration::from_secs(10);
 
         let connections = {
