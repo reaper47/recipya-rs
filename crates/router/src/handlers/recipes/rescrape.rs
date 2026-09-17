@@ -3,17 +3,17 @@ use std::{collections::HashMap, ops::Not, path::PathBuf, sync::Arc};
 use axum::{
     Form,
     extract::{Path, State},
-    http::{HeaderMap, HeaderValue},
+    http::HeaderValue,
     response::IntoResponse,
 };
-use axum_htmx::HX_REDIRECT;
-use config::States;
+use axum_htmx::{HX_REDIRECT, HxRequest};
 use indexmap::IndexMap;
 use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
+use config::States;
 use models::{
     Error::EntityNotFound,
     data::Data,
@@ -34,7 +34,6 @@ use crate::{
     Error, Result,
     handlers::{
         get_settings,
-        helpers::is_hx_request,
         message::{broadcast_error, broadcast_warning},
         recipes::common::schema_to_recipe_for_create,
     },
@@ -42,7 +41,7 @@ use crate::{
 };
 
 pub async fn recrape_recipe_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
@@ -85,8 +84,6 @@ pub async fn recrape_recipe_handler(
         broadcast_warning(&state, user.id, "Recipe has not changed.").await;
         return Ok(().into_response());
     }
-
-    let is_hx_request = is_hx_request(&header_map);
 
     let mut res = templates::recipes::rescrape_recipe_diff(
         &Data {

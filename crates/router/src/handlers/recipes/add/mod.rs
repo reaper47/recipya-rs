@@ -5,7 +5,6 @@ mod manual;
 mod raw;
 mod website;
 
-use config::States;
 pub use import_api::*;
 pub use import_app::*;
 pub use import_preview::*;
@@ -15,22 +14,19 @@ pub use website::*;
 
 use axum::{
     extract::{OriginalUri, State},
-    http::HeaderMap,
     response::IntoResponse,
 };
+use axum_htmx::HxRequest;
 
 use app::state::AppState;
+use config::States;
 use models::data::Data;
 
-use crate::{
-    Result,
-    handlers::{get_settings, helpers::is_hx_request},
-    middleware::mw_auth::RequireAuth,
-};
+use crate::{Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
 
 /// Handles the add recipe page.
 pub async fn add_recipes_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
@@ -46,7 +42,7 @@ pub async fn add_recipes_handler(
                 autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             ..Default::default()
         },
         &settings,

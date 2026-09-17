@@ -1,8 +1,8 @@
 use axum::{
     extract::{Path, State},
-    http::HeaderMap,
     response::IntoResponse,
 };
+use axum_htmx::HxRequest;
 use config::States;
 use tracing::error;
 
@@ -12,17 +12,14 @@ use models::data::Data;
 
 use crate::{
     Error, Result,
-    handlers::{
-        get_settings, helpers::is_hx_request, message::broadcast_error,
-        recipes::common::fetch_view_recipe,
-    },
+    handlers::{get_settings, message::broadcast_error, recipes::common::fetch_view_recipe},
     middleware::mw_auth::RequireAuth,
 };
 
 /// Handles the duplicate recipe endpoint.
 pub async fn duplicate_recipe_handler(
     Path(recipe_id): Path<i64>,
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -47,7 +44,7 @@ pub async fn duplicate_recipe_handler(
         &Data {
             is_admin: user.is_admin,
             is_authenticated: true,
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             recipes: vec![recipe],
             states: States {
                 autologin: state.config.read().await.states.autologin,

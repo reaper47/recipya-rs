@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use axum::{
     extract::{OriginalUri, Path, Query, State},
-    http::HeaderMap,
     response::IntoResponse,
 };
+use axum_htmx::HxRequest;
 use config::States;
 use iso8601::DateTime;
 use tracing::error;
@@ -20,13 +20,13 @@ use models::{
 
 use crate::{
     Error, Result,
-    handlers::{get_settings, helpers::is_hx_request, message::broadcast_error},
+    handlers::{get_settings, message::broadcast_error},
     middleware::mw_auth::RequireAuth,
 };
 
 /// Handles viewing the recipes.
 pub async fn recipes_handler(
-    headers: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
     RequireAuth(user): RequireAuth,
@@ -84,12 +84,12 @@ pub async fn recipes_handler(
                 autologin: state.config.read().await.states.autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&headers),
+            is_hx_request,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
                 &search_params,
                 num_recipes,
-                is_hx_request(&headers),
+                is_hx_request,
             )),
             searchbar: Some(SearchbarData::from_params(search_params)),
             recipes,
@@ -103,7 +103,7 @@ pub async fn recipes_handler(
 
 /// Handles viewing a recipe.
 pub async fn view_recipe_handler(
-    header_map: HeaderMap,
+    HxRequest(is_hx_request): HxRequest,
     Path(recipe_id): Path<i64>,
     OriginalUri(uri): OriginalUri,
     RequireAuth(user): RequireAuth,
@@ -154,7 +154,7 @@ pub async fn view_recipe_handler(
                 autologin,
                 ..Default::default()
             },
-            is_hx_request: is_hx_request(&header_map),
+            is_hx_request,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::hidden()),
             searchbar: Some(SearchbarData {
