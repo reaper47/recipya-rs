@@ -198,27 +198,23 @@ pub async fn health_ready_handler(
 ) -> (StatusCode, Json<HealthResponse>) {
     let is_db_ok = state.mm.ping().await;
 
-    let email_status = match state.email_service {
-        Some(email) => {
-            if email.test_connection() {
-                Status::Healthy
-            } else {
-                Status::Unhealthy
-            }
+    let email_status = state.email_service.map_or(Status::Disabled, |email| {
+        if email.test_connection() {
+            Status::Healthy
+        } else {
+            Status::Unhealthy
         }
-        None => Status::Disabled,
-    };
+    });
 
     let status = match (is_db_ok, email_status.clone()) {
-        (true, Status::Healthy) | (true, Status::Disabled) => Status::Healthy,
+        (true, Status::Healthy | Status::Disabled) => Status::Healthy,
         (true, Status::Unhealthy) | (false, Status::Healthy) => Status::Unhealthy,
         _ => Status::Degraded,
     };
 
     let status_code = match status {
         Status::Healthy => StatusCode::OK,
-        Status::Degraded => StatusCode::OK,
-        Status::Unhealthy | Status::Disabled => StatusCode::SERVICE_UNAVAILABLE,
+        Status::Degraded | Status::Unhealthy | Status::Disabled => StatusCode::SERVICE_UNAVAILABLE,
     };
 
     (

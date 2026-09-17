@@ -9,6 +9,9 @@ use crate::impl_display_as_debug;
 
 pub use time::format_description::well_known::Rfc3339;
 
+/// The default connection timeout for HTTP requests, in seconds.
+pub const DEFAULT_HTTP_CONNECTION_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+
 /// Formats a given `OffsetDateTime` into a string in RFC3339 format.
 ///
 /// # Panics

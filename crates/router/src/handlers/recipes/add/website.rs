@@ -18,7 +18,7 @@ use itertools::Itertools;
 use rand::RngExt;
 use reqwest::StatusCode;
 use tokio::{sync::mpsc, time::Instant};
-use tracing::error;
+use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -52,6 +52,17 @@ struct FetchWebsiteContext {
     recipe_ids: Arc<Mutex<Vec<i64>>>,
     report_logs: Arc<Mutex<Vec<ReportLogForCreate>>>,
     total: i64,
+}
+
+impl From<&FetchWebsiteContext> for Items {
+    fn from(ctx: &FetchWebsiteContext) -> Self {
+        Self {
+            total: i32::try_from(ctx.total).unwrap_or(0),
+            success: i32::try_from(ctx.count_success.load(Ordering::SeqCst)).unwrap_or(0),
+            skipped: i32::try_from(ctx.count_warning.load(Ordering::SeqCst)).unwrap_or(0),
+            failed: i32::try_from(ctx.count_error.load(Ordering::SeqCst)).unwrap_or(0),
+        }
+    }
 }
 
 impl FetchWebsiteContext {
@@ -152,7 +163,7 @@ pub async fn add_website_post_handler(
 fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
     tokio::spawn(async move {
         let num_urls = urls.len();
-        let (tx, mut rx) = mpsc::channel::<()>(num_urls);
+        let (tx, mut rx) = mpsc::channel::<()>(num_urls.min(64));
         let fetch_ctx = FetchWebsiteContext::new(num_urls, user_id);
         let total_exec_time = Instant::now();
 
@@ -166,8 +177,21 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             let tx = tx.clone();
             let fetch_ctx = fetch_ctx.clone();
             let state = state.clone();
+            let semaphore = state.scraper.semaphore.clone();
 
             tokio::spawn(async move {
+                let _permit = match semaphore.acquire().await {
+                    Ok(p) => p,
+                    Err(err) => {
+                        warn!(?err, "Failed to acquire scrape semaphore, aborting work");
+                        for _ in host_urls {
+                            fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
+                            let _ = tx.send(()).await;
+                        }
+                        return;
+                    }
+                };
+
                 let mut host_urls = host_urls.into_iter().peekable();
 
                 while let Some((idx, url)) = host_urls.next() {
@@ -212,14 +236,7 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
         }
 
         state.hide_broadcast(user_id).await;
-
-        let items = Items {
-            total: i32::try_from(fetch_ctx.total).unwrap_or(0),
-            success: i32::try_from(fetch_ctx.count_success.load(Ordering::SeqCst)).unwrap_or(0),
-            skipped: i32::try_from(fetch_ctx.count_warning.load(Ordering::SeqCst)).unwrap_or(0),
-            failed: i32::try_from(fetch_ctx.count_error.load(Ordering::SeqCst)).unwrap_or(0),
-        };
-
+        let items = Items::from(&fetch_ctx);
         fetch_ctx.send_toast_after_processing(&state, user_id).await;
 
         let report = ReportForCreate::new(

@@ -1,8 +1,9 @@
 use std::{marker::PhantomData, path::PathBuf};
 
 use async_trait::async_trait;
-
 use reqwest::Client;
+use tracing::{error, info};
+
 use schema_org::{
     AggregateRating, AtType, DurationOrText, NutritionInformation, Recipe, at_context,
     field::{
@@ -11,8 +12,7 @@ use schema_org::{
         RecipeRecipeInstructionsFieldEnum, RecipeYieldFieldEnum,
     },
 };
-use support::fs::new_fs_support;
-use tracing::{error, info};
+use support::{fs::new_fs_support, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
 
 use crate::{
     Error, Result,
@@ -112,6 +112,7 @@ impl RecipeClient for TandoorRecipeClient {
         Ok(Self {
             host: self.host,
             client: Client::builder()
+                .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
                 .default_headers(assemble_token_header(&AuthType::Bearer, &token)?)
                 .build()?,
         })

@@ -4,6 +4,9 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 use reqwest::Client;
+use tracing::{error, info};
+use uuid::Uuid;
+
 use schema_org::field::{
     CommentAuthorFieldEnum, RecipeAuthorFieldEnum, RecipeDescriptionFieldEnum,
     RecipeImageFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
@@ -14,8 +17,7 @@ use schema_org::{
     at_context,
 };
 use support::fs::new_fs_support;
-use tracing::{error, info};
-use uuid::Uuid;
+use support::time::DEFAULT_HTTP_CONNECTION_TIMEOUT;
 
 use super::host::Host;
 use crate::api::mealie::structs::{
@@ -133,6 +135,7 @@ impl RecipeClient for MealieRecipeClient {
         Ok(Self {
             host: self.host,
             client: Client::builder()
+                .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
                 .default_headers(assemble_token_header(&AuthType::Bearer, &token)?)
                 .build()?,
         })

@@ -14,8 +14,9 @@ pub use error::{Error, Result};
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use schema_org::Recipe;
+use tokio::sync::Semaphore;
 
+use schema_org::Recipe;
 use support::fs::FsSupport;
 
 use crate::parsers::Parser;
@@ -25,11 +26,14 @@ pub(crate) const ENABLE_JS: &str =
 
 pub(crate) const FORBIDDEN: &str = "403 Forbidden";
 
+const MAX_CONCURRENT_SCRAPED_WEBSITES: usize = 64;
+
 /// Represents the object responsible for scraping recipes from websites.
 #[derive(Clone)]
 pub struct Scraper {
     client: Arc<dyn HttpClient + Send + Sync>,
     fs_support: Arc<dyn FsSupport + Send + Sync>,
+    pub semaphore: Arc<Semaphore>,
 }
 
 impl Scraper {
@@ -38,7 +42,11 @@ impl Scraper {
         client: Arc<dyn HttpClient + Send + Sync>,
         fs_support: Arc<dyn FsSupport + Send + Sync>,
     ) -> Self {
-        Self { client, fs_support }
+        Self {
+            client,
+            fs_support,
+            semaphore: Arc::new(Semaphore::new(MAX_CONCURRENT_SCRAPED_WEBSITES)),
+        }
     }
 
     /// Scrapes the given URL and returns a `RecipeSchema`.

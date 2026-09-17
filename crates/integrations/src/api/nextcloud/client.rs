@@ -3,6 +3,8 @@ use std::{marker::PhantomData, path::PathBuf};
 use async_trait::async_trait;
 use base64::{Engine as _, engine::general_purpose};
 use reqwest::Client;
+use tracing::info;
+
 use schema_org::{
     AtType, DurationOrText, NutritionInformation, at_context,
     field::{
@@ -11,8 +13,7 @@ use schema_org::{
         RecipeRecipeYieldFieldEnum, RecipeToolFieldEnum,
     },
 };
-use support::fs::new_fs_support;
-use tracing::info;
+use support::{fs::new_fs_support, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
 
 use crate::{
     Error, Result,
@@ -118,6 +119,7 @@ impl RecipeClient for NextcloudRecipeClient {
         Ok(Self {
             host: self.host,
             client: Client::builder()
+                .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
                 .default_headers(assemble_token_header(&AuthType::Basic, &token)?)
                 .build()?,
         })
