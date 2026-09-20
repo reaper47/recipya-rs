@@ -6,7 +6,10 @@ use axum_htmx::HxRequest;
 use iso8601::DateTime;
 use tracing::error;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use config::States;
 use models::{
     Recipe,
@@ -15,11 +18,7 @@ use models::{
     time::FormattedTimes,
 };
 
-use crate::{
-    Error, Result,
-    handlers::{get_settings, message::broadcast_error},
-    middleware::mw_auth::RequireAuth,
-};
+use crate::{Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
 
 /// Handles searching recipes.
 pub async fn search_recipes_handler(
@@ -49,13 +48,13 @@ pub async fn search_recipes_handler(
             if let Ok(mapped) = mapped_recipes {
                 mapped
             } else {
-                broadcast_error(&state, user.id, "Error formatting recipe times.").await;
+                Toast::broadcast_error(&state, user.id, "Error formatting recipe times.").await;
                 return Err(Error::Database);
             }
         }
         Err(err) => {
             error!(user = ?user.id, ?search_params, ?err, "(search_recipes_handler) Error fetching recipes with search params");
-            broadcast_error(&state, user.id, "Error fetching recipes.").await;
+            Toast::broadcast_error(&state, user.id, "Error fetching recipes.").await;
             return Err(Error::Database);
         }
     };

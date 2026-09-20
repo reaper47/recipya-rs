@@ -1,0 +1,15 @@
+mod add;
+mod categories;
+mod duplicate;
+mod edit;
+mod favourite;
+mod helpers;
+mod recipe;
+mod recipes;
+mod rescrape;
+mod scale;
+mod search;
+mod share;
+mod supported_apps;
+mod supported_websites;
+mod timeline;

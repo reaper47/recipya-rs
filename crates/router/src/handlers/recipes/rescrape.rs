@@ -12,7 +12,10 @@ use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use config::States;
 use models::{
     Error::EntityNotFound,
@@ -32,11 +35,7 @@ use templates::recipes::RecipeDiff;
 
 use crate::{
     Error, Result,
-    handlers::{
-        get_settings,
-        message::{broadcast_error, broadcast_warning},
-        recipes::common::schema_to_recipe_for_create,
-    },
+    handlers::{get_settings, recipes::common::schema_to_recipe_for_create},
     middleware::mw_auth::RequireAuth,
 };
 
@@ -56,7 +55,7 @@ pub async fn recrape_recipe_handler(
             }
             Err(err) => {
                 error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-                broadcast_error(&state, user_id, "Recipe not found.").await;
+                Toast::broadcast_error(&state, user_id, "Recipe not found.").await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",
@@ -68,7 +67,7 @@ pub async fn recrape_recipe_handler(
         Ok(r) => schema_to_recipe_for_create(&state, r).await,
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error scraping recipe");
-            broadcast_error(
+            Toast::broadcast_error(
                 &state,
                 user.id,
                 "Error scraping recipe or recipe source is not a URL.",
@@ -81,7 +80,7 @@ pub async fn recrape_recipe_handler(
     let changes = new_recipe_c.diff(&old_recipe_c, is_nutrition_calculated_by_source);
 
     if changes.is_empty() {
-        broadcast_warning(&state, user.id, "Recipe has not changed.").await;
+        Toast::broadcast_warning(&state, user.id, "Recipe has not changed.").await;
         return Ok(().into_response());
     }
 
@@ -136,7 +135,7 @@ pub async fn recrape_recipe_put_handler(
         Ok(r) => RecipeForCreate::from(r),
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            broadcast_error(&state, user.id, "Recipe not found.").await;
+            Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -459,7 +458,7 @@ pub async fn recrape_recipe_put_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
-            broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Err(Error::Database);
         }
     }

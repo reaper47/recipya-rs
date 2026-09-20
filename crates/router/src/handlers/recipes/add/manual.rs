@@ -7,7 +7,10 @@ use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use config::States;
 use math::cooking::units::system;
 use models::{
@@ -22,9 +25,7 @@ use models::{
 
 use crate::{
     Error, Result,
-    handlers::{
-        get_settings, message::broadcast_error, recipes::common::fetch_categories_keywords,
-    },
+    handlers::{get_settings, recipes::common::fetch_categories_keywords},
     middleware::mw_auth::RequireAuth,
 };
 
@@ -142,7 +143,7 @@ pub async fn add_manual_recipe_post_handler(
         Ok(id) => id,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to add recipe to collection");
-            broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }
     };

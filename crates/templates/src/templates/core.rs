@@ -35,8 +35,8 @@ pub(super) fn head(title: &str) -> Markup {
             link rel="stylesheet" href=(format!("/public/css/vendor/easymde.min.css?v={BUILD_HASH}"));
 
             script src=(format!("/public/js/vendor/htmx-2.0.9.min.js?v={BUILD_HASH}")) {}
+            script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.4" integrity="sha384-A986SAtodyH8eg8x8irJnYUk7i9inVQqYigD6qZ9evobksGNIXfeFvDwLSHcp31N" crossorigin="anonymous" {}
             script src="https://cdn.jsdelivr.net/npm/hyperscript.org@0.9.91/dist/_hyperscript.min.js" integrity="sha384-OT9bNmUa5rM34SmxFpRftn2F6GbgM/4xnTmn0z106OE5uvsigkdtUMOpdPKOigyO" crossorigin="anonymous" {}
-            script src=(format!("/public/js/vendor/ws-2.0.4.min.js?v={BUILD_HASH}")) {}
             script src=(format!("/public/js/vendor/theme-change-2.0.2.min.js?v={BUILD_HASH}")) {}
             script src=(format!("/public/js/vendor/html-duration-picker.min.js?v={BUILD_HASH}")) {}
             script src=(format!("/public/js/vendor/cropper-2.1.1.min.js?v={BUILD_HASH}")) {}
@@ -72,11 +72,11 @@ pub(super) fn toast() -> Markup {
     }
 }
 
-/// Renders a notification toast through websockets.
-pub(super) fn toast_ws(title: &str, content: &str, is_toast_visible: bool) -> Markup {
+/// Renders a notification toast through SSE.
+pub(super) fn toast_sse(title: &str, content: &str, is_toast_visible: bool) -> Markup {
     html! {
         (toast())
-        div #ws-notification-container class={
+        div #sse-notification-container class={
             "z-20 fixed bottom-0 right-0 p-6 cursor-default"
             @if !is_toast_visible {
                 " hidden"

@@ -2,13 +2,11 @@ use axum::{Form, extract::State, response::IntoResponse};
 use reqwest::StatusCode;
 use tracing::error;
 
+use app::message::{Broadcaster, Toast};
 use app::state::AppState;
 use models::Recipe;
 
-use crate::{
-    Error, handlers::message::broadcast_error, middleware::mw_auth::RequireAuth,
-    recipes_router::params::RecipeCategoryForm,
-};
+use crate::{Error, middleware::mw_auth::RequireAuth, params::RecipeCategoryForm};
 
 /// Handles adding a recipe category into the database.
 pub async fn post_recipe_categories_handler(
@@ -23,7 +21,7 @@ pub async fn post_recipe_categories_handler(
 
     if let Err(err) = Recipe::add_category(&state.mm, &category, user.id).await {
         error!(?err, "Error adding recipe category");
-        broadcast_error(&state, user.id, "Failed to add recipe category.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to add recipe category.").await;
         return Error::Database.into_response();
     }
 
@@ -38,7 +36,7 @@ pub async fn delete_recipe_categories_handler(
 ) -> impl IntoResponse {
     let category = form.category;
     if category.is_empty() || category == "uncategorized" {
-        broadcast_error(
+        Toast::broadcast_error(
             &state,
             user.id,
             "Category cannot be empty or uncategorized.",
@@ -49,7 +47,7 @@ pub async fn delete_recipe_categories_handler(
 
     if let Err(err) = Recipe::delete_recipe_category(&state.mm, &category, user.id).await {
         error!(?err, "Error deleting recipe category");
-        broadcast_error(&state, user.id, "Failed to delete recipe category.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to delete recipe category.").await;
         return Error::Database.into_response();
     }
 

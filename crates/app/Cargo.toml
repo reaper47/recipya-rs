@@ -16,6 +16,7 @@ rust-version.workspace = true
 
 [dependencies]
 axum.workspace = true
+axum-htmx = "0.8.1"
 config.workspace = true
 derive_more.workspace = true
 diesel.workspace = true
@@ -25,6 +26,8 @@ models.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
 schema-org.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 support.workspace = true
 tokio.workspace = true
 tracing.workspace = true

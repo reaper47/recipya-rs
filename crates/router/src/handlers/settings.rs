@@ -9,6 +9,7 @@ use serde_json::json;
 use tracing::error;
 use uuid::Uuid;
 
+use app::message::{Broadcaster, Toast};
 use app::state::AppState;
 use config::{DemoState, States};
 use models::Recipe;
@@ -22,7 +23,6 @@ use repository::ModelManager;
 use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::Error;
-use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::fetch_categories_keywords;
 use crate::middleware::mw_auth::RequireAuth;
 use crate::schemas::settings::{
@@ -43,7 +43,7 @@ pub async fn settings_handler(
         Ok(settings) => settings,
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching user settings");
-            broadcast_error(&state, caller_user_id, "Error fetching user settings.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Error fetching user settings.").await;
             return Error::Database.into_response();
         }
     };
@@ -55,7 +55,7 @@ pub async fn settings_handler(
             .collect::<Vec<_>>(),
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching categories");
-            broadcast_error(&state, caller_user_id, "Error fetching categories.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Error fetching categories.").await;
             return Error::Database.into_response();
         }
     };
@@ -122,13 +122,13 @@ pub async fn export_data_handler(
         Ok(recipes) => recipes,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to retrieve recipes");
-            broadcast_error(&state, user.id, "Failed to retrieve recipes.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to retrieve recipes.").await;
             return Error::Database.into_response();
         }
     };
 
     if recipes.is_empty() {
-        broadcast_warning(&state, user.id, "No recipes found for export.").await;
+        Toast::broadcast_warning(&state, user.id, "No recipes found for export.").await;
         return StatusCode::NOT_FOUND.into_response();
     }
 
@@ -154,7 +154,7 @@ pub async fn export_data_post_handler(
     axum_extra::extract::Form(payload): axum_extra::extract::Form<ExportDataPayload>,
 ) -> impl IntoResponse {
     if payload.recipe_ids.is_empty() {
-        broadcast_warning(&state, user.id, "No recipes selected for export.").await;
+        Toast::broadcast_warning(&state, user.id, "No recipes selected for export.").await;
         return StatusCode::BAD_REQUEST.into_response();
     }
 
@@ -162,13 +162,13 @@ pub async fn export_data_post_handler(
         Ok(r) => r,
         Err(err) => {
             error!(user = ?user.id, ?payload, ?err, "Failed to fetch recipes");
-            broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
             return Error::Database.into_response();
         }
     };
 
     if recipes.is_empty() {
-        broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
@@ -179,7 +179,7 @@ pub async fn export_data_post_handler(
         Ok(file) => file,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to export recipes");
-            broadcast_error(&state, user.id, "Failed to export recipes.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to export recipes.").await;
             return Error::Fs.into_response();
         }
     };
@@ -189,7 +189,7 @@ pub async fn export_data_post_handler(
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
         error!(user = ?user.id, ?err, "Failed to create download");
-        broadcast_error(&state, user.id, "Failed to create export data response.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
         return Error::Database.into_response();
     }
 
@@ -208,7 +208,7 @@ pub async fn export_data_post_handler(
         Ok(res) => res,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to create response");
-            broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Error::Fs.into_response()
         }
     }
@@ -228,7 +228,7 @@ pub async fn set_bold_ingredients_handler(
         .await
     {
         error!(user = ?user.id, ?err, "Error updating paper size");
-        broadcast_error(&state, user.id, "Error updating paper size.").await;
+        Toast::broadcast_error(&state, user.id, "Error updating paper size.").await;
         return Error::Database.into_response();
     }
 
@@ -246,7 +246,7 @@ pub async fn set_nutrition_source_handler(
             payload = payload.nutrition_source,
             "Invalid nutrition source"
         );
-        broadcast_error(
+        Toast::broadcast_error(
             &state,
             user.id,
             &format!(
@@ -260,7 +260,7 @@ pub async fn set_nutrition_source_handler(
 
     if let Err(err) = source.save(&state.mm, user.id).await {
         error!(user = ?user.id, ?err, "Error saving selected nutrition source");
-        broadcast_error(&state, user.id, "Error saving selected nutrition source.").await;
+        Toast::broadcast_error(&state, user.id, "Error saving selected nutrition source.").await;
         return Error::Database.into_response();
     }
 
@@ -275,7 +275,7 @@ pub async fn set_paper_size_handler(
 ) -> impl IntoResponse {
     if let Err(err) = user.update_paper_size(&state.mm, form.paper_size).await {
         error!(user = ?user.id, ?err, "Error updating paper size");
-        broadcast_error(&state, user.id, "Error updating paper size.").await;
+        Toast::broadcast_error(&state, user.id, "Error updating paper size.").await;
         return Error::Database.into_response();
     }
 
@@ -317,12 +317,12 @@ pub async fn set_selected_timezone_handler(
         Ok(()) => ().into_response(),
         Err(models::Error::Time) => {
             error!(tz = ?payload.tz, "Selected tz is invalid");
-            broadcast_error(&state, user.id, "Invalid timezone.").await;
+            Toast::broadcast_error(&state, user.id, "Invalid timezone.").await;
             Error::InvalidPayload.into_response()
         }
         Err(err) => {
             error!(user = ?user.id, ?err, "Error updating timezone");
-            broadcast_error(&state, user.id, "Error updating timezone.").await;
+            Toast::broadcast_error(&state, user.id, "Error updating timezone.").await;
             Error::Database.into_response()
         }
     }
@@ -340,7 +340,7 @@ where
 {
     let Ok(theme) = payload.theme.parse::<Theme>() else {
         error!(theme = payload.theme, "Invalid theme");
-        broadcast_error(
+        Toast::broadcast_error(
             &state,
             user.id,
             &format!("Theme '{}' is invalid.", payload.theme),
@@ -351,7 +351,7 @@ where
 
     if let Err(err) = save_operation(theme, state.mm.clone(), user.id).await {
         error!(user = ?user.id, ?err, "Error saving selected theme");
-        broadcast_error(&state, user.id, "Error saving selected theme.").await;
+        Toast::broadcast_error(&state, user.id, "Error saving selected theme.").await;
         return Error::Database.into_response();
     }
 

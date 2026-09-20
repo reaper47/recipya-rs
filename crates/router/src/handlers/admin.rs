@@ -5,11 +5,11 @@ use tracing::error;
 use uuid::Uuid;
 use validator::Validate;
 
+use app::message::{Broadcaster, Toast};
 use app::state::AppState;
 use models::user::{User, UserForCreate};
 
 use crate::Error;
-use crate::handlers::message::{broadcast_error, broadcast_success};
 use crate::middleware::mw_auth::RequireAuth;
 use crate::schemas::admin::{UpdatePasswordForm, UserRowParams};
 use crate::schemas::auth::RegisterForm;
@@ -23,7 +23,7 @@ pub async fn add_user_handler(
     let user_id = user.id;
 
     if form.validate().is_err() {
-        broadcast_error(
+        Toast::broadcast_error(
             &state,
             user_id,
             "Email is invalid or passwords do not match.",
@@ -44,7 +44,7 @@ pub async fn add_user_handler(
         Ok(user) => user,
         Err(err) => {
             error!(?user_id, ?err, "Error inserting user as admin");
-            broadcast_error(&state, user_id, "A user with this email exists.").await;
+            Toast::broadcast_error(&state, user_id, "A user with this email exists.").await;
             return Error::EntityExists { entity: "user" }.into_response();
         }
     };
@@ -53,7 +53,7 @@ pub async fn add_user_handler(
         Ok(count) => count,
         Err(err) => {
             error!(?err, "Error fetching user count");
-            broadcast_error(&state, user_id, "Failed to fetch number of users.").await;
+            Toast::broadcast_error(&state, user_id, "Failed to fetch number of users.").await;
             return Error::Database.into_response();
         }
     };
@@ -78,24 +78,24 @@ pub async fn delete_user_handler(
     let user = match User::get_user_by_id(&state.mm, user_id).await {
         Ok(Some(user)) => user,
         Ok(None) => {
-            broadcast_error(&state, caller_user_id, "User not found.").await;
+            Toast::broadcast_error(&state, caller_user_id, "User not found.").await;
             return Error::EntityNotFound { entity: "user" }.into_response();
         }
         Err(err) => {
             error!(?user_id, ?err, "Error fetching user with id");
-            broadcast_error(&state, caller_user_id, "Failed to fetch user.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Failed to fetch user.").await;
             return Error::Database.into_response();
         }
     };
 
     if user.is_admin {
-        broadcast_error(&state, caller_user_id, "Cannot delete an admin.").await;
+        Toast::broadcast_error(&state, caller_user_id, "Cannot delete an admin.").await;
         return Error::DeleteForbidden.into_response();
     }
 
     if let Err(err) = User::delete(&state.mm, user_id).await {
         error!(?user_id, ?err, "Could not delete user with id");
-        broadcast_error(&state, caller_user_id, "Failed to delete user.").await;
+        Toast::broadcast_error(&state, caller_user_id, "Failed to delete user.").await;
         return Error::DeleteUser.into_response();
     }
 
@@ -103,12 +103,12 @@ pub async fn delete_user_handler(
         Ok(users) => users,
         Err(err) => {
             error!(?err, "Error fetching users");
-            broadcast_error(&state, caller_user_id, "Failed to fetch users.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Failed to fetch users.").await;
             return Error::Database.into_response();
         }
     };
 
-    broadcast_success(&state, caller_user_id, "User deleted.").await;
+    Toast::broadcast_success(&state, caller_user_id, "User deleted.").await;
     templates::settings::render_users_table(&users, true).into_response()
 }
 
@@ -125,14 +125,14 @@ pub async fn update_user_form_handler(
         Ok(user) => match user {
             None => {
                 error!(?user_id, "User not found in database.");
-                broadcast_error(&state, caller_user_id, "User not found.").await;
+                Toast::broadcast_error(&state, caller_user_id, "User not found.").await;
                 return Error::NoUser.into_response();
             }
             Some(user) => user,
         },
         Err(err) => {
             error!(?user_id, ?err, "Error fetching user as admin");
-            broadcast_error(&state, caller_user_id, "Error fetching user.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Error fetching user.").await;
             return Error::Database.into_response();
         }
     };
@@ -151,7 +151,7 @@ pub async fn update_user_handler(
 
     if let Err(err) = form.validate() {
         error!(?err, "Error validating update user form");
-        broadcast_error(&state, caller_user_id, "Payload cannot be empty.").await;
+        Toast::broadcast_error(&state, caller_user_id, "Payload cannot be empty.").await;
         return Error::InvalidPayload.into_response();
     }
 
@@ -159,7 +159,7 @@ pub async fn update_user_handler(
         Ok(()) => {}
         Err(err) => {
             error!(?user_id, ?err, "Error updating user password for user");
-            broadcast_error(&state, caller_user_id, "Failed to update user password.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Failed to update user password.").await;
             return Error::Database.into_response();
         }
     }
@@ -168,19 +168,19 @@ pub async fn update_user_handler(
         Ok(user) => match user {
             None => {
                 error!(?user_id, "User not found in database.");
-                broadcast_error(&state, caller_user_id, "User not found.").await;
+                Toast::broadcast_error(&state, caller_user_id, "User not found.").await;
                 return Error::NoUser.into_response();
             }
             Some(user) => user,
         },
         Err(err) => {
             error!(?user_id, ?err, "Error fetching user as admin");
-            broadcast_error(&state, caller_user_id, "Error fetching user.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Error fetching user.").await;
             return Error::Database.into_response();
         }
     };
 
-    broadcast_success(&state, caller_user_id, "User password updated.").await;
+    Toast::broadcast_success(&state, caller_user_id, "User password updated.").await;
     templates::settings::user_row(form.row_index, &user).into_response()
 }
 
@@ -197,14 +197,14 @@ pub async fn user_row_handler(
         Ok(user) => match user {
             None => {
                 error!(?user_id, "User not found in database.");
-                broadcast_error(&state, caller_user_id, "User not found.").await;
+                Toast::broadcast_error(&state, caller_user_id, "User not found.").await;
                 return Error::NoUser.into_response();
             }
             Some(user) => user,
         },
         Err(err) => {
             error!(?user_id, ?err, "Error fetching user as admin");
-            broadcast_error(&state, caller_user_id, "Error fetching user.").await;
+            Toast::broadcast_error(&state, caller_user_id, "Error fetching user.").await;
             return Error::Database.into_response();
         }
     };

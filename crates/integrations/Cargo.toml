@@ -48,6 +48,5 @@ zip.workspace = true
 [dev-dependencies]
 pretty_assertions.workspace = true
 test-fixtures.workspace = true
-test-utils.workspace = true
 tokio.workspace = true
 tracing-test.workspace = true

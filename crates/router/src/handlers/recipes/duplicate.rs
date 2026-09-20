@@ -6,13 +6,16 @@ use axum_htmx::HxRequest;
 use config::States;
 use tracing::error;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use models::Error::EntityNotFound;
 use models::data::Data;
 
 use crate::{
     Error, Result,
-    handlers::{get_settings, message::broadcast_error, recipes::common::fetch_view_recipe},
+    handlers::{get_settings, recipes::common::fetch_view_recipe},
     middleware::mw_auth::RequireAuth,
 };
 
@@ -30,7 +33,7 @@ pub async fn duplicate_recipe_handler(
             Ok(res) => res,
             Err(err) => {
                 error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
-                broadcast_error(&state, user.id, "Recipe not found.").await;
+                Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",

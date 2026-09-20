@@ -6,13 +6,13 @@ use axum::{
 use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use models::share::ShareRecipe;
 
-use crate::{
-    Error, handlers::message::broadcast_error, middleware::mw_auth::RequireAuth,
-    recipes_router::params::ShareRecipeForm,
-};
+use crate::{Error, middleware::mw_auth::RequireAuth, params::ShareRecipeForm};
 
 /// Handles generating a link for the recipe to share.
 pub async fn share_recipe_post_handler(
@@ -57,7 +57,7 @@ pub async fn share_recipe_post_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error generating shared recipe link");
-            broadcast_error(&state, user.id, "Error creating shared recipe link.").await;
+            Toast::broadcast_error(&state, user.id, "Error creating shared recipe link.").await;
             Error::BadTimeFormat.into_response()
         }
     }

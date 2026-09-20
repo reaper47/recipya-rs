@@ -13,5 +13,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-axum-test.workspace = true
+auth.workspace = true
+models.workspace = true
+repository.workspace = true
 uuid.workspace = true

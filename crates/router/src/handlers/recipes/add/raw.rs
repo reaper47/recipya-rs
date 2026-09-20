@@ -4,7 +4,10 @@ use reqwest::StatusCode;
 use tokio::time::Instant;
 use tracing::{error, warn};
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use models::{
     Recipe,
     recipe::structs::recipe::RecipeForCreate,
@@ -16,10 +19,7 @@ use models::{
     settings::UserSettingDetails,
 };
 
-use crate::{
-    Error, handlers::message::broadcast_error, middleware::mw_auth::RequireAuth,
-    recipes_router::params::PreviewForm,
-};
+use crate::{Error, middleware::mw_auth::RequireAuth, params::PreviewForm};
 
 /// Handles parsing a recipe from raw JSON.
 pub async fn add_recipe_import_raw_handler(
@@ -60,7 +60,7 @@ pub async fn add_recipe_import_raw_handler(
                 Err(models::Error::DuplicateEntityWithID(id)) => {
                     items.skipped += 1;
                     warn!("Recipe exists: {}", recipe_c.name);
-                    broadcast_error(&state, user.id, "Recipe exists.").await;
+                    Toast::broadcast_error(&state, user.id, "Recipe exists.").await;
                     (
                         Error::EntityExists { entity: "recipe" }.into_response(),
                         ReportLogForCreate::warning(
@@ -75,7 +75,7 @@ pub async fn add_recipe_import_raw_handler(
                 Err(err) => {
                     items.failed += 1;
                     error!(name = recipe_c.name, ?err, "Error saving recipe");
-                    broadcast_error(&state, user.id, "Failed to insert recipe.").await;
+                    Toast::broadcast_error(&state, user.id, "Failed to insert recipe.").await;
                     (
                         Error::Database.into_response(),
                         ReportLogForCreate::error(
@@ -93,7 +93,7 @@ pub async fn add_recipe_import_raw_handler(
         Err(err) => {
             items.failed += 1;
             error!(?err, "Error parsing recipe schema JSON");
-            broadcast_error(&state, user.id, "Error parsing recipe schema JSON.").await;
+            Toast::broadcast_error(&state, user.id, "Error parsing recipe schema JSON.").await;
             (
                 Error::InvalidPayload.into_response(),
                 ReportLogForCreate::error(

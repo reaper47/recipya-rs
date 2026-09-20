@@ -9,7 +9,10 @@ use config::States;
 use iso8601::DateTime;
 use tracing::error;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use models::{
     Recipe,
     data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe},
@@ -18,11 +21,7 @@ use models::{
     time::FormattedTimes,
 };
 
-use crate::{
-    Error, Result,
-    handlers::{get_settings, message::broadcast_error},
-    middleware::mw_auth::RequireAuth,
-};
+use crate::{Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
 
 /// Handles viewing the recipes.
 pub async fn recipes_handler(
@@ -38,7 +37,7 @@ pub async fn recipes_handler(
         Ok(count) => count,
         Err(err) => {
             error!(user = ?user.id,?err, "Error counting recipes");
-            broadcast_error(&state, user.id, "Error fetching number of recipes.").await;
+            Toast::broadcast_error(&state, user.id, "Error fetching number of recipes.").await;
             return Ok(Error::Database.into_response());
         }
     };
@@ -63,13 +62,13 @@ pub async fn recipes_handler(
             if let Ok(mapped) = mapped_recipes {
                 mapped
             } else {
-                broadcast_error(&state, user.id, "Error formatting recipe times.").await;
+                Toast::broadcast_error(&state, user.id, "Error formatting recipe times.").await;
                 return Err(Error::Database);
             }
         }
         Err(err) => {
             error!(user = ?user.id, ?search_params, ?err, "(recipes_handler) Error fetching recipes for user with search params");
-            broadcast_error(&state, user.id, "Error fetching recipes.").await;
+            Toast::broadcast_error(&state, user.id, "Error fetching recipes.").await;
             return Err(Error::Database);
         }
     };

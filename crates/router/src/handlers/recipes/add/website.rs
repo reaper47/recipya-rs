@@ -7,11 +7,7 @@ use std::{
     time::Duration,
 };
 
-use axum::{
-    Form,
-    extract::{State, ws::Message},
-    response::IntoResponse,
-};
+use axum::{Form, extract::State, response::IntoResponse};
 use futures::{StreamExt, stream};
 use futures_util::lock::Mutex;
 use itertools::Itertools;
@@ -22,6 +18,7 @@ use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
+use app::message::{Broadcaster, IMessage, MessageStatus, MessageType, Toast};
 use app::state::AppState;
 use models::{
     Recipe,
@@ -35,16 +32,11 @@ use models::{
 use support::net::resolve_and_validate;
 
 use crate::{
-    Error,
-    handlers::{
-        message::{IMessage, MessageHtmx, MessageStatus, MessageType, broadcast_error},
-        recipes::common::schema_to_recipe_for_create,
-    },
-    middleware::mw_auth::RequireAuth,
-    recipes_router::params::RecipeScrapeForm,
+    Error, handlers::recipes::common::schema_to_recipe_for_create,
+    middleware::mw_auth::RequireAuth, params::RecipeScrapeForm,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct FetchWebsiteContext {
     count_success: Arc<AtomicI64>,
     count_warning: Arc<AtomicI64>,
@@ -90,12 +82,12 @@ impl FetchWebsiteContext {
                 let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
                 let view_recipe_link = format!("View /recipes/{recipe_id}");
 
-                MessageHtmx::builder(MessageType::Toast, "Warning", "The recipe exists.")
+                Toast::builder(MessageType::Toast, "Warning", "The recipe exists.")
                     .status(MessageStatus::Warning)
                     .action(Some(&view_recipe_link))
                     .build()
             } else if count_error == 1 {
-                MessageHtmx::builder(MessageType::Toast, "Error", "Fetching the recipe failed.")
+                Toast::builder(MessageType::Toast, "Error", "Fetching the recipe failed.")
                     .status(MessageStatus::Error)
                     .action(Some("View /reports?view=latest"))
                     .build()
@@ -103,7 +95,7 @@ impl FetchWebsiteContext {
                 let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
                 let view_recipe_link = format!("View /recipes/{recipe_id}");
 
-                MessageHtmx::builder(
+                Toast::builder(
                     MessageType::Toast,
                     "Success",
                     "Recipe has been added to your collection.",
@@ -111,19 +103,20 @@ impl FetchWebsiteContext {
                 .action(Some(&view_recipe_link))
                 .build()
             } else {
-                MessageHtmx::error("No recipe has been scraped.")
+                Toast::error("No recipe has been scraped.")
             }
         } else {
-            let num_skipped = self.total - (count_success + count_warning);
-
-            let message = format!("Fetched: {count_success}. Skipped: {num_skipped}");
-            MessageHtmx::builder(MessageType::Toast, "Success", &message)
+            let message = format!(
+                "Fetched: {count_success}. Skipped: {}",
+                count_error + count_warning
+            );
+            Toast::builder(MessageType::Toast, "Success", &message)
                 .action(Some("View /reports?view=latest"))
                 .build()
         };
 
         if let Ok(json) = serde_json::to_string(&toast) {
-            state.broadcast(Message::Text(json.into()), user_id).await;
+            state.channels.broadcast_to_client(&json, user_id).await;
         }
     }
 }
@@ -150,7 +143,7 @@ pub async fn add_website_post_handler(
         .await;
 
     if urls.is_empty() {
-        broadcast_error(&state, user.id, "No valid URLs found.").await;
+        Toast::broadcast_error(&state, user.id, "No valid URLs found.").await;
         return Error::InvalidPayload.into_response();
     }
 

@@ -7,17 +7,17 @@ mod general_router;
 mod handlers;
 mod recipes_router;
 mod reports_router;
-mod schemas;
 mod settings_router;
 mod shared_router;
 mod shopping_router;
 
-mod static_files_router;
-
 pub mod middleware;
+pub mod schemas;
+pub mod static_files_router;
+pub use recipes_router::params;
 
 pub use error::{Error, Result};
-pub use handlers::static_files::copy_to_fs;
+pub use handlers::{shopping::SHOPPING_VIEW_COOKIE_NAME, static_files::copy_to_fs};
 
 use axum::Router;
 

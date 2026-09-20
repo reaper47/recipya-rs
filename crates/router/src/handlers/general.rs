@@ -1,13 +1,14 @@
+use std::convert::Infallible;
 use std::fmt::Write;
 use std::path::Path;
 
 use axum::Json;
 use axum::body::Body;
-use axum::extract::ws::WebSocket;
-use axum::extract::{Multipart, Query, State, WebSocketUpgrade};
+use axum::extract::{Multipart, Query, State};
 use axum::http::{Response, StatusCode};
-use axum::response::{Html, IntoResponse, Redirect};
-use futures_util::StreamExt;
+use axum::response::sse::{Event, KeepAlive};
+use axum::response::{Html, IntoResponse, Redirect, Sse};
+use futures::Stream;
 use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -17,6 +18,7 @@ use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
+use app::message::{Broadcaster, Toast};
 use app::state::AppState;
 use models::Recipe;
 use models::download::Download;
@@ -25,7 +27,6 @@ use models::params::{DownloadParams, FetchParams, SearchParams};
 use models::user::User;
 use support::net::resolve_and_validate;
 
-use crate::handlers::message::broadcast_error;
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::{Error, Result};
 
@@ -63,6 +64,8 @@ pub async fn download_handler(
     Query(params): Query<DownloadParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
+    use futures_util::StreamExt;
+
     let token = params.token;
 
     let file_path = match Download::find_by_token(&state.mm, token).await {
@@ -73,7 +76,7 @@ pub async fn download_handler(
         }
         Err(err) => {
             error!(user = ?user.id, ?token, ?err, "Failed to find download token");
-            broadcast_error(&state, user.id, "Failed to find download token.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to find download token.").await;
             return StatusCode::NOT_FOUND.into_response();
         }
     };
@@ -92,7 +95,7 @@ pub async fn download_handler(
         Ok(f) => f,
         Err(err) => {
             error!(?file_path, user = ?user.id, ?err, "Failed to open file");
-            broadcast_error(&state, user.id, "Failed to open export file.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to open export file.").await;
             return Error::Fs.into_response();
         }
     };
@@ -117,7 +120,7 @@ pub async fn download_handler(
         Ok(res) => res,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to create response");
-            broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Error::Fs.into_response()
         }
     }
@@ -132,7 +135,7 @@ pub async fn fetch_handler(
     let parsed = match Url::parse(&params.url) {
         Ok(u) if matches!(u.scheme(), "http" | "https") => u,
         _ => {
-            broadcast_error(&state, user.id, "Invalid URL").await;
+            Toast::broadcast_error(&state, user.id, "Invalid URL").await;
             return StatusCode::BAD_REQUEST.into_response();
         }
     };
@@ -152,7 +155,7 @@ pub async fn fetch_handler(
                     warn!(?url, reason = "Missing Host", MESSAGE);
                 }
             }
-            broadcast_error(&state, user.id, "Invalid URL").await;
+            Toast::broadcast_error(&state, user.id, "Invalid URL").await;
             return StatusCode::BAD_REQUEST.into_response();
         }
     };
@@ -162,7 +165,7 @@ pub async fn fetch_handler(
         Ok(r) => r,
         Err(err) => {
             error!(?err, "Failed to fetch URL");
-            broadcast_error(&state, user.id, "Could not fetch URL").await;
+            Toast::broadcast_error(&state, user.id, "Could not fetch URL").await;
             return StatusCode::BAD_REQUEST.into_response();
         }
     };
@@ -173,7 +176,7 @@ pub async fn fetch_handler(
         Ok(b) => b,
         Err(err) => {
             error!(?err, "Failed to read response");
-            broadcast_error(&state, user.id, "Could not read response").await;
+            Toast::broadcast_error(&state, user.id, "Could not read response").await;
             return StatusCode::BAD_GATEWAY.into_response();
         }
     };
@@ -237,7 +240,7 @@ pub async fn paper_sizes_handler(
         Ok(papers) => papers,
         Err(err) => {
             error!(?err, "Failed to get paper sizes");
-            broadcast_error(&state, user.id, "Failed to fetch paper sizes").await;
+            Toast::broadcast_error(&state, user.id, "Failed to fetch paper sizes").await;
             return Error::Database.into_response();
         }
     };
@@ -299,7 +302,7 @@ pub async fn search_suggestions_handler(
                 }),
             Err(err) => {
                 error!(?q, user = ?user.id, ?err, "(search_suggestions_handler) Error fetching items");
-                broadcast_error(&state, user.id, "Error fetching components.").await;
+                Toast::broadcast_error(&state, user.id, "Error fetching components.").await;
                 return Err(Error::Database);
             }
         };
@@ -308,6 +311,62 @@ pub async fn search_suggestions_handler(
     } else {
         Ok(Html(String::new()))
     }
+}
+
+struct ConnectedClientsGuard {
+    state: AppState,
+    user_id: Uuid,
+}
+
+impl ConnectedClientsGuard {
+    fn new(state: &AppState, user_id: Uuid) -> Self {
+        Self {
+            state: state.clone(),
+            user_id,
+        }
+    }
+}
+
+impl Drop for ConnectedClientsGuard {
+    fn drop(&mut self) {
+        let state = self.state.clone();
+        let user_id = self.user_id;
+        tokio::spawn(async move { state.channels.unsubscribe_client(user_id).await });
+    }
+}
+
+/// SSE handler for streaming events to the client.
+pub async fn sse_handler(
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+) -> Sse<impl Stream<Item = std::result::Result<Event, Infallible>>> {
+    use tokio_stream::StreamExt as _;
+
+    let mut client_rx = tokio_stream::wrappers::BroadcastStream::new(
+        state.channels.subscribe_client(user.id).await,
+    );
+    let mut shutdown_rx = state.channels.shutdown_rx();
+    let guard = ConnectedClientsGuard::new(&state, user.id);
+
+    let stream = async_stream::stream! {
+        let _guard = guard;
+        loop {
+            tokio::select! {
+                msg = client_rx.next() => {
+                    match msg {
+                        Some(Ok(msg)) => yield Event::default().data(msg),
+                        Some(Err(_)) => {},
+                        None => break,
+                    }
+                }
+                _ = shutdown_rx.changed() => {
+                    break;
+                }
+            }
+        }
+    };
+
+    Sse::new(stream.map(Ok)).keep_alive(KeepAlive::default())
 }
 
 /// Handles uploading a note's image to the appropriate data directory.
@@ -398,23 +457,4 @@ pub async fn user_initials_handler(
             "A".into()
         }
     }
-}
-
-/// WebSocket connection handler.
-pub async fn ws_handler(
-    ws: WebSocketUpgrade,
-    RequireAuth(user): RequireAuth,
-    State(state): State<AppState>,
-) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_socket(user.id, socket, state))
-}
-
-async fn handle_socket(user_id: Uuid, socket: WebSocket, state: AppState) {
-    state
-        .subscribers
-        .lock()
-        .await
-        .entry(user_id)
-        .or_insert_with(Vec::new)
-        .push(socket);
 }

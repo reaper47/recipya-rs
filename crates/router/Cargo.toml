@@ -16,9 +16,10 @@ rust-version.workspace = true
 
 [dependencies]
 app.workspace = true
-axum-extra = { version = "0.12.6", features = ["cookie", "form"] }
+async-stream.workspace = true
 auth.workspace = true
 axum.workspace = true
+axum-extra = { version = "0.12.6", features = ["cookie", "form"] }
 axum-htmx = "0.8.1"
 base64.workspace = true
 config.workspace = true
@@ -49,6 +50,7 @@ support.workspace = true
 templates.workspace = true
 time.workspace = true
 tokio.workspace = true
+tokio-stream = { version = "0.1.19", features = ["sync"] }
 tokio-util = "0.7.18"
 tower-cookies.workspace = true
 tower-http.workspace = true
@@ -65,11 +67,11 @@ diesel-async.workspace = true
 image = "0.25.10"
 jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
-test-utils.workspace = true
 time.workspace = true
 tokio.workspace = true
 tower = "0.5.3"
 tracing-test.workspace = true
 test-db.workspace = true
 test-fixtures.workspace = true
+test-harness.workspace = true
 test-models = { path = "../test-models" }

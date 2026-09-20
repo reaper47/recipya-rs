@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::Form;
-use axum::extract::{Query, State, ws::Message};
+use axum::extract::{Query, State};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
 use tower_cookies::Cookies;
@@ -9,6 +9,7 @@ use tracing::{debug, error, warn};
 use uuid::Uuid;
 use validator::Validate;
 
+use app::message::{Broadcaster, IMessage, Toast, add_hx_message};
 use app::state::AppState;
 use auth::pwd::scheme::SchemeStatus;
 use auth::pwd::{ContentToHash, validate_pwd};
@@ -22,7 +23,6 @@ use models::tokens::{
 };
 use models::user::User;
 
-use crate::handlers::message::{IMessage, MessageHtmx, MessageWs, add_hx_message, broadcast_error};
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::schemas::auth::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
@@ -40,7 +40,7 @@ pub async fn change_password_post_handler(
     }
 
     if form.password == form.new_password {
-        broadcast_error(
+        Toast::broadcast_error(
             &state,
             user.id,
             "New password cannot be the same as the current.",
@@ -50,22 +50,22 @@ pub async fn change_password_post_handler(
     }
 
     if form.validate().is_err() {
-        broadcast_error(&state, user.id, "Passwords do not match.").await;
+        Toast::broadcast_error(&state, user.id, "Passwords do not match.").await;
         return Error::Form.into_response();
     }
 
     match User::update_password_by_user_id(&state.mm, user.id, &form.new_password).await {
         Ok(()) => {
-            let toast = MessageWs::success("Your password has been updated.");
+            let toast = Toast::success("Your password has been updated.");
 
             if let Ok(json) = serde_json::to_string(&toast) {
-                state.broadcast(Message::Text(json.into()), user.id).await;
+                state.channels.broadcast_to_client(&json, user.id).await;
             }
 
             (StatusCode::NO_CONTENT, "").into_response()
         }
         Err(err) => {
-            broadcast_error(&state, user.id, "Failed to update password.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to update password.").await;
             Error::Model(err).into_response()
         }
     }
@@ -220,7 +220,7 @@ pub async fn forgot_password_reset_post_handler(
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, &MessageHtmx::success("Password is invalid"));
+        add_hx_message(&mut res, &Toast::success("Password is invalid"));
         return res;
     }
 
@@ -256,7 +256,7 @@ pub async fn forgot_password_reset_post_handler(
     if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
         error!(?user_id, ?err, "Failed to update password for user",);
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, &MessageHtmx::error("Failed to update password."));
+        add_hx_message(&mut res, &Toast::error("Failed to update password."));
         return res;
     }
 
@@ -266,10 +266,7 @@ pub async fn forgot_password_reset_post_handler(
     }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
-    add_hx_message(
-        &mut res,
-        &MessageHtmx::success("Your password has been updated."),
-    );
+    add_hx_message(&mut res, &Toast::success("Your password has been updated."));
 
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
         res.headers_mut().insert(axum_htmx::HX_REDIRECT, value);
@@ -300,7 +297,7 @@ pub async fn login_post_handler(
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
+        add_hx_message(&mut res, &Toast::error("Credentials are invalid."));
         return res;
     }
 
@@ -308,7 +305,7 @@ pub async fn login_post_handler(
         Ok(user) => match user {
             None => {
                 let mut res = Error::LoginFailUsernameNotFound.into_response();
-                add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
+                add_hx_message(&mut res, &Toast::error("Credentials are invalid."));
                 return res;
             }
             Some(user) => user,
@@ -334,7 +331,7 @@ pub async fn login_post_handler(
                 "Password validation failed"
             );
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
-            add_hx_message(&mut res, &MessageHtmx::error("Credentials are invalid."));
+            add_hx_message(&mut res, &Toast::error("Credentials are invalid."));
             return res;
         }
     };
@@ -348,10 +345,7 @@ pub async fn login_post_handler(
             .is_err()
         {
             let mut res = Error::UpdatePassword.into_response();
-            add_hx_message(
-                &mut res,
-                &MessageHtmx::error("Failed to update password schema."),
-            );
+            add_hx_message(&mut res, &Toast::error("Failed to update password schema."));
             return res;
         }
     }
@@ -360,10 +354,7 @@ pub async fn login_post_handler(
         Ok(token) => token,
         Err(err) => {
             let mut res = Error::GenerateToken.into_response();
-            add_hx_message(
-                &mut res,
-                &MessageHtmx::error("Failed to generate access token."),
-            );
+            add_hx_message(&mut res, &Toast::error("Failed to generate access token."));
             error!(user = ?user.id, ?err, "Failed to generate access token");
             return res;
         }
@@ -378,10 +369,7 @@ pub async fn login_post_handler(
         Ok(entry) => entry,
         Err(err) => {
             let mut res = Error::GenerateToken.into_response();
-            add_hx_message(
-                &mut res,
-                &MessageHtmx::error("Failed to generate refresh token."),
-            );
+            add_hx_message(&mut res, &Toast::error("Failed to generate refresh token."));
             error!(user = ?user.id, ?err, "Failed to generate refresh token");
             return res;
         }
@@ -460,7 +448,7 @@ pub async fn register_post_handler(
                 .unwrap_or_else(|| "Validation error".to_string());
 
             let mut res = StatusCode::UNPROCESSABLE_ENTITY.into_response();
-            add_hx_message(&mut res, &MessageHtmx::error(&message));
+            add_hx_message(&mut res, &Toast::error(&message));
             return res;
         }
 
@@ -476,7 +464,7 @@ pub async fn register_post_handler(
                         let mut res = Error::Model(err).into_response();
                         add_hx_message(
                             &mut res,
-                            &MessageHtmx::error("An error occurred during registration."),
+                            &Toast::error("An error occurred during registration."),
                         );
                         return res;
                     }
@@ -495,7 +483,7 @@ pub async fn register_post_handler(
                             let mut res = Error::Model(err).into_response();
                             add_hx_message(
                                 &mut res,
-                                &MessageHtmx::error("An error occurred during registration."),
+                                &Toast::error("An error occurred during registration."),
                             );
                             return res;
                         }
@@ -527,7 +515,7 @@ pub async fn register_post_handler(
                 let mut res = Error::FailFetch.into_response();
                 add_hx_message(
                     &mut res,
-                    &MessageHtmx::error("Failed to fetch user from database."),
+                    &Toast::error("Failed to fetch user from database."),
                 );
                 res
             }
@@ -544,12 +532,12 @@ pub async fn user_delete_handler(
     let config = state.config.read().await;
 
     if config.states.autologin == AutologinState::On {
-        broadcast_error(&state, user.id, "This account cannot be deleted.").await;
+        Toast::broadcast_error(&state, user.id, "This account cannot be deleted.").await;
         return Error::DeleteForbidden.into_response();
     }
 
     if config.states.demo == DemoState::On && is_demo_user(&state, user.id).await {
-        broadcast_error(
+        Toast::broadcast_error(
             &state,
             user.id,
             "Trump is Putin's lap dog. Remove him from office!",
