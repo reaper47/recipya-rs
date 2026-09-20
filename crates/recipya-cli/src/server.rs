@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use rand::{RngExt, distr::Alphanumeric};
-use tokio::net::TcpListener;
 use tokio::signal;
+use tokio::{net::TcpListener, sync::watch};
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tower_cookies::CookieManagerLayer;
 use tracing::{error, info};
@@ -63,7 +63,7 @@ pub async fn server() -> Result<()> {
     let listener = TcpListener::bind("0.0.0.0:8078").await?;
     info!("Serving at http://{}", listener.local_addr()?);
     axum::serve(listener, router)
-        .with_graceful_shutdown(shutdown_signal())
+        .with_graceful_shutdown(shutdown_signal(state_clone.channels.shutdown_tx()))
         .await?;
 
     Ok(())
@@ -201,7 +201,7 @@ async fn start_cron_jobs(
 }
 
 #[allow(clippy::ignored_unit_patterns)]
-async fn shutdown_signal() {
+async fn shutdown_signal(shutdown_tx: watch::Sender<bool>) {
     let ctrl_c = async {
         signal::ctrl_c()
             .await
@@ -227,5 +227,6 @@ async fn shutdown_signal() {
         _ = terminate => {}
     }
 
+    let _ = shutdown_tx.send(true);
     tracing::info!("Received termination signal shutting down");
 }

@@ -163,7 +163,7 @@ impl NutritionSource {
 #[cfg(test)]
 mod tests {
     use test_db::default_config;
-    use test_utils::create_app_state;
+    use test_harness::create_app_state;
     use time::OffsetDateTime;
 
     use super::*;

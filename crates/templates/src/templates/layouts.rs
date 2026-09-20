@@ -5,7 +5,7 @@ use models::data::Data;
 use models::settings::UserSettingDetails;
 use models::view::ViewMode;
 
-use super::core::{head, toast, toast_ws};
+use super::core::{head, toast, toast_sse};
 use super::icons::{
     icon_arrow_right_start_on_rectangle, icon_book_open, icon_cog_6_tooth, icon_flag,
     icon_shopping_cart,
@@ -46,8 +46,8 @@ pub fn main(
         (DOCTYPE)
         html lang="en" class="h-full" {
             (head(title))
-            body class="min-h-screen flex flex-col" hx-ext="ws" ws-connect="/ws"
-                 _=(PreEscaped(format!("on load call initTheme('{}', '{}')", user_settings.default_theme, user_settings.selected_theme))) {
+            body class="min-h-screen flex flex-col" hx-ext="sse" sse-connect="/sse" _=(PreEscaped(format!("on load call initTheme('{}', '{}')", user_settings.default_theme, user_settings.selected_theme))) {
+                div sse-swap="message" style="display:none" {}
                 div class="drawer lg:drawer-open" _="on htmx:afterSwap[target is #content] from body set #side-drawer-nav.checked to false" {
                     input #side-drawer-nav type="checkbox" class="drawer-toggle";
 
@@ -227,8 +227,7 @@ pub fn main(
                 }
 
                 div #fullscreen-loader class="htmx-indicator" {}
-                (toast())
-                (toast_ws("", "", false))
+                (toast_sse("", "", false))
             }
         }
     }

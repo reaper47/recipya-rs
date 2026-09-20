@@ -15,6 +15,7 @@ use tokio_util::bytes;
 use tracing::{error, warn};
 use uuid::Uuid;
 
+use app::message::{Broadcaster, Toast};
 use app::state::AppState;
 use models::Error::DuplicateEntityWithID;
 use models::Recipe;
@@ -26,9 +27,8 @@ use models::reports::report_types::{
 };
 use models::settings::UserSettingDetails;
 
-use crate::handlers::message::{broadcast_error, broadcast_warning};
 use crate::handlers::recipes::common::{broadcast_import_done_toast, schema_to_recipe_for_create};
-use crate::recipes_router::params::ImportFromAppForm;
+use crate::params::ImportFromAppForm;
 use crate::{Error, Result, middleware::mw_auth::RequireAuth};
 
 struct RecipeResult {
@@ -56,12 +56,12 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id).await;
-                broadcast_warning(&state, user_id, "No recipes found.").await;
+                Toast::broadcast_warning(&state, user_id, "No recipes found.").await;
                 return;
             }
             Err(_) => {
                 state.hide_broadcast(user_id).await;
-                broadcast_error(
+                Toast::broadcast_error(
                     &state,
                     user_id,
                     "An error occurred while parsing the recipes. Please check the logs.",

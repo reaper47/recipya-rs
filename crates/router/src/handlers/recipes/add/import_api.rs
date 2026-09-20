@@ -22,7 +22,7 @@ use crate::{
     Error,
     handlers::recipes::common::{broadcast_import_done_toast, schema_to_recipe_for_create},
     middleware::mw_auth::RequireAuth,
-    recipes_router::params::ImportFromApiForm,
+    params::ImportFromApiForm,
 };
 
 /// Handles the importing recipes from an API endpoint.

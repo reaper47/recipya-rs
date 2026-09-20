@@ -38,5 +38,5 @@ zip.workspace = true
 [dev-dependencies]
 pretty_assertions.workspace = true
 test-db.workspace = true
-test-utils.workspace = true
+test-harness.workspace = true
 tokio.workspace = true

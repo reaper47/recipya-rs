@@ -19,6 +19,7 @@ use tower_cookies::{Cookie, Cookies};
 use tracing::error;
 use uuid::Uuid;
 
+use app::message::{Broadcaster, Toast};
 use app::state::AppState;
 use config::{ProductionState, States};
 use models::Recipe;
@@ -36,9 +37,8 @@ use models::view::ViewMode;
 use templates::shopping::AddShoppingIngredient;
 
 use crate::handlers::get_settings;
-use crate::handlers::message::{broadcast_error, broadcast_success, broadcast_warning};
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
-use crate::recipes_router::params::ShareRecipeForm;
+use crate::params::ShareRecipeForm;
 use crate::schemas::shopping::{ListItemPayload, ListPayload, RecipeIngredientsPayload};
 use crate::{Error, Result};
 
@@ -59,7 +59,7 @@ pub async fn shopping_lists_handler(
         Ok(lists) => lists,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to get shopping lists");
-            broadcast_error(&state, user.id, "Failed to get shopping lists.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to get shopping lists.").await;
             return Err(Error::Database);
         }
     };
@@ -69,7 +69,8 @@ pub async fn shopping_lists_handler(
             Ok(details) => Some(details),
             Err(err) => {
                 error!(user = ?user.id, list = ?list.id, ?err, "Failed to get shopping list details of list");
-                broadcast_error(&state, user.id, "Failed to get shopping list details.").await;
+                Toast::broadcast_error(&state, user.id, "Failed to get shopping list details.")
+                    .await;
                 None
             }
         }
@@ -142,7 +143,7 @@ pub async fn shopping_list_delete_handler(
 ) -> impl IntoResponse {
     if let Err(err) = ShoppingList::delete(&state.mm, list_id, user.id).await {
         error!(?err, "Failed to delete shopping list");
-        broadcast_error(&state, user.id, "Failed to delete shopping list.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to delete shopping list.").await;
         return Error::Database.into_response();
     }
 
@@ -157,7 +158,7 @@ pub async fn shopping_list_put_handler(
     Form(payload): Form<ListPayload>,
 ) -> impl IntoResponse {
     if payload.name.is_empty() {
-        broadcast_error(&state, user.id, "Title cannot be empty.").await;
+        Toast::broadcast_error(&state, user.id, "Title cannot be empty.").await;
         return Error::InvalidPayload.into_response();
     }
 
@@ -171,12 +172,12 @@ pub async fn shopping_list_put_handler(
                 .into_response()
         }
         Err(models::Error::NameExists) => {
-            broadcast_warning(&state, user.id, "Title already exists.").await;
+            Toast::broadcast_warning(&state, user.id, "Title already exists.").await;
             Error::InvalidPayload.into_response()
         }
         Err(err) => {
             error!(?err, "Failed to update shopping list title");
-            broadcast_error(&state, user.id, "Failed to update shopping list title.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to update shopping list title.").await;
             Error::Database.into_response()
         }
     }
@@ -204,12 +205,12 @@ pub async fn shopping_list_copy_handler(
     let body = match res {
         Ok(()) => Body::from(String::from_utf8(writer).unwrap_or_default()),
         Err(models::Error::EmptyInput) => {
-            broadcast_warning(&state, user.id, "Shopping list is empty.").await;
+            Toast::broadcast_warning(&state, user.id, "Shopping list is empty.").await;
             return Err(Error::Write);
         }
         Err(err) => {
             error!(format = ?params.format, ?err, "Failed to write shopping list");
-            broadcast_error(&state, user.id, "Failed to write shopping list.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to write shopping list.").await;
             return Err(Error::Write);
         }
     };
@@ -238,12 +239,12 @@ pub async fn shopping_list_export_handler(
     let path = match list.export(&params.format, options) {
         Ok(f) => f,
         Err(models::Error::EmptyInput) => {
-            broadcast_warning(&state, user.id, "Shopping list is empty.").await;
+            Toast::broadcast_warning(&state, user.id, "Shopping list is empty.").await;
             return Err(Error::Write);
         }
         Err(err) => {
             error!(?err, "Failed to export shopping list");
-            broadcast_error(&state, user.id, "Failed to export shopping list.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to export shopping list.").await;
             return Err(Error::Database);
         }
     };
@@ -253,7 +254,7 @@ pub async fn shopping_list_export_handler(
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
         error!(user = ?user.id, ?err, "Failed to create download");
-        broadcast_error(&state, user.id, "Failed to create export data response.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
         return Err(Error::Database);
     }
 
@@ -272,7 +273,7 @@ pub async fn shopping_list_export_handler(
         Ok(res) => Ok(res),
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to create response");
-            broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Err(Error::Fs)
         }
     }
@@ -286,7 +287,7 @@ async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<Ex
         .map_err(|_| {
             let state = state.clone();
             tokio::spawn(async move {
-                broadcast_error(&state, user_id, "Failed to get user settings.").await;
+                Toast::broadcast_error(&state, user_id, "Failed to get user settings.").await;
             });
             Error::Database
         })?;
@@ -297,7 +298,7 @@ async fn pdf_export_options(state: &AppState, user_id: Uuid) -> Result<Option<Ex
         .map_err(|_| {
             let state = state.clone();
             tokio::spawn(async move {
-                broadcast_error(&state, user_id, "Failed to get paper size.").await;
+                Toast::broadcast_error(&state, user_id, "Failed to get paper size.").await;
             });
             Error::Database
         })?;
@@ -342,7 +343,7 @@ pub async fn shopping_list_view_handler(
         Ok(list) => list,
         Err(err) => {
             error!(?list_id, user = ?user.id, ?err, "Failed to get shopping list");
-            broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
             return Error::Database.into_response();
         }
     };
@@ -417,7 +418,8 @@ pub async fn shopping_list_share_post_handler(
         }
         Err(err) => {
             error!(?list_id, user = ?user.id, ?err, "Error generating shared recipe link for recipe");
-            broadcast_error(&state, user.id, "Error creating shared shopping list link.").await;
+            Toast::broadcast_error(&state, user.id, "Error creating shared shopping list link.")
+                .await;
             Error::BadTimeFormat.into_response()
         }
     }
@@ -431,13 +433,13 @@ pub async fn shopping_list_labels_post_handler(
     Form(form): Form<ListPayload>,
 ) -> impl IntoResponse {
     if form.name.is_empty() {
-        broadcast_warning(&state, user.id, "Label name cannot be empty.").await;
+        Toast::broadcast_warning(&state, user.id, "Label name cannot be empty.").await;
         return Error::InvalidPayload.into_response();
     }
 
     match ShoppingList::new_label(&state.mm, &form.name, list_id, user.id).await {
         Err(models::Error::DuplicateEntity) => {
-            broadcast_warning(
+            Toast::broadcast_warning(
                 &state,
                 user.id,
                 "Label already exists in the shopping list.",
@@ -449,7 +451,7 @@ pub async fn shopping_list_labels_post_handler(
             .into_response();
         }
         Err(err) => {
-            broadcast_error(&state, user.id, "Error creating shopping list label.").await;
+            Toast::broadcast_error(&state, user.id, "Error creating shopping list label.").await;
             error!(?err, "Failed to create shopping list label");
             return Error::Database.into_response();
         }
@@ -474,21 +476,22 @@ pub async fn shopping_list_label_put_handler(
     Path((list_id, label_id)): Path<(Uuid, i64)>,
     Form(payload): Form<ListPayload>,
 ) -> impl IntoResponse {
-    let new_label_id =
-        match ShoppingList::get_or_insert_label(&state.mm, &payload.name, user.id).await {
-            Ok(id) => id,
-            Err(err) => {
-                error!(?err, "Failed to update shopping list label");
-                broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
-                return Error::Database.into_response();
-            }
-        };
+    let new_label_id = match ShoppingList::get_or_insert_label(&state.mm, &payload.name, user.id)
+        .await
+    {
+        Ok(id) => id,
+        Err(err) => {
+            error!(?err, "Failed to update shopping list label");
+            Toast::broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
+            return Error::Database.into_response();
+        }
+    };
 
     if let Err(err) =
         ShoppingList::update_item_labels(&state.mm, list_id, label_id, new_label_id, user.id).await
     {
         error!(?err, "Failed to update shopping list label");
-        broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to update shopping list label.").await;
         return Error::Database.into_response();
     }
 
@@ -506,7 +509,7 @@ pub async fn shopping_lists_post_handler(
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
     else {
-        broadcast_warning(&state, user.id, "List title must not be empty.").await;
+        Toast::broadcast_warning(&state, user.id, "List title must not be empty.").await;
         return Error::InvalidPayload.into_response();
     };
 
@@ -514,7 +517,7 @@ pub async fn shopping_lists_post_handler(
         Ok(id) => id,
         Err(err) => {
             error!(?err, "Failed to create shopping list");
-            broadcast_error(&state, user.id, "Failed to create shopping list.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to create shopping list.").await;
             return Error::Database.into_response();
         }
     };
@@ -543,7 +546,7 @@ pub async fn shopping_list_item_post_handler(
 ) -> impl IntoResponse {
     let item = payload.item.trim();
     if item.is_empty() {
-        broadcast_warning(&state, user.id, "Item name must not be empty.").await;
+        Toast::broadcast_warning(&state, user.id, "Item name must not be empty.").await;
         return Error::InvalidPayload.into_response();
     }
 
@@ -563,7 +566,7 @@ pub async fn shopping_list_item_post_handler(
     {
         Ok(id) => id,
         Err(err) if err.to_string().contains("duplicate") => {
-            broadcast_warning(&state, user.id, "Item already exists in the label.").await;
+            Toast::broadcast_warning(&state, user.id, "Item already exists in the label.").await;
             return Error::EntityExists {
                 entity: "shopping list item",
             }
@@ -571,7 +574,7 @@ pub async fn shopping_list_item_post_handler(
         }
         Err(err) => {
             error!(?err, "Failed to add shopping list item");
-            broadcast_error(&state, user.id, "Failed to add shopping list item.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to add shopping list item.").await;
             return Error::Database.into_response();
         }
     };
@@ -598,7 +601,7 @@ pub async fn shopping_list_items_positions_put_handler(
             .contains("shopping_list_items_quantity_check")
     {
         error!(?err, "Failed to update shopping list item");
-        broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
         return Error::Database.into_response();
     }
 
@@ -613,7 +616,7 @@ pub async fn shopping_list_item_delete_handler(
 ) -> impl IntoResponse {
     if let Err(err) = ShoppingList::delete_item(&state.mm, list_id, item_id, user.id).await {
         error!(?err, "Failed to delete shopping list item");
-        broadcast_error(&state, user.id, "Failed to delete shopping list item.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to delete shopping list item.").await;
         return Error::Database.into_response();
     }
 
@@ -646,7 +649,7 @@ pub async fn shopping_list_item_put_handler(
             .contains("shopping_list_items_quantity_check")
     {
         error!(?err, "Failed to update shopping list item");
-        broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to update shopping list item.").await;
         return Error::Database.into_response();
     }
 
@@ -663,7 +666,7 @@ pub async fn shopping_list_item_put_handler(
         }
         Err(err) => {
             error!(?err, "Failed to get shopping list item");
-            broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
             Error::Database.into_response()
         }
     }
@@ -682,7 +685,7 @@ pub async fn shopping_list_item_edit_handler(
         }
         Err(err) => {
             error!(?err, "Failed to get shopping list item");
-            broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to get shopping list item.").await;
             Error::EntityNotFound {
                 entity: "shopping_list_item",
             }
@@ -700,7 +703,7 @@ pub async fn shopping_list_item_toggle_handler(
     if let Err(err) = ShoppingList::toggle_item_check(&state.mm, item_id).await {
         error!(?err, "Failed to toggle item check");
         if let Some(user) = user {
-            broadcast_error(&state, user.id, "Failed to toggle item check.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to toggle item check.").await;
         }
         return Error::Database.into_response();
     }
@@ -734,7 +737,7 @@ pub async fn shopping_recipe_ingredients_handler(
             .collect::<Vec<_>>(),
         Err(err) => {
             error!(?recipe_id, ?err, "Failed to fetch ingredients");
-            broadcast_error(&state, user.id, "Failed to fetch ingredients.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to fetch ingredients.").await;
             return Error::Database.into_response();
         }
     };
@@ -743,7 +746,7 @@ pub async fn shopping_recipe_ingredients_handler(
         Ok(lists) => lists,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to fetch shopping lists");
-            broadcast_error(&state, user.id, "Failed to fetch shopping lists.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to fetch shopping lists.").await;
             return Error::Database.into_response();
         }
     };
@@ -766,7 +769,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
 ) -> impl IntoResponse {
     payload.clean();
     if payload.is_empty() {
-        broadcast_warning(&state, user.id, "Payload is invalid.").await;
+        Toast::broadcast_warning(&state, user.id, "Payload is invalid.").await;
         return Error::InvalidPayload.into_response();
     }
 
@@ -776,7 +779,8 @@ pub async fn shopping_recipe_ingredients_post_handler(
             Ok(list) => list,
             Err(err) => {
                 error!(?err, "Failed to create new shopping list");
-                broadcast_error(&state, user.id, "Failed to create new shopping list.").await;
+                Toast::broadcast_error(&state, user.id, "Failed to create new shopping list.")
+                    .await;
                 return Error::Database.into_response();
             }
         },
@@ -786,7 +790,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
         Ok(list) => list,
         Err(err) => {
             error!(?list_id, ?err, "Failed to fetch shopping list");
-            broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to fetch shopping list.").await;
             return Error::Database.into_response();
         }
     };
@@ -817,10 +821,10 @@ pub async fn shopping_recipe_ingredients_post_handler(
         .await
     {
         error!(?recipe_id, ?err, "Failed to add items");
-        broadcast_error(&state, user.id, "Failed to add items for recipe.").await;
+        Toast::broadcast_error(&state, user.id, "Failed to add items for recipe.").await;
         return Error::Database.into_response();
     }
 
-    broadcast_success(&state, user.id, "Items added to shopping list.").await;
+    Toast::broadcast_success(&state, user.id, "Items added to shopping list.").await;
     ().into_response()
 }

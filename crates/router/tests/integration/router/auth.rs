@@ -1,0 +1,830 @@
+use std::default::Default;
+
+use axum::http::{Method, StatusCode};
+use axum_htmx::HX_REDIRECT;
+use time::OffsetDateTime;
+
+use auth::token::{
+    http::{AUTH_TOKEN, REFRESH_TOKEN},
+    jwt::validate_token,
+};
+use config::{AutologinState, Config, DemoState, SignupsState, States};
+use models::{
+    tokens::{EmailVerificationToken, EmailVerificationTokenForCreate},
+    tokens::{PasswordResetToken, PasswordResetTokenForCreate},
+    user::User,
+};
+use router::schemas::auth::{
+    ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
+};
+use test_db::default_config;
+use test_fixtures::{TEST_USER_EMAIL, TEST_USER_PASSWORD};
+use test_harness::{
+    assert_html, assert_must_be_logged_in, assert_not_in_html, assert_sse_message,
+    build_server_anonymous, build_server_logged_in, build_server_sse, build_server_sse_other_user,
+};
+
+type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+mod tests_change_password {
+    use super::*;
+
+    const BASE_URI: &str = "/auth/change-password";
+
+    fn a_change_password_form() -> ChangePasswordForm {
+        ChangePasswordForm {
+            password: "12345678".to_string(),
+            new_password: "123456789".to_string(),
+            new_password_confirm: "123456789".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_must_be_logged_in_ok() -> Result<()> {
+        assert_must_be_logged_in(Method::POST, BASE_URI).await
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_form_invalid_ok() -> Result<()> {
+        let (server, mut ws_server, _) = build_server_sse(default_config()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "123456789".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Passwords do not match.","status":"alert-error","title":"Operation Failed"}}"#).await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_password_same_as_new_ok() -> Result<()> {
+        let (server, mut ws_server, _) = build_server_sse(default_config()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ChangePasswordForm {
+                password: "12345678".to_string(),
+                new_password: "12345678".to_string(),
+                new_password_confirm: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-error","title":"Operation Failed"}}"#).await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_cannot_update_if_autologin_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(Config {
+            states: States {
+                autologin: AutologinState::On,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        res.assert_status_forbidden();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_change_password_ok() -> Result<()> {
+        let (server, mut ws_server, _) = build_server_sse(default_config()).await?;
+
+        let res = server.post(BASE_URI).form(&a_change_password_form()).await;
+
+        res.assert_status(StatusCode::NO_CONTENT);
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Success"}}"#).await;
+        Ok(())
+    }
+}
+
+mod tests_confirm {
+    use super::*;
+
+    const BASE_URI: &str = "/auth/verify-email";
+
+    #[tokio::test]
+    async fn test_get_confirm_missing_token_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_bad_request();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_confirm_invalid_token_ok() -> Result<()> {
+        let (server, state) = build_server_anonymous(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let entry = EmailVerificationToken::new(
+            &state.mm,
+            EmailVerificationTokenForCreate::new(user_id, 0),
+        )
+        .await?;
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
+        let res = server
+            .get(format!("{BASE_URI}?token={}", entry.token).as_str())
+            .await;
+
+        res.assert_status(StatusCode::GONE);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_confirm_ok() -> Result<()> {
+        let (server, state) = build_server_anonymous(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let entry = EmailVerificationToken::new(
+            &state.mm,
+            EmailVerificationTokenForCreate::new(user_id, 24),
+        )
+        .await?;
+
+        let res = server
+            .get(format!("{BASE_URI}?token={}", entry.token).as_str())
+            .await;
+
+        res.assert_status_ok();
+        assert_html(
+            &res,
+            &[
+                r#"<title hx-swap-oob="true">Success | Recipya</title>"#,
+                r"Your account has been verified.",
+            ],
+        );
+        Ok(())
+    }
+}
+
+mod tests_delete_user {
+
+    use super::*;
+
+    const BASE_URI: &str = "/auth/user";
+
+    #[tokio::test]
+    async fn test_delete_user_must_be_logged_in_ok() -> Result<()> {
+        assert_must_be_logged_in(Method::DELETE, BASE_URI).await
+    }
+
+    #[tokio::test]
+    async fn test_delete_user_demo_cannot_be_deleted_ok() -> Result<()> {
+        let (server, mut ws_server, _) = build_server_sse_other_user(
+            Config {
+                states: States {
+                    demo: DemoState::On,
+                    ..Default::default()
+                },
+                ..Config::default()
+            },
+            "demo@demo.com",
+        )
+        .await?;
+
+        let res = server.delete(BASE_URI).await;
+
+        res.assert_status(StatusCode::FORBIDDEN);
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-error","title":"Operation Failed"}}"#).await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_user_cannot_delete_if_autologin_ok() -> Result<()> {
+        let (server, mut ws_server, _) = build_server_sse(Config {
+            states: States {
+                autologin: AutologinState::On,
+                ..Default::default()
+            },
+            ..Config::default()
+        })
+        .await?;
+
+        let res = server.delete(BASE_URI).await;
+
+        res.assert_status(StatusCode::FORBIDDEN);
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"This account cannot be deleted.","status":"alert-error","title":"Operation Failed"}}"#).await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_user_ok() -> Result<()> {
+        let (server, state) = build_server_logged_in(default_config()).await?;
+
+        let res = server.delete(BASE_URI).await;
+
+        res.assert_status_see_other();
+        pretty_assertions::assert_eq!(
+            User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
+                .await?
+                .is_none(),
+            true,
+            "user should have been deleted"
+        );
+        Ok(())
+    }
+}
+
+mod tests_forgot_password {
+    use super::*;
+
+    const BASE_URI: &str = "/auth/forgot-password";
+    const URI_RESET: &str = "/auth/forgot-password/reset";
+
+    #[tokio::test]
+    async fn test_get_forgot_password_anonymous_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_ok();
+        assert_html(
+            &res,
+            &[
+                r#"<title hx-swap-oob="true">Forgot Password | Recipya</title>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email"></fieldset>"#,
+                r#"<button class="btn btn-primary btn-block btn-sm">Reset password</button>"#,
+            ],
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_forgot_password_authenticated_no_access_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(default_config()).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/recipes");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_forgot_password_cannot_when_authenticated_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(default_config()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ForgotPasswordForm {
+                email: "not@exist.com".to_string(),
+            })
+            .await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/recipes");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_forgot_password_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&ForgotPasswordForm {
+                email: "not@exist.com".to_string(),
+            })
+            .await;
+
+        res.assert_status_ok();
+        assert_html(
+            &res,
+            &[
+                r#"<h2 class="card-title underline self-center">Password Reset Requested</h2>"#,
+                r"An email with instructions on how to reset your password has been sent to you.",
+                r#"<a href="/" class="btn btn-primary btn-block btn-sm">Back Home</a>"#,
+            ],
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_forgot_password_reset_no_token_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server.get(URI_RESET).await;
+
+        res.assert_status_bad_request();
+        assert_html(&res, &[]);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_forgot_password_reset_err_invalid_token() -> Result<()> {
+        let (server, state) = build_server_anonymous(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let entry =
+            PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 0))
+                .await?;
+
+        let res = server
+            .get(&format!("{URI_RESET}?token={}", entry.token))
+            .await;
+
+        res.assert_status_bad_request();
+        assert_html(
+            &res,
+            &[
+                r#"<title hx-swap-oob="true">Token Expired | Recipya</title>"#,
+                "The token associated with the URL expired.",
+            ],
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_forgot_password_reset_ok() -> Result<()> {
+        let (server, state) = build_server_anonymous(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let entry =
+            PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
+                .await?;
+
+        let res = server
+            .get(&format!("{URI_RESET}?token={}", entry.token))
+            .await;
+
+        res.assert_status_ok();
+        assert_html(
+            &res,
+            &[
+                r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
+                &format!(
+                    r#"<input type="hidden" name="token" value="{}">"#,
+                    entry.token
+                ),
+                r#"<fieldset class="fieldset"><label class="label" for="password">New password</label><input id="password" type="password" required placeholder="Enter your new password" class="input" name="password"></fieldset>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="confirm-password">Confirm password</label><input id="confirm-password" type="password" required placeholder="Retype your password" class="input" name="password-confirm"></fieldset>"#,
+                r#"<button class="btn btn-primary btn-block btn-sm">Change</button>"#,
+            ],
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_forgot_password_reset_err_invalid() -> Result<()> {
+        let (server, state) = build_server_anonymous(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let entry =
+            PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
+                .await?;
+
+        let res = server
+            .post(URI_RESET)
+            .form(&ForgotPasswordResetForm {
+                token: entry.token,
+                password: "12345678".to_string(),
+                confirm_password: "123456789".to_string(),
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        res.assert_header(
+            axum_htmx::HX_TRIGGER,
+            r#"{"notification":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Success"}}"#,
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_forgot_password_reset_ok() -> Result<()> {
+        let (server, state) = build_server_anonymous(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let entry =
+            PasswordResetToken::new(&state.mm, PasswordResetTokenForCreate::new(user_id, 1))
+                .await?;
+
+        let res = server
+            .post(URI_RESET)
+            .form(&ForgotPasswordResetForm {
+                token: entry.token.clone(),
+                password: "12345678".to_string(),
+                confirm_password: "12345678".to_string(),
+            })
+            .await;
+
+        res.assert_status_see_other();
+        res.assert_header(
+            axum_htmx::HX_TRIGGER,
+            r#"{"notification":{"type":"toast","message":"Your password has been updated.","status":"alert-info","title":"Success"}}"#,
+        );
+        res.assert_header(axum_htmx::HX_REDIRECT, "/auth/login");
+        assert!(
+            PasswordResetToken::find_by_token(&state.mm, &entry.token)
+                .await?
+                .is_none()
+        );
+        Ok(())
+    }
+}
+
+mod tests_login {
+    use super::*;
+
+    const BASE_URI: &str = "/auth/login";
+
+    fn a_login_form() -> LoginForm {
+        LoginForm {
+            email: TEST_USER_EMAIL.to_string(),
+            password: TEST_USER_PASSWORD.to_string(),
+            remember_me: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_login_page_ok() -> Result<()> {
+        let mut config = default_config();
+        config.states.signups = SignupsState::On;
+        let (server, _) = build_server_anonymous(config).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_ok();
+        assert_html(
+            &res,
+            &[
+                r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login">"#,
+                r#"<div class="card-body"><div class="chat chat-end"><div class="chat-image avatar"><div class="w-10 rounded-full"><img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png"></div></div><div class="chat-bubble">The stove is hot. Shall we cook?</div></div>"#,
+                r#"<h2 class="card-title self-center underline">Log in to Recipya</h2>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value=""></fieldset>"#,
+                r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value=""></fieldset>"#,
+                r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
+                r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Login</button></div><div class="grid text-center gap-2"><div><div class="divider">OR</div><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Create an account</a></div></div>"#,
+            ],
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_login_page_demo_show_autologin_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(Config {
+            states: States {
+                demo: DemoState::On,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_ok();
+        assert_html(
+            &res,
+            &[
+                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value="demo@demo.com"></fieldset>"#,
+                r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demodemo"></fieldset>"#,
+                r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
+            ],
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_login_page_hide_signup_button_when_no_signups_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(Config {
+            states: States {
+                signups: SignupsState::On,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_ok();
+        assert_not_in_html(
+            &res,
+            &[r#"<a class="btn btn-sm btn-block btn-outline" href="/auth/register">Sign Up</a>"#],
+        )?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_login_redirect_to_home_when_already_logged_in_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(test_db::default_config()).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/recipes");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_login_redirect_to_recipes_when_autologin_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(Config {
+            states: States {
+                autologin: AutologinState::On,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/recipes");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_login_remember_me_checked_ok() -> Result<()> {
+        let mut config = default_config();
+        config.states.signups = SignupsState::On;
+        let (server, _) = build_server_anonymous(config).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&LoginForm {
+                email: TEST_USER_EMAIL.to_string(),
+                password: TEST_USER_PASSWORD.to_string(),
+                remember_me: Some(true),
+            })
+            .await;
+
+        res.assert_status_see_other();
+        res.assert_header(HX_REDIRECT, "/recipes");
+        let token = res.cookie(AUTH_TOKEN).value().to_string();
+        let claims = validate_token(&token)?;
+        let now = usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
+        assert!(
+            (claims.exp - now) >= 15 * 60,
+            "expiration time should be 15 minutes"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[tracing_test::traced_test]
+    async fn test_post_login_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server.post(BASE_URI).form(&a_login_form()).await;
+
+        res.assert_status_see_other();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_login_invalid_email_err() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&LoginForm {
+                email: "hello".to_string(),
+                password: TEST_USER_PASSWORD.to_string(),
+                remember_me: None,
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        res.assert_header(
+            axum_htmx::HX_TRIGGER,
+            r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_login_invalid_password_err() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&LoginForm {
+                email: "hello@example.com".to_string(),
+                password: "123".to_string(),
+                remember_me: None,
+            })
+            .await;
+
+        res.assert_status_bad_request();
+        res.assert_header(
+            axum_htmx::HX_TRIGGER,
+            r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_login_remember_me_checked_ok() -> Result<()> {
+        let (server, _) = build_server_anonymous(default_config()).await?;
+
+        let res = server
+            .post(BASE_URI)
+            .form(&LoginForm {
+                email: TEST_USER_EMAIL.to_string(),
+                password: TEST_USER_PASSWORD.to_string(),
+                remember_me: Some(true),
+            })
+            .await;
+
+        res.assert_status_see_other();
+        res.assert_header(HX_REDIRECT, "/recipes");
+        let token = res.cookie(AUTH_TOKEN).value().to_string();
+        let claims = validate_token(&token)?;
+        let now = usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
+        assert!(
+            (claims.exp - now) >= 15 * 60,
+            "expiration time should be 15 minutes"
+        );
+        Ok(())
+    }
+}
+
+mod tests_logout {
+    use super::*;
+
+    const BASE_URI: &str = "/auth/logout";
+
+    #[tokio::test]
+    async fn test_post_logout_ok() -> Result<()> {
+        let (server, state) = build_server_logged_in(default_config()).await?;
+
+        let res = server.post(BASE_URI).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/");
+        assert!(
+            res.maybe_cookie(REFRESH_TOKEN).is_none(),
+            "refresh token should be deleted"
+        );
+        let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
+            .await?
+            .expect("expected user");
+        pretty_assertions::assert_eq!(user.is_remember_me, false);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_logout_user_already_logged_in_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(default_config()).await?;
+
+        let res_post = server.post(BASE_URI).await;
+        let res_get = server.get("/auth/login").await;
+
+        res_post.assert_status_see_other();
+        res_get.assert_status_ok();
+        assert!(
+            res_post.maybe_cookie(REFRESH_TOKEN).is_none(),
+            "refresh token should be deleted"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_logout_cannot_logout_when_autologin_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(Config {
+            states: States {
+                autologin: AutologinState::On,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await?;
+
+        let res = server.post(BASE_URI).await;
+
+        res.assert_status_forbidden();
+        Ok(())
+    }
+}
+
+mod tests_register {
+    use super::*;
+
+    const BASE_URI: &str = "/auth/register";
+
+    fn a_register_form() -> RegisterForm {
+        RegisterForm {
+            email: "new_user@example.com".into(),
+            password: "12345678".into(),
+            password_confirm: "12345678".into(),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_register_redirect_to_home_when_logged_in_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(default_config()).await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/recipes");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_register_cannot_access_register_when_no_signups_ok() -> Result<()> {
+        let (server, _) = build_server_logged_in(Config {
+            states: States {
+                signups: SignupsState::On,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await?;
+
+        let res = server.get(BASE_URI).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/recipes");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_register_ok() -> Result<()> {
+        let mut config = default_config();
+        config.states.signups = SignupsState::On;
+        let (server, state) = build_server_anonymous(config).await?;
+        let form = a_register_form();
+
+        let res = server.post(BASE_URI).form(&form).await;
+
+        res.assert_status_see_other();
+        let user = User::get_user_by_email(&state.mm, &form.email).await?;
+        assert!(user.is_some(), "should have user in database");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_post_register_when_user_already_registered_ok() -> Result<()> {
+        let mut config = default_config();
+        config.states.signups = SignupsState::On;
+        let (server, _) = build_server_anonymous(config).await?;
+        let form = a_register_form();
+
+        let _ = server.post(BASE_URI).form(&form).await;
+        let _ = server
+            .post("/auth/login")
+            .form(&LoginForm {
+                email: form.email.clone(),
+                password: form.password.clone(),
+                remember_me: Some(false),
+            })
+            .await;
+        let res = server.post(BASE_URI).form(&form).await;
+
+        res.assert_status_see_other();
+        res.assert_header("Location", "/recipes");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_register_redirect_to_home_when_autologin_ok() -> Result<()> {
+        let (server, state) = build_server_logged_in(Config {
+            states: States {
+                autologin: AutologinState::On,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .await?;
+        let a_form = a_register_form();
+
+        let res_get = server.get(BASE_URI).await;
+        let res_post = server.post(BASE_URI).form(&a_form).await;
+
+        res_get.assert_status_see_other();
+        res_post.assert_status_see_other();
+        res_get.assert_header("Location", "/recipes");
+        res_post.assert_header("Location", "/recipes");
+        let user = User::get_user_by_email(&state.mm, &a_form.email).await?;
+        assert!(user.is_none(), "user should not have been registered");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_register_cannot_register_when_no_signups_ok() -> Result<()> {
+        let (server, state) = build_server_anonymous(default_config()).await?;
+        let a_form = a_register_form();
+
+        let res_get = server.post(BASE_URI).form(&a_form).await;
+        let res_post = server.post(BASE_URI).form(&a_form).await;
+
+        res_get.assert_status_see_other();
+        res_get.assert_status_see_other();
+        res_get.assert_header("Location", "/auth/login");
+        res_post.assert_header("Location", "/auth/login");
+        let user = User::get_user_by_email(&state.mm, &a_form.email).await?;
+        assert!(user.is_none(), "user should not have been registered");
+        Ok(())
+    }
+}

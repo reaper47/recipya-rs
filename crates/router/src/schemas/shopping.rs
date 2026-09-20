@@ -6,6 +6,15 @@ pub struct ListPayload {
     pub name: String,
 }
 
+impl ListPayload {
+    /// Creates a new `ListPayload` with the given name.
+    pub fn new<T: AsRef<str>>(name: T) -> Self {
+        Self {
+            name: name.as_ref().to_string(),
+        }
+    }
+}
+
 /// The payload of a list's item.
 #[derive(Default, Deserialize, Serialize)]
 pub struct ListItemPayload {

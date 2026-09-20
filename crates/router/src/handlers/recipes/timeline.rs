@@ -9,6 +9,7 @@ use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 use uuid::Uuid;
 
+use app::message::{Broadcaster, Toast};
 use app::state::AppState;
 use config::DataDir;
 use models::recipe::timeline::RecipeTimeline;
@@ -18,9 +19,8 @@ use templates::recipes::timeline::Event;
 
 use crate::{
     Error,
-    handlers::message::{broadcast_error, broadcast_success, broadcast_warning},
     middleware::mw_auth::RequireAuth,
-    recipes_router::params::{OrderParams, TimelineEventForm},
+    params::{OrderParams, TimelineEventForm},
 };
 
 /// Handles getting a timeline event for edit.
@@ -33,12 +33,12 @@ pub async fn timeline_event_get_edit_handler(
     let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await {
         Ok(t) => t,
         Err(EntityNotFound { entity, .. }) => {
-            broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
+            Toast::broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(?timeline_id, ?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
-            broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
+            Toast::broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
     };
@@ -58,12 +58,12 @@ pub async fn timeline_put_handler(
     {
         Ok(t) => t,
         Err(EntityNotFound { entity, .. }) => {
-            broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
+            Toast::broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(?timeline_id, ?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
-            broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
+            Toast::broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
     };
@@ -93,7 +93,7 @@ pub async fn timeline_put_handler(
         Ok(t) => t,
         Err(err) => {
             error!(?new_event_params, ?err, "Failed to edit timeline event");
-            broadcast_error(&state, user.id, "Failed to edit timeline event.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to edit timeline event.").await;
             return Error::Database.into_response();
         }
     };
@@ -117,7 +117,7 @@ pub async fn timeline_get_handler(
         Ok(recipe) => recipe,
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            broadcast_error(&state, user.id, "Recipe not found.").await;
+            Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -130,7 +130,7 @@ pub async fn timeline_get_handler(
         Ok(components) => components.into_iter().map(Event::from).collect::<Vec<_>>(),
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching timeline components");
-            broadcast_error(&state, user.id, "Failed to fetch timeline components.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to fetch timeline components.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "timeline",
@@ -177,11 +177,11 @@ pub async fn timeline_post_handler(
     .await
     {
         error!(?recipe_id, user = ?user.id, ?err, "Error creating timeline event");
-        broadcast_error(&state, user.id, "Could not create timeline event.").await;
+        Toast::broadcast_error(&state, user.id, "Could not create timeline event.").await;
         return Error::Database.into_response();
     }
 
-    broadcast_success(&state, user.id, "Timeline event created.").await;
+    Toast::broadcast_success(&state, user.id, "Timeline event created.").await;
     (StatusCode::CREATED, "").into_response()
 }
 
@@ -195,12 +195,12 @@ pub async fn timeline_event_get_handler(
     let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await {
         Ok(t) => Event::from(t),
         Err(EntityNotFound { entity, .. }) => {
-            broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
+            Toast::broadcast_warning(&state, user.id, "Timeline event does not exist.").await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
-            broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
+            Toast::broadcast_error(&state, user.id, "Could not fetch timeline event.").await;
             return Error::Database.into_response();
         }
     };

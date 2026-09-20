@@ -541,7 +541,7 @@ impl SRLegacyFoodDetails {
 #[cfg(test)]
 mod tests {
     use test_db::default_config;
-    use test_utils::create_app_state;
+    use test_harness::create_app_state;
 
     use super::*;
     use crate::testdata::nutrition_data::nutrition_data_for_tests::*;

@@ -21,7 +21,7 @@ document.body.addEventListener("htmx:historyRestore", () => {
   syncLayout();
 });
 
-document.body.addEventListener("showMessageHtmx", (event) => {
+document.body.addEventListener("showToast", (event) => {
   receiveToastMessage(event);
 });
 
@@ -411,20 +411,29 @@ function downloadFile(data, filename, mime) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  document.body.addEventListener("htmx:wsAfterMessage", function (event) {
-    const data = event.detail.message;
+  document.body.addEventListener("htmx:sseBeforeMessage", function (event) {
+    const data = event.detail.data;
 
     try {
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
 
-      if (parsed.showMessageHtmx) {
-        const { action, message, status, title } = parsed.showMessageHtmx;
-        showToast(title, message, status, action);
+      const notification = parsed.notification;
+      if (notification) {
+        const { type, action, message, status, title } = notification;
+        switch (type) {
+          case "toast":
+            showToast(title, message, status, action);
+            break;
+          case "snack":
+            const snack = document.getElementById("sse-notification-container");
+            snack.outerHTML = message;
+            break;
+        }
       }
     } catch (err) {
       if (!/<[^>]+>/.test(data)) {
         console.error(
-          `Failed to parse WebSocket message '${JSON.stringify(event.detail)}': ${err}`,
+          `Failed to parse SSE message '${JSON.stringify(event.detail)}': ${err}`,
         );
       }
     }
@@ -455,7 +464,7 @@ document.addEventListener("htmx:beforeProcessNode", () => {
   }
 });
 
-document.addEventListener("htmx:wsBeforeMessage", (event) => {
+document.addEventListener("htmx:sseBeforeMessage", (event) => {
   try {
     const { type, data, fileName } = JSON.parse(event.detail.message);
     switch (type) {

@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use axum::extract::ws::Message;
 use futures_util::{StreamExt, future::join_all, stream};
 use support::fs::FsSupport;
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
+use app::message::{Broadcaster, IMessage, MessageType, Toast};
 use app::state::AppState;
 use models::{
     Error::EntityNotFound,
@@ -21,10 +21,7 @@ use models::{
     user::User,
 };
 
-use crate::{
-    Error, Result,
-    handlers::message::{IMessage, MessageHtmx, MessageType, broadcast_error},
-};
+use crate::{Error, Result};
 
 pub async fn broadcast_import_done_toast(
     state: &AppState,
@@ -51,7 +48,7 @@ pub async fn broadcast_import_done_toast(
         "View /reports?view=latest".to_string()
     };
 
-    let toast = MessageHtmx::builder(
+    let toast = Toast::builder(
         MessageType::Toast,
         "Success",
         format!("Imported {num_success} recipes. Skipped {num_skipped}."),
@@ -60,7 +57,7 @@ pub async fn broadcast_import_done_toast(
     .build();
 
     if let Ok(json) = serde_json::to_string(&toast) {
-        state.broadcast(Message::Text(json.into()), user_id).await;
+        state.channels.broadcast_to_client(&json, user_id).await;
     }
 
     if let Err(err) = report.insert(&state.mm).await {
@@ -77,7 +74,7 @@ pub async fn fetch_categories_keywords(
         Ok(categories) => categories,
         Err(err) => {
             error!(?err, "Error fetching recipe categories");
-            broadcast_error(state, user_id, "Error fetching recipe categories.").await;
+            Toast::broadcast_error(state, user_id, "Error fetching recipe categories.").await;
             return Err(Error::Database);
         }
     };
@@ -86,7 +83,7 @@ pub async fn fetch_categories_keywords(
         Ok(keywords) => keywords,
         Err(err) => {
             error!(?err, "Error fetching recipe keywords");
-            broadcast_error(state, user_id, "Error fetching recipe keywords.").await;
+            Toast::broadcast_error(state, user_id, "Error fetching recipe keywords.").await;
             return Err(Error::Database);
         }
     };
@@ -265,7 +262,7 @@ pub async fn fetch_view_recipe(
         Ok(recipe) => recipe,
         Err(err) => {
             error!(?recipe_id, ?user_id, ?err, "Error fetching recipe");
-            broadcast_error(state, user_id, "Recipe not found.").await;
+            Toast::broadcast_error(state, user_id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",

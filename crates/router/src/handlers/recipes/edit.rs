@@ -11,7 +11,10 @@ use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use config::States;
 use models::{
     Error::EntityNotFound,
@@ -22,7 +25,7 @@ use models::{data::Data, recipe::structs::media::VideoForCreate};
 
 use crate::{
     Error, Result,
-    handlers::{get_settings, message::broadcast_error, recipes::common::fetch_view_recipe},
+    handlers::{get_settings, recipes::common::fetch_view_recipe},
     middleware::mw_auth::RequireAuth,
 };
 
@@ -39,7 +42,7 @@ pub async fn edit_recipe_handler(
         Ok(res) => res,
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
-            broadcast_error(&state, user.id, "Recipe not found.").await;
+            Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -156,7 +159,7 @@ pub async fn edit_recipe_put_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
-            broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
+            Toast::broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
             return Error::Database.into_response();
         }
     }

@@ -6,13 +6,13 @@ use axum::{
 };
 use tracing::error;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use models::{Recipe, data::ViewRecipe, time::FormattedTimes};
 
-use crate::{
-    Error, handlers::message::broadcast_error, middleware::mw_auth::RequireAuth,
-    recipes_router::params::FavouriteParams,
-};
+use crate::{Error, middleware::mw_auth::RequireAuth, params::FavouriteParams};
 
 /// Toggles the favourite state of a recipe.
 pub async fn toggle_favourite_handler(
@@ -26,7 +26,7 @@ pub async fn toggle_favourite_handler(
         Ok(v) => v,
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error toggling the favourite state of recipe");
-            broadcast_error(&state, user.id, "Error toggling favourite.").await;
+            Toast::broadcast_error(&state, user.id, "Error toggling favourite.").await;
             return Error::Database.into_response();
         }
     };

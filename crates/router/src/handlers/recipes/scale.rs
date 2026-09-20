@@ -6,12 +6,15 @@ use itertools::izip;
 use serde::Deserialize;
 use tracing::error;
 
-use app::state::AppState;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
 use math::cooking::units::system;
 use models::Error::EntityNotFound;
 use models::Recipe;
 
-use crate::{Error, handlers::message::broadcast_error, middleware::mw_auth::RequireAuth};
+use crate::{Error, middleware::mw_auth::RequireAuth};
 
 #[derive(Deserialize)]
 pub struct YieldQueryParams {
@@ -27,7 +30,7 @@ pub async fn scale_recipe_handler(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     if params.yield_param == 0 {
-        broadcast_error(&state, user.id, "Yield must be greater than zero.").await;
+        Toast::broadcast_error(&state, user.id, "Yield must be greater than zero.").await;
         return Error::InvalidQuery.into_response();
     }
 
@@ -52,7 +55,7 @@ pub async fn scale_recipe_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            broadcast_error(&state, user.id, "Recipe not found.").await;
+            Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
