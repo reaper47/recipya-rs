@@ -134,10 +134,13 @@ jobs:
           echo "$pgPath\bin" >> $env:GITHUB_PATH
 
       - name: Install Miri
+        if: runner.os == 'Linux'
         run: |
           rustup toolchain install nightly --component miri
           cargo +nightly miri setup
+
       - name: Test with Miri
+        if: runner.os == 'Linux'
         run: cargo +nightly miri test -p app -p email -p math -p pdf -p recipya-cli -p repository -p schema-org -p templates -p test-db -p test-fixtures -p test-models -p test-utils
 
       - name: Build Binary
