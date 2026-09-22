@@ -141,7 +141,7 @@ jobs:
 
       - name: Test with Miri
         if: runner.os == 'Linux'
-        run: cargo +nightly miri test -p app -p email -p math -p pdf -p recipya-cli -p repository -p schema-org -p templates -p test-db -p test-fixtures -p test-models -p test-utils
+        run: cargo +nightly miri test -p app -p email -p math -p pdf -p recipya-cli -p repository -p schema-org -p templates -p test-db -p test-fixtures -p test-models -p test-fixtures -p test-harness
 
       - name: Build Binary
         if: ${{ !matrix.use_docker }}
