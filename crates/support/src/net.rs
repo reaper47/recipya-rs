@@ -40,7 +40,7 @@ impl SsrfSafeClient {
             .inspect_err(|err| error!(?err, "Failed to create SsrSafeClient"))
             .map_err(|err| Error::ReqwestClient(err.to_string()))?;
 
-        Ok(SsrfSafeClient(client))
+        Ok(Self(client))
     }
 
     /// Convenience method to make a GET request to a URI.

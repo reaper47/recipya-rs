@@ -162,7 +162,7 @@ pub async fn fetch_handler(
         }
         Toast::broadcast_error(&state, user.id, "Invalid URL").await;
         return StatusCode::BAD_REQUEST.into_response();
-    };
+    }
 
     let client = match SsrfSafeClient::new() {
         Ok(c) => c,
