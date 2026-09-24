@@ -8,8 +8,8 @@ use router::params::PreviewForm;
 use test_db::default_config;
 use test_fixtures::open_test_file;
 use test_harness::{
-    assert_html, assert_must_be_logged_in, assert_sse_message,
-    build_server_logged_in, build_server_sse,
+    assert_html, assert_must_be_logged_in, assert_sse_message, build_server_logged_in,
+    build_server_sse,
 };
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
