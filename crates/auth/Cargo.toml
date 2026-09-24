@@ -15,7 +15,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-argon2 = { version = "0.5.3", features = ["std"] }
+argon2 = { version = "0.6.0" }
 base64.workspace = true
 derive_more.workspace = true
 enum_dispatch = "0.3.13"

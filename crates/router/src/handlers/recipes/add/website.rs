@@ -8,7 +8,6 @@ use std::{
 };
 
 use axum::{Form, extract::State, response::IntoResponse};
-use futures::{StreamExt, stream};
 use futures_util::lock::Mutex;
 use itertools::Itertools;
 use rand::RngExt;
@@ -29,7 +28,7 @@ use models::{
     },
     settings::UserSettingDetails,
 };
-use support::net::resolve_and_validate;
+use support::net::validate_ip;
 
 use crate::{
     Error, handlers::recipes::common::schema_to_recipe_for_create,
@@ -135,12 +134,10 @@ pub async fn add_website_post_handler(
     candidates.sort();
     candidates.dedup();
 
-    let urls = stream::iter(candidates)
-        .map(|u| async move { resolve_and_validate(u).await.ok() })
-        .buffered(8)
-        .filter_map(|o| async move { o })
-        .collect::<Vec<_>>()
-        .await;
+    let urls = candidates
+        .into_iter()
+        .filter_map(|u| validate_ip(&u).is_ok().then_some(u))
+        .collect::<Vec<_>>();
 
     if urls.is_empty() {
         Toast::broadcast_error(&state, user.id, "No valid URLs found.").await;

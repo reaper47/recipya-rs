@@ -20,7 +20,6 @@ axum.workspace = true
 derive_more.workspace = true
 flate2 = "1.1.9"
 itertools.workspace = true
-reqwest.workspace = true
 schema-org.workspace = true
 scraper.workspace = true
 serde_json.workspace = true
@@ -29,13 +28,13 @@ tokio.workspace = true
 tracing.workspace = true
 unicode-normalization = "0.1.25"
 url.workspace = true
-wreq-util = "3.0.0-rc.10"
+wreq-util = "0.2.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-wreq = { version = "6.0.0-rc.28", features = ["prefix-symbols"] }
+wreq = { version = "0.16.1", features = ["prefix-symbols"] }
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
-wreq = { version = "6.0.0-rc.28" }
+wreq = { version = "0.16.1" }
 
 [dev-dependencies]
 pretty_assertions.workspace = true

@@ -22,8 +22,6 @@ pub enum Error {
 
     #[from(serde_json::Error)]
     Deserialize,
-    #[from(reqwest::Error)]
-    Request,
     #[from(wreq::Error)]
     Wreq,
 }

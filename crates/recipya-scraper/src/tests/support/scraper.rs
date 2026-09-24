@@ -84,7 +84,7 @@ pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
 }
 
 async fn fetch_html(url: &str) -> Result<Bytes> {
-    let client = reqwest::Client::new();
+    let client = wreq::Client::new();
     let res = client.get(url).send().await?;
     let is_client_error = res.status().is_client_error();
 
@@ -169,7 +169,7 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
     let path = get_html_file_path(website, 0);
 
     if !path.exists() {
-        let client = reqwest::Client::new();
+        let client = wreq::Client::new();
         match client.get(url).send().await {
             Ok(res) => {
                 fs::File::create(path)
