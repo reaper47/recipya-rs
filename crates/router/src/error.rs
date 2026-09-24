@@ -60,6 +60,7 @@ pub enum Error {
     DNSResolution,
     ForbiddenIP,
     MissingHost,
+    SsrfValidation,
 
     // Modules
     #[from]

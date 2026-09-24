@@ -2,12 +2,16 @@ use std::convert::Infallible;
 use std::fmt::Write;
 use std::path::Path;
 
-use axum::Json;
-use axum::body::Body;
-use axum::extract::{Multipart, Query, State};
-use axum::http::{Response, StatusCode};
-use axum::response::sse::{Event, KeepAlive};
-use axum::response::{Html, IntoResponse, Redirect, Sse};
+use axum::{
+    Json,
+    body::Body,
+    extract::{Multipart, Query, State},
+    http::{Response, StatusCode},
+    response::{
+        Html, IntoResponse, Redirect, Sse,
+        sse::{Event, KeepAlive},
+    },
+};
 use futures::Stream;
 use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use serde::Serialize;
@@ -25,7 +29,7 @@ use models::download::Download;
 use models::paper::PaperSize;
 use models::params::{DownloadParams, FetchParams, SearchParams};
 use models::user::User;
-use support::net::resolve_and_validate;
+use support::net::{SsrfSafeClient, validate_ip};
 
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::{Error, Result};
@@ -132,7 +136,7 @@ pub async fn fetch_handler(
     Query(params): Query<FetchParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let parsed = match Url::parse(&params.url) {
+    let parsed_url = match Url::parse(&params.url) {
         Ok(u) if matches!(u.scheme(), "http" | "https") => u,
         _ => {
             Toast::broadcast_error(&state, user.id, "Invalid URL").await;
@@ -140,28 +144,36 @@ pub async fn fetch_handler(
         }
     };
 
-    let url = match resolve_and_validate(parsed).await {
-        Ok(u) => u,
-        Err(err) => {
-            const MESSAGE: &str = "Fetch handler blocked by SSRF guard";
-            match err {
-                support::net::Error::DNSResolution(url) => {
-                    warn!(?url, reason = "DNS Resolution", MESSAGE);
-                }
-                support::net::Error::ForbiddenIP(url) => {
-                    warn!(?url, reason = "Forbidden IP", MESSAGE);
-                }
-                support::net::Error::MissingHost(url) => {
-                    warn!(?url, reason = "Missing Host", MESSAGE);
-                }
+    if let Err(err) = validate_ip(&parsed_url) {
+        const MESSAGE: &str = "Fetch handler blocked by SSRF guard";
+        match err {
+            support::net::Error::DNSResolution(url) => {
+                warn!(?url, reason = "DNS Resolution", MESSAGE);
             }
-            Toast::broadcast_error(&state, user.id, "Invalid URL").await;
-            return StatusCode::BAD_REQUEST.into_response();
+            support::net::Error::ForbiddenIP => {
+                warn!(?parsed_url, reason = "Forbidden IP", MESSAGE);
+            }
+            support::net::Error::MissingHost => {
+                warn!(?parsed_url, reason = "Missing Host", MESSAGE);
+            }
+            err => {
+                warn!(?parsed_url, ?err, "Failed to validate SSRF");
+            }
+        }
+        Toast::broadcast_error(&state, user.id, "Invalid URL").await;
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+
+    let client = match SsrfSafeClient::new() {
+        Ok(c) => c,
+        Err(err) => {
+            error!(?err, "Failed to create safe HTTP client");
+            Toast::broadcast_error(&state, user.id, "Could not create HTTP client").await;
+            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
     };
 
-    let client = reqwest::Client::new();
-    let mut res = match client.get(url).send().await {
+    let mut res = match client.get(parsed_url).await {
         Ok(r) => r,
         Err(err) => {
             error!(?err, "Failed to fetch URL");

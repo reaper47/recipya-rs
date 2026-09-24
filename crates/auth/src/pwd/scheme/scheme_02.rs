@@ -1,6 +1,9 @@
 use std::sync::OnceLock;
 
-use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHasher, PasswordVerifier, phc::PasswordHash},
+};
 
 use super::{ContentToHash, Error, Result, Scheme};
 use crate::config::auth_config;
@@ -16,10 +19,8 @@ impl Scheme for Scheme02 {
     fn hash(&self, to_hash: &ContentToHash) -> Result<String> {
         let argon2 = get_argon2();
 
-        let salt_b64 = SaltString::encode_b64(to_hash.salt.as_bytes()).map_err(|_| Error::Salt)?;
-
         let pwd = argon2
-            .hash_password(to_hash.content.as_bytes(), &salt_b64)
+            .hash_password_with_salt(to_hash.content.as_bytes(), to_hash.salt.as_bytes())
             .map_err(|_| Error::Hash)?
             .to_string();
 

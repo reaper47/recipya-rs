@@ -1,12 +1,12 @@
 use std::fmt::Formatter;
 
-use reqwest::Url;
-use schema_org::Recipe;
 use scraper::Html;
+use url::Url;
 
-use crate::custom;
+use schema_org::Recipe;
 
 use super::{Error, Result};
+use crate::custom;
 
 include!("generated_websites.rs");
 

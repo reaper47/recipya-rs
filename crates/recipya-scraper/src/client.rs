@@ -24,15 +24,13 @@ pub trait HttpClient {
 
 /// A wrapper around `reqwest::Client` for making HTTP requests.
 pub struct AppHttpClient {
-    client: reqwest::Client,
-    client_wreq: wreq::Client,
+    client: wreq::Client,
 }
 
 impl Default for AppHttpClient {
     fn default() -> Self {
         Self {
-            client: reqwest::Client::default(),
-            client_wreq: wreq::Client::builder()
+            client: wreq::Client::builder()
                 .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
                 .emulation(Emulation::Chrome145)
                 .build()
@@ -56,27 +54,21 @@ impl HttpClient for AppHttpClient {
         };
 
         let res = self.client.get(url).send().await?;
-        let bytes_vec = if res.status().is_success() {
-            let bytes = res.bytes().await?;
-            bytes.to_vec()
-        } else {
-            let wres = self.client_wreq.get(url).send().await?;
-            if !wres.status().is_success() {
-                let status = wres.status();
-                let bytes = wres.bytes().await?;
-                error!(?url, ?status, body = ?bytes, "Failed to scrape");
-                return Err(Error::Fetch(format!("HTTP error: {status}")));
-            }
 
-            let bytes = wres.bytes().await?;
-            bytes.to_vec()
-        };
+        if !res.status().is_success() {
+            let status = res.status();
+            let bytes = res.bytes().await?;
+            error!(?url, ?status, body = ?bytes, "Failed to scrape");
+            return Err(Error::Fetch(format!("HTTP error: {status}")));
+        }
+
+        let bytes_vec = res.bytes().await?.to_vec();
 
         let text = {
             let initial = String::from_utf8_lossy(&bytes_vec);
 
             if initial.contains(ENABLE_JS) || initial.contains(FORBIDDEN) {
-                let res = self.client_wreq.get(url).send().await?;
+                let res = self.client.get(url).send().await?;
                 if res.status().is_redirection() {
                     let location = res
                         .headers()
@@ -84,7 +76,7 @@ impl HttpClient for AppHttpClient {
                         .and_then(|v| v.to_str().ok())
                         .unwrap_or("");
 
-                    self.client_wreq.get(location).send().await?.text().await?
+                    self.client.get(location).send().await?.text().await?
                 } else {
                     res.text().await?
                 }

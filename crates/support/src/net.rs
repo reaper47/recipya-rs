@@ -1,52 +1,86 @@
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::{
+    error, io,
+    net::{IpAddr, Ipv4Addr, Ipv6Addr},
+    sync::Arc,
+};
 
+use derive_more::From;
+use itertools::Itertools;
+use reqwest::{
+    Response,
+    dns::{Addrs, Resolve, Resolving},
+    redirect::Policy,
+};
 use tokio::net::lookup_host;
+use tracing::error;
 use url::{Host, Url};
 
 use crate::impl_display_as_debug;
 
-/// Resolves and validates the given URL, ensuring it is not a forbidden IP.
+/// Wrapper around an HTTP client that is safe against Server Side Request Forgery (SSRF) attacks.
+//
+// AI usage: Most of the solution has been proposed by Claude Sonnet 5.
+pub struct SsrfSafeClient(reqwest::Client);
+
+impl SsrfSafeClient {
+    /// Creates a new HTTP client that is safe against Server Side Request Forgery (SSRF) attacks.
+    pub fn new() -> Result<Self> {
+        let client = reqwest::Client::builder()
+            .dns_resolver(Arc::new(SSrfSafeResolver))
+            .redirect(Policy::custom(|attempt| {
+                if attempt.previous().len() > 10 {
+                    return attempt.error("stopped after 10 redirects");
+                }
+                match validate_ip(attempt.url()) {
+                    Ok(()) => attempt.follow(),
+                    Err(err) => attempt.error(err),
+                }
+            }))
+            .build()
+            .inspect_err(|err| error!(?err, "Failed to create SsrSafeClient"))
+            .map_err(|err| Error::ReqwestClient(err.to_string()))?;
+
+        Ok(Self(client))
+    }
+
+    /// Convenience method to make a GET request to a URI.
+    pub async fn get(&self, url: Url) -> Result<Response> {
+        let res = self.0.get(url).send().await?;
+        Ok(res)
+    }
+}
+
+struct SSrfSafeResolver;
+
+impl Resolve for SSrfSafeResolver {
+    fn resolve(&self, name: reqwest::dns::Name) -> Resolving {
+        Box::pin(async move {
+            let addrs = lookup_host((name.as_str(), 0)).await?.collect_vec();
+
+            if addrs.is_empty() || addrs.iter().any(|addr| is_forbidden_ip(addr.ip())) {
+                let err = io::Error::new(io::ErrorKind::PermissionDenied, "forbidden address");
+                return Err(Box::new(err) as Box<dyn error::Error + Send + Sync>);
+            }
+            Ok(Box::new(addrs.into_iter()) as Addrs)
+        })
+    }
+}
+
+/// Validates the given URL, ensuring it is not a forbidden IP.
 ///
-/// # AI usage
-///
-/// Most of this function was developed by prompting Claude Sonnet 4.6
-/// to fix a security advisory I received regarding the /fetch endpoint.
-///
-/// I prompted the AI because I am not a security expert and wanted to get
-/// this security vulnerability fixed.
-pub async fn resolve_and_validate(url: Url) -> Result<Url> {
+// # AI usage
+//
+// Most of this function was developed by prompting Claude Sonnet 4.6
+// to fix a security advisory I received regarding the /fetch endpoint.
+//
+// I prompted the AI because I am not a security expert and wanted to get
+// this security vulnerability fixed.
+pub fn validate_ip(url: &Url) -> Result<()> {
     match url.host() {
-        Some(Host::Ipv4(ip)) => {
-            if is_forbidden_v4(ip) {
-                return Err(Error::ForbiddenIP(url));
-            }
-            Ok(url)
-        }
-        Some(Host::Ipv6(ip)) => {
-            if is_forbidden_v6(ip) {
-                return Err(Error::ForbiddenIP(url));
-            }
-            Ok(url)
-        }
-        Some(Host::Domain(domain)) => {
-            let port = url.port_or_known_default().unwrap_or(80);
-            let addrs: Vec<IpAddr> = lookup_host((domain, port))
-                .await
-                .map_err(|_| Error::DNSResolution(url.clone()))?
-                .map(|s| s.ip())
-                .collect();
-
-            if addrs.is_empty() {
-                return Err(Error::DNSResolution(url));
-            }
-
-            if addrs.iter().any(|ip| is_forbidden_ip(*ip)) {
-                return Err(Error::ForbiddenIP(url));
-            }
-
-            Ok(url)
-        }
-        None => Err(Error::MissingHost(url)),
+        Some(Host::Ipv4(ip)) if is_forbidden_v4(ip) => Err(Error::ForbiddenIP),
+        Some(Host::Ipv6(ip)) if is_forbidden_v6(ip) => Err(Error::ForbiddenIP),
+        Some(_) => Ok(()),
+        None => Err(Error::MissingHost),
     }
 }
 
@@ -95,11 +129,16 @@ fn is_forbidden_v6(ip: Ipv6Addr) -> bool {
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Enumeration of errors related to the network.
-#[derive(Debug)]
+#[derive(Debug, From)]
 pub enum Error {
     DNSResolution(Url),
-    ForbiddenIP(Url),
-    MissingHost(Url),
+    ForbiddenIP,
+    MissingHost,
+    ReqwestClient(String),
+    SsrfValidation,
+
+    #[from]
+    Reqwest(reqwest::Error),
 }
 
 impl_display_as_debug!(Error);
@@ -112,79 +151,82 @@ mod tests {
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-    mod tests_resolve_and_validate {
+    mod tests_validate_ip {
         use std::assert_matches;
 
         use super::*;
 
-        #[tokio::test]
-        async fn test_rejects_ip_loopback_ok() -> Result<()> {
-            let url = Url::parse("http://127.0.0.1/admin")?;
+        #[test]
+        fn test_rejects_ip_loopback_ok() {
+            let url = Url::parse("http://127.0.0.1/admin").unwrap();
 
-            let err = resolve_and_validate(url).await.unwrap_err();
+            let err = validate_ip(&url).unwrap_err();
 
-            assert_matches!(err, Error::ForbiddenIP(_));
-            Ok(())
+            assert_matches!(err, Error::ForbiddenIP);
         }
 
-        #[tokio::test]
-        async fn test_rejects_ip_metadata_endpoint_ok() -> Result<()> {
-            let url = Url::parse("http://169.254.169.254/latest/meta-data/")?;
+        #[test]
+        fn test_rejects_ip_metadata_endpoint_ok() {
+            let url = Url::parse("http://169.254.169.254/latest/meta-data/").unwrap();
 
-            let err = resolve_and_validate(url).await.unwrap_err();
+            let err = validate_ip(&url).unwrap_err();
 
-            assert_matches!(err, Error::ForbiddenIP(_));
-            Ok(())
+            assert_matches!(err, Error::ForbiddenIP);
         }
 
-        #[tokio::test]
-        async fn test_rejects_bracketed_ipv6_loopback_ok() -> Result<()> {
-            let url = Url::parse("http://[::1]/")?;
+        #[test]
+        fn test_rejects_bracketed_ipv6_loopback_ok() {
+            let url = Url::parse("http://[::1]/").unwrap();
 
-            let err = resolve_and_validate(url).await.unwrap_err();
+            let err = validate_ip(&url).unwrap_err();
 
-            assert_matches!(err, Error::ForbiddenIP(_));
-            Ok(())
+            assert_matches!(err, Error::ForbiddenIP);
         }
 
-        #[tokio::test]
-        async fn test_errors_on_missing_host_ok() -> Result<()> {
-            let url = Url::parse("file:///etc/passwd")?;
+        #[test]
+        fn test_errors_on_missing_host_ok() {
+            let url = Url::parse("file:///etc/passwd").unwrap();
 
-            let err = resolve_and_validate(url).await.unwrap_err();
+            let err = validate_ip(&url).unwrap_err();
 
-            assert_matches!(err, Error::MissingHost(_));
-            Ok(())
+            assert_matches!(err, Error::MissingHost);
         }
 
         #[tokio::test]
         async fn test_rejects_hostname_resolving_to_loopback_ok() -> Result<()> {
-            let url = Url::parse("http://localhost/")?;
+            let client = SsrfSafeClient::new()?;
 
-            let err = resolve_and_validate(url).await.unwrap_err();
+            let err = client
+                .get(Url::parse("http://localhost/")?)
+                .await
+                .unwrap_err();
 
-            assert_matches!(err, Error::ForbiddenIP(_));
+            assert_matches!(err, Error::Reqwest(_));
             Ok(())
         }
 
         #[tokio::test]
         async fn test_errors_on_unresolvable_hostname_ok() -> Result<()> {
-            let url = Url::parse("http://this-domain-should-not-exist-9f3a7c.invalid/")?;
+            let client = SsrfSafeClient::new()?;
 
-            let err = resolve_and_validate(url).await.unwrap_err();
+            let err = client
+                .get(Url::parse(
+                    "http://this-domain-should-not-exist-9f3a7c.invalid/",
+                )?)
+                .await
+                .unwrap_err();
 
-            assert_matches!(err, Error::DNSResolution(_));
+            assert_matches!(err, Error::Reqwest(_));
             Ok(())
         }
 
-        #[tokio::test]
-        async fn test_allows_public_ip_ok() -> Result<()> {
-            let url = Url::parse("http://8.8.8.8/")?;
+        #[test]
+        fn test_allows_public_ip_ok() {
+            let url = Url::parse("http://8.8.8.8/").unwrap();
 
-            let got = resolve_and_validate(url).await;
+            let got = validate_ip(&url);
 
             assert!(got.is_ok());
-            Ok(())
         }
     }
 }
