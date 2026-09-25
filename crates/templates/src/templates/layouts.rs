@@ -46,9 +46,9 @@ pub fn main(
         (DOCTYPE)
         html lang="en" class="h-full" {
             (head(title))
-            body class="min-h-screen flex flex-col" hx-ext="sse" sse-connect="/sse" _=(PreEscaped(format!("on load call initTheme('{}', '{}')", user_settings.default_theme, user_settings.selected_theme))) {
-                div sse-swap="message" style="display:none" {}
-                div class="drawer lg:drawer-open" _="on htmx:afterSwap[target is #content] from body set #side-drawer-nav.checked to false" {
+            body class="min-h-screen flex flex-col" _=(PreEscaped(format!("on load call initTheme('{}', '{}')", user_settings.default_theme, user_settings.selected_theme))) {
+                div hx-sse:connect="/sse" hx-swap="none" {}
+                div class="drawer lg:drawer-open" _="on htmx:after:swap[target is #content] from body set #side-drawer-nav.checked to false" {
                     input #side-drawer-nav type="checkbox" class="drawer-toggle";
 
                     div class="drawer-content flex flex-col min-h-screen" {
@@ -90,7 +90,7 @@ pub fn main(
                                                     #addcookbook
                                                     class="btn btn-primary btn-sm hover:btn-accent"
                                                     hx-post="/cookbooks"
-                                                    hx-prompt="Enter the name of your cookbook"
+                                                    hx-on::config:request="ctx.request.headers['HX-Prompt'] = prompt('Name of your cookbook:') ?? event.preventDefault()"
                                                     hx-target="#cookbooks-display"
                                                     hx-trigger="mousedown"
                                                     hx-swap="beforeend" {

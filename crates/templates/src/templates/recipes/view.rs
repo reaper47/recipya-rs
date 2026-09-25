@@ -368,7 +368,7 @@ fn render_right_controls(
                                 hx-post=(format!("/recipes/{recipe_id}/share"))
                                 hx-target="#share-dialog-result"
                                 hx-push-url="false"
-                                _="on htmx:afterRequest from me
+                                _="on htmx:after:request from me
                                         if event.detail.successful
                                             if navigator.canShare
                                                 set name to document.querySelector('[itemprop=name]').textContent then
@@ -433,7 +433,7 @@ fn render_right_controls(
                         hx-get=(format!("/recipes/{recipe_id}/timeline"))
                         hx-target="#timeline-dialog-result"
                         hx-push-url="false"
-                        _="on htmx:afterRequest from me open #timeline-dialog" {
+                        _="on htmx:after:request from me open #timeline-dialog" {
                     (icon_timeline())
                 }
             }
@@ -465,7 +465,7 @@ fn render_right_controls(
                                 hx-get=(format!("/recipes/{recipe_id}/timeline"))
                                 hx-target="#timeline-dialog-result"
                                 hx-push-url="false"
-                                _="on htmx:afterRequest from me open #timeline-dialog" {
+                                _="on htmx:after:request from me open #timeline-dialog" {
                                 (icon_timeline())
                                 "Timeline"
                             }
@@ -486,7 +486,7 @@ fn render_right_controls(
                                 hx-get=(format!("/shopping/recipes/{recipe_id}/ingredients"))
                                 hx-target="#add-to-shopping-list-dialog"
                                 hx-push-url="false"
-                                _="on htmx:afterRequest from me open #add-to-shopping-list-dialog" {
+                                _="on htmx:after:request from me open #add-to-shopping-list-dialog" {
                                 (icon_cart_plus())
                                 "Shopping"
                             }
@@ -495,7 +495,7 @@ fn render_right_controls(
                             button hx-post=(format!("/recipes/{recipe_id}/share"))
                                 hx-target="#share-dialog-result"
                                 hx-push-url="false"
-                                _="on htmx:afterRequest from me
+                                _="on htmx:after:request from me
                                     if event.detail.successful
                                         if navigator.canShare
                                             set name to document.querySelector('[itemprop=name]').textContent then

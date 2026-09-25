@@ -52,9 +52,9 @@ fn render_index(data: &ReportsData) -> Markup {
         }
         script {
             (PreEscaped(r#"
-                document.body.addEventListener("htmx:wsAfterMessage", (event) => {
+                document.body.addEventListener("htmx:sse:after:message", (event) => {
                     try {
-                        const data = JSON.parse(event.detail.message);
+                        const data = JSON.parse(event.detail.message.data);
                         if (data?.headers?.["HX-Trigger"]) {
                             htmx.trigger(document.body, data.headers["HX-Trigger"]);
                         }

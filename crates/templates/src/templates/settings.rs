@@ -268,7 +268,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                                 "Recipes"
                             }
                             form hx-post="/placeholder" hx-encoding="multipart/form-data" hx-swap="none"
-                                  _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.recipe.webp')")) {
+                                  _=(PreEscaped("on htmx:after:request call reloadImg('/data/images/Placeholders/placeholder.recipe.webp')")) {
                                 img src="/data/images/Placeholders/placeholder.recipe.webp" alt="Recipe placeholder" class="w-60 h-60";
                                 input type="hidden" name="name" value="recipe";
                                 input type="file" name="images" class="file-input file-input-bordered file-input-sm max-w-60 mt-1";
@@ -280,7 +280,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                                    hx-post="/placeholder/restore"
                                    hx-vals=r#"js:{t: "recipe"}"#
                                    hx-swap="none"
-                                   _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.recipe.webp')")) {
+                                   _=(PreEscaped("on htmx:after:request call reloadImg('/data/images/Placeholders/placeholder.recipe.webp')")) {
                                 "Restore original"
                             }
                         }
@@ -289,7 +289,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                                 "Cookbook"
                             }
                             form hx-post="/placeholder" hx-encoding="multipart/form-data" hx-swap="none"
-                                 _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
+                                 _=(PreEscaped("on htmx:after:request call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
                                 img src="/data/images/Placeholders/placeholder.cookbook.webp" alt="Cookbook placeholder" class="w-60 h-60";
                                 input type="hidden" name="name" value="cookbook";
                                 input type="file" name="images" class="file-input file-input-bordered file-input-sm max-w-60 mt-1";
@@ -301,7 +301,7 @@ fn settings_recipes(categories: &[Category], settings: &UserSettingDetails) -> M
                                    hx-post="/placeholder/restore"
                                    hx-vals=r#"js:{name: "cookbook"}"#
                                    hx-swap="none"
-                                   _=(PreEscaped("on htmx:afterRequest call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
+                                   _=(PreEscaped("on htmx:after:request call reloadImg('/data/images/Placeholders/placeholder.cookbook.webp')")) {
                                 "Restore original"
                             }
                         }
@@ -684,7 +684,7 @@ pub fn edit_user_row(curr_idx: usize, user: &User) -> Markup {
                        hx-swap="outerHTML"
                        hx-include="#email,#password,#confirm-password"
                        hx-trigger="keydown[key=='Enter']"
-                       _="on htmx:afterRequest call document.activeElement.blur()";
+                       _="on htmx:after:request call document.activeElement.blur()";
                 input #confirm-password type="password" required placeholder="Retype password"
                        class="input input-sm" name="new-password-confirm" autocomplete="off"
                        hx-post="/admin/user"
@@ -692,7 +692,7 @@ pub fn edit_user_row(curr_idx: usize, user: &User) -> Markup {
                        hx-swap="outerHTML"
                        hx-include="#email,#password,#confirm-password"
                        hx-trigger="keydown[key=='Enter']"
-                       _="on htmx:afterRequest call document.activeElement.blur()";
+                       _="on htmx:after:request call document.activeElement.blur()";
             }
             td class="grid grid-flow-col gap-2" {
                 button type="button"
@@ -729,7 +729,7 @@ fn new_user_row(num_users: usize) -> Markup {
                        hx-swap="outerHTML"
                        hx-include="#email,#password,#confirm-password"
                        hx-trigger="keydown[key=='Enter']"
-                       _="on htmx:afterRequest call document.activeElement.blur()";
+                       _="on htmx:after:request call document.activeElement.blur()";
             }
             td {
                 input #password type="password" required placeholder="Enter password"
@@ -739,7 +739,7 @@ fn new_user_row(num_users: usize) -> Markup {
                        hx-swap="outerHTML"
                        hx-include="#email,#password,#confirm-password"
                        hx-trigger="keydown[key=='Enter']"
-                       _="on htmx:afterRequest call document.activeElement.blur()";
+                       _="on htmx:after:request call document.activeElement.blur()";
                 input #confirm-password type="password" required placeholder="Retype password"
                        class="input input-sm" name="password-confirm" autocomplete="off"
                        hx-post="/admin/user"
@@ -747,7 +747,7 @@ fn new_user_row(num_users: usize) -> Markup {
                        hx-swap="outerHTML"
                        hx-include="#email,#password,#confirm-password"
                        hx-trigger="keydown[key=='Enter']"
-                       _="on htmx:afterRequest call document.activeElement.blur()";
+                       _="on htmx:after:request call document.activeElement.blur()";
             }
             td {
                 button class="btn btn-ghost btn-square btn-xs"

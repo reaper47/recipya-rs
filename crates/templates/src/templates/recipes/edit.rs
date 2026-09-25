@@ -355,7 +355,7 @@ fn render_media(
                                         hx-get="/fetch"
                                         hx-vals="js:{url: event.target.previousElementSibling.value}"
                                         hx-swap="none"
-                                        _="on htmx:afterRequest
+                                        _="on htmx:after:request
                                             if event.detail.successful then
                                                 set a to first in event.target.parentElement.parentElement.children then
                                                 call updateMediaFromFetch(a, event.detail.xhr.responseURL)

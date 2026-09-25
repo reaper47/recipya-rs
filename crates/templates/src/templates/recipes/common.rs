@@ -316,10 +316,10 @@ fn category_badge(category: &str, is_inside_card: bool) -> Markup {
 pub(super) fn init_recipe_form_js() -> Markup {
     html! {
         (PreEscaped(r##"<script>
-            document.addEventListener("htmx:afterSettle", function handler() {
+            document.addEventListener("htmx:after:swap", function handler() {
                 if (document.querySelector("#ingredients-list")) {
                     initRecipeFormJS();
-                    document.removeEventListener("htmx:afterSettle", handler);
+                    document.removeEventListener("htmx:after:swap", handler);
                 }
             });
         </script>"##))
@@ -458,7 +458,7 @@ pub(super) fn render_media_editor(image_num: usize, image_src: &str) -> Markup {
                     span class="hidden input-error" {}
                     div class="justify-center flex join" {
                         input type="url" placeholder="Enter the URL of an image" class="input input-sm join-item";
-                        button type="button" class="btn btn-sm join-item" hx-get="/fetch" hx-vals="js:{url: event.target.previousElementSibling.value}" hx-swap="none" _="on htmx:afterRequest
+                        button type="button" class="btn btn-sm join-item" hx-get="/fetch" hx-vals="js:{url: event.target.previousElementSibling.value}" hx-swap="none" _="on htmx:after:request
                           if event.detail.successful then
                             set a to first in event.target.parentElement.parentElement.children then
                             call updateMediaFromFetch(a, event.detail.xhr.responseURL)

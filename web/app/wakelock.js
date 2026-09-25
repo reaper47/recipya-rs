@@ -1,7 +1,7 @@
 if (!window.__wakelockLoaded) {
   window.__wakelockLoaded = true;
 
-  document.addEventListener("htmx:beforeSwap", () => {
+  document.addEventListener("htmx:before:swap", () => {
     if (wakeLock !== null) {
       isToggledByUser = false;
       isWakeLockActivated = false;

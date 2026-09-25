@@ -5,19 +5,19 @@ document.addEventListener("DOMContentLoaded", function () {
   window.currentTime = () => new Date().getTime();
 });
 
-document.addEventListener("htmx:afterSettle", () => {
+document.addEventListener("htmx:after:swap", () => {
   requestAnimationFrame(() => {
     Array.from(document.querySelectorAll("[autofocus]")).at(-1)?.focus();
   });
 });
 
-document.body.addEventListener("htmx:afterSwap", (event) => {
-  if (event.target.id === "content") {
+document.body.addEventListener("htmx:before:swap", (event) => {
+  if (event.detail.ctx.target.id === "content") {
     syncLayout();
   }
 });
 
-document.body.addEventListener("htmx:historyRestore", () => {
+document.body.addEventListener("htmx:before:history:restore", () => {
   syncLayout();
 });
 
@@ -411,15 +411,15 @@ function downloadFile(data, filename, mime) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  document.body.addEventListener("htmx:sseBeforeMessage", function (event) {
-    const data = event.detail.data;
+  document.body.addEventListener("htmx:sse:after:message", function (event) {
+    if (event.detail.message.event !== "notification") {
+      return;
+    }
+
+    const data = JSON.parse(event.detail.message.data);
 
     try {
-      const parsed = typeof data === "string" ? JSON.parse(data) : data;
-
-      const notification = parsed.notification;
-      if (notification) {
-        const { type, action, message, status, title } = notification;
+        const { type, action, message, status, title } = data;
         switch (type) {
           case "toast":
             showToast(title, message, status, action);
@@ -428,7 +428,6 @@ window.addEventListener("DOMContentLoaded", () => {
             const snack = document.getElementById("sse-notification-container");
             snack.outerHTML = message;
             break;
-        }
       }
     } catch (err) {
       if (!/<[^>]+>/.test(data)) {
@@ -440,7 +439,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-document.addEventListener("htmx:beforeProcessNode", () => {
+document.addEventListener("htmx:before:process", () => {
   const el = document.querySelector("#add-cookbook");
   if (el) {
     if (document.querySelector(".cookbooks-display") === null) {
@@ -464,16 +463,17 @@ document.addEventListener("htmx:beforeProcessNode", () => {
   }
 });
 
-document.addEventListener("htmx:sseBeforeMessage", (event) => {
+document.addEventListener("htmx:sse:after:message", (event) => {
   try {
-    const { type, data, fileName } = JSON.parse(event.detail.message);
-    switch (type) {
+    console.log("SSE3", event.detail);
+    const { data, event } = event.detail.message;
+    switch (event) {
       case "toast":
-        const { title, message, background, action } = data;
+        const { title, message, background, action } = JSON.parse(data);
         showToast(title, message, background, action);
         break;
       case "file":
-        const decoded = atob(data);
+        const decoded = atob(JSON.parse(data));
         const bytes = new Uint8Array(decoded.length);
         for (let i = 0; i < decoded.length; i++) {
           bytes[i] = decoded.charCodeAt(i);

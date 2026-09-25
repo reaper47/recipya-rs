@@ -48,7 +48,7 @@ pub(super) fn searchbar(data: &SearchbarData) -> Markup {
             ul #search-suggestions-menu
                 class="hidden grid absolute top-full left-1/2 -translate-x-1/2 mt-1 menu bg-base-300 rounded-box shadow-lg z-50 max-h-60 overflow-y-auto w-full"
                 _=(PreEscaped("
-                    on htmx:afterSwap
+                    on htmx:after:swap
                         if my.children.length > 0 then
                             remove .hidden from me
                         else

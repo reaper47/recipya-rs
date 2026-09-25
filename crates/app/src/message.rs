@@ -48,7 +48,7 @@ pub trait IMessage {
 /// corner of the screen.
 #[derive(Serialize)]
 pub struct Toast {
-    #[serde(rename = "notification")]
+    #[serde(flatten)]
     content: Content,
 }
 
@@ -56,7 +56,7 @@ pub struct Toast {
 /// updates in the bottom right corner of the screen.
 #[derive(Serialize)]
 pub struct Snack {
-    #[serde(rename = "notification")]
+    #[serde(flatten)]
     content: Content,
 }
 

@@ -163,7 +163,7 @@ fn render_shopping_lists_list(shopping: &ShoppingData, is_mobile: bool) -> Marku
             button type="button"
                 class="btn btn-xs btn-square btn-ghost"
                 hx-post="/shopping/lists"
-                hx-prompt="Name of the new shopping list:"
+                hx-on::config:request="ctx.request.headers['HX-Prompt'] = prompt('Name of the new shopping list:') ?? event.preventDefault()"
                 hx-target="#shopping-lists"
                 hx-swap="afterbegin"
                 hx-on:htmx:after-request="addNewShoppingList()" {
@@ -530,7 +530,7 @@ fn action_share_button(list_id: Uuid) -> Markup {
             hx-target="#share-dialog-result"
             hx-push-url="false"
             hx-on--after-request="closeShoppingSidebar()"
-            _="on htmx:afterRequest from me
+            _="on htmx:after:request from me
                 if event.detail.successful
                     if navigator.canShare
                         set name to document.querySelector('[itemprop=name]').textContent then

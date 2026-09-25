@@ -362,11 +362,14 @@ pub async fn sse_handler(
 
     let stream = async_stream::stream! {
         let _guard = guard;
+
+        yield Event::default().event("init").data("connected");
+
         loop {
             tokio::select! {
                 msg = client_rx.next() => {
                     match msg {
-                        Some(Ok(msg)) => yield Event::default().data(msg),
+                        Some(Ok(msg)) => yield Event::default().event("notification").data(msg),
                         Some(Err(_)) => {},
                         None => break,
                     }

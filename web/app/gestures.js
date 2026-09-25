@@ -8,7 +8,7 @@ function maybeInitRecipe() {
   }
 }
 
-document.addEventListener("htmx:afterSettle", maybeInitRecipe);
+document.addEventListener("htmx:after:swap", maybeInitRecipe);
 
 function initDrag(el, onReorder) {
   if (!el) {
