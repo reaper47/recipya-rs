@@ -79,6 +79,12 @@ pub fn view_recipe_helper(
     let recipe = &recipe_details.recipe;
 
     Ok(html! {
+        @if let Ok(schema) = serde_json::to_string(&view.recipe_details.to_schema()) {
+            script type="application/ld+json" {
+                (PreEscaped(&schema))
+            }
+        }
+
         @if !matches!(&data.share, Some(share) if share.is_shared) {
              dialog #share-dialog .modal {
                 div class="modal-box w-4/5 sm:w-96" {
