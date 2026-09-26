@@ -184,19 +184,30 @@ impl RecipeDetails {
             Lang::Ara | Lang::Heb | Lang::Yid | Lang::Urd | Lang::Pes
         )
     }
+
+    /// Convenience function to transform a `RecipeDetails` into a `schema_org::Recipe`.
+    pub fn to_schema(&self) -> schema_org::Recipe {
+        schema_org::Recipe::from(self)
+    }
 }
 
 impl From<RecipeDetails> for schema_org::Recipe {
-    #[allow(clippy::too_many_lines)]
     fn from(recipe: RecipeDetails) -> Self {
-        let all_images = recipe.all_images();
-        let r = recipe.recipe;
+        Self::from(&recipe)
+    }
+}
+
+impl From<&RecipeDetails> for schema_org::Recipe {
+    #[allow(clippy::too_many_lines)]
+    fn from(value: &RecipeDetails) -> Self {
+        let all_images = value.all_images();
 
         Self {
             r#type: AtType::Recipe.to_opt(),
             context: at_context(),
-            nutrition: recipe
+            nutrition: value
                 .nutrition
+                .clone()
                 .per_100g
                 .map(|n| {
                     vec![NutritionInformation {
@@ -251,22 +262,24 @@ impl From<RecipeDetails> for schema_org::Recipe {
                 })
                 .unwrap_or_default(),
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(
-                f64::from(r.r#yield),
+                f64::from(value.recipe.r#yield),
             )],
-            recipe_cuisine: recipe
+            recipe_cuisine: value
                 .cuisine
+                .clone()
                 .map(|cuisine| vec![cuisine])
                 .unwrap_or_default(),
-            recipe_ingredient: recipe.ingredients.into(),
+            recipe_ingredient: value.ingredients.clone().into(),
             cook_time: vec![DurationOrText::Text(format!(
                 "PT{}S",
-                recipe.times.cook_seconds
+                value.times.cook_seconds
             ))],
-            recipe_instructions: recipe.instructions.into(),
-            recipe_category: vec![recipe.category],
-            tool: recipe
+            recipe_instructions: value.instructions.clone().into(),
+            recipe_category: vec![value.category.clone()],
+            tool: value
                 .tools
-                .into_iter()
+                .iter()
+                .cloned()
                 .map(|tool| {
                     RecipeToolFieldEnum::HowToTool(Box::new(HowToTool {
                         r#type: AtType::HowToTool.to_opt(),
@@ -284,42 +297,48 @@ impl From<RecipeDetails> for schema_org::Recipe {
                 .collect(),
             prep_time: vec![DurationOrText::Text(format!(
                 "PT{}S",
-                recipe.times.prep_seconds
+                value.times.prep_seconds
             ))],
             total_time: vec![DurationOrText::Text(format!(
                 "PT{}S",
-                recipe.times.total_seconds
+                value.times.total_seconds
             ))],
-            date_created: vec![r.created_at.to_string()],
-            date_modified: vec![r.updated_at.to_string()],
-            keywords: recipe
+            date_created: vec![value.recipe.created_at.to_string()],
+            date_modified: vec![value.recipe.updated_at.to_string()],
+            keywords: value
                 .keywords
-                .into_iter()
+                .iter()
+                .cloned()
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
-            content_rating: r
+            content_rating: value
+                .recipe
                 .rating
                 .filter(|rating| rating > &0)
                 .map(|rating| vec![RecipeContentRatingFieldEnum::new_rating(f32::from(rating))])
                 .unwrap_or_default(),
             text: vec![
                 json!({
-                    "recipeId": r.id,
-                    "isFavourite": r.is_favourite,
-                    "measurementSystemId": r.measurement_system_id,
-                    "notes": r.notes.unwrap_or_default(),
+                    "recipeId": value.recipe.id,
+                    "isFavourite": value.recipe.is_favourite,
+                    "measurementSystemId": value.recipe.measurement_system_id,
+                    "notes": value.recipe.notes.clone().unwrap_or_default(),
                 })
                 .to_string(),
             ],
-            aggregate_rating: r
+            aggregate_rating: value
+                .recipe
                 .rating
                 .filter(|rating| rating > &0)
                 .map(|rating| vec![AggregateRating::new(f32::from(rating), 1)])
                 .unwrap_or_default(),
-            in_language: vec![RecipeInLanguageFieldEnum::Text(r.language)],
-            video: recipe
+            in_language: vec![RecipeInLanguageFieldEnum::Text(
+                value.recipe.language.clone(),
+            )],
+            video: value
                 .videos
-                .into_iter()
+                .iter()
+                .cloned()
                 .map(|video| {
                     RecipeVideoFieldEnum::VideoObject(Box::new(VideoObject {
                         r#type: AtType::VideoObject.to_opt(),
@@ -348,15 +367,17 @@ impl From<RecipeDetails> for schema_org::Recipe {
                 .into_iter()
                 .map(|s| RecipeImageFieldEnum::URL(format!("{s}.webp")))
                 .collect(),
-            description: r
+            description: value
+                .recipe
                 .description
+                .clone()
                 .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
                 .unwrap_or_default(),
             url: {
-                let s = r.source.into_string();
+                let s = value.recipe.source.clone().into_string();
                 if s.is_empty() { vec![] } else { vec![s] }
             },
-            name: vec![r.name],
+            name: vec![value.recipe.name.clone()],
             ..Default::default()
         }
     }

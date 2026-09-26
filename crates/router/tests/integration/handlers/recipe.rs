@@ -341,7 +341,6 @@ mod tests_get {
 }
 
 mod tests_delete {
-
     use super::*;
 
     #[tokio::test]
@@ -385,6 +384,7 @@ fn assert_complete_recipe(
     assert_html(
         res,
         &[
+            r#"<script type="application/ld+json">{"@type":"Recipe","@context":"https://schema.org","#,
             &format!(
                 "<title hx-swap-oob=\"true\">{} | Recipya</title>",
                 recipe.name
