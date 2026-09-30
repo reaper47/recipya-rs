@@ -17,6 +17,7 @@ pub fn index(
     path: &str,
     data: &Data,
     data_dir: &DataDir,
+    messages: &l10n::Messages,
     user_setting: &UserSettingDetails,
 ) -> Markup {
     if data.is_hx_request {
@@ -31,6 +32,7 @@ pub fn index(
             path,
             data,
             &render_index(fs_support, path, data, data_dir),
+            messages,
             user_setting,
         )
     }

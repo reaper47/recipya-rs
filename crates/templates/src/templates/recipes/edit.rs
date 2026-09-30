@@ -25,6 +25,7 @@ pub fn edit_recipe(
     fs_support: &Arc<dyn FsSupport + Sync + Send>,
     mut data: Data,
     data_dir: &DataDir,
+    messages: &l10n::Messages,
     user_setting: &UserSettingDetails,
     categories: Vec<Category>,
     keywords: Vec<Keyword>,
@@ -46,7 +47,8 @@ pub fn edit_recipe(
             }
             (render_edit_recipe(fs_support, &view, data_dir, categories, keywords))
         } @else {
-            (layouts::main(&page_title, &path, &data, &render_edit_recipe(fs_support, &view, data_dir, categories, keywords), user_setting))
+            @let content = render_edit_recipe(fs_support, &view, data_dir, categories, keywords);
+            (layouts::main(&page_title, &path, &data, &content, messages, user_setting))
         }
         (init_recipe_form_js())
     })

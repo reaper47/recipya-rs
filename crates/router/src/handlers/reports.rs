@@ -4,6 +4,7 @@ use axum::{
 };
 use axum_htmx::HxRequest;
 use config::States;
+use fluent_static::support::axum::RequestLanguage;
 use serde::Deserialize;
 
 use app::state::AppState;
@@ -27,6 +28,7 @@ pub async fn reports_handler(
     HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
     Query(params): Query<ReportsParams>,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -60,6 +62,7 @@ pub async fn reports_handler(
             }),
             ..Default::default()
         },
+        &messages,
         &settings,
     )
     .into_response())
@@ -69,6 +72,7 @@ pub async fn reports_handler(
 pub async fn report_handler(
     HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     Path(report_id): Path<i64>,
     State(state): State<AppState>,
@@ -103,6 +107,7 @@ pub async fn report_handler(
                 }),
                 ..Default::default()
             },
+            &messages,
             &settings,
         )
         .into_response())

@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "accept-language"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f27d075294830fcab6f66e320dab524bc6d048f4a151698e153205559113772"
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -887,6 +893,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "convert_case"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "affbf0190ed2caf063e3def54ff444b449371d55c58e513a95ab98eca50adb49"
+dependencies = [
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "cookie"
 version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1327,7 +1342,7 @@ version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "799a97264921d8623a957f6c3b9011f3b5492f557bbb7a5a19b7fa6d06ba8dcb"
 dependencies = [
- "convert_case",
+ "convert_case 0.10.0",
  "proc-macro2",
  "quote",
  "rustc_version",
@@ -1941,6 +1956,86 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "fluent-static"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b0d4af85a203dad39d392a4032590e6fc217795bb604a0d4baa45d726527b23"
+dependencies = [
+ "accept-language",
+ "axum-core",
+ "axum-extra",
+ "fluent-static-function",
+ "fluent-static-macros",
+ "fluent-static-value",
+ "http",
+ "intl_pluralrules",
+ "maud",
+ "once_cell",
+ "thiserror 2.0.21",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-static-codegen"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c93b40be980e7c9939dd81ccfc55b40e932857818e6b4a82ae00d38079c16d89"
+dependencies = [
+ "convert_case 0.11.0",
+ "fluent-static-function",
+ "fluent-static-value",
+ "fluent-syntax",
+ "intl_pluralrules",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+ "thiserror 2.0.21",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-static-function"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b307b147e6fe9af59532b79f6fc833dca44fa0ec64d03b0bf08264ce589dc718"
+dependencies = [
+ "fluent-static-value",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "fluent-static-macros"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca0a50d5e66dba852f2e62bd6933ac91d52772d78f14e19a2260e40f811a3459"
+dependencies = [
+ "fluent-static-codegen",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "fluent-static-value"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d61f5ab637ecced37b0413df41857f2547c8e7eb1cb1a5d7722d5091130b321"
+dependencies = [
+ "paste",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "fluent-syntax"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54f0d287c53ffd184d04d8677f590f4ac5379785529e5e08b1c8083acdd5c198"
+dependencies = [
+ "memchr",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -2781,6 +2876,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "intl_pluralrules"
+version = "7.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "078ea7b7c29a2b4df841a7f6ac8775ff6074020c6776d48491ce2268e068f972"
+dependencies = [
+ "unic-langid",
+]
+
+[[package]]
 name = "inventory"
 version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2979,6 +3083,13 @@ dependencies = [
  "euclid",
  "polycool",
  "smallvec",
+]
+
+[[package]]
+name = "l10n"
+version = "0.0.0"
+dependencies = [
+ "fluent-static",
 ]
 
 [[package]]
@@ -4286,6 +4397,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc-macro-hack"
+version = "0.5.20+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4742,6 +4859,8 @@ dependencies = [
  "tower-cookies",
  "tracing",
  "tracing-subscriber",
+ "walkdir",
+ "yansi",
 ]
 
 [[package]]
@@ -4961,6 +5080,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "email",
+ "fluent-static",
  "futures",
  "futures-util",
  "humantime",
@@ -4971,6 +5091,7 @@ dependencies = [
  "iso8601",
  "itertools 0.15.0",
  "jsonwebtoken",
+ "l10n",
  "math",
  "mime_guess",
  "models",
@@ -5963,8 +6084,10 @@ name = "templates"
 version = "0.1.0"
 dependencies = [
  "config",
+ "fluent-static",
  "humantime",
  "integrations",
+ "l10n",
  "markdown",
  "math",
  "maud",
@@ -6177,6 +6300,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1e27c91459209c2986af3dcf603a5a74a4368754ce37414f59acc971167f643"
 dependencies = [
  "displaydoc",
+ "serde_core",
  "zerovec",
 ]
 
@@ -6650,6 +6774,49 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.6",
+]
+
+[[package]]
+name = "unic-langid"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28ba52c9b05311f4f6e62d5d9d46f094bd6e84cb8df7b3ef952748d752a7d05"
+dependencies = [
+ "unic-langid-impl",
+ "unic-langid-macros",
+]
+
+[[package]]
+name = "unic-langid-impl"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dce1bf08044d4b7a94028c93786f8566047edc11110595914de93362559bc658"
+dependencies = [
+ "tinystr",
+]
+
+[[package]]
+name = "unic-langid-macros"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5957eb82e346d7add14182a3315a7e298f04e1ba4baac36f7f0dbfedba5fc25"
+dependencies = [
+ "proc-macro-hack",
+ "tinystr",
+ "unic-langid-impl",
+ "unic-langid-macros-impl",
+]
+
+[[package]]
+name = "unic-langid-macros-impl"
+version = "0.9.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1249a628de3ad34b821ecb1001355bca3940bcb2f88558f1a8bd82e977f75b5"
+dependencies = [
+ "proc-macro-hack",
+ "quote",
+ "syn 2.0.119",
+ "unic-langid-impl",
 ]
 
 [[package]]
@@ -7480,6 +7647,7 @@ version = "0.11.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb0464e17806c1d976d5cba29399c7f08e516e279e2ba493f63123b5fca67dd8"
 dependencies = [
+ "serde",
  "yoke",
  "zerofrom",
  "zerovec-derive",

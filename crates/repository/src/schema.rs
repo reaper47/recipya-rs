@@ -238,6 +238,18 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    languages (id) {
+        id -> Int8,
+        locale -> Text,
+        name -> Text,
+        english_name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     levels (id) {
         id -> Int2,
         name -> Text,
@@ -637,6 +649,7 @@ diesel::table! {
         bold_ingredients -> Bool,
         timezone -> Text,
         paper_size_id -> Int2,
+        language_id -> Int8,
     }
 }
 
@@ -765,6 +778,7 @@ diesel::joinable!(shopping_lists -> users (user_id));
 diesel::joinable!(times -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> tools (tool_id));
+diesel::joinable!(user_settings -> languages (language_id));
 diesel::joinable!(user_settings -> measurement_systems (measurement_system_id));
 diesel::joinable!(user_settings -> nutrition_sources (nutrition_source_id));
 diesel::joinable!(user_settings -> themes (selected_theme));
@@ -800,6 +814,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     instructions_recipes,
     keywords,
     keywords_recipes,
+    languages,
     levels,
     measurement_systems,
     nutrition,

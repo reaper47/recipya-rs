@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
-use config::DataDir;
 use maud::{Markup, html};
+use uuid::Uuid;
+
+use config::DataDir;
 use models::{
     data::Data,
     recipe::structs::{
@@ -17,7 +19,6 @@ use models::{
     time::FormattedTimes,
 };
 use support::fs::FsSupport;
-use uuid::Uuid;
 
 use crate::{
     recipes::common::{format_nutrition, nutrition_table_header, render_rating},
@@ -42,6 +43,7 @@ pub fn rescrape_recipe_diff(
     data: &Data,
     data_dir: &DataDir,
     fs_support: &Arc<dyn FsSupport + Sync + Send>,
+    messages: &l10n::Messages,
     user_setting: &UserSettingDetails,
     recipe_id: i64,
     diff: RecipeDiff,
@@ -56,7 +58,7 @@ pub fn rescrape_recipe_diff(
             }
             (content)
         } @else {
-            (layouts::main(&page_title, &format!("/{recipe_id}/rescrape"), data, &content, user_setting))
+            (layouts::main(&page_title, &format!("/{recipe_id}/rescrape"), data, &content, messages, user_setting))
         }
     }
 }

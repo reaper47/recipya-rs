@@ -6,6 +6,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::{HX_REDIRECT, HxRequest};
+use fluent_static::support::axum::RequestLanguage;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tracing::error;
@@ -32,6 +33,7 @@ use crate::{
 /// Handles a recipe's edit page.
 pub async fn edit_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
@@ -67,6 +69,7 @@ pub async fn edit_recipe_handler(
             ..Default::default()
         },
         &state.data_dir,
+        &messages,
         &settings,
         categories,
         keywords,

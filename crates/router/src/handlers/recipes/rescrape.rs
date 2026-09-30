@@ -7,6 +7,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::{HX_REDIRECT, HxRequest};
+use fluent_static::support::axum::RequestLanguage;
 use indexmap::IndexMap;
 use reqwest::StatusCode;
 use tracing::error;
@@ -42,6 +43,7 @@ use crate::{
 pub async fn recrape_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -98,6 +100,7 @@ pub async fn recrape_recipe_handler(
         },
         &state.data_dir,
         &state.fs_support,
+        &messages,
         &get_settings(&state, user.id).await?,
         recipe_id,
         RecipeDiff {

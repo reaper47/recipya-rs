@@ -19,6 +19,7 @@ use crate::templates::layouts;
 /// Renders the add recipe manually page.
 pub fn add_recipe_manual(
     data: &Data,
+    messages: &l10n::Messages,
     user_setting: &UserSettingDetails,
     categories: Vec<Category>,
     keywords: Vec<Keyword>,
@@ -31,7 +32,8 @@ pub fn add_recipe_manual(
             title hx-swap-oob="true" { "Add Recipe Manually | Recipya" }
             (render_add_recipe_manual(view, categories, keywords))
         } @else {
-            (&layouts::main("Add Recipe Manually", path, data, &render_add_recipe_manual(view, categories, keywords), user_setting))
+            @let content = render_add_recipe_manual(view, categories, keywords);
+            (&layouts::main("Add Recipe Manually", path, data, &content, messages, user_setting))
         }
         (init_recipe_form_js())
     }

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_REDIRECT, HxRequest};
+use fluent_static::support::axum::RequestLanguage;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
 use tracing::error;
@@ -32,6 +33,7 @@ use crate::{
 /// Handles rendering the form to add a recipe manually.
 pub async fn add_manual_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -55,6 +57,7 @@ pub async fn add_manual_recipe_handler(
             is_hx_request,
             ..Default::default()
         },
+        &messages,
         &settings,
         categories,
         keywords,

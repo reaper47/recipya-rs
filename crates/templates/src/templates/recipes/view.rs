@@ -34,6 +34,7 @@ pub fn view_recipe(
     path: &str,
     data_dir: &DataDir,
     data: &Data,
+    messages: &l10n::Messages,
     user_setting: &UserSettingDetails,
 ) -> Result<Markup> {
     let view = data
@@ -54,6 +55,7 @@ pub fn view_recipe(
                 path,
                 data,
                 &view_recipe_helper(fs_support, data_dir, data)?,
+                messages,
                 user_setting,
             ))
         }

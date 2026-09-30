@@ -20,7 +20,12 @@ use crate::templates::{
 };
 
 /// Renders the searchbar.
-pub fn lists_index(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Markup {
+pub fn lists_index(
+    path: &str,
+    data: &Data,
+    messages: &l10n::Messages,
+    user_setting: &UserSettingDetails,
+) -> Markup {
     let content = render_lists_index(data);
 
     html! {
@@ -29,7 +34,7 @@ pub fn lists_index(path: &str, data: &Data, user_setting: &UserSettingDetails) -
             (content)
             (pagination(&PaginationData::hidden()))
         } @else {
-            (layouts::main("Shopping Lists", path, data, &content, user_setting))
+            (layouts::main("Shopping Lists", path, data, &content, messages, user_setting))
             (pagination(&PaginationData::hidden()))
         }
     }
@@ -815,6 +820,7 @@ pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Ma
 pub fn render_view_shopping_list_details<T: AsRef<str>>(
     path: T,
     data: &Data,
+    messages: &l10n::Messages,
     user_settings: &UserSettingDetails,
 ) -> Markup {
     let content = data.shopping.as_ref().map_or_else(
@@ -838,7 +844,7 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
             (content)
             (pagination(&PaginationData::hidden()))
         } @else {
-            (layouts::main("Shopping Lists", path.as_ref(), data, &content, user_settings))
+            (layouts::main("Shopping Lists", path.as_ref(), data, &content, messages, user_settings))
             (pagination(&PaginationData::hidden()))
         }
     }

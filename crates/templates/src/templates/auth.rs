@@ -1,11 +1,12 @@
 use maud::{Markup, html};
 
 use config::{DemoState, SignupsState};
+use l10n::Messages;
 
 use crate::templates::layouts;
 
 /// Renders the forgot password request form.
-pub fn forgot_password() -> Markup {
+pub fn forgot_password(messages: &Messages) -> Markup {
     layouts::auth(
         "Forgot Password",
         &html! {
@@ -18,15 +19,17 @@ pub fn forgot_password() -> Markup {
                     hx-post="/auth/forgot-password" {
                     div class="card-body" {
                         h2 class="card-title underline self-center" {
-                            "Forgot Password"
+                            (messages.auth_forgot_password())
                         }
                         fieldset class="fieldset" {
-                            label class="label" for="email" { "Email" }
-                            input #email type="email" required placeholder="Enter your email address" class="input" name="email";
+                            label class="label" for="email" {
+                                (messages.email())
+                            }
+                            input #email type="email" required placeholder=(messages.auth_email_placeholder()) class="input" name="email";
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" {
-                                "Reset password"
+                                (messages.auth_reset_password())
                             }
                         }
                     }

@@ -4,6 +4,7 @@ use axum::{
 };
 use axum_htmx::HxRequest;
 use config::States;
+use fluent_static::support::axum::RequestLanguage;
 use tracing::error;
 
 use app::{
@@ -24,6 +25,7 @@ pub async fn duplicate_recipe_handler(
     Path(recipe_id): Path<i64>,
     HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let settings = get_settings(&state, user.id).await?;
@@ -55,6 +57,7 @@ pub async fn duplicate_recipe_handler(
             },
             ..Default::default()
         },
+        &messages,
         &settings,
         categories,
         keywords,

@@ -5,11 +5,10 @@ use time_tz::TimeZone;
 
 use config::{DemoState, States};
 use math::cooking::units::system::MeasurementSystem;
-use models::Recipe;
-use models::data::Data;
-use models::recipe::structs::recipe::Category;
-use models::settings::{Theme, UserSettingDetails};
-use models::user::User;
+use models::{
+    Recipe, data::Data, language::Language, recipe::structs::recipe::Category,
+    settings::UserSettingDetails, theme::Theme, user::User,
+};
 use nutrition::NutritionDataSource;
 
 use crate::templates::common::cancel_submit_form_actions;
@@ -69,8 +68,9 @@ fn empty_recipe_category() -> Markup {
 pub fn settings(
     data: &Data,
     users: Option<Vec<User>>,
-    user_setting: &UserSettingDetails,
+    user_settings: &UserSettingDetails,
     categories: &[Category],
+    languages: &[Language],
     config: &SettingsForView,
 ) -> Markup {
     let onclick = |settings_block_id: &str| -> Markup {
@@ -138,21 +138,21 @@ pub fn settings(
                 }
             }
             div #settings-blocks class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem" {
-                (settings_recipes(categories, user_setting))
-                (settings_general(user_setting))
+                (settings_recipes(categories, user_settings))
+                (settings_general(user_settings, languages))
                 @if data.is_admin {
                     (settings_connections(config))
                     (settings_server(data, config))
-                    (settings_admin(&users.unwrap_or_default(), user_setting, config.states.demo))
+                    (settings_admin(&users.unwrap_or_default(), user_settings, config.states.demo))
                 }
                 (settings_data(data))
-                (settings_account(user_setting))
+                (settings_account())
                 (settings_about(data))
             }
         }
         (export_data_dialog())
         (paper_sizes_dialog())
-        (supported_nutrition_sources_dialog(user_setting))
+        (supported_nutrition_sources_dialog(user_settings))
     }
 }
 
@@ -367,7 +367,7 @@ fn supported_nutrition_sources_dialog(settings: &UserSettingDetails) -> Markup {
     }
 }
 
-fn settings_general(user_settings: &UserSettingDetails) -> Markup {
+fn settings_general(user_settings: &UserSettingDetails, languages: &[Language]) -> Markup {
     let mut all_tz = time_tz::timezones::iter()
         .filter_map(|tz| {
             let name = tz.name();
@@ -377,8 +377,36 @@ fn settings_general(user_settings: &UserSettingDetails) -> Markup {
     all_tz.sort_unstable();
 
     html! {
-        div #settings-general class="p-3 overflow-y-auto max-h-96 hidden" {
+        div #settings-general class="p-3 max-h-96 hidden" {
             div class="flex justify-between items-center text-sm" {
+                div {
+                    p class="font-semibold" {
+                        "Theme"
+                    }
+                    p class="font-normal text-xs" {
+                        "Select your preferred theme."
+                    }
+                }
+                (themes_palette(false, &user_settings.default_theme, &user_settings.selected_theme))
+            }
+            div class="flex justify-between items-center text-sm mt-2" {
+                div {
+                    p class="font-semibold" {
+                        "Language"
+                    }
+                    p class="font-normal text-xs" {
+                        "Choose the language for the UI."
+                    }
+                }
+                select name="locale" class="block w-fit select select-bordered select-sm" hx-post="/settings/language" hx-swap="none" {
+                    @for lang in languages {
+                        option value=(lang.id) selected[lang.locale == user_settings.selected_locale] {
+                            (lang.name)
+                        }
+                    }
+                }
+            }
+            div class="flex justify-between items-center text-sm mt-2" {
                 div {
                     p class="font-semibold" {
                         "Paper size"
@@ -405,7 +433,6 @@ fn settings_general(user_settings: &UserSettingDetails) -> Markup {
                         }
                     }
                 }
-                div class="divider m-0" {}
             }
             div class="flex justify-between items-center text-sm mt-2" {
                 @let selected_tz = user_settings.tz_name();
@@ -422,7 +449,6 @@ fn settings_general(user_settings: &UserSettingDetails) -> Markup {
                             option value=(tz) selected[tz == selected_tz] { (tz) }
                         }
                 }
-                div class="divider m-0" {}
             }
         }
     }
@@ -908,23 +934,9 @@ pub fn render_export_data_dialog_recipes(current_url: &str, recipes: Vec<Recipe>
     }
 }
 
-fn settings_account(user_settings: &UserSettingDetails) -> Markup {
+fn settings_account() -> Markup {
     html! {
         div #settings-account class="hidden p-3 md:max-h-96" {
-            div {
-                div class="flex justify-between items-center text-sm" {
-                    div {
-                        p class="font-semibold" {
-                            "Theme"
-                        }
-                        p class="font-normal text-xs" {
-                            "Select your preferred theme."
-                        }
-                    }
-                    (themes_palette(false, &user_settings.default_theme, &user_settings.selected_theme))
-                }
-            }
-            div class="divider m-0" {}
             div class="flex justify-between items-center text-sm" {
                 details class="w-full" {
                     summary class="font-semibold cursor-default select-none" {
@@ -1006,7 +1018,7 @@ fn themes_palette(is_set_default: bool, default_theme: &Theme, selected_theme: &
 
     html! {
         div id=(palette_id) class="dropdown dropdown-end hidden z-30 [@supports(color:oklch(0%_0_0))]:block" _=(PreEscaped(init)) {
-            div tabindex="0" role="button" class="btn btn-sm btn-outline w-40" {
+            div tabindex="0" role="button" class="btn btn-sm btn-outline w-40 justify-between" {
                 svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="h-5 w-5 stroke-current md:hidden" {
                     path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" {}
                 }
@@ -1017,7 +1029,7 @@ fn themes_palette(is_set_default: bool, default_theme: &Theme, selected_theme: &
                     path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" {}
                 }
             }
-            div tabindex="0" class="dropdown-content bg-base-200 text-base-content rounded-box top-px h-[28.6rem] max-h-[calc(100vh-10rem)] w-56 overflow-y-auto border border-white/5 shadow-2xl outline outline-1 outline-black/5 mt-16" {
+            div tabindex="0" class="dropdown-content bg-base-200 text-base-content rounded-box top-px h-[28.6rem] max-h-[calc(100vh-10rem)] w-56 overflow-y-auto shadow-2xl mt-12" {
                 div class="grid grid-cols-1 gap-3 p-3" {
                     @if is_set_default {
                         @for theme in Theme::iter().skip(1) {

@@ -11,7 +11,7 @@ use models::{
     settings::UserSettingDetails,
 };
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::Result;
 
 pub fn a_bare_minimum_recipe() -> RecipeForCreate {
     RecipeForCreate {

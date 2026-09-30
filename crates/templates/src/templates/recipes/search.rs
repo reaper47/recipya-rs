@@ -18,6 +18,7 @@ pub fn search_results(
     path: &str,
     data: &Data,
     data_dir: &DataDir,
+    messages: &l10n::Messages,
     user_setting: &UserSettingDetails,
 ) -> Markup {
     if data.is_hx_request {
@@ -36,7 +37,7 @@ pub fn search_results(
             (list_recipes(fs_support, path, data, data_dir))
         };
 
-        layouts::main("Recipes", path, data, &content, user_setting)
+        layouts::main("Recipes", path, data, &content, messages, user_setting)
     }
 }
 

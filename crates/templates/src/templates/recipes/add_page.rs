@@ -9,7 +9,12 @@ use crate::templates::layouts;
 use crate::templates::pagination::pagination;
 
 /// Renders the add recipe page.
-pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Markup {
+pub fn add_page(
+    path: &str,
+    data: &Data,
+    messages: &l10n::Messages,
+    user_setting: &UserSettingDetails,
+) -> Markup {
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" { "Add Recipe | Recipya" }
@@ -20,6 +25,7 @@ pub fn add_page(path: &str, data: &Data, user_setting: &UserSettingDetails) -> M
                 path,
                 data,
                 &render_add_page(),
+                messages,
                 user_setting,
             ))
         }

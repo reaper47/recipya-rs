@@ -5,7 +5,7 @@ use models::{
     time::FormattedTimes,
 };
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::Result;
 
 mod tests_formatted_times {
     use super::*;

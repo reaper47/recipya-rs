@@ -4,6 +4,7 @@ use axum::Form;
 use axum::extract::{Query, State};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
+use fluent_static::support::axum::RequestLanguage;
 use tower_cookies::Cookies;
 use tracing::{debug, error, warn};
 use uuid::Uuid;
@@ -118,10 +119,13 @@ fn get_token_from_query(query: &mut HashMap<String, String>) -> Result<String> {
 }
 
 /// Renders the forgot password request page.
-pub async fn forgot_password_handler(OptionalAuth(user): OptionalAuth) -> impl IntoResponse {
+pub async fn forgot_password_handler(
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
+    OptionalAuth(user): OptionalAuth,
+) -> impl IntoResponse {
     match user {
         Some(_) => Redirect::to("/recipes").into_response(),
-        None => templates::auth::forgot_password().into_response(),
+        None => templates::auth::forgot_password(&messages).into_response(),
     }
 }
 

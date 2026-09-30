@@ -40,6 +40,7 @@ pub fn main(
     path: &str,
     data: &Data,
     content: &Markup,
+    messages: &l10n::Messages,
     user_settings: &UserSettingDetails,
 ) -> Markup {
     html! {
@@ -137,7 +138,7 @@ pub fn main(
                                             li onclick="document.activeElement?.blur()" {
                                                 a href="/reports" hx-get="/reports" hx-target="#content" hx-push-url="true" {
                                                     (icon_flag())
-                                                    "Reports"
+                                                    (messages.reports())
                                                 }
                                             }
                                             div class="divider m-0" {}

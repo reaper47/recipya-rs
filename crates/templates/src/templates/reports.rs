@@ -10,7 +10,12 @@ use time::macros::format_description;
 use crate::templates::{layouts, pagination::pagination};
 
 /// Renders the main reports page.
-pub fn index(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Markup {
+pub fn index(
+    path: &str,
+    data: &Data,
+    messages: &l10n::Messages,
+    user_setting: &UserSettingDetails,
+) -> Markup {
     let reports_data = &data.reports.clone().unwrap_or_default();
     let content = render_index(reports_data);
 
@@ -19,7 +24,7 @@ pub fn index(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Mark
             title hx-swap-oob="true" { "Reports | Recipya" }
             (content)
         } @else {
-            (layouts::main("Reports", path, data, &content, user_setting))
+            (layouts::main("Reports", path, data, &content, messages, user_setting))
         }
     }
 }

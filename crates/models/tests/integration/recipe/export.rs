@@ -1,8 +1,6 @@
 use uuid::Uuid;
 
-use crate::recipe::utils::a_complete_recipe;
-
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::{Result, recipe::utils::a_complete_recipe};
 
 #[test]
 fn test_to_markdown_complete_recipe_ok() -> Result<()> {

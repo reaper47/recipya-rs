@@ -1,11 +1,7 @@
 use axum::http::{Method, StatusCode};
 
 use config::DemoState;
-use models::{
-    Recipe,
-    settings::{Theme, UserSettingDetails},
-    user::User,
-};
+use models::{Recipe, settings::UserSettingDetails, theme::Theme, user::User};
 use nutrition::NutritionDataSource;
 use router::schemas::settings::{
     BoldIngredientsPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload, TzPayload,
@@ -121,7 +117,7 @@ mod tests_settings {
                 r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-about">"#,
                 r#"<div id="settings-blocks" class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem">"#,
                 r#"<div id="settings-recipes" class="p-3 md:h-[50vh] overflow-y-auto">"#,
-                r#"<div id="settings-general" class="p-3 overflow-y-auto max-h-96 hidden">"#,
+                r#"<div id="settings-general" class="p-3 max-h-96 hidden">"#,
                 r#"<div id="settings-connections" class="p-3 overflow-y-auto max-h-96 hidden">"#,
                 r#"<div id="settings-server" class="hidden p-3 md:max-h-96">"#,
                 r#"<div id="settings-data" class="hidden p-3">"#,
@@ -395,6 +391,42 @@ mod tests_bold_ingredients {
         res.assert_status_ok();
         let got = UserSettingDetails::get(&state.mm, user_id).await?;
         assert!(!got.is_bold_ingredients);
+        Ok(())
+    }
+}
+
+mod tests_language {
+    use models::language::Language;
+    use router::schemas::settings::LanguagePayload;
+
+    use super::*;
+
+    const BASE_URI: &str = "/settings/language";
+
+    #[tokio::test]
+    async fn test_language_must_be_logged_in_ok() -> Result<()> {
+        assert_must_be_logged_in(Method::POST, BASE_URI).await
+    }
+
+    #[tokio::test]
+    async fn test_set_new_language_ok() -> Result<()> {
+        let (server, state) = build_server_logged_in(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let id = Language::get_all(&state.mm)
+            .await?
+            .iter()
+            .find(|l| &l.locale == "fr-CA")
+            .map(|l| l.id)
+            .unwrap_or_default();
+
+        let res = server
+            .post(BASE_URI)
+            .form(&LanguagePayload { locale: id })
+            .await;
+
+        res.assert_status_ok();
+        let got = UserSettingDetails::get(&state.mm, user_id).await?;
+        assert_eq!(got.selected_locale, "fr-CA");
         Ok(())
     }
 }

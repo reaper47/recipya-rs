@@ -5,8 +5,10 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::HxRequest;
-use config::States;
+use config::{ProductionState, States};
+use fluent_static::support::axum::RequestLanguage;
 use iso8601::DateTime;
+use tower_cookies::Cookies;
 use tracing::error;
 
 use app::{
@@ -21,13 +23,18 @@ use models::{
     time::FormattedTimes,
 };
 
-use crate::{Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
+use crate::{
+    Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth,
+    settings_router::set_language_cookie,
+};
 
 /// Handles viewing the recipes.
 pub async fn recipes_handler(
+    cookies: Cookies,
     HxRequest(is_hx_request): HxRequest,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -73,6 +80,12 @@ pub async fn recipes_handler(
         }
     };
 
+    set_language_cookie(
+        &cookies,
+        &settings.selected_locale,
+        state.config.read().await.states.production == ProductionState::On,
+    );
+
     Ok(templates::recipes::index(
         &state.fs_support,
         uri.path(),
@@ -95,6 +108,7 @@ pub async fn recipes_handler(
             ..Default::default()
         },
         &state.data_dir,
+        &messages,
         &settings,
     )
     .into_response())
@@ -105,6 +119,7 @@ pub async fn view_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
     Path(recipe_id): Path<i64>,
     OriginalUri(uri): OriginalUri,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -168,6 +183,7 @@ pub async fn view_recipe_handler(
             recipes: vec![view_recipe],
             ..Default::default()
         },
+        &messages,
         &user_settings,
     ) {
         Ok(res) => Ok(res),

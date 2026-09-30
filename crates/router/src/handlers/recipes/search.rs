@@ -3,6 +3,7 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::HxRequest;
+use fluent_static::support::axum::RequestLanguage;
 use iso8601::DateTime;
 use tracing::error;
 
@@ -25,6 +26,7 @@ pub async fn search_recipes_handler(
     HxRequest(is_hx_request): HxRequest,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -89,6 +91,7 @@ pub async fn search_recipes_handler(
             ..Default::default()
         },
         &state.data_dir,
+        &messages,
         &settings,
     )
     .into_response())

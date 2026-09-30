@@ -7,6 +7,7 @@ use axum::extract::{OriginalUri, Path, Query};
 use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
 use axum_htmx::{HX_TRIGGER, HxPrompt, HxRequest};
+use fluent_static::support::axum::RequestLanguage;
 use itertools::izip;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
@@ -48,6 +49,7 @@ pub const SHOPPING_VIEW_COOKIE_NAME: &str = "view:shopping-list";
 /// Handles fetching the user's shopping lists.
 pub async fn shopping_lists_handler(
     HxRequest(is_hx_request): HxRequest,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     OriginalUri(uri): OriginalUri,
     State(state): State<AppState>,
@@ -104,6 +106,7 @@ pub async fn shopping_lists_handler(
             }),
             ..Default::default()
         },
+        &messages,
         &settings,
     )
     .into_response())

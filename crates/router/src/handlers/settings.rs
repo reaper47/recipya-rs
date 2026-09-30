@@ -1,33 +1,45 @@
-use axum::Form;
-use axum::body::Body;
-use axum::extract::State;
-use axum::http::{Response, StatusCode};
-use axum::response::IntoResponse;
+use axum::{
+    Form,
+    body::Body,
+    extract::State,
+    http::{HeaderName, Response, StatusCode},
+    response::IntoResponse,
+};
 use axum_htmx::{HX_TRIGGER, HxCurrentUrl, HxRequest};
 use iso8601::DateTime;
 use serde_json::json;
+use tower_cookies::Cookies;
 use tracing::error;
 use uuid::Uuid;
 
-use app::message::{Broadcaster, Toast};
-use app::state::AppState;
-use config::{DemoState, States};
-use models::Recipe;
-use models::data::{AboutData, Data};
-use models::download::{Download, DownloadForCreate};
-use models::export::ExportData;
-use models::settings::{Theme, UserSettingDetails};
-use models::user::User;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
+use config::{DemoState, ProductionState, States};
+use models::{
+    Recipe,
+    data::{AboutData, Data},
+    download::{Download, DownloadForCreate},
+    export::ExportData,
+    language::Language,
+    settings::UserSettingDetails,
+    theme::Theme,
+    user::User,
+};
 use nutrition::NutritionDataSource;
 use repository::ModelManager;
 use templates::settings::{EmailSettingsForView, SettingsForView};
 
-use crate::Error;
-use crate::handlers::recipes::common::fetch_categories_keywords;
-use crate::middleware::mw_auth::RequireAuth;
-use crate::schemas::settings::{
-    BoldIngredientsPayload, ExportDataPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload,
-    TzPayload,
+use crate::{
+    Error,
+    handlers::recipes::common::fetch_categories_keywords,
+    middleware::mw_auth::RequireAuth,
+    schemas::settings::{
+        BoldIngredientsPayload, ExportDataPayload, LanguagePayload, NutritionSourcePayload,
+        PaperSizeForm, ThemePayload, TzPayload,
+    },
+    settings_router::set_language_cookie,
 };
 
 /// Handles rendering the settings page.
@@ -56,6 +68,15 @@ pub async fn settings_handler(
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching categories");
             Toast::broadcast_error(&state, caller_user_id, "Error fetching categories.").await;
+            return Error::Database.into_response();
+        }
+    };
+
+    let languages = match Language::get_all(&state.mm).await {
+        Ok(l) => l,
+        Err(err) => {
+            error!(?caller_user_id, ?err, "Error fetching languages");
+            Toast::broadcast_error(&state, caller_user_id, "Error fetching languages.").await;
             return Error::Database.into_response();
         }
     };
@@ -97,6 +118,7 @@ pub async fn settings_handler(
         users,
         &settings,
         &categories,
+        &languages,
         &SettingsForView {
             states: config.states.clone(),
             email: EmailSettingsForView {
@@ -210,6 +232,35 @@ pub async fn export_data_post_handler(
             error!(user = ?user.id, ?err, "Failed to create response");
             Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
             Error::Fs.into_response()
+        }
+    }
+}
+
+/// Handles setting the default language for the target user.
+pub async fn language_post_handler(
+    cookies: Cookies,
+    RequireAuth(user): RequireAuth,
+    State(state): State<AppState>,
+    Form(form): Form<LanguagePayload>,
+) -> impl IntoResponse {
+    match user.update_language(&state.mm, form.locale).await {
+        Ok(locale) => {
+            set_language_cookie(
+                &cookies,
+                &locale,
+                state.config.read().await.states.production == ProductionState::On,
+            );
+
+            (
+                StatusCode::OK,
+                [(HeaderName::from_static("hx-redirect"), "true")],
+            )
+                .into_response()
+        }
+        Err(err) => {
+            error!(?form, user = ?user.id, ?err, "Error updating language");
+            Toast::broadcast_error(&state, user.id, "Error updating language.").await;
+            Error::Database.into_response()
         }
     }
 }
