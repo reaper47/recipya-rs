@@ -18,6 +18,7 @@ use app::{
     state::AppState,
 };
 use config::States;
+use l10n::Messages;
 use models::{
     Error::EntityNotFound,
     data::Data,
@@ -43,7 +44,7 @@ use crate::{
 pub async fn recrape_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
-    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -57,7 +58,13 @@ pub async fn recrape_recipe_handler(
             }
             Err(err) => {
                 error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-                Toast::broadcast_error(&state, user_id, "Recipe not found.").await;
+                Toast::broadcast_error(
+                    &state,
+                    user_id,
+                    &messages.toast_recipes_none_found(),
+                    &messages,
+                )
+                .await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",
@@ -72,7 +79,8 @@ pub async fn recrape_recipe_handler(
             Toast::broadcast_error(
                 &state,
                 user.id,
-                "Error scraping recipe or recipe source is not a URL.",
+                &messages.toast_recipes_scrape_failed(),
+                &messages,
             )
             .await;
             return Err(Error::FailFetch);
@@ -82,7 +90,13 @@ pub async fn recrape_recipe_handler(
     let changes = new_recipe_c.diff(&old_recipe_c, is_nutrition_calculated_by_source);
 
     if changes.is_empty() {
-        Toast::broadcast_warning(&state, user.id, "Recipe has not changed.").await;
+        Toast::broadcast_warning(
+            &state,
+            user.id,
+            &messages.toast_recipes_not_changed(),
+            &messages,
+        )
+        .await;
         return Ok(().into_response());
     }
 
@@ -100,14 +114,14 @@ pub async fn recrape_recipe_handler(
         },
         &state.data_dir,
         &state.fs_support,
-        &messages,
-        &get_settings(&state, user.id).await?,
+        &get_settings(&state, user.id, &messages).await?,
         recipe_id,
         RecipeDiff {
             old: old_recipe_c,
             new: new_recipe_c,
             changes,
         },
+        &messages,
     )
     .into_response();
 
@@ -130,6 +144,7 @@ pub async fn recrape_recipe_handler(
 #[allow(clippy::cast_possible_truncation)]
 pub async fn recrape_recipe_put_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     Form(form): Form<Vec<(String, String)>>,
@@ -138,7 +153,13 @@ pub async fn recrape_recipe_put_handler(
         Ok(r) => RecipeForCreate::from(r),
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_none_found(),
+                &messages,
+            )
+            .await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -461,7 +482,13 @@ pub async fn recrape_recipe_put_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
-            Toast::broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_add_collection_failed(),
+                &messages,
+            )
+            .await;
             return Err(Error::Database);
         }
     }

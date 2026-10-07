@@ -8,116 +8,126 @@ use crate::templates::layouts;
 /// Renders the forgot password request form.
 pub fn forgot_password(messages: &Messages) -> Markup {
     layouts::auth(
-        "Forgot Password",
+        &messages.forgot_password_form_title(),
         &html! {
             div #container {
                 form
                     class="card w-80 sm:w-96 bg-base-100 shadow-xl"
-                    hx-boost="true"
                     hx-target="#container"
                     hx-push-url="/auth/forgot-password/requested"
                     hx-post="/auth/forgot-password" {
-                    div class="card-body" {
+                    div .card-body {
                         h2 class="card-title underline self-center" {
-                            (messages.auth_forgot_password())
+                            (messages.forgot_password_form_title())
                         }
                         fieldset class="fieldset" {
-                            label class="label" for="email" {
-                                (messages.email())
+                            label .label for="email" {
+                                (messages.email_input_label())
                             }
-                            input #email type="email" required placeholder=(messages.auth_email_placeholder()) class="input" name="email";
+                            input #email type="email" required .input name="email" placeholder=(messages.email_input_placeholder()) autocomplete="email";
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" {
-                                (messages.auth_reset_password())
+                                (messages.reset_password_form_submit())
                             }
                         }
                     }
                 }
             }
         },
+        messages,
     )
 }
 
-pub fn forgot_password_reset(token: &str) -> Markup {
+/// Renders the forgot password reset form.
+pub fn forgot_password_reset(token: &str, messages: &Messages) -> Markup {
     layouts::auth(
-        "Reset Password",
+        &messages.reset_password_form_title(),
         &html! {
             div #container {
-                form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-boost="true" hx-target="#container" hx-swap="none" hx-post="/auth/forgot-password/reset" {
-                    div class="card-body" {
+                form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-target="#container" hx-swap="none" hx-post="/auth/forgot-password/reset" {
+                    div .card-body {
                         input type="hidden" name="token" value=(token);
                         h2 class="card-title underline self-center" {
-                            "Change Password"
+                            (messages.reset_password_form_title())
                         }
-                        fieldset class="fieldset" {
-                            label class="label" for="password" { "New password" }
-                            input #password type="password" required placeholder="Enter your new password" class="input" name="password";
+                        fieldset .fieldset {
+                            label .label for="password" {
+                                (messages.new_password_input_label())
+                            }
+                            input #password type="password" required .input name="password" autocomplete="new-password" placeholder=(messages.new_password_input_placeholder());
                         }
-                        fieldset class="fieldset" {
-                            label class="label" for="confirm-password" { "Confirm password" }
-                            input #confirm-password type="password" required placeholder="Retype your password" class="input" name="password-confirm";
+                        fieldset .fieldset {
+                            label .label for="confirm-password" {
+                                (messages.confirm_password_input_label())
+                            }
+                            input #confirm-password type="password" required .input name="password-confirm" autocomplete="new-password" placeholder=(messages.confirm_password_input_placeholder());
                         }
                         div class="card-actions justify-end" {
                             button class="btn btn-primary btn-block btn-sm" {
-                                "Change"
+                                (messages.reset_password_form_submit())
                             }
                         }
                     }
                 }
             }
         },
+        messages,
     )
 }
 
 /// Renders the login form template.
-pub fn login(demo: &DemoState, signups: &SignupsState) -> Markup {
+pub fn login(demo: &DemoState, signups: &SignupsState, messages: &Messages) -> Markup {
     layouts::auth(
-        "Login",
+        &messages.login_form_tab_title(),
         &html! {
             form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login" {
-                div class="card-body" {
+                div .card-body {
                     div class="chat chat-end" {
                       div class="chat-image avatar" {
                         div class="w-10 rounded-full" {
                           img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png";
                         }
                       }
-                      div class="chat-bubble" { "The stove is hot. Shall we cook?" }
+                      div .chat-bubble {
+                          (messages.login_form_greeting_1())
+                      }
                     }
                     h2 class="card-title self-center underline" {
-                        "Log in to Recipya"
+                        (messages.login_form_title())
                     }
-                    fieldset class="fieldset" {
-                        label class="label" for="email" { "Email" }
-                        input #email type="email" required placeholder="Enter your email address" class="input" name="email"
-                              value=@if demo == &DemoState::On { "demo@demo.com" };
+                    fieldset .fieldset {
+                        label .label for="email" {
+                            (messages.email_input_label())
+                        }
+                        input #email type="email" required .input name="email" placeholder=(messages.email_input_placeholder()) autocomplete="username" value=@if demo == &DemoState::On { "demo@demo.com" };
                     }
-                    fieldset class="fieldset" {
+                    fieldset .fieldset {
                         label class="label block" for="password" {
-                            "Password"
+                            (messages.password_input_label())
                             a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password" {
-                                "Forgot your password?"
+                                (messages.login_form_forgot_password())
                             }
                         }
-                        input #password type="password" required placeholder="Enter your password" class="input" name="password"
-                              value=@if demo == &DemoState::On { "demodemo" };
+                        input #password type="password" required .input name="password" placeholder=(messages.password_input_placeholder()) autocomplete="current-password" value=@if demo == &DemoState::On { "demodemo" };
                     }
                     label class="fieldset-label py-2" {
-                        input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked";
-                        "Remember me"
+                        input type="checkbox" .checkbox name="remember-me" checked;
+                        (messages.login_form_remember_me())
                     }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {
-                            "Login"
+                            (messages.login())
                         }
                     }
                     div class="grid text-center gap-2" {
                         @if signups == &SignupsState::On {
                             div {
-                                div class="divider" { "OR" }
+                                div class="divider uppercase" {
+                                    (messages.or())
+                                }
                                 a class="btn btn-sm btn-block btn-outline" href="/auth/register" {
-                                    "Create an account"
+                                    (messages.login_form_create_account())
                                 }
                             }
                         }
@@ -125,56 +135,66 @@ pub fn login(demo: &DemoState, signups: &SignupsState) -> Markup {
                 }
             }
         },
+        messages,
     )
 }
 
 /// Renders the user registration page.
-pub fn register() -> Markup {
+pub fn register(messages: &Messages) -> Markup {
     layouts::auth(
-        "Register",
+        &messages.register_form_tab_title(),
         &html! {
              form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/register" {
-                div class="card-body" {
+                div .card-body {
                     div class="chat chat-end" {
                       div class="chat-image avatar" {
                         div class="w-10 rounded-full" {
                           img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png";
                         }
                       }
-                      div class="chat-bubble" { "Your culinary journey starts here!" }
+                      div .chat-bubble {
+                          (messages.register_form_greeting_1())
+                      }
                     }
                     h2 class="card-title underline self-center" {
-                        "Create your account"
+                        (messages.register_form_title())
                     }
-                    fieldset class="fieldset" {
-                        label class="label" for="email" { "Email" }
-                        input #email type="email" required placeholder="Enter your email address" class="input" name="email";
+                    fieldset .fieldset {
+                        label .label for="email" {
+                            (messages.email_input_label())
+                        }
+                        input #email type="email" .input name="email" required placeholder=(messages.email_input_placeholder());
                     }
-                    fieldset class="fieldset" {
-                        label class="label" for="email" { "Password" }
-                        input #password type="password" required placeholder="Enter your password" class="input" name="password";
+                    fieldset .fieldset {
+                        label .label for="email" {
+                            (messages.password_input_label())
+                        }
+                        input #password type="password" .input name="password" required placeholder=(messages.password_input_placeholder());
                     }
-                    fieldset class="fieldset" {
-                        label class="label" for="password-confirm" { "Confirm password" }
-                        input #password-confirm type="password" required  placeholder="Retype your password" class="input" name="password-confirm";
+                    fieldset .fieldset {
+                        label .label for="password-confirm" {
+                            (messages.confirm_password_input_label())
+                        }
+                        input #password-confirm type="password" required .input name="password-confirm" placeholder=(messages.confirm_password_input_placeholder());
                     }
                     div class="card-actions justify-end" {
                         button class="btn btn-primary btn-block btn-sm" {
-                            "Sign Up"
+                            (messages.signup())
                         }
                     }
                     div class="grid place-content-center text-center gap-2 pt-1" {
                         div {
-                            p class="text-center" {
-                                "Already have an account?"
+                            p .text-center {
+                                (messages.register_form_account_exists())
                             }
                             a class="btn btn-sm btn-block btn-outline" href="/auth/login" {
-                                "Log in"
+                                (messages.login())
                             }
                         }
                     }
                 }
             }
         },
+        messages,
     )
 }

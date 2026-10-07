@@ -13,6 +13,7 @@ use app::{
     state::AppState,
 };
 use config::States;
+use l10n::Messages;
 use math::cooking::units::system;
 use models::{
     Recipe,
@@ -33,13 +34,13 @@ use crate::{
 /// Handles rendering the form to add a recipe manually.
 pub async fn add_manual_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
-    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let settings = get_settings(&state, user.id).await?;
+    let settings = get_settings(&state, user.id, &messages).await?;
 
-    let (categories, keywords) = match fetch_categories_keywords(&state, user.id).await {
+    let (categories, keywords) = match fetch_categories_keywords(&state, user.id, &messages).await {
         Ok(res) => res,
         Err(err) => {
             return Err(err);
@@ -57,10 +58,10 @@ pub async fn add_manual_recipe_handler(
             is_hx_request,
             ..Default::default()
         },
-        &messages,
         &settings,
         categories,
         keywords,
+        &messages,
     )
     .into_response())
 }
@@ -68,6 +69,7 @@ pub async fn add_manual_recipe_handler(
 /// Handles posting a submitted recipe form.
 pub async fn add_manual_recipe_post_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     form: RecipeForm,
 ) -> impl IntoResponse {
@@ -146,7 +148,13 @@ pub async fn add_manual_recipe_post_handler(
         Ok(id) => id,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to add recipe to collection");
-            Toast::broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_add_collection_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     };

@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use config::States;
+use l10n::Messages;
 use models::Error::EntityNotFound;
 use models::data::{AboutData, Data, ShareData, ShoppingData, ViewRecipe};
 use models::settings::UserSettingDetails;
@@ -22,7 +23,7 @@ use crate::middleware::mw_auth::OptionalAuth;
 pub async fn share_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
-    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     OptionalAuth(user): OptionalAuth,
     Path(link): Path<Uuid>,
     State(state): State<AppState>,
@@ -76,8 +77,8 @@ pub async fn share_recipe_handler(
                     }],
                     ..Default::default()
                 },
-                &messages,
                 &settings,
+                &messages,
             )
         }
         None => templates::recipes::view_recipe(
@@ -107,8 +108,8 @@ pub async fn share_recipe_handler(
                 }],
                 ..Default::default()
             },
-            &messages,
             &UserSettingDetails::default(),
+            &messages,
         ),
     };
 
@@ -170,8 +171,8 @@ pub async fn share_shopping_list_handler(
             }),
             ..Default::default()
         },
-        &messages,
         &user_settings.unwrap_or_default(),
+        &messages,
     )
     .into_response()
 }

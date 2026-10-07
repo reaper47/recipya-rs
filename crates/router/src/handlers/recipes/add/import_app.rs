@@ -3,8 +3,8 @@ use std::sync::atomic::AtomicI64;
 
 use axum::extract::State;
 use axum::response::IntoResponse;
-use base64::Engine;
-use base64::engine::general_purpose;
+use base64::{Engine, engine::general_purpose};
+use fluent_static::support::axum::RequestLanguage;
 use futures::StreamExt;
 use reqwest::StatusCode;
 use tokio::fs;
@@ -17,6 +17,7 @@ use uuid::Uuid;
 
 use app::message::{Broadcaster, Toast};
 use app::state::AppState;
+use l10n::Messages;
 use models::Error::DuplicateEntityWithID;
 use models::Recipe;
 use models::recipe::structs::recipe::RecipeForCreate;
@@ -39,32 +40,45 @@ struct RecipeResult {
 /// Handles the importing recipes from an application endpoint.
 pub async fn add_recipe_import_app_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     form: ImportFromAppForm,
 ) -> impl IntoResponse {
-    save_parsed_recipes(state, form, user.id);
+    save_parsed_recipes(state, form, user.id, messages);
 
     (StatusCode::ACCEPTED, "").into_response()
 }
 
-fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) {
+fn save_parsed_recipes(
+    state: AppState,
+    form: ImportFromAppForm,
+    user_id: Uuid,
+    messages: Messages,
+) {
     tokio::spawn(async move {
         let app = form.app.clone();
         let start_time = Arc::new(Instant::now());
 
-        let mut recipes = match parse_recipes(&state, form, user_id).await {
+        let mut recipes = match parse_recipes(&state, form, user_id, &messages).await {
             Ok(r) => r,
             Err(Error::NoRecipe) => {
-                state.hide_broadcast(user_id).await;
-                Toast::broadcast_warning(&state, user_id, "No recipes found.").await;
+                state.hide_broadcast(user_id, &messages).await;
+                Toast::broadcast_warning(
+                    &state,
+                    user_id,
+                    &messages.toast_recipes_not_found(),
+                    &messages,
+                )
+                .await;
                 return;
             }
             Err(_) => {
-                state.hide_broadcast(user_id).await;
+                state.hide_broadcast(user_id, &messages).await;
                 Toast::broadcast_error(
                     &state,
                     user_id,
-                    "An error occurred while parsing the recipes. Please check the logs.",
+                    &messages.toast_recipes_parsing_failed(),
+                    &messages,
                 )
                 .await;
                 return;
@@ -85,6 +99,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             recipes,
             Arc::clone(&start_time),
             user_id,
+            &messages,
         )
         .await;
 
@@ -148,6 +163,7 @@ fn save_parsed_recipes(state: AppState, form: ImportFromAppForm, user_id: Uuid) 
             report,
             app.to_string(),
             user_id,
+            &messages,
         )
         .await;
     });
@@ -194,9 +210,17 @@ async fn parse_recipes(
     state: &AppState,
     form: ImportFromAppForm,
     user_id: Uuid,
+    messages: &Messages,
 ) -> Result<Vec<schema_org::Recipe>> {
     state
-        .broadcast_progress("Parsing recipes...", 1, 100, true, user_id)
+        .broadcast_progress(
+            &messages.toast_recipes_parsing_progress_start(),
+            1,
+            100,
+            true,
+            user_id,
+            &messages,
+        )
         .await;
 
     let recipes = match form.parse_recipes() {
@@ -229,6 +253,7 @@ async fn push_recipes_to_db(
     recipes: Vec<schema_org::Recipe>,
     start_time: Arc<Instant>,
     user_id: Uuid,
+    messages: &Messages,
 ) -> (Vec<i64>, Vec<ReportLogForCreate>) {
     let num_recipes_usize = recipes.len();
     let num_recipes = num_recipes_usize
@@ -243,7 +268,14 @@ async fn push_recipes_to_db(
     let semaphore = Arc::new(Semaphore::new(16));
 
     state
-        .broadcast_progress("Saving media", 1, num_recipes, true, user_id)
+        .broadcast_progress(
+            &messages.toast_recipes_saving_media(),
+            1,
+            num_recipes,
+            true,
+            user_id,
+            &messages,
+        )
         .await;
 
     let curr = Arc::new(AtomicI64::new(0));
@@ -251,6 +283,7 @@ async fn push_recipes_to_db(
     for recipe in recipes {
         let curr = Arc::clone(&curr);
         let state = Arc::clone(&state);
+        let messages = messages.clone();
 
         set.spawn(async move {
             let recipe_c = schema_to_recipe_for_create(state.as_ref(), recipe).await;
@@ -258,7 +291,14 @@ async fn push_recipes_to_db(
             let num_completed = curr.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
             if num_completed % 12 == 0 || num_completed == num_recipes {
                 state
-                    .broadcast_progress("Saving media", num_completed, num_recipes, true, user_id)
+                    .broadcast_progress(
+                        &messages.toast_recipes_saving_media(),
+                        num_completed,
+                        num_recipes,
+                        true,
+                        user_id,
+                        &messages,
+                    )
                     .await;
             }
             recipe_c
@@ -286,6 +326,7 @@ async fn push_recipes_to_db(
                     start_time,
                     user_id,
                     &user_settings,
+                    messages,
                 )
                 .await
             }
@@ -322,6 +363,7 @@ async fn push_recipe(
     start_time: Arc<Instant>,
     user_id: Uuid,
     user_settings: &UserSettingDetails,
+    messages: &Messages,
 ) -> Result<RecipeResult> {
     let seq_num = i32::try_from(idx + 1).unwrap_or(1);
     let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
@@ -364,7 +406,14 @@ async fn push_recipe(
     let num_completed = curr.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
     if num_completed % 12 == 0 || num_completed == num_recipes {
         state
-            .broadcast_progress("Saving recipes", num_completed, num_recipes, true, user_id)
+            .broadcast_progress(
+                &messages.toast_recipes_saving_recipes(),
+                num_completed,
+                num_recipes,
+                true,
+                user_id,
+                &messages,
+            )
             .await;
     }
 

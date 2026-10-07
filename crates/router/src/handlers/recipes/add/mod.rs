@@ -33,7 +33,7 @@ pub async fn add_recipes_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let settings = get_settings(&state, user.id).await?;
+    let settings = get_settings(&state, user.id, &messages).await?;
 
     Ok(templates::recipes::add_page(
         uri.path(),

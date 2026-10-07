@@ -12,6 +12,7 @@ use app::{
     state::AppState,
 };
 use config::States;
+use l10n::Messages;
 use models::{
     Recipe,
     data::{AboutData, Data, PaginationData, SearchbarData, ViewRecipe},
@@ -26,7 +27,7 @@ pub async fn search_recipes_handler(
     HxRequest(is_hx_request): HxRequest,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
-    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -50,13 +51,25 @@ pub async fn search_recipes_handler(
             if let Ok(mapped) = mapped_recipes {
                 mapped
             } else {
-                Toast::broadcast_error(&state, user.id, "Error formatting recipe times.").await;
+                Toast::broadcast_error(
+                    &state,
+                    user.id,
+                    &messages.toast_recipes_times_format_failed(),
+                    &messages,
+                )
+                .await;
                 return Err(Error::Database);
             }
         }
         Err(err) => {
             error!(user = ?user.id, ?search_params, ?err, "(search_recipes_handler) Error fetching recipes with search params");
-            Toast::broadcast_error(&state, user.id, "Error fetching recipes.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_fetch_failed(),
+                &messages,
+            )
+            .await;
             return Err(Error::Database);
         }
     };
@@ -64,10 +77,10 @@ pub async fn search_recipes_handler(
     if recipes.is_empty() {
         let is_favourites = search_params.is_favourites.unwrap_or_default();
 
-        return Ok(templates::search::no_results(is_favourites).into_response());
+        return Ok(templates::search::no_results(is_favourites, &messages).into_response());
     }
 
-    let settings = get_settings(&state, user.id).await?;
+    let settings = get_settings(&state, user.id, &messages).await?;
 
     Ok(templates::recipes::search_results(
         &state.fs_support,
@@ -91,8 +104,8 @@ pub async fn search_recipes_handler(
             ..Default::default()
         },
         &state.data_dir,
-        &messages,
         &settings,
+        &messages,
     )
     .into_response())
 }

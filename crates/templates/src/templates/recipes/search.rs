@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
-use config::DataDir;
+use l10n::Messages;
 use maud::{Markup, html};
+use serde_json::json;
+
+use config::DataDir;
 use models::data::Data;
 use models::settings::UserSettingDetails;
-use serde_json::json;
 use support::fs::FsSupport;
 
 use crate::recipes::common::list_recipes;
@@ -18,31 +20,38 @@ pub fn search_results(
     path: &str,
     data: &Data,
     data_dir: &DataDir,
-    messages: &l10n::Messages,
     user_setting: &UserSettingDetails,
+    messages: &Messages,
 ) -> Markup {
     if data.is_hx_request {
         let is_fav = data.searchbar.as_ref().is_some_and(|sb| sb.is_favourites);
 
         html! {
-            (list_recipes(fs_support, path, data, data_dir))
-            (render_search_favourites_button(is_fav, true))
+            (list_recipes(fs_support, path, data, data_dir, messages))
+            (render_search_favourites_button(is_fav, true, messages))
             @if let Some(p) = &data.pagination {
-                (pagination(p))
+                (pagination(p, messages))
             }
         }
     } else {
         let content: Markup = html! {
-            (search_bar(data))
-            (list_recipes(fs_support, path, data, data_dir))
+            (search_bar(data, messages))
+            (list_recipes(fs_support, path, data, data_dir, messages))
         };
 
-        layouts::main("Recipes", path, data, &content, messages, user_setting)
+        layouts::main(
+            &messages.recipes(),
+            path,
+            data,
+            &content,
+            messages,
+            user_setting,
+        )
     }
 }
 
 /// Renders the searchbar component.
-pub fn search_bar(data: &Data) -> Markup {
+pub fn search_bar(data: &Data, messages: &Messages) -> Markup {
     html! {
         div class="flex flex-col pb-2" {
             section class="grid w-full max-w-xl mx-auto px-4 pt-4" {
@@ -60,12 +69,12 @@ pub fn search_bar(data: &Data) -> Markup {
                         hx-push-url="true"
                         hx-trigger="submit, change target:.sort-option" {
                         @if let Some(s) = &data.searchbar {
-                            (searchbar(s))
+                            (searchbar(s, messages))
                         }
                     }
                 }
             }
         }
-        (search_help())
+        (search_help(messages))
     }
 }

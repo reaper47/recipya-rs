@@ -17,6 +17,7 @@ use app::{
     state::AppState,
 };
 use config::States;
+use l10n::Messages;
 use models::{
     Error::EntityNotFound,
     Recipe,
@@ -33,24 +34,31 @@ use crate::{
 /// Handles a recipe's edit page.
 pub async fn edit_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
-    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     RequireAuth(user): RequireAuth,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let settings = get_settings(&state, user.id).await?;
+    let settings = get_settings(&state, user.id, &messages).await?;
 
-    let (recipe, categories, keywords) = match fetch_view_recipe(&state, user.id, recipe_id).await {
-        Ok(res) => res,
-        Err(err) => {
-            error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
-            Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
-            return Err(Error::Model(EntityNotFound {
-                id: recipe_id.to_string(),
-                entity: "recipe",
-            }));
-        }
-    };
+    let (recipe, categories, keywords) =
+        match fetch_view_recipe(&state, user.id, recipe_id, &messages).await {
+            Ok(res) => res,
+            Err(err) => {
+                error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
+                Toast::broadcast_error(
+                    &state,
+                    user.id,
+                    &messages.toast_recipes_none_found(),
+                    &messages,
+                )
+                .await;
+                return Err(Error::Model(EntityNotFound {
+                    id: recipe_id.to_string(),
+                    entity: "recipe",
+                }));
+            }
+        };
 
     let recipe_id = recipe.recipe_details.recipe.id;
     let autologin = state.config.read().await.states.autologin;
@@ -69,10 +77,10 @@ pub async fn edit_recipe_handler(
             ..Default::default()
         },
         &state.data_dir,
-        &messages,
         &settings,
         categories,
         keywords,
+        &messages,
     ) {
         Ok(res) => Ok(res),
         Err(err) => {
@@ -85,23 +93,22 @@ pub async fn edit_recipe_handler(
 /// Handles updating a recipe.
 pub async fn edit_recipe_put_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     form: RecipeForm,
 ) -> impl IntoResponse {
     let fs_support = Arc::clone(&state.fs_support);
+    let img_root = &state.data_dir.images.root;
 
     let mut recipe_c = RecipeForCreate::from(&form);
+
     recipe_c.images = form
         .images
         .into_iter()
         .map(
             |(original_file_stem, path)| match Uuid::parse_str(&original_file_stem) {
-                Ok(name)
-                    if fs_support.is_file_exists(name, &state.data_dir.images.root, ".webp") =>
-                {
-                    name
-                }
+                Ok(name) if fs_support.is_file_exists(name, img_root, ".webp") => name,
                 Ok(_) | Err(_) => {
                     let file_name = path
                         .file_stem()
@@ -111,7 +118,7 @@ pub async fn edit_recipe_put_handler(
                         .parse::<Uuid>()
                         .unwrap_or_default();
 
-                    fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
+                    fs_support.upload_image(&path, file_name, img_root);
 
                     let thumbnails_dir = state.data_dir.images.thumbnails.clone();
                     let fs_support = Arc::clone(&state.fs_support);
@@ -162,7 +169,13 @@ pub async fn edit_recipe_put_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
-            Toast::broadcast_error(&state, user.id, "Failed to add recipe to collection.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_add_collection_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     }

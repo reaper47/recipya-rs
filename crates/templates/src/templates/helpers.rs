@@ -1,3 +1,5 @@
+use maud::{Markup, html};
+
 /// Truncates a string to the specified number of characters and appends an ellipsis (`…`) if truncated.
 pub(super) fn cut_string(s: &str, num_chars: usize) -> String {
     if s.chars().count() <= num_chars {
@@ -6,6 +8,29 @@ pub(super) fn cut_string(s: &str, num_chars: usize) -> String {
 
     let truncated: String = s.chars().take(num_chars).collect();
     format!("{truncated}…")
+}
+
+/// Injects HTML markup into a Fluent message.
+pub(super) fn inject_markup_in_message(text: &str, slots: &[(&str, Markup)]) -> Markup {
+    let first = slots
+        .iter()
+        .enumerate()
+        .filter_map(|(i, (marker, _))| text.find(marker).map(|pos| (pos, i)))
+        .min();
+
+    match first {
+        Some((pos, i)) => {
+            let (marker, inner) = &slots[i];
+            html! {
+                (&text[..pos])
+                (inner)
+                (inject_markup_in_message(&text[pos + marker.len()..], slots))
+            }
+        }
+        None => html! {
+            (text)
+        },
+    }
 }
 
 #[cfg(test)]

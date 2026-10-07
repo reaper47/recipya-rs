@@ -2,6 +2,7 @@ use axum::{
     extract::{Path, Query, State},
     response::IntoResponse,
 };
+use fluent_static::support::axum::RequestLanguage;
 use itertools::izip;
 use serde::Deserialize;
 use tracing::error;
@@ -10,7 +11,8 @@ use app::{
     message::{Broadcaster, Toast},
     state::AppState,
 };
-use math::cooking::units::system;
+use l10n::Messages;
+use math::cooking::units::system::MeasurementSystem;
 use models::Error::EntityNotFound;
 use models::Recipe;
 
@@ -25,20 +27,26 @@ pub struct YieldQueryParams {
 /// Handles scaling the recipe's yield.
 pub async fn scale_recipe_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Path(recipe_id): Path<i64>,
     Query(params): Query<YieldQueryParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     if params.yield_param == 0 {
-        Toast::broadcast_error(&state, user.id, "Yield must be greater than zero.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_recipes_yield_zero(),
+            &messages,
+        )
+        .await;
         return Error::InvalidQuery.into_response();
     }
 
     let recipe = match Recipe::get(&state.mm, user.id, recipe_id).await {
         Ok(mut recipe) => {
             let measurement_system =
-                system::MeasurementSystem::from_id(recipe.recipe.measurement_system_id)
-                    .unwrap_or_default();
+                MeasurementSystem::from_id(recipe.recipe.measurement_system_id).unwrap_or_default();
 
             let factor = f64::from(params.yield_param) / f64::from(recipe.recipe.r#yield);
             let items = recipe.ingredients.items_as_text();
@@ -55,7 +63,13 @@ pub async fn scale_recipe_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_none_found(),
+                &messages,
+            )
+            .await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -64,5 +78,5 @@ pub async fn scale_recipe_handler(
         }
     };
 
-    templates::recipes::render_ingredients_instructions(&recipe).into_response()
+    templates::recipes::render_ingredients_instructions(&recipe, &messages).into_response()
 }

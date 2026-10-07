@@ -1,11 +1,13 @@
 use maud::{Markup, PreEscaped, html};
-
-use models::recipe::timeline::RecipeTimeline;
 use time::macros::format_description;
 
-use crate::recipes::common::{RatingSize, render_rating};
-use crate::templates::icons::{icon_check, icon_pencil, icon_x_mark};
+use l10n::Messages;
+use models::recipe::timeline::RecipeTimeline;
 
+use crate::recipes::common::{RatingSize, render_rating};
+use crate::templates::icons;
+
+/// Represents a timeline event.
 #[derive(Default)]
 pub struct Event {
     pub id: i64,
@@ -36,16 +38,18 @@ impl From<RecipeTimeline> for Event {
 }
 
 /// Renders the timeline dialog for a recipe.
-pub fn render_dialog(recipe_id: i64, events: &[Event]) -> Markup {
+pub fn render_dialog(recipe_id: i64, events: &[Event], messages: &Messages) -> Markup {
     html! {
         dialog #timeline-dialog .modal {
             div class="modal-box relative w-fit max-w-[80vw] overflow-auto" {
                 form method="dialog" {
-                    button class="btn btn-sm btn-circle btn-ghost fixed top-4 right-4 z-30" aria-label="Close" { "✕" }
+                    button class="btn btn-sm btn-circle btn-ghost fixed top-4 right-4 z-30" aria-label=(messages.action_close()) { "✕" }
                 }
-                h3 class="font-bold text-lg" { "Recipe Timeline" }
+                h3 class="font-bold text-lg" {
+                    (messages.recipe_timeline_title())
+                }
                 ul #timeline-dialog-result class="timeline timeline-vertical lg:timeline-horizontal overflow-x-auto" {
-                    (render_events(recipe_id, events))
+                    (render_events(recipe_id, events, messages))
                 }
             }
         }
@@ -55,21 +59,27 @@ pub fn render_dialog(recipe_id: i64, events: &[Event]) -> Markup {
                 form method="dialog" {
                     button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" { "✕" }
                 }
-                h3 class="font-bold text-lg" { "Add event to timeline" }
+                h3 class="font-bold text-lg" {
+                    (messages.recipe_timeline_add())
+                }
                 form .py-4 hx-post=(format!("/recipes/{recipe_id}/timeline")) hx-encoding="multipart/form-data" hx-indicator="#fullscreen-loader" hx-swap="none"
                      _="on submit call document.querySelector('#timeline-new-event-dialog').close()
                         on htmx:afterRequest[detail.successful] reset me" {
                     div #timeline-event-card class="card card-sm bg-base-100 shadow-sm max-w-md" {
                         div class="card-body p-0" {
                             fieldset class="fieldset border-base-300 rounded-box border p-4" {
-                                label class="label" { "Title" }
-                                input type="hidden" name="title" value="Recipe made";
-                                input type="text" name="title" class="input w-full" value="Recipe made" disabled;
+                                label .label {
+                                    (messages.recipe_timeline_title_label())
+                                }
+                                input type="hidden" name="title" value=(messages.recipe_timeline_recipe_made());
+                                input type="text" name="title" class="input w-full" value=(messages.recipe_timeline_recipe_made()) disabled;
 
-                                label class="label" { "Date" }
+                                label .label {
+                                    (messages.recipe_timeline_date())
+                                }
                                 input type="hidden" #event-date name="date" _="on load set my value to window.todayISO() then put my value into #cally-timeline's innerText";
                                 button #cally-timeline type="button" popovertarget="cally-popover-timeline" class="input input-border w-full" style="anchor-name:--cally-timeline" {
-                                    "Pick a date"
+                                    (messages.recipe_timeline_date_placeholder())
                                 }
                                 div popover #cally-popover-timeline class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor:--cally-timeline" {
                                     calendar-date class="cally" _="
@@ -87,19 +97,25 @@ pub fn render_dialog(recipe_id: i64, events: &[Event]) -> Markup {
                                     }
                                 }
 
-                                label class="label" for="event-image" { "Image" }
+                                label .label for="event-image" {
+                                    (messages.recipe_timeline_image())
+                                }
                                 input #event-image type="file" accept="image/*,video/*" name="image" class="file-input file-input-bordered w-full";
 
-                                label class="label" for="event-comment" { "Comment" }
-                                textarea #event-comment name="comment" placeholder="How did your dish go today?" rows="5" class="textarea w-full h-full resize-none rounded-none focus:outline-none" {}
+                                label .label for="event-comment" {
+                                    (messages.recipe_timeline_comment())
+                                }
+                                textarea #event-comment name="comment" placeholder=(messages.recipe_timeline_comment_placeholder()) rows="5" class="textarea w-full h-full resize-none rounded-none focus:outline-none" {}
 
-                                label class="label" { "Rating" }
-                                (render_rating("rating-event", Some(3), None, false, None))
+                                label .label {
+                                    (messages.recipe_timeline_rating())
+                                }
+                                (render_rating("rating-event", Some(3), None, false, None, messages))
                             }
                         }
                     }
                     button class="btn btn-block btn-primary btn-sm" {
-                        "Submit"
+                        (messages.action_submit())
                     }
                 }
             }
@@ -107,18 +123,24 @@ pub fn render_dialog(recipe_id: i64, events: &[Event]) -> Markup {
     }
 }
 
-pub fn render_events(recipe_id: i64, events: &[Event]) -> Markup {
+pub fn render_events(recipe_id: i64, events: &[Event], messages: &Messages) -> Markup {
     let num_events = events.len();
 
     html! {
         @for (idx, event) in events.iter().enumerate() {
-            (render_event(event, idx, num_events, recipe_id))
+            (render_event(event, idx, num_events, recipe_id, messages))
         }
     }
 }
 
 /// Renders a single timeline event item.
-pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i64) -> Markup {
+pub fn render_event(
+    event: &Event,
+    index: usize,
+    num_events: usize,
+    recipe_id: i64,
+    messages: &Messages,
+) -> Markup {
     let timeline_edit_url = format!(
         "/recipes/{recipe_id}/timelines/{}/edit?index={}&max-index={}",
         event.id, index, num_events
@@ -133,7 +155,7 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
             div class="timeline-start timeline-box p-0" {
                 div class="card lg:card-side card-sm bg-base-100 shadow-sm max-w-md" {
                     div class="card-body max-w-60" {
-                        h2 class="card-title" {
+                        h2 .card-title {
                             (event.title)
                         }
                         @if let Some(s) = event.comment.as_deref() {
@@ -143,7 +165,7 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
                         }
                         @if let Some(rating) = event.rating {
                             div class="flex justify-between items-baseline" {
-                                (render_rating(&format!("rating-timeline-{index}"), Some(rating), Some(RatingSize::Small), true, None))
+                                (render_rating(&format!("rating-timeline-{index}"), Some(rating), Some(RatingSize::Small), true, None, messages))
                                 (edit_button(&timeline_edit_url, &timeline_event_id))
                             }
                         } @else if index > 0 {
@@ -154,18 +176,18 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
                     }
                 }
             }
-            div class="timeline-middle" {
+            div .timeline-middle {
                 svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" {
                     path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd";
                 }
             }
-            div class="timeline-end" {
-                p .text-center.pb-2 {
+            div .timeline-end {
+                p class="text-center pb-2" {
                     (event.date)
                 }
                 @if let Some(image) = event.image.as_deref() {
                     figure {
-                        img src=(image) alt="Timeline event" class="w-full lg:w-60 h-60 object-cover rounded-lg";
+                        img src=(image) alt=(messages.recipe_timeline_event()) class="w-full lg:w-60 h-60 object-cover rounded-lg";
                     }
                 }
             }
@@ -178,11 +200,8 @@ pub fn render_event(event: &Event, index: usize, num_events: usize, recipe_id: i
 
 fn edit_button(timeline_edit_url: &str, hx_target: &str) -> Markup {
     html! {
-        button class="btn btn-ghost btn-square btn-sm"
-                hx-get=(timeline_edit_url)
-                hx-target=(format!("#{hx_target}"))
-                hx-swap="outerHTML" {
-            (icon_pencil(false))
+        button class="btn btn-ghost btn-square btn-sm" hx-get=(timeline_edit_url) hx-target={ "#" (hx_target) } hx-swap="outerHTML" {
+            (icons::pencil(false))
         }
     }
 }
@@ -197,6 +216,7 @@ pub fn render_edit(
     index: usize,
     num_events: usize,
     recipe_id: i64,
+    messages: &Messages,
 ) -> Markup {
     let event_id = event.id;
     let local_time = event
@@ -213,7 +233,7 @@ pub fn render_edit(
     html! {
         li id=(timeline_id) {
             hr;
-            form id=(form_id) hx-put=(format!("/recipes/{recipe_id}/timelines/{event_id}")) hx-encoding="multipart/form-data" hx-target=(format!("#{timeline_id}")) hx-indicator="#fullscreen-loader" hx-swap="outerHTML" {}
+            form id=(form_id) hx-put={ "/recipes/" (recipe_id) "/timelines/" (event_id) } hx-encoding="multipart/form-data" hx-target={ "#" (timeline_id) } hx-indicator="#fullscreen-loader" hx-swap="outerHTML" {}
 
             input type="hidden" name="index" value=(index) form=(form_id);
             input type="hidden" name="max-index" value=(num_events) form=(form_id);
@@ -221,35 +241,35 @@ pub fn render_edit(
             div class="timeline-start timeline-box p-0" {
                 div class="card lg:card-side card-sm bg-base-100 shadow-sm max-w-md" {
                     div class="card-body max-w-60" {
-                        h2 class="card-title" {
+                        h2 .card-title {
                             input type="text" name="title" class="input w-full" value=(event.title) form=(form_id);
                         }
                         textarea #event-comment name="comment" placeholder="How did your dish go today?" rows="5" class="textarea w-full h-full resize-none rounded-none focus:outline-none" form=(form_id) {
                             (event.comment.unwrap_or_default())
                         }
                         div class="flex items-baseline justify-between" {
-                            (render_rating("rating-event", event.rating, Some(RatingSize::Small), false, Some(&form_id)))
-                            div class="join" {
+                            (render_rating("rating-event", event.rating, Some(RatingSize::Small), false, Some(&form_id), messages))
+                            div .join {
                                 button type="button" class="btn btn-ghost btn-square btn-sm join-item"
-                                        hx-get=(format!("/recipes/{recipe_id}/timelines/{event_id}?index={index}&max-index={num_events}"))
-                                        hx-target=(format!("#{timeline_id}"))
+                                        hx-get={ "/recipes/" (recipe_id) "/timelines/" (event_id) "?index=" (index) "&max-index=" (num_events) }
+                                        hx-target={ "#" (timeline_id) }
                                         hx-swap="outerHTML" {
-                                    (icon_x_mark())
+                                    (icons::x_mark())
                                 }
                                 button form=(form_id) class="btn btn-ghost btn-square btn-sm join-item" {
-                                    (icon_check())
+                                    (icons::check())
                                 }
                             }
                         }
                     }
                 }
             }
-            div class="timeline-middle" {
+            div .timeline-middle {
                 button id=(cally_timeline_id) type="button" popovertarget="cally-popover-timeline" class="cally-timeline input input-border w-full" style="anchor-name:--cally-timeline" {
                     ("")
                 }
                 div popover #cally-popover-timeline class="dropdown bg-base-100 rounded-box shadow-lg" style="position-anchor:--cally-timeline" {
-                    calendar-date class="cally" _=(format!(r"
+                    calendar-date .cally _=(format!(r"
                         on change
                             put my value into value of #{date_id}
                             put my value into innerText of #{cally_timeline_id}
@@ -265,15 +285,16 @@ pub fn render_edit(
                 }
             }
             div class="timeline-end lg:w-60" {
-                input type="hidden" id=(date_id) class="event-date" name="date" value=("") form=(form_id);
+                input type="hidden" id=(date_id) .event-date name="date" value=("") form=(form_id);
 
-                figure class="image-preview" {
+                figure .image-preview {
                     @if let Some(image) = event.image {
-                        @let image = format!("/data/images/Timelines/{image}.webp");
-                        img src=(image) alt="Event image" class="w-full h-60 object-cover";
+                        img src={ "/data/images/Timelines/" (image) ".webp" } alt=(messages.recipe_timeline_event_image()) class="w-full h-60 object-cover";
                     } @else {
                         div class="w-full h-60 bg-base-200 flex items-center justify-center" {
-                            span class="text-base-content/50" { "No image" }
+                            span class="text-base-content/50" {
+                                (messages.recipe_timeline_no_image())
+                            }
                         }
                     }
                 }

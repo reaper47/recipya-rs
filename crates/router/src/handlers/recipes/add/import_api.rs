@@ -1,6 +1,6 @@
 use axum::{Form, extract::State, response::IntoResponse};
+use fluent_static::support::axum::RequestLanguage;
 use futures_util::{StreamExt, pin_mut};
-use models::settings::UserSettingDetails;
 use reqwest::StatusCode;
 use tokio::time::Instant;
 use tracing::{error, warn};
@@ -8,14 +8,16 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use integrations::api::Credentials;
-use models::Error::{DuplicateEntity, DuplicateEntityWithID};
+use l10n::Messages;
 use models::{
+    Error::{DuplicateEntity, DuplicateEntityWithID},
     Recipe,
     reports::{
         report::{Items, ReportForCreate},
         report_log::ReportLogForCreate,
         report_types::{Import, PrimaryReportType, ReportTypeFull, TertiaryReportType},
     },
+    settings::UserSettingDetails,
 };
 
 use crate::{
@@ -28,22 +30,30 @@ use crate::{
 /// Handles the importing recipes from an API endpoint.
 pub async fn add_recipe_import_api_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<ImportFromApiForm>,
 ) -> impl IntoResponse {
-    fetch_recipes_from_api(state, form, user.id);
+    fetch_recipes_from_api(state, form, user.id, messages);
 
     (StatusCode::ACCEPTED, "").into_response()
 }
 
 #[allow(clippy::too_many_lines)]
-fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uuid) {
+fn fetch_recipes_from_api(
+    state: AppState,
+    form: ImportFromApiForm,
+    user_id: Uuid,
+    messages: Messages,
+) {
+    let preparing_import_msg = messages.toast_recipes_preparing_import().clone();
+
     tokio::spawn(async move {
         let api = form.api.to_string();
         let start_time = Instant::now();
 
         state
-            .broadcast_progress("Preparing import...", 0, 100, true, user_id)
+            .broadcast_progress(&preparing_import_msg, 0, 100, true, user_id, &messages)
             .await;
 
         let api_stream = form
@@ -117,7 +127,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
                                 seq_num,
                                 &name,
                                 Some(id),
-                                "Recipe exists",
+                                &messages.fetch_recipes_exists(),
                                 exec_time_ms,
                             ));
                         }
@@ -136,7 +146,7 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
                                 seq_num,
                                 &format!("{api} - id '{recipe_api_id}'"),
                                 None,
-                                "Fetch Failure",
+                                &messages.fetch_recipes_failed(),
                                 &err.to_string(),
                                 exec_time_ms,
                             ));
@@ -152,14 +162,28 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
                 || processed == total
             {
                 state
-                    .broadcast_progress("Fetching recipes...", processed, total, true, user_id)
+                    .broadcast_progress(
+                        &messages.toast_recipes_fetch_progress(),
+                        processed,
+                        total,
+                        true,
+                        user_id,
+                        &messages,
+                    )
                     .await;
                 last_progress_time = Instant::now();
             }
         }
 
         state
-            .broadcast_progress("Fetching recipes...", processed, total, true, user_id)
+            .broadcast_progress(
+                &messages.toast_recipes_fetch_progress(),
+                processed,
+                total,
+                true,
+                user_id,
+                &messages,
+            )
             .await;
 
         let report_type = match form.api {
@@ -183,7 +207,10 @@ fn fetch_recipes_from_api(state: AppState, form: ImportFromApiForm, user_id: Uui
             i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
             user_id,
         );
-        broadcast_import_done_toast(&state, successes, processed, report, api, user_id).await;
+        broadcast_import_done_toast(
+            &state, successes, processed, report, api, user_id, &messages,
+        )
+        .await;
     });
 }
 
