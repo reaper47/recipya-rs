@@ -48,20 +48,18 @@ fn output_dir() -> PathBuf {
 }
 
 fn locale_tags(base: &Path) -> Vec<String> {
+    // When building for production, all locales will be included. It will take a long time to compile the crate.
+    // When building in debug mode, only the en-CA locale will be included. This is to minimize compile times.
+    let is_debug_only = env::var("PROFILE").is_ok_and(|p| p == "debug");
+
     let mut tags = fs::read_dir(base)
         .expect("locales directory should exist")
         .filter_map(Result::ok)
         .filter(|entry| entry.path().join(RESOURCE_FILE_NAME).is_file())
         .filter_map(|entry| entry.file_name().into_string().ok())
+        .filter(|tag| !is_debug_only || tag == DEFAULT_LANGUAGE)
         .collect::<Vec<_>>();
-    tags.sort();
 
-    // When building for production, all locales will be included. It will take a long time to compile the crate.
-    // When building in debug mode, only the en-CA locale will be included. This is to minimize compile times.
-    let is_debug = env::var("DEBUG").expect("'DEBUG' to be set") == "true";
-    if is_debug {
-        vec![tags.into_iter().find(|t| t.starts_with("en-CA")).unwrap()]
-    } else {
-        tags
-    }
+    tags.sort();
+    tags
 }
