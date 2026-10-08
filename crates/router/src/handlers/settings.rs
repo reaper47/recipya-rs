@@ -326,8 +326,8 @@ pub async fn language_post_handler(
             );
 
             (
-                StatusCode::OK,
-                [(HeaderName::from_static("hx-redirect"), "true")],
+                StatusCode::NO_CONTENT,
+                [(HeaderName::from_static("hx-trigger"), "language-changed")],
             )
                 .into_response()
         }
@@ -518,7 +518,7 @@ where
             &state,
             user.id,
             &messages.toast_settings_invalid_theme(&payload.theme),
-            &messages,
+            messages,
         )
         .await;
         return Error::InvalidPayload.into_response();
@@ -530,7 +530,7 @@ where
             &state,
             user.id,
             &messages.toast_settings_update_theme_failed(),
-            &messages,
+            messages,
         )
         .await;
         return Error::Database.into_response();

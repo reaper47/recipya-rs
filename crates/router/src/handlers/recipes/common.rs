@@ -33,7 +33,7 @@ pub async fn broadcast_import_done_toast(
     user_id: Uuid,
     messages: &Messages,
 ) {
-    state.hide_broadcast(user_id, &messages).await;
+    state.hide_broadcast(user_id, messages).await;
 
     let num_success = i64::try_from(recipe_ids.len())
         .inspect_err(|err| error!(len = recipe_ids.len(), ?err, "Failed to cast num success"))
@@ -81,7 +81,7 @@ pub async fn fetch_categories_keywords(
                 state,
                 user_id,
                 &messages.toast_settings_fetch_categories_failed(),
-                &messages,
+                messages,
             )
             .await;
             return Err(Error::Database);
@@ -96,7 +96,7 @@ pub async fn fetch_categories_keywords(
                 state,
                 user_id,
                 &messages.toast_recipes_keywords_fetch_failed(),
-                &messages,
+                messages,
             )
             .await;
             return Err(Error::Database);
@@ -282,7 +282,7 @@ pub async fn fetch_view_recipe(
                 state,
                 user_id,
                 &messages.toast_recipes_none_found(),
-                &messages,
+                messages,
             )
             .await;
             return Err(Error::Model(EntityNotFound {

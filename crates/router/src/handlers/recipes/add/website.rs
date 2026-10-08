@@ -109,7 +109,7 @@ impl FetchWebsiteContext {
                 .action(Some(&view_recipe_link))
                 .build()
             } else {
-                Toast::error(&messages.fetch_recipes_none_scraped(), &messages)
+                Toast::error(&messages.fetch_recipes_none_scraped(), messages)
             }
         } else {
             let message = format!(

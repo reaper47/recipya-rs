@@ -46,7 +46,7 @@ fn fetch_recipes_from_api(
     user_id: Uuid,
     messages: Messages,
 ) {
-    let preparing_import_msg = messages.toast_recipes_preparing_import().clone();
+    let preparing_import_msg = messages.toast_recipes_preparing_import();
 
     tokio::spawn(async move {
         let api = form.api.to_string();

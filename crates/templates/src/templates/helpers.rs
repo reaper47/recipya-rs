@@ -18,18 +18,17 @@ pub(super) fn inject_markup_in_message(text: &str, slots: &[(&str, Markup)]) -> 
         .filter_map(|(i, (marker, _))| text.find(marker).map(|pos| (pos, i)))
         .min();
 
-    match first {
-        Some((pos, i)) => {
-            let (marker, inner) = &slots[i];
-            html! {
-                (&text[..pos])
-                (inner)
-                (inject_markup_in_message(&text[pos + marker.len()..], slots))
-            }
+    if let Some((pos, i)) = first {
+        let (marker, inner) = &slots[i];
+        html! {
+            (&text[..pos])
+            (inner)
+            (inject_markup_in_message(&text[pos + marker.len()..], slots))
         }
-        None => html! {
+    } else {
+        html! {
             (text)
-        },
+        }
     }
 }
 

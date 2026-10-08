@@ -1,8 +1,10 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use fluent_static::Message;
 use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
+use models::recipe::structs::nutrition::{Nutrition, NutritionPerServingDetails};
 use serde_json::json;
 use url::Url;
 
@@ -49,7 +51,7 @@ pub fn view_recipe(
             (view_recipe_helper(fs_support, data_dir, data, messages)?)
         } @else {
             (layouts::main(
-                &recipe_name,
+                recipe_name,
                 path,
                 data,
                 &view_recipe_helper(fs_support, data_dir, data, messages)?,
@@ -773,52 +775,7 @@ fn render_nutrition(recipe_details: &RecipeDetails, messages: &Messages) -> Mark
             }
             tbody {
                 @if let Some(nutrition) = &recipe_details.nutrition.per_100g {
-                        @for (name, value) in [
-                            (
-                                messages.title(messages.nutrition_calories().to_string()),
-                                format_nutrition(nutrition.calories_kcal.map(Into::into), " kcal"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_total_carbs().to_string()),
-                                format_nutrition(nutrition.total_carbohydrates, "g"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_sugars().to_string()),
-                                format_nutrition(nutrition.sugars_g, "g"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_protein().to_string()),
-                                format_nutrition(nutrition.protein_g, "g"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_total_fat().to_string()),
-                                format_nutrition(nutrition.total_fat_g, "g"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_sat_fat().to_string()),
-                                format_nutrition(nutrition.saturated_fat_g, "g"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_unsat_fat().to_string()),
-                                format_nutrition(nutrition.unsaturated_fat_g, "g"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_trans_fat().to_string()),
-                                format_nutrition(nutrition.trans_fat_g, "g"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_cholesterol().to_string()),
-                                format_nutrition(nutrition.cholesterol_mg, "mg"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_sodium().to_string()),
-                                format_nutrition(nutrition.sodium_mg, "mg"),
-                            ),
-                            (
-                                messages.title(messages.nutrition_fibre().to_string()),
-                                format_nutrition(nutrition.fiber_g, "g"),
-                            ),
-                        ] {
+                        @for (name, value) in nutrition_per_100g_data(nutrition, messages) {
                         tr data-nutrition-type="per-100g" {
                             td { (name) }
                             td { (value) }
@@ -850,56 +807,7 @@ fn render_nutrition(recipe_details: &RecipeDetails, messages: &Messages) -> Mark
                 }
 
                 @if let Some(nutrition) = &recipe_details.nutrition.per_serving {
-                    @for (name, value) in [
-                        (
-                            messages.title(messages.nutrition_serving_size().to_string()),
-                            if nutrition.serving_size.is_empty() { "1" } else { Default::default() }.to_string(),
-                        ),
-                        (
-                            messages.title(messages.nutrition_calories().to_string()),
-                            format_nutrition(nutrition.nutrition.calories_kcal.map(Into::into), " kcal"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_total_carbs().to_string()),
-                            format_nutrition(nutrition.nutrition.total_carbohydrates, "g"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_sugars().to_string()),
-                            format_nutrition(nutrition.nutrition.sugars_g, "g"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_protein().to_string()),
-                            format_nutrition(nutrition.nutrition.protein_g, "g"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_total_fat().to_string()),
-                            format_nutrition(nutrition.nutrition.total_fat_g, "g"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_sat_fat().to_string()),
-                            format_nutrition(nutrition.nutrition.saturated_fat_g, "g"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_unsat_fat().to_string()),
-                            format_nutrition(nutrition.nutrition.unsaturated_fat_g, "g"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_trans_fat().to_string()),
-                            format_nutrition(nutrition.nutrition.trans_fat_g, "g"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_cholesterol().to_string()),
-                            format_nutrition(nutrition.nutrition.cholesterol_mg, "mg"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_sodium().to_string()),
-                            format_nutrition(nutrition.nutrition.sodium_mg, "mg"),
-                        ),
-                        (
-                            messages.title(messages.nutrition_fibre().to_string()),
-                            format_nutrition(nutrition.nutrition.fiber_g, "g"),
-                        ),
-                    ] {
+                    @for (name, value) in nutrition_per_serving_data(nutrition, messages) {
                         tr data-nutrition-type="per-serving" .hidden {
                             td {
                                 (name)
@@ -925,6 +833,116 @@ fn render_nutrition(recipe_details: &RecipeDetails, messages: &Messages) -> Mark
             }
         }
     }
+}
+
+fn nutrition_per_100g_data(nutrition: &Nutrition, messages: &Messages) -> [(Message, String); 11] {
+    [
+        (
+            messages.title(messages.nutrition_calories().to_string()),
+            format_nutrition(nutrition.calories_kcal.map(Into::into), " kcal"),
+        ),
+        (
+            messages.title(messages.nutrition_total_carbs().to_string()),
+            format_nutrition(nutrition.total_carbohydrates, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sugars().to_string()),
+            format_nutrition(nutrition.sugars_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_protein().to_string()),
+            format_nutrition(nutrition.protein_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_total_fat().to_string()),
+            format_nutrition(nutrition.total_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sat_fat().to_string()),
+            format_nutrition(nutrition.saturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_unsat_fat().to_string()),
+            format_nutrition(nutrition.unsaturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_trans_fat().to_string()),
+            format_nutrition(nutrition.trans_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_cholesterol().to_string()),
+            format_nutrition(nutrition.cholesterol_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_sodium().to_string()),
+            format_nutrition(nutrition.sodium_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_fibre().to_string()),
+            format_nutrition(nutrition.fiber_g, "g"),
+        ),
+    ]
+}
+
+fn nutrition_per_serving_data(
+    nutrition: &NutritionPerServingDetails,
+    messages: &Messages,
+) -> [(Message, String); 12] {
+    [
+        (
+            messages.title(messages.nutrition_serving_size().to_string()),
+            if nutrition.serving_size.is_empty() {
+                "1"
+            } else {
+                Default::default()
+            }
+            .to_string(),
+        ),
+        (
+            messages.title(messages.nutrition_calories().to_string()),
+            format_nutrition(nutrition.nutrition.calories_kcal.map(Into::into), " kcal"),
+        ),
+        (
+            messages.title(messages.nutrition_total_carbs().to_string()),
+            format_nutrition(nutrition.nutrition.total_carbohydrates, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sugars().to_string()),
+            format_nutrition(nutrition.nutrition.sugars_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_protein().to_string()),
+            format_nutrition(nutrition.nutrition.protein_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_total_fat().to_string()),
+            format_nutrition(nutrition.nutrition.total_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sat_fat().to_string()),
+            format_nutrition(nutrition.nutrition.saturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_unsat_fat().to_string()),
+            format_nutrition(nutrition.nutrition.unsaturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_trans_fat().to_string()),
+            format_nutrition(nutrition.nutrition.trans_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_cholesterol().to_string()),
+            format_nutrition(nutrition.nutrition.cholesterol_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_sodium().to_string()),
+            format_nutrition(nutrition.nutrition.sodium_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_fibre().to_string()),
+            format_nutrition(nutrition.nutrition.fiber_g, "g"),
+        ),
+    ]
 }
 
 fn render_source(source: &Source, messages: &Messages) -> Markup {

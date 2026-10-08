@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
+use fluent_static::Message;
 use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
 
 use config::DataDir;
 use models::data::{Data, ViewRecipe};
+use models::recipe::structs::nutrition::{Nutrition, NutritionPerServingDetails};
 use models::recipe::structs::recipe::{Category, Keyword};
 use models::recipe::structs::section::SectionComponents;
 use models::settings::UserSettingDetails;
@@ -12,7 +14,7 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::{
     add_ingredient, add_ingredient_without_section, add_instruction,
-    add_instruction_without_section, add_section, add_tool, init_recipe_form_js,
+    add_instruction_without_section, add_section, add_tool, format_nutrition, init_recipe_form_js,
     nutrition_table_header, recipe_keyword_empty, render_media_editor, render_rating,
 };
 use crate::templates::icons;
@@ -394,80 +396,8 @@ fn render_nutrition(view: &ViewRecipe, messages: &Messages) -> Markup {
         table class="table table-zebra table-xs" {
             (nutrition_table_header(messages))
             tbody {
-                @let format_nutrition = |value: Option<f64>, unit: &str| -> String {
-                    value.map_or_else(|| "-".into(), |v| if v < 1.0 {
-                        format!("{v:.2}{unit}")
-                    } else {
-                        format!("{v:.0}{unit}")
-                    })
-                };
-
                 @let nutrition = view.recipe_details.nutrition.per_100g.as_ref();
-                @for (name, name_attr, placeholder, value) in [
-                    (
-                        messages.nutrition_calories(),
-                        "calories-per-100g",
-                        "368kcal",
-                        format_nutrition(nutrition.and_then(|n| n.calories_kcal.map(Into::into)), " kcal"),
-                    ),
-                    (
-                        messages.nutrition_total_carbs(),
-                        "total-carbohydrates-per-100g",
-                        "35g",
-                        format_nutrition(nutrition.and_then(|n| n.total_carbohydrates), "g"),
-                    ),
-                    (
-                        messages.nutrition_sugars(),
-                        "sugars-per-100g",
-                        "3g",
-                        format_nutrition(nutrition.and_then(|n| n.sugars_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_protein(),
-                        "protein-per-100g",
-                        "21g",
-                        format_nutrition(nutrition.and_then(|n| n.protein_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_total_fat(),
-                        "total-fat-per-100g",
-                        "15g",
-                        format_nutrition(nutrition.and_then(|n| n.total_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_sat_fat(),
-                        "saturated-fat-per-100g",
-                        "1.8g",
-                        format_nutrition(nutrition.and_then(|n| n.saturated_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_unsat_fat(),
-                        "unsaturated-fat-per-100g",
-                        "1.8g",
-                        format_nutrition(nutrition.and_then(|n| n.unsaturated_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_trans_fat(),
-                        "trans-fat-per-100g",
-                        "1.8g",
-                        format_nutrition(nutrition.and_then(|n| n.trans_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_cholesterol(),
-                        "cholesterol-per-100g",
-                        "1.1mg", format_nutrition(nutrition.and_then(|n| n.cholesterol_mg), "mg"),
-                    ),
-                    (
-                        messages.nutrition_sodium(),
-                        "sodium-per-100g",
-                        "100mg", format_nutrition(nutrition.and_then(|n| n.sodium_mg), "mg"),
-                    ),
-                    (
-                        messages.nutrition_fibre(),
-                        "fiber-per-100g",
-                        "8g", format_nutrition(nutrition.and_then(|n| n.fiber_g), "g"),
-                    ),
-                ] {
+                @for (name, name_attr, placeholder, value) in nutrition_per_100g_data(nutrition, messages) {
                     tr data-nutrition-type="per-100g" {
                         td {
                             (name)
@@ -481,80 +411,7 @@ fn render_nutrition(view: &ViewRecipe, messages: &Messages) -> Markup {
                 }
 
                 @let nutrition = view.recipe_details.nutrition.per_serving.as_ref();
-                @for (name, name_attr, placeholder, value) in [
-                    (
-                        messages.nutrition_serving_size(),
-                        "serving-size",
-                        "1/4 cup (45g)",
-                        nutrition.map_or_else(|| "-", |nutrition| nutrition.serving_size.as_ref()),
-                    ),
-                    (
-                        messages.nutrition_calories(),
-                        "calories-per-serving",
-                        "368kcal",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.calories_kcal.map(Into::into)), " kcal"),
-                    ),
-                    (
-                        messages.nutrition_total_carbs(),
-                        "total-carbohydrates-per-serving",
-                        "35g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.total_carbohydrates), "g"),
-                    ),
-                    (
-                        messages.nutrition_sugars(),
-                        "sugars-per-serving",
-                        "3g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.sugars_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_protein(),
-                        "protein-per-serving",
-                        "21g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.protein_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_total_fat(),
-                        "total-fat-per-serving",
-                        "15g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.total_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_sat_fat(),
-                        "saturated-fat-per-serving",
-                        "1.8g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.saturated_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_unsat_fat(),
-                        "unsaturated-fat-per-serving",
-                        "1.8g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.unsaturated_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_trans_fat(),
-                        "trans-fat-per-serving",
-                        "1.8g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.trans_fat_g), "g"),
-                    ),
-                    (
-                        messages.nutrition_cholesterol(),
-                        "cholesterol-per-serving",
-                        "1.1mg",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.cholesterol_mg), "mg"),
-                    ),
-                    (
-                        messages.nutrition_sodium(),
-                        "sodium-per-serving",
-                        "100mg",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.sodium_mg), "mg"),
-                    ),
-                    (
-                        messages.nutrition_fibre(),
-                        "fiber-per-serving",
-                        "8g",
-                        &format_nutrition(nutrition.and_then(|n| n.nutrition.fiber_g), "g"),
-                    ),
-                ] {
+                @for (name, name_attr, placeholder, value) in nutrition_per_serving_data(nutrition, messages) {
                     tr data-nutrition-type="per-serving" .hidden {
                         td {
                             (name)
@@ -569,6 +426,166 @@ fn render_nutrition(view: &ViewRecipe, messages: &Messages) -> Markup {
             }
         }
     }
+}
+
+fn nutrition_per_100g_data<'a>(
+    nutrition: Option<&Nutrition>,
+    messages: &Messages,
+) -> [(Message, &'a str, &'a str, String); 11] {
+    [
+        (
+            messages.nutrition_calories(),
+            "calories-per-100g",
+            "368kcal",
+            format_nutrition(
+                nutrition.and_then(|n| n.calories_kcal.map(Into::into)),
+                " kcal",
+            ),
+        ),
+        (
+            messages.nutrition_total_carbs(),
+            "total-carbohydrates-per-100g",
+            "35g",
+            format_nutrition(nutrition.and_then(|n| n.total_carbohydrates), "g"),
+        ),
+        (
+            messages.nutrition_sugars(),
+            "sugars-per-100g",
+            "3g",
+            format_nutrition(nutrition.and_then(|n| n.sugars_g), "g"),
+        ),
+        (
+            messages.nutrition_protein(),
+            "protein-per-100g",
+            "21g",
+            format_nutrition(nutrition.and_then(|n| n.protein_g), "g"),
+        ),
+        (
+            messages.nutrition_total_fat(),
+            "total-fat-per-100g",
+            "15g",
+            format_nutrition(nutrition.and_then(|n| n.total_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_sat_fat(),
+            "saturated-fat-per-100g",
+            "1.8g",
+            format_nutrition(nutrition.and_then(|n| n.saturated_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_unsat_fat(),
+            "unsaturated-fat-per-100g",
+            "1.8g",
+            format_nutrition(nutrition.and_then(|n| n.unsaturated_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_trans_fat(),
+            "trans-fat-per-100g",
+            "1.8g",
+            format_nutrition(nutrition.and_then(|n| n.trans_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_cholesterol(),
+            "cholesterol-per-100g",
+            "1.1mg",
+            format_nutrition(nutrition.and_then(|n| n.cholesterol_mg), "mg"),
+        ),
+        (
+            messages.nutrition_sodium(),
+            "sodium-per-100g",
+            "100mg",
+            format_nutrition(nutrition.and_then(|n| n.sodium_mg), "mg"),
+        ),
+        (
+            messages.nutrition_fibre(),
+            "fiber-per-100g",
+            "8g",
+            format_nutrition(nutrition.and_then(|n| n.fiber_g), "g"),
+        ),
+    ]
+}
+
+fn nutrition_per_serving_data<'a>(
+    nutrition: Option<&NutritionPerServingDetails>,
+    messages: &Messages,
+) -> [(Message, &'a str, &'a str, String); 12] {
+    [
+        (
+            messages.nutrition_serving_size(),
+            "serving-size",
+            "1/4 cup (45g)",
+            nutrition.map_or_else(|| "-".into(), |nutrition| nutrition.serving_size.clone()),
+        ),
+        (
+            messages.nutrition_calories(),
+            "calories-per-serving",
+            "368kcal",
+            format_nutrition(
+                nutrition.and_then(|n| n.nutrition.calories_kcal.map(Into::into)),
+                " kcal",
+            ),
+        ),
+        (
+            messages.nutrition_total_carbs(),
+            "total-carbohydrates-per-serving",
+            "35g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.total_carbohydrates), "g"),
+        ),
+        (
+            messages.nutrition_sugars(),
+            "sugars-per-serving",
+            "3g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.sugars_g), "g"),
+        ),
+        (
+            messages.nutrition_protein(),
+            "protein-per-serving",
+            "21g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.protein_g), "g"),
+        ),
+        (
+            messages.nutrition_total_fat(),
+            "total-fat-per-serving",
+            "15g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.total_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_sat_fat(),
+            "saturated-fat-per-serving",
+            "1.8g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.saturated_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_unsat_fat(),
+            "unsaturated-fat-per-serving",
+            "1.8g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.unsaturated_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_trans_fat(),
+            "trans-fat-per-serving",
+            "1.8g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.trans_fat_g), "g"),
+        ),
+        (
+            messages.nutrition_cholesterol(),
+            "cholesterol-per-serving",
+            "1.1mg",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.cholesterol_mg), "mg"),
+        ),
+        (
+            messages.nutrition_sodium(),
+            "sodium-per-serving",
+            "100mg",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.sodium_mg), "mg"),
+        ),
+        (
+            messages.nutrition_fibre(),
+            "fiber-per-serving",
+            "8g",
+            format_nutrition(nutrition.and_then(|n| n.nutrition.fiber_g), "g"),
+        ),
+    ]
 }
 
 fn render_source(view: &ViewRecipe, messages: &Messages) -> Markup {

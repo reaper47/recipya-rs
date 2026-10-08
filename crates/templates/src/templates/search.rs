@@ -1,3 +1,4 @@
+use fluent_static::Message;
 use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
 
@@ -127,6 +128,48 @@ fn search_sort_option(
 
 /// Renders the search help pop up.
 pub(super) fn search_help(messages: &Messages) -> Markup {
+    let data = search_help_data(messages);
+
+    html! {
+        div #search-help popover class="hidden card p-0 w-80 bg-base-100 shadow-xl max-h-[28rem] z-20 sm:w-[30rem] " style="position: fixed; inset: unset; bottom: 0.5rem; right: 0.5rem;" {
+            div class="card-body max-h-96 p-4" {
+                div class="card-actions justify-between" {
+                    h2 .card-title {
+                        (messages.search_help_title())
+                    }
+                    button class="btn btn-square btn-sm" _="on click toggle .hidden on #search-help" {
+                        (icons::x_mark())
+                    }
+                }
+                div {
+                    p class="text-xs mb-2" {
+                        (messages.search_help_description())
+                    }
+                    div class="overflow-x-auto max-h-64" {
+                        table class="table table-xs table-pin-rows" {
+                            thead {
+                                tr {
+                                    th { (messages.search_help_search()) }
+                                    th { (messages.search_help_example()) }
+                                }
+                            }
+                            tbody {
+                                @for (term, example) in &data {
+                                    tr {
+                                        th { (term) }
+                                        td { (example) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn search_help_data(messages: &Messages) -> [(Message, String); 20] {
     let biscuits = messages.search_help_biscuits();
     let chicken_kyiv = messages.search_help_chicken_kyiv();
     let dinner = messages.search_help_dinner();
@@ -135,7 +178,7 @@ pub(super) fn search_help(messages: &Messages) -> Markup {
     let ukrainian = messages.search_help_ukrainian();
     let wok = messages.search_help_wok();
 
-    let data = [
+    [
         (
             messages.search_help_any_field(),
             messages.search_help_big_green_squash().to_string(),
@@ -159,7 +202,7 @@ pub(super) fn search_help(messages: &Messages) -> Markup {
         ),
         (
             messages.search_help_by("instruction"),
-            format!("ins:{preheat_oven}",),
+            format!("ins:{preheat_oven}"),
         ),
         (messages.search_help_by("keyword"), format!("kw:{biscuits}")),
         (messages.search_help_by("tool"), format!("tool:{wok}")),
@@ -219,45 +262,7 @@ pub(super) fn search_help(messages: &Messages) -> Markup {
             messages.search_help_multiple("tools"),
             format!("tool:{wok},{}", messages.search_help_blender()),
         ),
-    ];
-
-    html! {
-        div #search-help popover class="hidden card p-0 w-80 bg-base-100 shadow-xl max-h-[28rem] z-20 sm:w-[30rem] " style="position: fixed; inset: unset; bottom: 0.5rem; right: 0.5rem;" {
-            div class="card-body max-h-96 p-4" {
-                div class="card-actions justify-between" {
-                    h2 .card-title {
-                        (messages.search_help_title())
-                    }
-                    button class="btn btn-square btn-sm" _="on click toggle .hidden on #search-help" {
-                        (icons::x_mark())
-                    }
-                }
-                div {
-                    p class="text-xs mb-2" {
-                        (messages.search_help_description())
-                    }
-                    div class="overflow-x-auto max-h-64" {
-                        table class="table table-xs table-pin-rows" {
-                            thead {
-                                tr {
-                                    th { (messages.search_help_search()) }
-                                    th { (messages.search_help_example()) }
-                                }
-                            }
-                            tbody {
-                                @for (term, example) in &data {
-                                    tr {
-                                        th { (term) }
-                                        td { (example) }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    ]
 }
 
 /// Renders the component to display when there are no search results.

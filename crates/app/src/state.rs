@@ -209,10 +209,10 @@ impl AppState {
                 </div>
             </div>"#,
             if is_notification_visible { "" } else { "hidden" },
-            &messages.of()
+            messages.of()
         ).lines().map(str::trim).collect::<Vec<_>>().join("");
 
-        Snack::broadcast_success(self, user_id, &content, &messages).await;
+        Snack::broadcast_success(self, user_id, &content, messages).await;
     }
 
     /// Gets a recipe from the cache if present.

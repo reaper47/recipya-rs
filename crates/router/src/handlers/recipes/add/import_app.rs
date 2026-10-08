@@ -49,6 +49,7 @@ pub async fn add_recipe_import_app_handler(
     (StatusCode::ACCEPTED, "").into_response()
 }
 
+#[allow(clippy::too_many_lines)]
 fn save_parsed_recipes(
     state: AppState,
     form: ImportFromAppForm,
@@ -219,7 +220,7 @@ async fn parse_recipes(
             100,
             true,
             user_id,
-            &messages,
+            messages,
         )
         .await;
 
@@ -274,7 +275,7 @@ async fn push_recipes_to_db(
             num_recipes,
             true,
             user_id,
-            &messages,
+            messages,
         )
         .await;
 
@@ -412,7 +413,7 @@ async fn push_recipe(
                 num_recipes,
                 true,
                 user_id,
-                &messages,
+                messages,
             )
             .await;
     }

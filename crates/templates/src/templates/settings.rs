@@ -82,7 +82,25 @@ pub fn settings(
     };
 
     html! {
-        div class="flex flex-col menu-sm sm:flex-row sm:menu-md" {
+        script type="text/hyperscript" {
+            (PreEscaped(r"behavior ReselectTab
+                  on 'language-changed' from body
+                    call htmx.ajax('GET', window.location.href, {target: '#content', swap: 'innerHTML'})
+                    set $refreshed to true
+                  end
+                  on htmx:afterSettle
+                    if $refreshed
+                      set $refreshed to false
+                      set tabs to <.setting-tab/> in me
+                      send mousedown to tabs[1]
+                      remove .menu-active from tabs[0]
+                      add .menu-active to tabs[1]
+                    end
+                  end
+                end"))
+        }
+
+        div class="flex flex-col menu-sm sm:flex-row sm:menu-md" hx-get="/settings" hx-trigger="language-changed from:body" _="install ReselectTab" {
             ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical"
                _=(PreEscaped("on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target")) {
 
@@ -419,7 +437,7 @@ fn settings_general(
                         (messages.settings_general_language_description())
                     }
                 }
-                select name="locale" class="block w-fit select select-bordered select-sm" hx-post="/settings/language" hx-swap="none" {
+                select name="locale" class="block w-fit select select-bordered select-sm" hx-post="/settings/language" {
                     @for lang in languages {
                         option value=(lang.id) selected[lang.locale == user_settings.selected_locale] {
                             (lang.name)

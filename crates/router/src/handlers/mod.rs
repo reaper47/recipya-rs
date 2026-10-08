@@ -32,7 +32,7 @@ pub async fn get_settings(
                 state,
                 user_id,
                 &messages.toast_users_fetch_settings_failed(),
-                &messages,
+                messages,
             )
             .await;
             Err(Error::Database)

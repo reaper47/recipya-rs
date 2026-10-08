@@ -24,6 +24,7 @@ use models::{
 use crate::{Error, middleware::mw_auth::RequireAuth, params::PreviewForm};
 
 /// Handles parsing a recipe from raw JSON.
+#[allow(clippy::too_many_lines)]
 pub async fn add_recipe_import_raw_handler(
     RequireAuth(user): RequireAuth,
     RequestLanguage(messages): RequestLanguage<Messages>,

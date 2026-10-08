@@ -3091,6 +3091,7 @@ name = "l10n"
 version = "0.0.0"
 dependencies = [
  "fluent-static",
+ "fluent-static-codegen",
 ]
 
 [[package]]
