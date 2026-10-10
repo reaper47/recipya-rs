@@ -25,7 +25,7 @@ enum Piece<'a> {
 pub(super) fn inject_markup_in_message(
     text: &str,
     slots: &[(&str, Markup)],
-    mode: Replace,
+    mode: &Replace,
 ) -> Markup {
     let mut pieces = Vec::new();
     let mut rest = text;
@@ -42,7 +42,7 @@ pub(super) fn inject_markup_in_message(
         pieces.push(Piece::Slot(inner));
         rest = &rest[pos + marker.len()..];
 
-        if mode == Replace::First {
+        if mode == &Replace::First {
             break;
         }
     }

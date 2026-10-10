@@ -65,7 +65,7 @@ fn render_index(
                     p {
                         (inject_markup_in_message(
                             &messages.recipe_page_collection_subtext(add_recipe_page_title.to_string()),
-                            &[(&add_recipe_page_title, button_markup)], Replace::All)
+                            &[(&add_recipe_page_title, button_markup)], &Replace::All)
                         )
                     }
                 }

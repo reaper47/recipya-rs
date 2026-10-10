@@ -1204,7 +1204,7 @@ fn settings_about(data: &Data, messages: &Messages) -> Markup {
                                     a class="link" href="https://recipya.musicavis.ca/about/changelog/v1.3.0" target="_blank" {
                                         (release_notes)
                                     }
-                                })], Replace::All))
+                                })], &Replace::All))
                         }
                     }
                     div class="flex flex-row self-start" {
@@ -1264,7 +1264,7 @@ fn settings_about(data: &Data, messages: &Messages) -> Markup {
                             (inject_markup_in_message(&messages.keyboard_shortcuts_macos_replacement("Ctrl", "Cmd"), &[
                                 ("Ctrl", ctrl_markup),
                                 ("Cmd", cmd_markup),
-                            ], Replace::All))
+                            ], &Replace::All))
                         }
                     }
                 }

@@ -46,7 +46,7 @@ mod tests_get {
         let res = server.get(&base_uri(recipe_id)).await;
 
         res.assert_status_ok();
-        res.assert_text_contains(&format!(
+        res.assert_text_contains(format!(
             r#"<title hx-swap-oob="true">{} | Recipya</title>"#,
             recipe.name
         ));
@@ -89,7 +89,7 @@ mod tests_get {
         let res = server.get(&base_uri(recipe_id)).await;
 
         res.assert_status_ok();
-        res.assert_text_contains(&format!(
+        res.assert_text_contains(format!(
             r#"<title hx-swap-oob="true">{FSI}{}{PDI} | Recipya</title>"#,
             recipe.name
         ));
@@ -107,7 +107,7 @@ mod tests_get {
         assert_html(
             &res,
             &[
-                &format!(r#"<title hx-swap-oob="true">Recipe not found. | Recipya</title>"#),
+                r#"<title hx-swap-oob="true">Recipe not found. | Recipya</title>"#,
                 "Recipe not found",
                 "The recipe you requested to view is not found.",
             ],

@@ -144,7 +144,7 @@ fn render_summary(p: &PaginationData, messages: &Messages) -> Markup {
             (&to, to_markup),
             (&total, total_markup),
         ],
-        Replace::All,
+        &Replace::All,
     )
 }
 

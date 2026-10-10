@@ -78,7 +78,7 @@ fn render_fetch_websites_card(messages: &Messages) -> Markup {
                 (messages.fetch_website_card_title())
             }
             p {
-                (inject_markup_in_message(&messages.fetch_website_card_description(supported.to_string()), &[(&supported, button_markup)], Replace::First))
+                (inject_markup_in_message(&messages.fetch_website_card_description(supported.to_string()), &[(&supported, button_markup)], &Replace::First))
             }
             div class="card-actions justify-end" {
                 button class="btn btn-outline btn-sm btn-block" _="on click open #websites-dialog" {
@@ -149,7 +149,7 @@ fn render_import_apps_card(messages: &Messages) -> Markup {
                          (&various_apps, various_markup),
                          (&schema, schema_markup),
                      ],
-                     Replace::All,
+                     &Replace::All,
                 ))
             }
             p {
@@ -158,7 +158,7 @@ fn render_import_apps_card(messages: &Messages) -> Markup {
                      &[
                          (&bookmarklet, bookmarklet_markup),
                      ],
-                     Replace::All,
+                     &Replace::All,
                 ))
             }
             div .card-actions {
