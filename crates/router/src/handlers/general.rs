@@ -12,6 +12,7 @@ use axum::{
         sse::{Event, KeepAlive},
     },
 };
+use fluent_static::support::axum::RequestLanguage;
 use futures::Stream;
 use reqwest::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use serde::Serialize;
@@ -24,6 +25,7 @@ use uuid::Uuid;
 
 use app::message::{Broadcaster, Toast};
 use app::state::AppState;
+use l10n::Messages;
 use models::Recipe;
 use models::download::Download;
 use models::paper::PaperSize;
@@ -65,6 +67,7 @@ pub async fn index_handler(OptionalAuth(user): OptionalAuth) -> Redirect {
 /// Handles downloading a file from a public URL.
 pub async fn download_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Query(params): Query<DownloadParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
@@ -80,7 +83,13 @@ pub async fn download_handler(
         }
         Err(err) => {
             error!(user = ?user.id, ?token, ?err, "Failed to find download token");
-            Toast::broadcast_error(&state, user.id, "Failed to find download token.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_download_token_not_found(),
+                &messages,
+            )
+            .await;
             return StatusCode::NOT_FOUND.into_response();
         }
     };
@@ -99,7 +108,13 @@ pub async fn download_handler(
         Ok(f) => f,
         Err(err) => {
             error!(?file_path, user = ?user.id, ?err, "Failed to open file");
-            Toast::broadcast_error(&state, user.id, "Failed to open export file.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_export_file_open_failed(),
+                &messages,
+            )
+            .await;
             return Error::Fs.into_response();
         }
     };
@@ -124,7 +139,13 @@ pub async fn download_handler(
         Ok(res) => res,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to create response");
-            Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_export_data_failed(),
+                &messages,
+            )
+            .await;
             Error::Fs.into_response()
         }
     }
@@ -133,13 +154,14 @@ pub async fn download_handler(
 /// Handles fetchinmg the content of a public URL.
 pub async fn fetch_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Query(params): Query<FetchParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let parsed_url = match Url::parse(&params.url) {
         Ok(u) if matches!(u.scheme(), "http" | "https") => u,
         _ => {
-            Toast::broadcast_error(&state, user.id, "Invalid URL").await;
+            Toast::broadcast_error(&state, user.id, &messages.toast_invalid_url(), &messages).await;
             return StatusCode::BAD_REQUEST.into_response();
         }
     };
@@ -160,7 +182,7 @@ pub async fn fetch_handler(
                 warn!(?parsed_url, ?err, "Failed to validate SSRF");
             }
         }
-        Toast::broadcast_error(&state, user.id, "Invalid URL").await;
+        Toast::broadcast_error(&state, user.id, &messages.toast_invalid_url(), &messages).await;
         return StatusCode::BAD_REQUEST.into_response();
     }
 
@@ -168,7 +190,13 @@ pub async fn fetch_handler(
         Ok(c) => c,
         Err(err) => {
             error!(?err, "Failed to create safe HTTP client");
-            Toast::broadcast_error(&state, user.id, "Could not create HTTP client").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_http_client_failed(),
+                &messages,
+            )
+            .await;
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
     };
@@ -177,7 +205,13 @@ pub async fn fetch_handler(
         Ok(r) => r,
         Err(err) => {
             error!(?err, "Failed to fetch URL");
-            Toast::broadcast_error(&state, user.id, "Could not fetch URL").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_fetch_url_failed(),
+                &messages,
+            )
+            .await;
             return StatusCode::BAD_REQUEST.into_response();
         }
     };
@@ -188,7 +222,13 @@ pub async fn fetch_handler(
         Ok(b) => b,
         Err(err) => {
             error!(?err, "Failed to read response");
-            Toast::broadcast_error(&state, user.id, "Could not read response").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_read_response_failed(),
+                &messages,
+            )
+            .await;
             return StatusCode::BAD_GATEWAY.into_response();
         }
     };
@@ -246,13 +286,20 @@ pub async fn health_ready_handler(
 /// Handler for fetching paper sizes.
 pub async fn paper_sizes_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let papers = match PaperSize::get_all(&state.mm).await {
         Ok(papers) => papers,
         Err(err) => {
             error!(?err, "Failed to get paper sizes");
-            Toast::broadcast_error(&state, user.id, "Failed to fetch paper sizes").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_paper_sizes_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     };
@@ -265,6 +312,7 @@ pub async fn paper_sizes_handler(
             .map(|(idx, (cat, p))| (idx + 1, cat, p))
             .collect::<Vec<_>>()
             .as_slice(),
+        &messages,
     )
     .into_response()
 }
@@ -272,6 +320,7 @@ pub async fn paper_sizes_handler(
 /// Handles searching for suggestions.
 pub async fn search_suggestions_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Query(params): Query<SearchParams>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
@@ -314,7 +363,7 @@ pub async fn search_suggestions_handler(
                 }),
             Err(err) => {
                 error!(?q, user = ?user.id, ?err, "(search_suggestions_handler) Error fetching items");
-                Toast::broadcast_error(&state, user.id, "Error fetching components.").await;
+                Toast::broadcast_error(&state, user.id, &messages.toast_components_failed(), &messages).await;
                 return Err(Error::Database);
             }
         };

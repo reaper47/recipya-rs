@@ -5,6 +5,7 @@ mod manual;
 mod raw;
 mod website;
 
+use fluent_static::support::axum::RequestLanguage;
 pub use import_api::*;
 pub use import_app::*;
 pub use import_preview::*;
@@ -28,10 +29,11 @@ use crate::{Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
 pub async fn add_recipes_handler(
     HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let settings = get_settings(&state, user.id).await?;
+    let settings = get_settings(&state, user.id, &messages).await?;
 
     Ok(templates::recipes::add_page(
         uri.path(),
@@ -45,6 +47,7 @@ pub async fn add_recipes_handler(
             is_hx_request,
             ..Default::default()
         },
+        &messages,
         &settings,
     )
     .into_response())

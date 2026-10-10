@@ -4,6 +4,7 @@ use axum::Form;
 use axum::extract::{Query, State};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
+use fluent_static::support::axum::RequestLanguage;
 use tower_cookies::Cookies;
 use tracing::{debug, error, warn};
 use uuid::Uuid;
@@ -11,12 +12,14 @@ use validator::Validate;
 
 use app::message::{Broadcaster, IMessage, Toast, add_hx_message};
 use app::state::AppState;
-use auth::pwd::scheme::SchemeStatus;
-use auth::pwd::{ContentToHash, validate_pwd};
-use auth::token::generate_access_token;
-use auth::token::http::{clear_auth_cookies, set_auth_cookies};
+use auth::pwd::{ContentToHash, scheme::SchemeStatus, validate_pwd};
+use auth::token::{
+    generate_access_token,
+    http::{clear_auth_cookies, set_auth_cookies},
+};
 use config::{AutologinState, DemoState, ProductionState, SignupsState};
 use email::{Data, Email, Template};
+use l10n::Messages;
 use models::tokens::{
     EmailVerificationToken, EmailVerificationTokenForCreate, PasswordResetToken,
     PasswordResetTokenForCreate, RefreshToken, RefreshTokenForCreate,
@@ -32,6 +35,7 @@ use crate::{Error, Result};
 /// Handles a user's update password request.
 pub async fn change_password_post_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<ChangePasswordForm>,
 ) -> impl IntoResponse {
@@ -43,20 +47,27 @@ pub async fn change_password_post_handler(
         Toast::broadcast_error(
             &state,
             user.id,
-            "New password cannot be the same as the current.",
+            &messages.toast_auth_new_password_same_as_old(),
+            &messages,
         )
         .await;
         return Error::Form.into_response();
     }
 
     if form.validate().is_err() {
-        Toast::broadcast_error(&state, user.id, "Passwords do not match.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_auth_password_no_match(),
+            &messages,
+        )
+        .await;
         return Error::Form.into_response();
     }
 
     match User::update_password_by_user_id(&state.mm, user.id, &form.new_password).await {
         Ok(()) => {
-            let toast = Toast::success("Your password has been updated.");
+            let toast = Toast::success(&messages.toast_auth_password_updated(), &messages);
 
             if let Ok(json) = serde_json::to_string(&toast) {
                 state.channels.broadcast_to_client(&json, user.id).await;
@@ -65,7 +76,13 @@ pub async fn change_password_post_handler(
             (StatusCode::NO_CONTENT, "").into_response()
         }
         Err(err) => {
-            Toast::broadcast_error(&state, user.id, "Failed to update password.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_auth_password_update_failed(),
+                &messages,
+            )
+            .await;
             Error::Model(err).into_response()
         }
     }
@@ -73,6 +90,7 @@ pub async fn change_password_post_handler(
 
 /// Handles account confirmation once the user clicks their confirm button.
 pub async fn verify_email_handler(
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
@@ -110,7 +128,12 @@ pub async fn verify_email_handler(
         return Error::Database.into_response();
     }
 
-    templates::general::simple("Success", "Your account has been verified.").into_response()
+    templates::general::simple(
+        &messages.toast_title_success(),
+        &messages.auth_account_verified(),
+        &messages,
+    )
+    .into_response()
 }
 
 fn get_token_from_query(query: &mut HashMap<String, String>) -> Result<String> {
@@ -118,16 +141,20 @@ fn get_token_from_query(query: &mut HashMap<String, String>) -> Result<String> {
 }
 
 /// Renders the forgot password request page.
-pub async fn forgot_password_handler(OptionalAuth(user): OptionalAuth) -> impl IntoResponse {
+pub async fn forgot_password_handler(
+    OptionalAuth(user): OptionalAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
+) -> impl IntoResponse {
     match user {
         Some(_) => Redirect::to("/recipes").into_response(),
-        None => templates::auth::forgot_password().into_response(),
+        None => templates::auth::forgot_password(&messages).into_response(),
     }
 }
 
 /// Handles the forgot password request form.
 pub async fn forgot_password_post_handler(
     OptionalAuth(user): OptionalAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<ForgotPasswordForm>,
 ) -> impl IntoResponse {
@@ -148,7 +175,7 @@ pub async fn forgot_password_post_handler(
         {
             let payload = Email {
                 to: user_email.clone(),
-                subject: "Reset password".into(),
+                subject: messages.reset_password_form_title().to_string(),
                 body: String::new(),
                 template: Some(Template::ForgotPassword),
                 data: Some(Data {
@@ -166,8 +193,9 @@ pub async fn forgot_password_post_handler(
         }
 
         templates::general::simple(
-            "Password Reset Requested",
-            "An email with instructions on how to reset your password has been sent to you.",
+            &messages.auth_password_reset_requested_title(),
+            &messages.auth_password_reset_requested_text(),
+            &messages,
         )
         .into_response()
     }
@@ -175,6 +203,7 @@ pub async fn forgot_password_post_handler(
 
 /// Renders the forgot password reset page.
 pub async fn forgot_password_reset_handler(
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
@@ -192,15 +221,16 @@ pub async fn forgot_password_reset_handler(
                 }
 
                 let mut res = templates::general::simple(
-                    "Token Expired",
-                    "The token associated with the URL expired.",
+                    &messages.auth_token_expired_title(),
+                    &messages.auth_token_expired_text(),
+                    &messages,
                 )
                 .into_response();
                 *res.status_mut() = StatusCode::BAD_REQUEST;
                 return res;
             }
 
-            templates::auth::forgot_password_reset(&v.token).into_response()
+            templates::auth::forgot_password_reset(&v.token, &messages).into_response()
         }
         Ok(_) => {
             warn!("The token '{token}' was not found in the database.");
@@ -215,12 +245,16 @@ pub async fn forgot_password_reset_handler(
 
 /// Handles the submission of the password reset form.
 pub async fn forgot_password_reset_post_handler(
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<ForgotPasswordResetForm>,
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, &Toast::success("Password is invalid"));
+        add_hx_message(
+            &mut res,
+            &Toast::success(&messages.toast_auth_password_invalid(), &messages),
+        );
         return res;
     }
 
@@ -228,8 +262,9 @@ pub async fn forgot_password_reset_post_handler(
         Ok(Some(token)) => {
             if token.is_expired() {
                 let mut res = templates::general::simple(
-                    "Token Expired",
-                    "The token associated with the URL expired.",
+                    &messages.auth_token_expired_title(),
+                    &messages.auth_token_expired_text(),
+                    &messages,
                 )
                 .into_response();
                 *res.status_mut() = StatusCode::BAD_REQUEST;
@@ -256,7 +291,10 @@ pub async fn forgot_password_reset_post_handler(
     if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
         error!(?user_id, ?err, "Failed to update password for user",);
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, &Toast::error("Failed to update password."));
+        add_hx_message(
+            &mut res,
+            &Toast::error(&messages.toast_auth_password_update_failed(), &messages),
+        );
         return res;
     }
 
@@ -266,7 +304,10 @@ pub async fn forgot_password_reset_post_handler(
     }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
-    add_hx_message(&mut res, &Toast::success("Your password has been updated."));
+    add_hx_message(
+        &mut res,
+        &Toast::success(&messages.toast_auth_password_updated(), &messages),
+    );
 
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
         res.headers_mut().insert(axum_htmx::HX_REDIRECT, value);
@@ -278,6 +319,7 @@ pub async fn forgot_password_reset_post_handler(
 /// Renders the login page.
 pub async fn login_handler(
     OptionalAuth(user): OptionalAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     if user.is_some() {
@@ -285,19 +327,25 @@ pub async fn login_handler(
     } else {
         let config = state.config.read().await;
 
-        templates::auth::login(&config.states.demo, &config.states.signups).into_response()
+        templates::auth::login(&config.states.demo, &config.states.signups, &messages)
+            .into_response()
     }
 }
 
 /// Handles user login requests.
+#[allow(clippy::too_many_lines)]
 pub async fn login_post_handler(
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     cookies: Cookies,
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
     if form.validate().is_err() {
         let mut res = Error::Form.into_response();
-        add_hx_message(&mut res, &Toast::error("Credentials are invalid."));
+        add_hx_message(
+            &mut res,
+            &Toast::error(&messages.toast_auth_credentials_invalid(), &messages),
+        );
         return res;
     }
 
@@ -305,7 +353,10 @@ pub async fn login_post_handler(
         Ok(user) => match user {
             None => {
                 let mut res = Error::LoginFailUsernameNotFound.into_response();
-                add_hx_message(&mut res, &Toast::error("Credentials are invalid."));
+                add_hx_message(
+                    &mut res,
+                    &Toast::error(&messages.toast_auth_credentials_invalid(), &messages),
+                );
                 return res;
             }
             Some(user) => user,
@@ -331,7 +382,10 @@ pub async fn login_post_handler(
                 "Password validation failed"
             );
             let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
-            add_hx_message(&mut res, &Toast::error("Credentials are invalid."));
+            add_hx_message(
+                &mut res,
+                &Toast::error(&messages.toast_auth_credentials_invalid(), &messages),
+            );
             return res;
         }
     };
@@ -345,7 +399,13 @@ pub async fn login_post_handler(
             .is_err()
         {
             let mut res = Error::UpdatePassword.into_response();
-            add_hx_message(&mut res, &Toast::error("Failed to update password schema."));
+            add_hx_message(
+                &mut res,
+                &Toast::error(
+                    &messages.toast_auth_password_schema_update_failed(),
+                    &messages,
+                ),
+            );
             return res;
         }
     }
@@ -354,7 +414,10 @@ pub async fn login_post_handler(
         Ok(token) => token,
         Err(err) => {
             let mut res = Error::GenerateToken.into_response();
-            add_hx_message(&mut res, &Toast::error("Failed to generate access token."));
+            add_hx_message(
+                &mut res,
+                &Toast::error(&messages.toast_auth_access_token_failed(), &messages),
+            );
             error!(user = ?user.id, ?err, "Failed to generate access token");
             return res;
         }
@@ -369,7 +432,10 @@ pub async fn login_post_handler(
         Ok(entry) => entry,
         Err(err) => {
             let mut res = Error::GenerateToken.into_response();
-            add_hx_message(&mut res, &Toast::error("Failed to generate refresh token."));
+            add_hx_message(
+                &mut res,
+                &Toast::error(&messages.toast_auth_refresh_token_failed(), &messages),
+            );
             error!(user = ?user.id, ?err, "Failed to generate refresh token");
             return res;
         }
@@ -408,6 +474,7 @@ pub async fn logout_post_handler(
 
 /// Renders the user registration page.
 pub async fn register_handler(
+    RequestLanguage(messages): RequestLanguage<Messages>,
     OptionalAuth(user): OptionalAuth,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
@@ -418,13 +485,14 @@ pub async fn register_handler(
             return Redirect::to("/auth/login").into_response();
         }
 
-        templates::auth::register().into_response()
+        templates::auth::register(&messages).into_response()
     }
 }
 
 /// Handles user registration.
 pub async fn register_post_handler(
     OptionalAuth(user): OptionalAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<RegisterForm>,
 ) -> impl IntoResponse {
@@ -448,7 +516,7 @@ pub async fn register_post_handler(
                 .unwrap_or_else(|| "Validation error".to_string());
 
             let mut res = StatusCode::UNPROCESSABLE_ENTITY.into_response();
-            add_hx_message(&mut res, &Toast::error(&message));
+            add_hx_message(&mut res, &Toast::error(&message, &messages));
             return res;
         }
 
@@ -464,7 +532,7 @@ pub async fn register_post_handler(
                         let mut res = Error::Model(err).into_response();
                         add_hx_message(
                             &mut res,
-                            &Toast::error("An error occurred during registration."),
+                            &Toast::error(&messages.toast_auth_registration_error(), &messages),
                         );
                         return res;
                     }
@@ -483,7 +551,7 @@ pub async fn register_post_handler(
                             let mut res = Error::Model(err).into_response();
                             add_hx_message(
                                 &mut res,
-                                &Toast::error("An error occurred during registration."),
+                                &Toast::error(&messages.toast_auth_registration_error(), &messages),
                             );
                             return res;
                         }
@@ -495,7 +563,7 @@ pub async fn register_post_handler(
                     tokio::spawn(async move {
                         service.send(Email {
                             to: user.email,
-                            subject: "Verify your email address".into(),
+                            subject: messages.toast_auth_verify_email().to_string(),
                             body: String::new(),
                             template: Some(Template::Intro),
                             data: Some(Data {
@@ -515,7 +583,7 @@ pub async fn register_post_handler(
                 let mut res = Error::FailFetch.into_response();
                 add_hx_message(
                     &mut res,
-                    &Toast::error("Failed to fetch user from database."),
+                    &Toast::error(&messages.toast_users_fetch_users_failed(), &messages),
                 );
                 res
             }
@@ -526,13 +594,20 @@ pub async fn register_post_handler(
 /// Handles user deletion.
 pub async fn user_delete_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
     let config = state.config.read().await;
 
     if config.states.autologin == AutologinState::On {
-        Toast::broadcast_error(&state, user.id, "This account cannot be deleted.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_auth_account_no_delete(),
+            &messages,
+        )
+        .await;
         return Error::DeleteForbidden.into_response();
     }
 
@@ -541,6 +616,7 @@ pub async fn user_delete_handler(
             &state,
             user.id,
             "Trump is Putin's lap dog. Remove him from office!",
+            &messages,
         )
         .await;
         return Error::DeleteForbidden.into_response();

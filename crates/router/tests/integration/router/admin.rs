@@ -48,7 +48,7 @@ mod tests_user {
             .await;
 
         res.assert_status(StatusCode::BAD_REQUEST);
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Email is invalid or passwords do not match.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Email is invalid or passwords do not match.","status":"alert-error","title":"Operation failed"}}"# ).await;
         Ok(())
     }
 
@@ -66,7 +66,7 @@ mod tests_user {
             .await;
 
         res.assert_status(StatusCode::CONFLICT);
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"A user with this email exists.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Email is invalid or passwords do not match.","status":"alert-error","title":"Operation failed"}}"# ).await;
         Ok(())
     }
 
@@ -148,7 +148,7 @@ mod tests_users {
             let res = server.delete(&base_uri(user_id)).await;
 
             res.assert_status_forbidden();
-            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Cannot delete an admin.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Cannot delete an admin.","status":"alert-error","title":"Operation failed"}}"# ).await;
             Ok(())
         }
 
@@ -159,7 +159,7 @@ mod tests_users {
             let res = server.delete(&base_uri(Uuid::new_v4())).await;
 
             res.assert_status_not_found();
-            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation failed"}}"# ).await;
             Ok(())
         }
 
@@ -212,12 +212,12 @@ mod tests_users {
                 .await;
 
             res.assert_status_bad_request();
-            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Payload cannot be empty.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Payload cannot be empty.","status":"alert-error","title":"Operation failed"}}"# ).await;
             Ok(())
         }
 
         #[tokio::test]
-        async fn test_user_does_not_exist_ok() -> Result<()> {
+        async fn test_patch_user_does_not_exist_ok() -> Result<()> {
             let (server, mut ws_server, _) = build_server_sse(default_config()).await?;
             let password = "a big beautiful bill";
 
@@ -231,7 +231,7 @@ mod tests_users {
                 .await;
 
             res.assert_status_internal_server_error();
-            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Failed to update user password.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Failed to update password.","status":"alert-error","title":"Operation failed"}}"# ).await;
             Ok(())
         }
 
@@ -290,7 +290,7 @@ mod tests_users {
                 .await;
 
             res.assert_status_internal_server_error();
-            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation failed"}}"# ).await;
             Ok(())
         }
 
@@ -346,7 +346,7 @@ mod tests_user_row {
         let res = server.get(&base_uri(Uuid::new_v4(), 3)).await;
 
         res.assert_status_internal_server_error();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation failed"}}"# ).await;
         Ok(())
     }
 

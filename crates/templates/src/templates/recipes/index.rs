@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use l10n::Messages;
+
 use config::DataDir;
 use maud::{Markup, html};
 use models::data::Data;
@@ -8,6 +10,7 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::list_recipes;
 use crate::recipes::search_bar;
+use crate::templates::helpers::{Replace, inject_markup_in_message};
 use crate::templates::layouts::{self, render_empty_nav_extra_content, render_recipe_button};
 use crate::templates::pagination::pagination;
 
@@ -18,19 +21,21 @@ pub fn index(
     data: &Data,
     data_dir: &DataDir,
     user_setting: &UserSettingDetails,
+    messages: &Messages,
 ) -> Markup {
     if data.is_hx_request {
         html! {
-            (render_index(fs_support, path, data, data_dir))
+            (render_index(fs_support, path, data, data_dir, messages))
             (render_empty_nav_extra_content())
-            (render_recipe_button(true))
+            (render_recipe_button(true, messages))
         }
     } else {
         layouts::main(
-            "Recipes",
+            &messages.recipes(),
             path,
             data,
-            &render_index(fs_support, path, data, data_dir),
+            &render_index(fs_support, path, data, data_dir, messages),
+            messages,
             user_setting,
         )
     }
@@ -41,30 +46,39 @@ fn render_index(
     path: &str,
     data: &Data,
     data_dir: &DataDir,
+    messages: &Messages,
 ) -> Markup {
     if data.recipes.is_empty() {
+        let add_recipe_page_title = messages.add_recipe_page_title();
+        let button_markup = html! {
+            a class="underline font-semibold cursor-pointer" hx-get="/recipes/add" hx-target="#content" hx-push-url="true" {
+                (add_recipe_page_title)
+            }
+        };
+
         html! {
             div class="grid place-content-center text-sm h-full text-center md:text-base" {
                 div class="p-4 md:p-0" {
-                    p class="pb-2" {
-                        "Your recipe collection looks a bit empty at the moment."
+                    p .pb-2 {
+                        (messages.recipe_page_empty_collection())
                     }
                     p {
-                        "Why not start adding recipes by clicking the "
-                        a class="underline font-semibold cursor-pointer" hx-get="/recipes/add" hx-target="#content" hx-push-url="true" { "Add recipe" }
-                        " button at the top?"
+                        (inject_markup_in_message(
+                            &messages.recipe_page_collection_subtext(add_recipe_page_title.to_string()),
+                            &[(&add_recipe_page_title, button_markup)], &Replace::All)
+                        )
                     }
                 }
             }
         }
     } else {
         html! {
-            (search_bar(data))
-            div #list-recipes class="min-h-0" {
-                (list_recipes(fs_support, path, data, data_dir))
+            (search_bar(data, messages))
+            div #list-recipes .min-h-0 {
+                (list_recipes(fs_support, path, data, data_dir, messages))
             }
             @if data.is_hx_request && let Some(p) = &data.pagination {
-                (pagination(p))
+                (pagination(p, messages))
             }
         }
     }

@@ -18,9 +18,7 @@ use test_harness::{build_server_anonymous, create_app_state};
 use time::Duration;
 use uuid::Uuid;
 
-use crate::recipe::utils::a_complete_recipe_for_create;
-
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::{Result, recipe::utils::a_complete_recipe_for_create};
 
 mod tests_all {
     use super::*;

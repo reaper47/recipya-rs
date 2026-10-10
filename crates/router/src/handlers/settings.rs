@@ -1,39 +1,54 @@
-use axum::Form;
-use axum::body::Body;
-use axum::extract::State;
-use axum::http::{Response, StatusCode};
-use axum::response::IntoResponse;
+use axum::{
+    Form,
+    body::Body,
+    extract::State,
+    http::{HeaderName, Response, StatusCode},
+    response::IntoResponse,
+};
 use axum_htmx::{HX_TRIGGER, HxCurrentUrl, HxRequest};
+use fluent_static::support::axum::RequestLanguage;
 use iso8601::DateTime;
 use serde_json::json;
+use tower_cookies::Cookies;
 use tracing::error;
 use uuid::Uuid;
 
-use app::message::{Broadcaster, Toast};
-use app::state::AppState;
-use config::{DemoState, States};
-use models::Recipe;
-use models::data::{AboutData, Data};
-use models::download::{Download, DownloadForCreate};
-use models::export::ExportData;
-use models::settings::{Theme, UserSettingDetails};
-use models::user::User;
+use app::{
+    message::{Broadcaster, Toast},
+    state::AppState,
+};
+use config::{DemoState, ProductionState, States};
+use l10n::Messages;
+use models::{
+    Recipe,
+    data::{AboutData, Data},
+    download::{Download, DownloadForCreate},
+    export::ExportData,
+    language::Language,
+    settings::UserSettingDetails,
+    theme::Theme,
+    user::User,
+};
 use nutrition::NutritionDataSource;
 use repository::ModelManager;
 use templates::settings::{EmailSettingsForView, SettingsForView};
 
-use crate::Error;
-use crate::handlers::recipes::common::fetch_categories_keywords;
-use crate::middleware::mw_auth::RequireAuth;
-use crate::schemas::settings::{
-    BoldIngredientsPayload, ExportDataPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload,
-    TzPayload,
+use crate::{
+    Error,
+    handlers::recipes::common::fetch_categories_keywords,
+    middleware::mw_auth::RequireAuth,
+    schemas::settings::{
+        BoldIngredientsPayload, ExportDataPayload, LanguagePayload, NutritionSourcePayload,
+        PaperSizeForm, ThemePayload, TzPayload,
+    },
+    settings_router::set_language_cookie,
 };
 
 /// Handles rendering the settings page.
 pub async fn settings_handler(
     HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let caller_user = user;
@@ -43,19 +58,46 @@ pub async fn settings_handler(
         Ok(settings) => settings,
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching user settings");
-            Toast::broadcast_error(&state, caller_user_id, "Error fetching user settings.").await;
+            Toast::broadcast_error(
+                &state,
+                caller_user_id,
+                &messages.toast_users_fetch_settings_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     };
 
-    let categories = match fetch_categories_keywords(&state, caller_user_id).await {
+    let categories = match fetch_categories_keywords(&state, caller_user_id, &messages).await {
         Ok((categories, _)) => categories
             .into_iter()
             .filter(|c| c.name != "uncategorized")
             .collect::<Vec<_>>(),
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching categories");
-            Toast::broadcast_error(&state, caller_user_id, "Error fetching categories.").await;
+            Toast::broadcast_error(
+                &state,
+                caller_user_id,
+                &messages.toast_settings_fetch_categories_failed(),
+                &messages,
+            )
+            .await;
+            return Error::Database.into_response();
+        }
+    };
+
+    let languages = match Language::get_all(&state.mm).await {
+        Ok(l) => l,
+        Err(err) => {
+            error!(?caller_user_id, ?err, "Error fetching languages");
+            Toast::broadcast_error(
+                &state,
+                caller_user_id,
+                &messages.toast_settings_fetch_languages_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     };
@@ -97,6 +139,7 @@ pub async fn settings_handler(
         users,
         &settings,
         &categories,
+        &languages,
         &SettingsForView {
             states: config.states.clone(),
             email: EmailSettingsForView {
@@ -108,6 +151,7 @@ pub async fn settings_handler(
             azure_di_key: String::new(),
             azure_di_endpoint: String::new(),
         },
+        &messages,
     )
     .into_response()
 }
@@ -115,6 +159,7 @@ pub async fn settings_handler(
 /// Handles exporting data for the target user.
 pub async fn export_data_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     HxCurrentUrl(hx_current_url): HxCurrentUrl,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
@@ -122,13 +167,25 @@ pub async fn export_data_handler(
         Ok(recipes) => recipes,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to retrieve recipes");
-            Toast::broadcast_error(&state, user.id, "Failed to retrieve recipes.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_fetch_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     };
 
     if recipes.is_empty() {
-        Toast::broadcast_warning(&state, user.id, "No recipes found for export.").await;
+        Toast::broadcast_warning(
+            &state,
+            user.id,
+            &messages.toast_recipes_none_found(),
+            &messages,
+        )
+        .await;
         return StatusCode::NOT_FOUND.into_response();
     }
 
@@ -144,17 +201,25 @@ pub async fn export_data_handler(
         },
     );
 
-    templates::settings::render_export_data_dialog_recipes(&current_url, recipes).into_response()
+    templates::settings::render_export_data_dialog_recipes(&current_url, recipes, &messages)
+        .into_response()
 }
 
 /// Handles exporting data for the target user.
 pub async fn export_data_post_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     axum_extra::extract::Form(payload): axum_extra::extract::Form<ExportDataPayload>,
 ) -> impl IntoResponse {
     if payload.recipe_ids.is_empty() {
-        Toast::broadcast_warning(&state, user.id, "No recipes selected for export.").await;
+        Toast::broadcast_warning(
+            &state,
+            user.id,
+            &messages.toast_recipes_none_selected_export(),
+            &messages,
+        )
+        .await;
         return StatusCode::BAD_REQUEST.into_response();
     }
 
@@ -162,13 +227,25 @@ pub async fn export_data_post_handler(
         Ok(r) => r,
         Err(err) => {
             error!(user = ?user.id, ?payload, ?err, "Failed to fetch recipes");
-            Toast::broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_fetch_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     };
 
     if recipes.is_empty() {
-        Toast::broadcast_error(&state, user.id, "Failed to fetch recipes.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_recipes_fetch_failed(),
+            &messages,
+        )
+        .await;
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
@@ -179,7 +256,13 @@ pub async fn export_data_post_handler(
         Ok(file) => file,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to export recipes");
-            Toast::broadcast_error(&state, user.id, "Failed to export recipes.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_export_failed(),
+                &messages,
+            )
+            .await;
             return Error::Fs.into_response();
         }
     };
@@ -189,7 +272,13 @@ pub async fn export_data_post_handler(
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
         error!(user = ?user.id, ?err, "Failed to create download");
-        Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_export_data_failed(),
+            &messages,
+        )
+        .await;
         return Error::Database.into_response();
     }
 
@@ -208,8 +297,50 @@ pub async fn export_data_post_handler(
         Ok(res) => res,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to create response");
-            Toast::broadcast_error(&state, user.id, "Failed to create export data response.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_export_data_failed(),
+                &messages,
+            )
+            .await;
             Error::Fs.into_response()
+        }
+    }
+}
+
+/// Handles setting the default language for the target user.
+pub async fn language_post_handler(
+    cookies: Cookies,
+    RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
+    State(state): State<AppState>,
+    Form(form): Form<LanguagePayload>,
+) -> impl IntoResponse {
+    match user.update_language(&state.mm, form.locale).await {
+        Ok(locale) => {
+            set_language_cookie(
+                &cookies,
+                &locale,
+                state.config.read().await.states.production == ProductionState::On,
+            );
+
+            (
+                StatusCode::NO_CONTENT,
+                [(HeaderName::from_static("hx-trigger"), "language-changed")],
+            )
+                .into_response()
+        }
+        Err(err) => {
+            error!(?form, user = ?user.id, ?err, "Error updating language");
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_settings_update_language_failed(),
+                &messages,
+            )
+            .await;
+            Error::Database.into_response()
         }
     }
 }
@@ -217,6 +348,7 @@ pub async fn export_data_post_handler(
 /// Handles setting the bold ingredients preference for the target user.
 pub async fn set_bold_ingredients_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<BoldIngredientsPayload>,
 ) -> impl IntoResponse {
@@ -228,7 +360,13 @@ pub async fn set_bold_ingredients_handler(
         .await
     {
         error!(user = ?user.id, ?err, "Error updating paper size");
-        Toast::broadcast_error(&state, user.id, "Error updating paper size.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_settings_update_paper_size_failed(),
+            &messages,
+        )
+        .await;
         return Error::Database.into_response();
     }
 
@@ -238,6 +376,7 @@ pub async fn set_bold_ingredients_handler(
 /// Handles setting the nutrition source for the target user.
 pub async fn set_nutrition_source_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(payload): Form<NutritionSourcePayload>,
 ) -> impl IntoResponse {
@@ -249,10 +388,8 @@ pub async fn set_nutrition_source_handler(
         Toast::broadcast_error(
             &state,
             user.id,
-            &format!(
-                "Nutrition source '{}' is invalid.",
-                payload.nutrition_source
-            ),
+            &messages.toast_settings_invalid_nutrition_source(&payload.nutrition_source),
+            &messages,
         )
         .await;
         return Error::InvalidPayload.into_response();
@@ -260,7 +397,13 @@ pub async fn set_nutrition_source_handler(
 
     if let Err(err) = source.save(&state.mm, user.id).await {
         error!(user = ?user.id, ?err, "Error saving selected nutrition source");
-        Toast::broadcast_error(&state, user.id, "Error saving selected nutrition source.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_settings_save_nutrition_source_failed(),
+            &messages,
+        )
+        .await;
         return Error::Database.into_response();
     }
 
@@ -270,12 +413,19 @@ pub async fn set_nutrition_source_handler(
 /// Handles setting the paper size for the target user.
 pub async fn set_paper_size_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<PaperSizeForm>,
 ) -> impl IntoResponse {
     if let Err(err) = user.update_paper_size(&state.mm, form.paper_size).await {
         error!(user = ?user.id, ?err, "Error updating paper size");
-        Toast::broadcast_error(&state, user.id, "Error updating paper size.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_settings_update_paper_size_failed(),
+            &messages,
+        )
+        .await;
         return Error::Database.into_response();
     }
 
@@ -285,12 +435,17 @@ pub async fn set_paper_size_handler(
 /// Handles setting the default theme for the target user.
 pub async fn set_default_theme_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(payload): Form<ThemePayload>,
 ) -> impl IntoResponse {
-    handle_theme_request(user, state, payload, |theme, mm, user_id| async move {
-        theme.save_default(&mm, user_id).await
-    })
+    handle_theme_request(
+        user,
+        state,
+        payload,
+        |theme, mm, user_id| async move { theme.save_default(&mm, user_id).await },
+        &messages,
+    )
     .await
     .into_response()
 }
@@ -298,18 +453,24 @@ pub async fn set_default_theme_handler(
 /// Handles setting the selected theme for the target user.
 pub async fn set_selected_theme_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(payload): Form<ThemePayload>,
 ) -> impl IntoResponse {
-    handle_theme_request(user, state, payload, |theme, mm, user_id| async move {
-        theme.save_selected(&mm, user_id).await
-    })
+    handle_theme_request(
+        user,
+        state,
+        payload,
+        |theme, mm, user_id| async move { theme.save_selected(&mm, user_id).await },
+        &messages,
+    )
     .await
 }
 
 /// Handles setting the selected timezone for the target user.
 pub async fn set_selected_timezone_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(payload): Form<TzPayload>,
 ) -> impl IntoResponse {
@@ -317,12 +478,24 @@ pub async fn set_selected_timezone_handler(
         Ok(()) => ().into_response(),
         Err(models::Error::Time) => {
             error!(tz = ?payload.tz, "Selected tz is invalid");
-            Toast::broadcast_error(&state, user.id, "Invalid timezone.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_settings_invalid_timezone(),
+                &messages,
+            )
+            .await;
             Error::InvalidPayload.into_response()
         }
         Err(err) => {
             error!(user = ?user.id, ?err, "Error updating timezone");
-            Toast::broadcast_error(&state, user.id, "Error updating timezone.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_settings_update_timezone_failed(),
+                &messages,
+            )
+            .await;
             Error::Database.into_response()
         }
     }
@@ -333,7 +506,8 @@ async fn handle_theme_request<F, Fut>(
     state: AppState,
     payload: ThemePayload,
     save_operation: F,
-) -> impl IntoResponse
+    messages: &Messages,
+) -> impl IntoResponse + use<F, Fut>
 where
     F: FnOnce(Theme, ModelManager, Uuid) -> Fut,
     Fut: Future<Output = Result<(), models::Error>> + Send,
@@ -343,7 +517,8 @@ where
         Toast::broadcast_error(
             &state,
             user.id,
-            &format!("Theme '{}' is invalid.", payload.theme),
+            &messages.toast_settings_invalid_theme(&payload.theme),
+            messages,
         )
         .await;
         return Error::InvalidPayload.into_response();
@@ -351,7 +526,13 @@ where
 
     if let Err(err) = save_operation(theme, state.mm.clone(), user.id).await {
         error!(user = ?user.id, ?err, "Error saving selected theme");
-        Toast::broadcast_error(&state, user.id, "Error saving selected theme.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.toast_settings_update_theme_failed(),
+            messages,
+        )
+        .await;
         return Error::Database.into_response();
     }
 

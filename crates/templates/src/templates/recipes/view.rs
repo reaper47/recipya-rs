@@ -1,7 +1,10 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use fluent_static::Message;
+use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
+use models::recipe::structs::nutrition::{Nutrition, NutritionPerServingDetails};
 use serde_json::json;
 use url::Url;
 
@@ -18,12 +21,7 @@ use support::fs::FsSupport;
 use crate::recipes::common::{format_nutrition, render_rating};
 use crate::recipes::timeline::render_dialog;
 use crate::shopping::render_recipe_add_shopping_dialog;
-use crate::templates::icons::{
-    icon_alarm_clock, icon_bulb_off, icon_bulb_on, icon_cart_plus, icon_clock, icon_cooking_pot,
-    icon_cutting_board, icon_document_duplicate, icon_ellipsis_vertical, icon_fire, icon_globe_alt,
-    icon_heart, icon_pause, icon_pencil, icon_play, icon_plus_circle, icon_printer, icon_share,
-    icon_stop, icon_timeline, icon_trash,
-};
+use crate::templates::icons;
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
 use crate::{Error, Result};
@@ -35,6 +33,7 @@ pub fn view_recipe(
     data_dir: &DataDir,
     data: &Data,
     user_setting: &UserSettingDetails,
+    messages: &Messages,
 ) -> Result<Markup> {
     let view = data
         .recipes
@@ -42,23 +41,26 @@ pub fn view_recipe(
         .ok_or("Must have at least one recipe.")
         .map_err(|_| Error::NoRecipe)?;
 
+    let recipe_name = view.recipe_details.recipe.name.as_str();
+
     Ok(html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" {
-                 (view.recipe_details.recipe.name) " | Recipya"
+                 (messages.recipe_page_tab_title_view(recipe_name))
             }
-            (view_recipe_helper(fs_support, data_dir, data)?)
+            (view_recipe_helper(fs_support, data_dir, data, messages)?)
         } @else {
             (layouts::main(
-                &view.recipe_details.recipe.name,
+                recipe_name,
                 path,
                 data,
-                &view_recipe_helper(fs_support, data_dir, data)?,
+                &view_recipe_helper(fs_support, data_dir, data, messages)?,
+                messages,
                 user_setting,
             ))
         }
         (render_recipe_add_shopping_dialog())
-        (pagination(&PaginationData::hidden()))
+        (pagination(&PaginationData::hidden(), messages))
     })
 }
 
@@ -67,6 +69,7 @@ pub fn view_recipe_helper(
     fs_support: &Arc<dyn FsSupport + Sync + Send>,
     data_dir: &DataDir,
     data: &Data,
+    messages: &Messages,
 ) -> Result<Markup> {
     let view = data
         .recipes
@@ -92,7 +95,7 @@ pub fn view_recipe_helper(
                     div class="modal-action block mt-4" {
                         form method="dialog" {
                             button class="btn btn-block btn-outline btn-sm" {
-                                "Close"
+                                (messages.action_close())
                             }
                         }
                     }
@@ -107,16 +110,16 @@ pub fn view_recipe_helper(
                 div class="card card-border bg-base-100 shadow-none w-full border-gray-700 xl:w-[72rem] print:rounded-none"
                     dir=(if recipe_details.is_rtl() { "rtl" } else { "ltr" }) {
                     div class="card-body contents" style="padding: 0" {
-                        (render_header(recipe_id, data, recipe, recipe_details))
+                        (render_header(recipe_id, data, recipe, recipe_details, messages))
                         div class="grid md:grid-flow-col md:grid-cols-6" {
-                            (render_media(fs_support, &view.recipe_details, data_dir))
+                            (render_media(fs_support, &view.recipe_details, data_dir, messages))
                             div class="grid grid-cols-3 col-span-3 md:grid-flow-row md:grid-rows-4 print:grid-rows-2" style="grid-template-rows: auto" {
                                 div class="grid grid-flow-col border-gray-700 col-span-6 md:border-t md:row-span-1 print:border-none" {
                                     div class={
                                         "py-2 flex justify-center items-center border-b border-gray-700 md:border-b-0"
                                         @if data.is_preview { " md:hidden" }
                                     } {
-                                        (render_rating("rating", recipe.rating, None, true, None))
+                                        (render_rating("rating", recipe.rating, None, true, None, messages))
                                     }
                                 }
                                 div class="grid grid-flow-col col-span-6 md:col-span-3 md:row-span-1 md:border-y md:border-gray-700 print:row-span-1 print:grid-cols-2 print:border-b-black print:border" {
@@ -131,49 +134,50 @@ pub fn view_recipe_helper(
                                     div class="grid col-span-2 border-gray-700 place-items-center text-sm border-x p-2 md:p-0 md:col-span-1 print:hidden" {
                                         @if data.is_authenticated && !data.is_preview {
                                             form autocomplete="off" _="on submit halt the event" class="print:hidden" {
-                                                fieldset class="fieldset" {
-                                                    legend { "Servings" }
-                                                    input #yield
-                                                        type="number"
-                                                        min="1"
-                                                        name="yield"
+                                                fieldset .fieldset {
+                                                    legend {
+                                                        (messages.recipe_page_servings())
+                                                    }
+                                                    input #yield type="number" min="1" name="yield"
                                                         value=(if recipe.r#yield == 0 {
                                                             "1".into()
                                                         } else {
                                                             recipe.r#yield.to_string()
                                                         })
                                                         class="input max-w-18 md:max-w-24"
-                                                        hx-get=(format!("/recipes/{recipe_id}/scale"))
+                                                        hx-get={ "/recipes/" (recipe_id) "/scale" }
                                                         hx-trigger="input"
                                                         hx-target="#ingredients-instructions-container";
                                                 }
                                             }
                                         } @else {
                                             p class="text-sm text-center" {
-                                                (format!("{} servings", recipe.r#yield))
+                                                (messages.recipe_page_servings_text(recipe.r#yield))
                                             }
                                         }
                                     }
                                     p class="hidden p-0 pt-2 md:col-span-1 print:grid print:text-center print:place-content-center" {
-                                        (recipe.r#yield.to_string()) " servings"
+                                        (messages.recipe_page_servings_text(recipe.r#yield))
                                     }
                                     div class={
                                         "flex items-center justify-center col-span-2 text-sm md:col-span-1 print:hidden"
                                         @if data.is_preview { " md:hidden" }
                                     } {
-                                        (render_source(&recipe.source))
+                                        (render_source(&recipe.source, messages))
                                     }
                                 }
                                 @if data.is_preview {
                                     div class="col-span-6 border-b" {
-                                        (render_source(&recipe.source))
+                                        (render_source(&recipe.source, messages))
                                     }
                                 }
                                 @if !recipe_details.keywords.is_empty() {
                                     div class="border-gray-700 border-y col-span-6 md:border-t-0 md:grid-cols-3 print:border-none" {
-                                        div class="p-4" {
+                                        div .p-4 {
                                             @for kw in recipe_details.keywords.iter() {
-                                                div class="badge badge-sm badge-neutral m-1 flex-auto" { (kw) }
+                                                div class="badge badge-sm badge-neutral m-1 flex-auto" {
+                                                    (kw)
+                                                }
                                             }
                                         }
                                     }
@@ -184,23 +188,23 @@ pub fn view_recipe_helper(
                                         @if data.is_preview { " md:grid-cols-3" } @else { " md:grid-cols-4" }
                                     } {
                                     div class="contents grid grid-flow-col md:col-span-6" {
-                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
-                                                (icon_cutting_board())
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_prep_time()) {
+                                                (icons::cutting_board())
                                                 time datetime=(view.formatted_times.prep_datetime) { (view.formatted_times.prep) }
                                             }
-                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
-                                                (icon_cooking_pot())
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_cook_time()) {
+                                                (icons::cooking_pot())
                                                 time datetime=(view.formatted_times.cook_datetime) { (view.formatted_times.cook) }
                                             }
-                                            div class="flex justify-self-center items-center gap-1 cursor-default" title="Total time" {
-                                                (icon_clock())
+                                            div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_total_time()) {
+                                                (icons::clock())
                                                 time datetime=(view.formatted_times.total_datetime) { (view.formatted_times.total) }
                                             }
                                     }
                                 }
                                 @if data.is_preview {
                                     div class="col-span-6 text-center border-b " {
-                                        (render_rating("rating", recipe.rating, None, true, None))
+                                        (render_rating("rating", recipe.rating, None, true, None, messages))
                                     }
                                 }
                                 div class={
@@ -215,7 +219,7 @@ pub fn view_recipe_helper(
                                             @if let Some(description) = &recipe.description {
                                                 (description)
                                             } @else {
-                                                "No description"
+                                                (messages.recipe_page_no_description())
                                             }
                                         }
                                     }
@@ -223,26 +227,28 @@ pub fn view_recipe_helper(
                                         "col-span-3"
                                         @if recipe_details.nutrition.per_100g.is_none() { " hidden md:block" }
                                     } {
-                                        (render_nutrition(recipe_details))
+                                        (render_nutrition(recipe_details, messages))
                                     }
                                 }
                             }
                         }
-                        (print_description(recipe))
+                        (print_description(recipe, messages))
                         div class="border-gray-700 md:border-t" {
-                            (render_ingredients_instructions(recipe_details))
+                            (render_ingredients_instructions(recipe_details, messages))
                             div class="hidden print:grid col-span-6 ml-2 my-1" {
-                                (render_tools(recipe_details))
-                                (render_ingredients(recipe_details))
+                                (render_tools(recipe_details, messages))
+                                (render_ingredients(recipe_details, messages))
                             }
                             div class="hidden col-span-5 overflow-visible print:inline" {
-                                (render_instructions(recipe_details))
+                                (render_instructions(recipe_details, messages))
                             }
                         }
-                        (print_source(recipe))
+                        (print_source(recipe, messages))
                         @if let Some(notes) = &recipe_details.recipe.notes {
                             details class="border-t w-full" {
-                                summary class="font-semibold p-2 select-none" { "Notes" }
+                                summary class="font-semibold p-2 select-none" {
+                                    (messages.recipe_page_notes())
+                                }
                                 div class="prose gap-2 py-2 px-4" {
                                     (PreEscaped(markdown::to_html(notes)))
                                 }
@@ -253,16 +259,18 @@ pub fn view_recipe_helper(
             }
         }
 
-        (render_dialog(recipe.id, &[]))
+        (render_dialog(recipe.id, &[], messages))
     })
 }
 
-fn print_description(recipe: &Recipe) -> Markup {
+fn print_description(recipe: &Recipe, messages: &Messages) -> Markup {
     html! {
         @if let Some(description) = &recipe.description {
             div class="hidden print:block print:mx-2" {
                 h1 class="text-sm print:mb-1" {
-                    b { "Description" }
+                    b {
+                        (messages.recipe_page_description())
+                    }
                 }
                 (description)
             }
@@ -270,13 +278,15 @@ fn print_description(recipe: &Recipe) -> Markup {
     }
 }
 
-fn print_source(recipe: &Recipe) -> Markup {
+fn print_source(recipe: &Recipe, messages: &Messages) -> Markup {
     let source = recipe.source.as_str();
 
     html! {
         div class="hidden print:block print:mx-2 print:mb-2 print:text-sm" {
             h1 class="print:mb-1" {
-                b { "Source" }
+                b {
+                    (messages.recipe_page_source())
+                }
             }
             @if !source.is_empty() {
                  @if Url::parse(source).is_ok() {
@@ -284,10 +294,14 @@ fn print_source(recipe: &Recipe) -> Markup {
                         (source)
                     }
                  } @else {
-                       p { "Source: Unknown" }
+                       p {
+                           (messages.recipe_page_source_unknown())
+                       }
                 }
             } @else {
-                p { "Source: Unknown" }
+                p {
+                    (messages.recipe_page_source_unknown())
+                }
             }
         }
     }
@@ -298,11 +312,12 @@ fn render_header(
     data: &Data,
     recipe: &Recipe,
     recipe_details: &RecipeDetails,
+    messages: &Messages,
 ) -> Markup {
     html! {
         h2 class="card-title bg-base-200 px-2 pt-2 place-content-center rounded-t-2xl print:border-b print:border-black" style="justify-content: space-between" {
             @if !data.is_preview {
-                (render_left_controls(recipe_id, data))
+                (render_left_controls(recipe_id, data, messages))
             }
             span class={
                 "text-center pb-2 print:w-full"
@@ -311,32 +326,32 @@ fn render_header(
                     (recipe_details.recipe.name)
             }
             @if !data.is_preview {
-                (render_right_controls(recipe_id, &recipe.source, recipe.is_favourite, data))
+                (render_right_controls(recipe_id, &recipe.source, recipe.is_favourite, data, messages))
             }
         }
     }
 }
 
-fn render_left_controls(recipe_id: i64, data: &Data) -> Markup {
+fn render_left_controls(recipe_id: i64, data: &Data, messages: &Messages) -> Markup {
     html! {
         span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
-            button title="Toggle screen lock" _="on load if not navigator.wakeLock hide me end on click call toggleWakeLock()" {
+            button title=(messages.recipe_page_toggle_screen_lock()) _="on load if not navigator.wakeLock hide me end on click call toggleWakeLock()" {
                 span #bulb-on .hidden {
-                    (icon_bulb_on())
+                    (icons::bulb_on())
                 }
                 span #bulb-off {
-                    (icon_bulb_off())
+                    (icons::bulb_off())
                 }
             }
 
             @if data.is_authenticated && matches!(&data.share, Some(share) if share.is_from_host) {
                 button #edit-recipe class="ml-2 hidden sm:block"
-                    title="Edit recipe"
-                    hx-get=(format!("/recipes/{recipe_id}/edit"))
+                    title=(messages.recipe_page_edit_recipe())
+                    hx-get={ "/recipes/" (recipe_id) "/edit" }
                     hx-push-url="true"
                     hx-target="#content"
                     hx-swap="innerHTML transition:true" {
-                    (icon_pencil(true))
+                    (icons::pencil(true))
                 }
             }
         }
@@ -349,29 +364,28 @@ fn render_right_controls(
     recipe_source: &Source,
     is_favourite: bool,
     data: &Data,
+    messages: &Messages,
 ) -> Markup {
     html! {
         span class="hidden md:hidden" {
-            div #recipe-menu
-                popover
-                style="inset: unset; top: 3.5rem; right: 0.5rem;"
+            div #recipe-menu popover style="inset: unset; top: 3.5rem; right: 0.5rem;"
                 class="rounded-box z-10 shadow bg-base-100"
                 _="on click if me.matches(':popover-open') then me.hidePopover()" {
                 ul tabindex="0" class="menu w-full" {
                     li {
-                        a #edit-recipe title="Edit recipe"
-                            hx-get=(format!("/recipes/{recipe_id}/edit"))
+                        a #edit-recipe title=(messages.recipe_page_edit_recipe())
+                            hx-get={ "/recipes/" (recipe_id) "/edit" }
                             hx-push-url="true"
                             hx-target="#content"
                             hx-swap="innerHTML transition:true" {
-                            (icon_pencil(false))
-                            "Edit"
+                            (icons::pencil(false))
+                            (messages.action_edit())
                         }
                     }
                     @if !matches!(&data.share, Some(share) if share.is_shared) {
                         li {
-                            a title="Share recipe"
-                                hx-post=(format!("/recipes/{recipe_id}/share"))
+                            a title=(messages.recipe_page_share_recipe())
+                                hx-post={ "/recipes/" (recipe_id) "/share" }
                                 hx-target="#share-dialog-result"
                                 hx-push-url="false"
                                 _="on htmx:afterRequest from me
@@ -383,40 +397,40 @@ fn render_right_controls(
                                             else
                                                 open #share-dialog
                                         end" {
-                                (icon_share())
-                                "Share"
+                                (icons::share())
+                                (messages.action_share())
                             }
                         }
                         li {
-                            a #duplicate-recipe title="Duplicate recipe"
+                            a #duplicate-recipe title=(messages.recipe_page_duplicate_recipe())
                                 hx-push-url="/recipes/add/manual"
-                                hx-get=(format!("/recipes/{recipe_id}/duplicate"))
+                                hx-get={ "/recipes/" (recipe_id) "/duplicate" }
                                 hx-target="#content" {
-                                (icon_document_duplicate())
-                                "Duplicate fuck"
+                                (icons::document_duplicate())
+                                (messages.action_duplicate())
                             }
                         }
                     }
-                    li title="Print recipe" _="on click print()" {
+                    li title=(messages.recipe_page_print_recipe()) _="on click print()" {
                         a {
-                            (icon_printer())
-                            "Print"
+                            (icons::printer())
+                            (messages.action_print())
                         }
                     }
                     @if matches!(&data.share, Some(share) if share.is_from_host) {
                         li {
-                            a title="Mark or unmark as favourite" {
-                                "Favourite"
+                            a title=(messages.recipe_page_toggle_favourite()) {
+                                (messages.recipe_page_favourite())
                             }
                         }
                         li {
-                            a title="Delete recipe"
-                                hx-delete=(format!("/recipes/{recipe_id}"))
+                            a title=(messages.recipe_page_delete_recipe())
+                                hx-delete={ "/recipes/" (recipe_id) }
                                 hx-swap="none"
-                                hx-confirm="Are you sure you wish to delete this recipe?"
+                                hx-confirm=(messages.recipe_page_delete_recipe_confirm())
                                 hx-indicator="#fullscreen-loader" {
-                                (icon_trash())
-                                "Delete"
+                                (icons::trash())
+                                (messages.action_delete())
                             }
                         }
                     }
@@ -426,79 +440,80 @@ fn render_right_controls(
         span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
             @if matches!(&data.share, Some(share) if share.is_shared) {
                 @if !matches!(&data.share, Some(share) if share.is_from_host) {
-                    button class="mr-2"
-                        title="Add recipe to collection"
-                        hx-get=(format!("/recipes/{recipe_id}/share"))
+                    button .mr-2 title=(messages.recipe_page_add_to_collection())
+                        hx-get={ "/recipes/" (recipe_id) "/share" }
                         hx-push-url="true" {
-                        (icon_plus_circle())
+                        (icons::plus_circle())
                     }
                 }
             } @else {
-                (render_favourite_button(recipe_id, is_favourite, false, true))
-                button type="button" title="Open timeline" aria-label="Open timeline" class="hidden btn btn-xs btn-ghost md:block"
-                        hx-get=(format!("/recipes/{recipe_id}/timeline"))
+                (render_favourite_button(recipe_id, is_favourite, false, true, messages))
+                @let open_timeline = messages.recipe_timeline_open();
+                button type="button" title=(open_timeline) aria-label=(open_timeline) class="hidden btn btn-xs btn-ghost md:block"
+                        hx-get={ "/recipes/" (recipe_id) "/timeline" }
                         hx-target="#timeline-dialog-result"
                         hx-push-url="false"
                         _="on htmx:afterRequest from me open #timeline-dialog" {
-                    (icon_timeline())
+                    (icons::timeline())
                 }
             }
             div class="dropdown dropdown-end" {
-                div tabindex="0" role="button" class="btn btn-xs btn-ghost" title="Open recipe options menu" {
-                    (icon_ellipsis_vertical())
+                div tabindex="0" role="button" class="btn btn-xs btn-ghost" title=(messages.recipe_page_options_menu()) {
+                    (icons::ellipsis_vertical())
                 }
                 ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-40 p-2 shadow-sm" {
                     @if matches!(&data.share, Some(share) if !share.is_shared) {
                         li .md:hidden {
-                            a #edit-recipe title="Edit recipe"
-                                hx-get=(format!("/recipes/{recipe_id}/edit"))
+                            a #edit-recipe title=(messages.recipe_page_edit_recipe())
+                                hx-get={ "/recipes/" (recipe_id) "/edit" }
                                 hx-push-url="true"
                                 hx-target="#content"
                                 hx-swap="innerHTML transition:true" {
-                                (icon_pencil(false))
-                                "Edit"
+                                (icons::pencil(false))
+                                (messages.action_edit())
                             }
                         }
                         li _="on click document.activeElement.blur()" {
                             button _="on click open #timeline-new-event-dialog" {
-                                (icon_fire())
-                                "Recipe made"
+                                (icons::fire())
+                                (messages.recipe_timeline_recipe_made())
                             }
                         }
+                        @let open_timeline = messages.recipe_timeline_open();
                         li class="block md:hidden" _="on click document.activeElement.blur()" {
-                            a title="Open timeline"
-                                aria-label="Open timeline"
-                                hx-get=(format!("/recipes/{recipe_id}/timeline"))
+                            a title=(open_timeline)
+                                aria-label=(open_timeline)
+                                hx-get={ "/recipes/" (recipe_id) "/timeline" }
                                 hx-target="#timeline-dialog-result"
                                 hx-push-url="false"
                                 _="on htmx:afterRequest from me open #timeline-dialog" {
-                                (icon_timeline())
-                                "Timeline"
+                                (icons::timeline())
+                                (messages.recipe_timeline())
                             }
                         }
                         @if matches!(recipe_source, Source::Url(_)) {
                             li _="on click document.activeElement.blur()" {
-                                button hx-get=(format!("/recipes/{recipe_id}/rescrape"))
+                                button hx-get={ "/recipes/" (recipe_id) "/rescrape" }
                                     hx-target="#content"
                                     hx-swap="none"
                                     hx-indicator="#fullscreen-loader" {
-                                    (icon_globe_alt())
-                                    "Rescrape"
+                                    (icons::globe_alt())
+                                    (messages.action_rescrape())
                                 }
                             }
                         }
                         li _="on click document.activeElement.blur()" {
-                            a aria-label="Add to shopping list"
-                                hx-get=(format!("/shopping/recipes/{recipe_id}/ingredients"))
+                            a aria-label=(messages.shopping_list_add_to_list())
+                                hx-get={ "/shopping/recipes/" (recipe_id) "/ingredients" }
                                 hx-target="#add-to-shopping-list-dialog"
                                 hx-push-url="false"
                                 _="on htmx:afterRequest from me open #add-to-shopping-list-dialog" {
-                                (icon_cart_plus())
-                                "Shopping"
+                                (icons::cart_plus())
+                                (messages.shopping())
                             }
                         }
                         li _="on click document.activeElement.blur()" {
-                            button hx-post=(format!("/recipes/{recipe_id}/share"))
+                            button hx-post={ "/recipes/" (recipe_id) "/share" }
                                 hx-target="#share-dialog-result"
                                 hx-push-url="false"
                                 _="on htmx:afterRequest from me
@@ -510,31 +525,31 @@ fn render_right_controls(
                                         else
                                             open #share-dialog
                                     end" {
-                                (icon_share())
-                                "Share"
+                                (icons::share())
+                                (messages.action_share())
                             }
                         }
                         li  _="on click document.activeElement.blur()" {
-                            button #duplicate-recipe hx-push-url="/recipes/add/manual" hx-get=(format!("/recipes/{recipe_id}/duplicate")) hx-target="#content" {
-                                (icon_document_duplicate())
-                                "Duplicate"
+                            button #duplicate-recipe hx-push-url="/recipes/add/manual" hx-get={ "/recipes/" (recipe_id) "/duplicate" } hx-target="#content" {
+                                (icons::document_duplicate())
+                                (messages.action_duplicate())
                             }
                         }
                     }
                     li {
                         button _="on click print()" {
-                            (icon_printer())
-                            "Print"
+                            (icons::printer())
+                            (messages.action_print())
                         }
                     }
                     @if !matches!(&data.share, Some(share) if share.is_shared) {
                         li {
-                            button hx-delete=(format!("/recipes/{recipe_id}"))
+                            button hx-delete={ "/recipes/" (recipe_id) }
                                 hx-swap="none"
-                                hx-confirm="Are you sure you wish to delete this recipe?"
+                                hx-confirm=(messages.recipe_page_delete_recipe_confirm())
                                 hx-indicator="#fullscreen-loader" {
-                                (icon_trash())
-                                "Delete"
+                                (icons::trash())
+                                (messages.action_delete())
                             }
                         }
                     }
@@ -544,7 +559,7 @@ fn render_right_controls(
     }
 }
 
-fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
+fn render_ingredients(recipe_details: &RecipeDetails, messages: &Messages) -> Markup {
     let ingredients = &recipe_details.ingredients;
     let col_count = if ingredients.len() > 10 {
         "column-count: 2"
@@ -554,7 +569,9 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
 
     html! {
         h1 class="text-sm print:mb-1" {
-            b { "Ingredients" }
+            b {
+                (messages.recipe_page_ingredients())
+            }
         }
         @match ingredients {
             SectionComponents::Grouped(sections) => {
@@ -565,11 +582,13 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
                         }
                         ul class="col-span-6 w-full print:mb-2" style=(col_count) {
                             @for ing in section.items.iter() {
-                                li class="text-sm" {
+                                li .text-sm {
                                     label {
                                         input type="checkbox";
                                     }
-                                    span class="pl-2" { (ing.text) }
+                                    span .pl-2 {
+                                        (ing.text)
+                                    }
                                 }
                             }
                         }
@@ -579,11 +598,13 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
             SectionComponents::Flat(items) => {
                 ul class="col-span-6 w-full print:mb-2" style=(col_count) {
                     @for ing in items.iter() {
-                        li class="text-sm" {
+                        li .text-sm {
                             label {
                                 input type="checkbox";
                             }
-                            span class="pl-2" { (ing.text) }
+                            span .pl-2 {
+                                (ing.text)
+                            }
                         }
                     }
                 }
@@ -592,10 +613,12 @@ fn render_ingredients(recipe_details: &RecipeDetails) -> Markup {
     }
 }
 
-fn render_instructions(recipe_details: &RecipeDetails) -> Markup {
+fn render_instructions(recipe_details: &RecipeDetails, messages: &Messages) -> Markup {
     html! {
         h1 class="text-sm print:ml-2 print:mb-1" {
-            b { "Instructions" }
+            b {
+                (messages.recipe_page_instructions())
+            }
         }
         @match &recipe_details.instructions {
             SectionComponents::Grouped(section) => {
@@ -635,35 +658,36 @@ fn render_media(
     fs_support: &Arc<dyn FsSupport + Sync + Send>,
     recipe_details: &RecipeDetails,
     data_dir: &DataDir,
+    messages: &Messages,
 ) -> Markup {
     html! {
         div class="w-[95vw] md:w-full text-center border-b border-gray-700 md:col-span-3 md:border-r md:border-b-0 flex items-center justify-center print:hidden" {
             @match recipe_details.num_media()  {
                 0 => {
                     img style="object-fit: cover"
-                        alt="Image of the recipe"
+                        alt=(messages.recipe_page_image_alt())
                         class="w-full max-h-80 md:max-h-[34rem]"
                         src="/data/images/Placeholders/placeholder.recipe.webp";
                 },
                 1 => {
                     @if recipe_details.num_images() == 1 {
                         @if let Some(image) = recipe_details.recipe.image {
-                            img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src=(format!("/data/images/{image}.webp"));
+                            img #output style="object-fit: cover" alt=(messages.recipe_page_image_alt()) class="w-full max-h-80 md:max-h-[34rem]" src={ "/data/images/" (image) ".webp" };
                         } @else {
-                           img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
+                           img #output style="object-fit: cover" alt=(messages.recipe_page_image_alt()) class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
                         }
                     } @else if let Some(video) = recipe_details.videos.first() {
                         @if let Some(url) = &video.embed_url {
-                            iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
+                            iframe src=(url) title=(messages.recipe_page_youtube_video_player()) frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                         } @else if let Some(url) = &video.content_url {
                             video controls preload="metadata" src=(url) {}
                         } @else if fs_support.is_file_exists(video.video, &data_dir.videos, ".webm") {
-                            video controls preload="metadata" src=(format!("/data/videos/{}.webm",video.video)) type="video/webm" {}
+                            video controls preload="metadata" src={ "/data/videos/" (video.video) ".webm" } type="video/webm" {}
                         } @else {
                             p {
-                                "Video is currently being processed."
+                                (messages.recipe_page_video_currently_processed())
                                 br;
-                                "Please refresh the page later."
+                                (messages.recipe_page_please_refresh_later())
                             }
                         }
                     }
@@ -671,15 +695,11 @@ fn render_media(
                 _ => {
                     div class="carousel w-full" {
                         @for (idx, &img) in recipe_details.all_images().iter().enumerate() {
-                            div id=(format!("media-{idx}")) class="carousel-item relative w-full" {
+                            div id={ "media-" (idx) } class="carousel-item relative w-full" {
                                 @if fs_support.is_file_exists(img, &data_dir.images.root, ".webp") {
-                                     img style="object-fit: cover"
-                                    alt="Image of the recipe"
-                                    class="w-full max-h-80 md:max-h-[34rem]"
-                                    src=(format!("/data/images/{img}.webp"));
+                                    img style="object-fit: cover" alt=(messages.recipe_page_image_alt()) class="w-full max-h-80 md:max-h-[34rem]" src={ "/data/images/" (img) ".webp" };
                                 } @else {
-                                      img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]"
-                                          src="/data/images/Placeholders/placeholder.recipe.webp";
+                                      img style="object-fit: cover" alt=(messages.recipe_page_image_alt()) class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
                                 }
                                 div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
                                     a class="btn btn-soft btn-sm"
@@ -702,22 +722,22 @@ fn render_media(
                             }
                         }
                         @for (idx, v) in recipe_details.videos.iter().enumerate() {
-                            div id=(format!("media-{}", idx+recipe_details.num_images())) class="carousel-item relative w-full" {
+                            div id={ "media-" (idx+recipe_details.num_images()) } class="carousel-item relative w-full" {
                                 @if let Some(url) = &v.embed_url {
-                                    iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
+                                    iframe src=(url) title=(messages.recipe_page_youtube_video_player()) frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                                 } @else if let Some(url) = &v.content_url {
                                     video controls preload="metadata" src=(url) {}
                                 } @else if fs_support.is_file_exists(v.video, &data_dir.videos, ".webm") {
-                                    video controls preload="metadata" src=(format!("/data/videos/{}.webm", v.video)) type="video/webm" {}
+                                    video controls preload="metadata" src={ "/data/videos/" (v.video) ".webm" } type="video/webm" {}
                                 } @else {
                                     p class="grid place-self-center" {
-                                        (format!("Video #{} is currently being processed.", idx+1))
+                                        (messages.recipe_page_video_num_processed(idx+1))
                                         br;
-                                        "Please refresh the page later."
+                                        (messages.recipe_page_please_refresh_later())
                                     }
                                 }
                                 div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
-                                    a class="btn btn-soft btn-sm" href=(format!("#media-{}", idx.checked_add(recipe_details.num_images()).and_then(|val| val.checked_sub(1)).unwrap_or(1))) { "❮" }
+                                    a class="btn btn-soft btn-sm" href={ "#media-" (idx.checked_add(recipe_details.num_images()).and_then(|val| val.checked_sub(1)).unwrap_or(1)) } { "❮" }
                                     a class="btn btn-soft btn-sm"
                                       href=(if idx == recipe_details.num_videos() - 1 {
                                             "#media-0".into()
@@ -736,34 +756,26 @@ fn render_media(
     }
 }
 
-fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
+fn render_nutrition(recipe_details: &RecipeDetails, messages: &Messages) -> Markup {
     html! {
         table class="table table-zebra table-xs print:hidden" {
             thead {
                 tr {
                     select class="select select-sm" onchange="filterNutritionRows(this, this.value)" {
-                        option value="per-100g" { "Nutrition (per 100g)" }
+                        option value="per-100g" {
+                            (messages.nutrition_per_100_g())
+                        }
                         @if recipe_details.nutrition.per_serving.is_some() {
-                            option value="per-serving" { "Nutrition (per serving)" }
+                            option value="per-serving" {
+                                (messages.nutrition_per_serving())
+                            }
                         }
                     }
                 }
             }
             tbody {
                 @if let Some(nutrition) = &recipe_details.nutrition.per_100g {
-                        @for (name, value) in [
-                            ("Calories:", format_nutrition(nutrition.calories_kcal.map(Into::into), " kcal")),
-                            ("Total carbs:", format_nutrition(nutrition.total_carbohydrates, "g")),
-                            ("Sugars:", format_nutrition(nutrition.sugars_g, "g")),
-                            ("Protein:", format_nutrition(nutrition.protein_g, "g")),
-                            ("Total fat:", format_nutrition(nutrition.total_fat_g, "g")),
-                            ("Saturated fat:", format_nutrition(nutrition.saturated_fat_g, "g")),
-                            ("Unsaturated fat:", format_nutrition(nutrition.unsaturated_fat_g, "g")),
-                            ("Trans fat:", format_nutrition(nutrition.trans_fat_g, "g")),
-                            ("Cholesterol:", format_nutrition(nutrition.cholesterol_mg, "mg")),
-                            ("Sodium:", format_nutrition(nutrition.sodium_mg, "mg")),
-                            ("Fiber:", format_nutrition(nutrition.fiber_g, "g")),
-                        ] {
+                        @for (name, value) in nutrition_per_100g_data(nutrition, messages) {
                         tr data-nutrition-type="per-100g" {
                             td { (name) }
                             td { (value) }
@@ -771,43 +783,38 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
                     }
                 } @else {
                     @for name in [
-                        "Calories:",
-                        "Total carbs:",
-                        "Sugars:",
-                        "Protein:",
-                        "Total fat:",
-                        "Saturated fat:",
-                        "Unsaturated fat:",
-                        "Trans fat:",
-                        "Cholesterol:",
-                        "Sodium:",
-                        "Fiber:",
+                        messages.title(messages.nutrition_calories().to_string()),
+                        messages.title(messages.nutrition_total_carbs().to_string()),
+                        messages.title(messages.nutrition_sugars().to_string()),
+                        messages.title(messages.nutrition_protein().to_string()),
+                        messages.title(messages.nutrition_total_fat().to_string()),
+                        messages.title(messages.nutrition_sat_fat().to_string()),
+                        messages.title(messages.nutrition_unsat_fat().to_string()),
+                        messages.title(messages.nutrition_trans_fat().to_string()),
+                        messages.title(messages.nutrition_cholesterol().to_string()),
+                        messages.title(messages.nutrition_sodium().to_string()),
+                        messages.title(messages.nutrition_fibre().to_string()),
                     ] {
                         tr data-nutrition-type="per-100g" {
-                            td { (name) }
-                            td { "-" }
+                            td {
+                                (name)
+                            }
+                            td {
+                                "-"
+                            }
                         }
                     }
                 }
 
                 @if let Some(nutrition) = &recipe_details.nutrition.per_serving {
-                    @for (name, value) in [
-                        ("Serving size:", if nutrition.serving_size.is_empty() { "1" } else { Default::default() }.to_string()),
-                        ("Calories:", format_nutrition(nutrition.nutrition.calories_kcal.map(Into::into), " kcal")),
-                        ("Total carbs:", format_nutrition(nutrition.nutrition.total_carbohydrates, "g")),
-                        ("Sugars:", format_nutrition(nutrition.nutrition.sugars_g, "g")),
-                        ("Protein:", format_nutrition(nutrition.nutrition.protein_g, "g")),
-                        ("Total fat:", format_nutrition(nutrition.nutrition.total_fat_g, "g")),
-                        ("Saturated fat:", format_nutrition(nutrition.nutrition.saturated_fat_g, "g")),
-                        ("Unsaturated fat:", format_nutrition(nutrition.nutrition.unsaturated_fat_g, "g")),
-                        ("Trans fat:", format_nutrition(nutrition.nutrition.trans_fat_g, "g")),
-                        ("Cholesterol:", format_nutrition(nutrition.nutrition.cholesterol_mg, "mg")),
-                        ("Sodium:", format_nutrition(nutrition.nutrition.sodium_mg, "mg")),
-                        ("Fiber:", format_nutrition(nutrition.nutrition.fiber_g, "g")),
-                    ] {
+                    @for (name, value) in nutrition_per_serving_data(nutrition, messages) {
                         tr data-nutrition-type="per-serving" .hidden {
-                            td { (name) }
-                            td { (value) }
+                            td {
+                                (name)
+                            }
+                            td {
+                                (value)
+                            }
                         }
                     }
                 }
@@ -816,9 +823,11 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
         @if let (Some(per_100g), Some(_)) = &recipe_details.nutrition.to_line() {
             div class="hidden pt-2 print:block print:mx-2 print:my-1" {
                 h1 class="text-sm print:mb-1" {
-                    b { "Nutrition Facts" }
+                    b {
+                        (messages.nutrition_facts())
+                    }
                 }
-                p class="text-xs" {
+                p .text-xs {
                     (per_100g)
                 }
             }
@@ -826,37 +835,155 @@ fn render_nutrition(recipe_details: &RecipeDetails) -> Markup {
     }
 }
 
-fn render_source(source: &Source) -> Markup {
+fn nutrition_per_100g_data(nutrition: &Nutrition, messages: &Messages) -> [(Message, String); 11] {
+    [
+        (
+            messages.title(messages.nutrition_calories().to_string()),
+            format_nutrition(nutrition.calories_kcal.map(Into::into), " kcal"),
+        ),
+        (
+            messages.title(messages.nutrition_total_carbs().to_string()),
+            format_nutrition(nutrition.total_carbohydrates, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sugars().to_string()),
+            format_nutrition(nutrition.sugars_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_protein().to_string()),
+            format_nutrition(nutrition.protein_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_total_fat().to_string()),
+            format_nutrition(nutrition.total_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sat_fat().to_string()),
+            format_nutrition(nutrition.saturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_unsat_fat().to_string()),
+            format_nutrition(nutrition.unsaturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_trans_fat().to_string()),
+            format_nutrition(nutrition.trans_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_cholesterol().to_string()),
+            format_nutrition(nutrition.cholesterol_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_sodium().to_string()),
+            format_nutrition(nutrition.sodium_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_fibre().to_string()),
+            format_nutrition(nutrition.fiber_g, "g"),
+        ),
+    ]
+}
+
+fn nutrition_per_serving_data(
+    nutrition: &NutritionPerServingDetails,
+    messages: &Messages,
+) -> [(Message, String); 12] {
+    [
+        (
+            messages.title(messages.nutrition_serving_size().to_string()),
+            if nutrition.serving_size.is_empty() {
+                "1"
+            } else {
+                Default::default()
+            }
+            .to_string(),
+        ),
+        (
+            messages.title(messages.nutrition_calories().to_string()),
+            format_nutrition(nutrition.nutrition.calories_kcal.map(Into::into), " kcal"),
+        ),
+        (
+            messages.title(messages.nutrition_total_carbs().to_string()),
+            format_nutrition(nutrition.nutrition.total_carbohydrates, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sugars().to_string()),
+            format_nutrition(nutrition.nutrition.sugars_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_protein().to_string()),
+            format_nutrition(nutrition.nutrition.protein_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_total_fat().to_string()),
+            format_nutrition(nutrition.nutrition.total_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_sat_fat().to_string()),
+            format_nutrition(nutrition.nutrition.saturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_unsat_fat().to_string()),
+            format_nutrition(nutrition.nutrition.unsaturated_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_trans_fat().to_string()),
+            format_nutrition(nutrition.nutrition.trans_fat_g, "g"),
+        ),
+        (
+            messages.title(messages.nutrition_cholesterol().to_string()),
+            format_nutrition(nutrition.nutrition.cholesterol_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_sodium().to_string()),
+            format_nutrition(nutrition.nutrition.sodium_mg, "mg"),
+        ),
+        (
+            messages.title(messages.nutrition_fibre().to_string()),
+            format_nutrition(nutrition.nutrition.fiber_g, "g"),
+        ),
+    ]
+}
+
+fn render_source(source: &Source, messages: &Messages) -> Markup {
     html! {
         @match source {
             Source::Url(url) => {
                 a class="btn btn-sm btn-outline no-underline print:hidden" href=(url) target="_blank" {
-                    (icon_globe_alt())
-                    "Source"
+                    (icons::globe_alt())
+                    (messages.recipe_page_source())
                 }
-                p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (url) }
+                p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" {
+                    (url)
+                }
             }
             Source::Other(other) => {
                 @if other.is_empty() {
-                    p class="text-center" {
-                        "Source:"
+                    p .text-center {
+                        (messages.recipe_page_source_label())
                         br;
-                        "Unknown"
+                        (messages.unknown())
                     }
                 } @else {
-                    p class="no-underline print:hidden" { "Source" }
-                    p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" { (other) }
+                    p class="no-underline print:hidden" {
+                        (messages.recipe_page_source())
+                    }
+                    p class="hidden print:block print:whitespace-nowrap print:overflow-hidden print:text-ellipsis print:max-w-xs" {
+                        (other)
+                    }
                 }
             }
         }
     }
 }
 
-fn render_tools(recipe_details: &RecipeDetails) -> Markup {
+fn render_tools(recipe_details: &RecipeDetails, messages: &Messages) -> Markup {
     html! {
         @if !recipe_details.tools.is_empty() {
             h1 class="text-sm print:mb-1" {
-                b { "Tools" }
+                b {
+                    (messages.recipe_page_tools())
+                }
             }
             ol class="col-span-6 w-full mb-4"
                 style=(if recipe_details.tools.len() > 10 {
@@ -865,11 +992,11 @@ fn render_tools(recipe_details: &RecipeDetails) -> Markup {
                     "column-count: 1"
                 }) {
                 @for t in recipe_details.tools.iter() {
-                    li class="text-sm" {
+                    li .text-sm {
                         label class="flex items-center w-full" {
                             input type="checkbox";
                         }
-                        span class="pl-2" {
+                        span .pl-2 {
                             (t.quantity.to_string()) (t.name)
                         }
                     }
@@ -880,19 +1007,19 @@ fn render_tools(recipe_details: &RecipeDetails) -> Markup {
 }
 
 /// Renders the ingredient and the instruction lists.
-pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
+pub fn render_ingredients_instructions(recipe: &RecipeDetails, messages: &Messages) -> Markup {
     html! {
         div #ingredients-instructions-container class="grid text-sm md:grid-cols-6 md:col-span-6" {
             div class="col-span-6 border-gray-700 border-y px-4 py-2 md:col-span-2 md:border-r md:border-y-0 print:hidden" {
                 @if !recipe.tools.is_empty() {
                     h2 class="font-semibold text-center underline pb-1" {
-                        "Tools"
+                        (messages.recipe_page_tools())
                     }
-                    ul id="tools-list-container" class="list grid gap-1" {
+                    ul #tools-list-container class="list grid gap-1" {
                         @for tool in recipe.tools.iter() {
                             li class="swipeable-item list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" {
                                 label class="flex items-center w-full" data-swipeable {
-                                    input type="checkbox" class="checkbox";
+                                    input type="checkbox" .checkbox;
                                     span class="px-2 [input:checked~&]:opacity-50" {
                                         (tool.quantity.to_string()) " " (tool.name)
                                     }
@@ -901,7 +1028,9 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                         }
                     }
                 }
-                h2 class="font-semibold text-center underline pb-1" { "Ingredients" }
+                h2 class="font-semibold text-center underline pb-1" {
+                    (messages.recipe_page_ingredients())
+                }
                 @match &recipe.ingredients {
                     SectionComponents::Grouped(section) => {
                         div {
@@ -917,7 +1046,9 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                 }
             }
             div class="col-span-6 px-8 py-2 border-gray-700 md:rounded-bl-none md:col-span-4 print:hidden" {
-                h2 class="font-semibold text-center underline pb-1" { "Instructions" }
+                h2 class="font-semibold text-center underline pb-1" {
+                    (messages.recipe_page_instructions())
+                }
                 @match &recipe.instructions {
                     SectionComponents::Grouped(section) => {
                         @for section in section.iter() {
@@ -925,11 +1056,11 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
                                 h3 class="font-bold py-2" {
                                     (section.title)
                                 }
-                                (render_instructions_list(section.items.as_slice()))
+                                (render_instructions_list(section.items.as_slice(), messages))
                             }
                         }
                     },
-                    SectionComponents::Flat(items) => (render_instructions_list(items.as_slice())),
+                    SectionComponents::Flat(items) => (render_instructions_list(items.as_slice(), messages)),
                 }
             }
         }
@@ -938,7 +1069,7 @@ pub fn render_ingredients_instructions(recipe: &RecipeDetails) -> Markup {
 
 fn render_ingredients_list(ingredients: &[Item]) -> Markup {
     html! {
-        ul id="ingredients-list-container" class="list grid gap-1" {
+        ul #ingredients-list-container class="list grid gap-1" {
             @for ingredient in ingredients {
                  li class="swipeable-item list-row py-1 no-after select-none grid grid-cols-1 hover:bg-base-300" data-drag-row {
                      label class="flex items-center" data-swipeable {
@@ -953,25 +1084,25 @@ fn render_ingredients_list(ingredients: &[Item]) -> Markup {
     }
 }
 
-fn render_instructions_list(instructions: &[Item]) -> Markup {
+fn render_instructions_list(instructions: &[Item], messages: &Messages) -> Markup {
     html! {
         ol class="grid list-decimal" {
             @for (idx, instruction) in instructions.iter().enumerate() {
                 li class="min-w-full py-2 select-none hover:bg-base-300"
                     _="on mousedown toggle .line-through toggle .opacity-40 then if I match .line-through then add .invisible to .timer in me else remove .invisible from .timer in me" {
-                    div class="flex" {
+                    div .flex {
                         div class="whitespace-pre-line w-full transition-all" {
                             (PreEscaped(&instruction.text))
                         }
                          @if let Some(d) = instruction.duration_seconds {
-                            div id=(format!("timer-container-{idx}")) class="timer-container" _="on mousedown halt the event"{
-                                button class="timer btn btn-sm btn-wide btn-ghost" title=(format_timer_label(d))
+                            div id={ "timer-container-" (idx) } class="timer-container" _="on mousedown halt the event"{
+                                button class="timer btn btn-sm btn-wide btn-ghost" title=(format_timer_label(d, messages))
                                        _="on click add .hidden to me
                                           remove .hidden from the next <div/>
                                           call initTimer(event)" {
-                                    (icon_alarm_clock())
+                                    (icons::alarm_clock())
                                 }
-                                (render_countdown(&format!("countdown-step-{idx}"), d))
+                                (render_countdown(&format!("countdown-step-{idx}"), d, messages))
                             }
                         }
                     }
@@ -981,12 +1112,15 @@ fn render_instructions_list(instructions: &[Item]) -> Markup {
     }
 }
 
-fn format_timer_label(seconds: i32) -> String {
+fn format_timer_label(seconds: i32, messages: &Messages) -> String {
     let duration = Duration::from_secs(u64::from(seconds.unsigned_abs()));
-    format!("Start {} timer", humantime::format_duration(duration))
+
+    messages
+        .recipe_page_start_timer(humantime::format_duration(duration).to_string())
+        .to_string()
 }
 
-fn render_countdown(id: &str, num_seconds: i32) -> Markup {
+fn render_countdown(id: &str, num_seconds: i32, messages: &Messages) -> Markup {
     let hours = num_seconds / 3600;
     let minutes = (num_seconds % 3600) / 60;
     let seconds = num_seconds % 60;
@@ -1006,14 +1140,14 @@ fn render_countdown(id: &str, num_seconds: i32) -> Markup {
                        add .hidden to me
                        remove .hidden from next <button/>
                        call playTimer(event)"
-                { (icon_play()) }
+                { (icons::play()) }
 
                 button class="timer-pause btn btn-sm btn-soft btn-warning btn-square"
                     _="on click
                        add .hidden to me
                        remove .hidden from previous <button/>
                        call pauseTimer(event)"
-                { (icon_pause()) }
+                { (icons::pause()) }
 
                 button class="timer-stop btn btn-sm btn-soft btn-error btn-square"
                     _="on click
@@ -1022,7 +1156,7 @@ fn render_countdown(id: &str, num_seconds: i32) -> Markup {
                        add .hidden to closest .countdown-container
                        remove .hidden from the first <button/> in closest .timer-container
                        call stopTimer(event)"
-                { (icon_stop()) }
+                { (icons::stop()) }
 
                 button class="timer-end btn btn-sm btn-soft btn-error btn-square btn-block hidden"
                     _="on click
@@ -1033,7 +1167,7 @@ fn render_countdown(id: &str, num_seconds: i32) -> Markup {
                        add .hidden to closest .countdown-container
                        remove .hidden from the first <button/> in closest .timer-container
                        call stopTimer(event)"
-                { "End" }
+                { (messages.action_end()) }
             }
         }
     }
@@ -1045,6 +1179,7 @@ pub fn render_favourite_button(
     is_favourite: bool,
     is_deletable: bool,
     is_view_recipe: bool,
+    messages: &Messages,
 ) -> Markup {
     let id = format!("favourite-{recipe_id}");
 
@@ -1061,18 +1196,18 @@ pub fn render_favourite_button(
     };
 
     html! {
-        button id=(id) class=(class) title="Add to favourites"
-                hx-post=(format!("/recipes/{recipe_id}/favourite"))
+        button id=(id) class=(class) title=(messages.recipe_page_add_to_favourites())
+                hx-post={ "/recipes/" (recipe_id) "/favourite" }
                 hx-target=(hx_target)
                 hx-swap=(hx_swap)
                 hx-push-url="false"
                 hx-vals=(json!({
                     "view-recipe": is_view_recipe
                 }))
-                aria-label="Add to favorites"
+                aria-label=(messages.recipe_page_add_to_favourites())
                 aria-pressed=(is_favourite.to_string())
                 _="on mousedown halt the event" {
-            (icon_heart(is_favourite))
+            (icons::heart(is_favourite))
         }
     }
 }

@@ -46,7 +46,7 @@ To be detailed once the new documentation website will go live.
 
 ## Translations
 
-To be detailed once the i18n system is implemented.
+To be detailed once the l10n system is implemented.
 
 ## Contributing code to Recipya
 

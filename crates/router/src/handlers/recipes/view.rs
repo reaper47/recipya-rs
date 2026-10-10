@@ -5,14 +5,17 @@ use axum::{
     response::IntoResponse,
 };
 use axum_htmx::HxRequest;
-use config::States;
+use fluent_static::support::axum::RequestLanguage;
 use iso8601::DateTime;
+use tower_cookies::Cookies;
 use tracing::error;
 
 use app::{
     message::{Broadcaster, Toast},
     state::AppState,
 };
+use config::{ProductionState, States};
+use l10n::Messages;
 use models::{
     Recipe,
     data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe},
@@ -21,23 +24,34 @@ use models::{
     time::FormattedTimes,
 };
 
-use crate::{Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
+use crate::{
+    Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth,
+    settings_router::set_language_cookie,
+};
 
 /// Handles viewing the recipes.
 pub async fn recipes_handler(
+    cookies: Cookies,
     HxRequest(is_hx_request): HxRequest,
     Query(search_params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let settings = get_settings(&state, user.id).await?;
+    let settings = get_settings(&state, user.id, &messages).await?;
 
     let num_recipes = match Recipe::count(&state.mm, user.id).await {
         Ok(count) => count,
         Err(err) => {
             error!(user = ?user.id,?err, "Error counting recipes");
-            Toast::broadcast_error(&state, user.id, "Error fetching number of recipes.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_count_failed(),
+                &messages,
+            )
+            .await;
             return Ok(Error::Database.into_response());
         }
     };
@@ -62,16 +76,34 @@ pub async fn recipes_handler(
             if let Ok(mapped) = mapped_recipes {
                 mapped
             } else {
-                Toast::broadcast_error(&state, user.id, "Error formatting recipe times.").await;
+                Toast::broadcast_error(
+                    &state,
+                    user.id,
+                    &messages.toast_recipes_times_format_failed(),
+                    &messages,
+                )
+                .await;
                 return Err(Error::Database);
             }
         }
         Err(err) => {
             error!(user = ?user.id, ?search_params, ?err, "(recipes_handler) Error fetching recipes for user with search params");
-            Toast::broadcast_error(&state, user.id, "Error fetching recipes.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_fetch_failed(),
+                &messages,
+            )
+            .await;
             return Err(Error::Database);
         }
     };
+
+    set_language_cookie(
+        &cookies,
+        &settings.selected_locale,
+        state.config.read().await.states.production == ProductionState::On,
+    );
 
     Ok(templates::recipes::index(
         &state.fs_support,
@@ -96,6 +128,7 @@ pub async fn recipes_handler(
         },
         &state.data_dir,
         &settings,
+        &messages,
     )
     .into_response())
 }
@@ -106,6 +139,7 @@ pub async fn view_recipe_handler(
     Path(recipe_id): Path<i64>,
     OriginalUri(uri): OriginalUri,
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let cache_key = (user.id, recipe_id);
@@ -114,8 +148,9 @@ pub async fn view_recipe_handler(
     } else {
         let Ok(recipe) = Recipe::get(&state.mm, user.id, recipe_id).await else {
             return Ok(templates::general::simple(
-                "Recipe Not Found",
-                "The recipe you requested to view is not found.",
+                &messages.toast_recipes_not_found(),
+                &messages.toast_recipes_not_found_view(),
+                &messages,
             ));
         };
 
@@ -169,6 +204,7 @@ pub async fn view_recipe_handler(
             ..Default::default()
         },
         &user_settings,
+        &messages,
     ) {
         Ok(res) => Ok(res),
         Err(err) => {

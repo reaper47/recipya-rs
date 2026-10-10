@@ -4,12 +4,14 @@ use axum::{
 };
 use axum_htmx::HxRequest;
 use config::States;
+use fluent_static::support::axum::RequestLanguage;
 use tracing::error;
 
 use app::{
     message::{Broadcaster, Toast},
     state::AppState,
 };
+use l10n::Messages;
 use models::Error::EntityNotFound;
 use models::data::Data;
 
@@ -24,16 +26,23 @@ pub async fn duplicate_recipe_handler(
     Path(recipe_id): Path<i64>,
     HxRequest(is_hx_request): HxRequest,
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
-    let settings = get_settings(&state, user.id).await?;
+    let settings = get_settings(&state, user.id, &messages).await?;
 
     let (mut recipe, categories, keywords) =
-        match fetch_view_recipe(&state, user.id, recipe_id).await {
+        match fetch_view_recipe(&state, user.id, recipe_id, &messages).await {
             Ok(res) => res,
             Err(err) => {
                 error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
-                Toast::broadcast_error(&state, user.id, "Recipe not found.").await;
+                Toast::broadcast_error(
+                    &state,
+                    user.id,
+                    &messages.toast_recipes_not_found(),
+                    &messages,
+                )
+                .await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",
@@ -58,6 +67,7 @@ pub async fn duplicate_recipe_handler(
         &settings,
         categories,
         keywords,
+        &messages,
     )
     .into_response())
 }

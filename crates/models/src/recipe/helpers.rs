@@ -412,7 +412,7 @@ pub async fn insert_nutrition(
             unsaturated_fat_g: n.unsaturated_fat_g,
             cholesterol_mg: n.cholesterol_mg,
             sodium_mg: n.sodium_mg,
-            fiber_g: n.fiber_g,
+            fiber_g: n.fibre_g,
             trans_fat_g: n.trans_fat_g,
         }),
         Some(_) | None => calculated_nutrition
@@ -432,7 +432,7 @@ pub async fn insert_nutrition(
             unsaturated_fat_g: n.nutrition.unsaturated_fat_g,
             cholesterol_mg: n.nutrition.cholesterol_mg,
             sodium_mg: n.nutrition.sodium_mg,
-            fiber_g: n.nutrition.fiber_g,
+            fiber_g: n.nutrition.fibre_g,
             trans_fat_g: n.nutrition.trans_fat_g,
         }),
         Some(_) | None => calculated_nutrition

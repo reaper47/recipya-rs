@@ -8,6 +8,7 @@ pub mod shared;
 pub mod shopping;
 pub mod static_files;
 
+use l10n::Messages;
 use tracing::error;
 use uuid::Uuid;
 
@@ -17,12 +18,23 @@ use models::settings::UserSettingDetails;
 
 use crate::{Error, Result};
 
-pub async fn get_settings(state: &AppState, user_id: Uuid) -> Result<UserSettingDetails> {
+/// Handler to get a user's settings.
+pub async fn get_settings(
+    state: &AppState,
+    user_id: Uuid,
+    messages: &Messages,
+) -> Result<UserSettingDetails> {
     match UserSettingDetails::get(&state.mm, user_id).await {
         Ok(settings) => Ok(settings),
         Err(err) => {
             error!(?user_id, ?err, "Error fetching user settings");
-            Toast::broadcast_error(state, user_id, "Error fetching user settings.").await;
+            Toast::broadcast_error(
+                state,
+                user_id,
+                &messages.toast_users_fetch_settings_failed(),
+                messages,
+            )
+            .await;
             Err(Error::Database)
         }
     }

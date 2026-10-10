@@ -1,0 +1,679 @@
+### Recipya - English (UK)
+
+-brand = Recipya
+
+## Shared vocabulary
+
+cookbooks = Livres de recettes
+recipes = Recettes
+reports = Rapports
+settings = Paramètres
+shopping = Achats
+login = Se connecter
+logout = Se déconnecter
+signup = S'inscrire
+unknown = Inconnu
+of = of
+or = ou
+title = { $title }:
+count = { NUMBER($count) }
+
+## Shared table column headers
+
+column-name = Nom
+column-number = Numéro
+column-description = Description
+column-category = Catégorie
+column-source = Source
+column-website = Site web
+column-country = Pays
+column-setting = Paramètre
+column-environment = Environnement
+column-value = Valeur
+country-usa = États-Unis d'Amérique
+
+## Inputs
+
+add-tool-input =
+    .placeholder = 1 poêle
+add-ingredient-input =
+    .placeholder = 1 tasse d'oignons hachés
+add-instructions-input =
+    .placeholder = Mélangez tous les ingrédients ensemble
+confirm-password-input =
+    .label = Confirm password
+    .placeholder = Retype password
+email-input =
+    .label = E-mail
+    .placeholder = Entrez votre adresse e-mail
+user-input =
+    .label = Nom d’utilisateur ou adresse e-mail
+    .placeholder = Entrez votre nom d’utilisateur
+new-password-input =
+    .label = Mot de passe nouveau
+    .placeholder = Saisir le nouveau mot de passe
+password-input =
+    .label = Mot de passe
+    .placeholder = Entrez le mot de passe
+current-password-input =
+    .label = Mot de passe actuel
+    .placeholder = Saisir le mot de passe actuel
+paper-sizes-search =
+    .placeholder = Rechercher une taille de papier
+search-recipe-input =
+    .placeholder = Rechercher une recette
+searchbar-input =
+    .placeholder = Rechercher des recettes…
+searchbar-no-results = Aucun résultat
+searchbar-action = Rechercher
+recipe-rating-aria-label =
+    { $count ->
+        [one] { $count } étoile
+       *[other] { $count } étoiles
+    }
+
+## Authentication
+
+auth-account-verified = Votre compte a été vérifié.
+auth-password-reset-requested-title = Demande de réinitialisation du mot de passe effectuée
+auth-password-reset-requested-text = Un e-mail contenant des instructions sur la manière de réinitialiser votre mot de passe vous a été envoyé.
+auth-token-expired-title = Jeton expiré
+auth-token-expired-text = Le jeton associé à l’URL a expiré.
+forgot-password-form-title = Mot de passe oublié
+reset-password-form-title = Réinitialiser le mot de passe
+reset-password-form-submit = Définir un nouveau mot de passe
+login-form-tab-title = { login }
+login-form-title = Connectez-vous à { -brand }
+login-form-greeting-1 = La cuisinière est chaude. Allons-nous cuisiner ?
+login-form-create-account = Créer un compte
+login-form-forgot-password = Mot de passe oublié ?
+login-form-remember-me = Se souvenir de moi
+register-form-tab-title = S'inscrire
+register-form-title = Créez votre compte
+register-form-greeting-1 = Votre parcours culinaire commence ici !
+register-form-account-exists = Avez-vous déjà un compte ?
+change-password-form-title = Changer le mot de passe
+delete-account-form-title = Supprimer le compte
+delete-account-form-description = Supprimez votre compte de manière permanente
+delete-account-form-confirm = Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.
+
+## Toasts: general
+
+toast-title-success = Succès
+toast-title-error = L’opération a échoué
+toast-title-warning = Attention
+toast-export-data-failed = Impossible de créer la réponse de données d'exportation.
+toast-http-client-failed = Impossible de créer le client HTTP.
+toast-download-token-not-found = Impossible de trouver le jeton de téléchargement.
+toast-components-failed = Erreur lors de la récupération des composants.
+toast-paper-sizes-failed = Impossible de récupérer les formats de papier.
+toast-fetch-url-failed = Impossible de récupérer l'URL.
+toast-invalid-url = URL non valide
+toast-export-file-open-failed = Impossible d’ouvrir le fichier d’exportation.
+toast-payload-empty = Le contenu ne peut pas être vide.
+toast-payload-invalid = Le contenu est invalide.
+toast-read-response-failed = Impossible de lire la réponse.
+
+## Toasts: auth
+
+toast-auth-account-no-delete = Ce compte ne peut pas être supprimé.
+toast-auth-credentials-invalid = Les identifiants sont invalides.
+toast-auth-email-or-password-invalid = L’adresse e-mail est invalide ou les mots de passe ne correspondent pas.
+toast-auth-access-token-failed = Impossible de générer le jeton d'accès.
+toast-auth-refresh-token-failed = Échec de la génération du jeton de rafraîchissement.
+toast-auth-password-invalid = Mot de passe invalide.
+toast-auth-password-no-match = Les mots de passe ne correspondent pas.
+toast-auth-password-updated = Votre mot de passe a été mis à jour.
+toast-auth-user-password-updated = Mot de passe de l’utilisateur mis à jour.
+toast-auth-password-update-failed = Échec de la mise à jour du mot de passe.
+toast-auth-password-schema-update-failed = Échec de la mise à jour du schéma de mot de passe.
+toast-auth-new-password-same-as-old = Le nouveau mot de passe ne peut pas être identique à l'actuel.
+toast-auth-registration-error = Une erreur s'est produite lors de l'inscription.
+toast-auth-verify-email = Vérifiez votre adresse e-mail
+
+## Toasts: users
+
+toast-users-cannot-delete-admin = Un administrateur ne peut pas être supprimé.
+toast-users-delete-success = Utilisateur supprimé.
+toast-users-delete-failed = Impossible de supprimer l'utilisateur.
+toast-users-fetch-settings-failed = Erreur lors de la récupération des paramètres utilisateur.
+toast-users-fetch-users-failed = Echec de la récupération des utilisateurs.
+toast-users-fetch-user-failed = Impossible de récupérer l'utilisateur.
+toast-users-not-found = Utilisateur introuvable.
+
+## Toasts: recipes
+
+toast-recipes-add-category-failed = Impossible d’ajouter la catégorie de recette.
+toast-recipes-add-collection-failed = Impossible d’ajouter la recette à la collection.
+toast-recipes-category-empty = La catégorie ne peut pas être vide ni non classée.
+toast-recipes-category-delete-failed = Impossible de supprimer la catégorie de recettes.
+toast-recipes-count-failed = Erreur lors de la récupération du nombre de recettes.
+toast-recipes-delete-failed = La recette n’a pas pu être supprimée.
+toast-recipes-exist = Recette existante.
+toast-recipes-export-failed = Impossible d’exporter les recettes.
+toast-recipes-fetch-progress = Récupération des recettes…
+toast-recipes-fetch-failed = Erreur lors de la récupération des recettes.
+toast-recipes-fetch-ingredients-failed = Échec de la récupération des ingrédients.
+toast-recipes-import-status =
+    Importé { $num_success ->
+        [one] { NUMBER($num_success) } recette
+       *[other] { NUMBER($num_success) } recettes
+    }. Ignoré { NUMBER($num_skipped) }.
+toast-recipes-insert-failed = Impossible d’insérer la recette.
+toast-recipes-keywords-fetch-failed = Erreur lors de la récupération des mots-clés de la recette.
+toast-recipes-none-found = Aucune recette trouvée.
+toast-recipes-none-found-export = Aucun recette trouvé pour l’exportation.
+toast-recipes-none-selected-export = Aucune recette n’a été sélectionnée pour l’exportation.
+toast-recipes-not-changed = La recette n’a pas changé.
+toast-recipes-not-found = Recette introuvable.
+toast-recipes-not-found-view = La recette que vous avez demandé à consulter est introuvable.
+toast-recipes-parse-json-failed = Chyba při analýze schématu receptu ve formátu JSON.
+toast-recipes-parsing-progress-start = Analizowanie przepisów…
+toast-recipes-parsing-failed = Une erreur s'est produite lors de l'analyse des recettes. Veuillez consulter les journaux.
+toast-recipes-preview-failed = Chyba při vykreslování náhledu receptu.
+toast-recipes-preparing-import = Préparation de l’importation…
+toast-recipes-saving-media = Enregistrer les médias
+toast-recipes-saving-recipes = Enregistrer les recettes
+toast-recipes-scrape-failed = Erreur lors du scraping de la recette ou la source de la recette n’est pas une URL.
+toast-recipes-share-link-failed = Erreur lors de la création du lien de partage de la recette.
+toast-recipes-times-format-failed = Erreur lors du formatage des temps de la recette.
+toast-recipes-toggle-favourites-failed = Erreur lors de la modification de la sélection des favoris.
+toast-recipes-yield-zero = Rendement doit être supérieur à zéro.
+
+## Toasts: timeline
+
+toast-timeline-event-created = Événement de la chronologie créé.
+toast-timeline-event-create-failed = Impossible de créer l’événement de la chronologie.
+toast-timeline-event-not-exist = L’événement de la chronologie n’existe pas.
+toast-timeline-event-fetch-failed = Impossible de récupérer l’événement de la chronologie.
+toast-timeline-event-edit-failed = Impossible de modifier l’événement de la chronologie.
+toast-timeline-components-fetch-failed = Impossible de récupérer les composants de la chronologie.
+
+## Toasts: settings
+
+toast-settings-fetch-categories-failed = Erreur lors de la récupération des catégories.
+toast-settings-fetch-languages-failed = Erreur lors de la récupération des langues.
+toast-settings-invalid-nutrition-source = La source de nutrition « { $name } » n’est pas valide.
+toast-settings-invalid-timezone = Invalid time zone.
+toast-settings-invalid-theme = Thème « { $name } » n’est pas valide.
+toast-settings-save-nutrition-source-failed = Erreur lors de la sauvegarde de la source de nutrition sélectionnée.
+toast-settings-update-language-failed = Erreur lors de la mise à jour de la langue.
+toast-settings-update-paper-size-failed = Erreur lors de la mise à jour du format du papier.
+toast-settings-update-theme-failed = Erreur lors de la sauvegarde du thème sélectionné.
+toast-settings-update-timezone-failed = Error updating time zone.
+
+## Toasts: shopping
+
+toast-shopping-add-item-failed = Impossible d’ajouter l’élément à la liste de courses.
+toast-shopping-add-items-failed = Impossible d’ajouter les articles pour la recette.
+toast-shopping-add-items-success = Articles ajoutés à la liste de courses.
+toast-shopping-create-failed = Impossible de créer une nouvelle liste de courses.
+toast-shopping-create-label-failed = Hataa lors de la création de l'étiquette de la liste de courses.
+toast-shopping-delete-list-failed = Impossible de supprimer la liste de courses.
+toast-shopping-export-failed = Impossible d'exporter la liste de courses.
+toast-shopping-fetch-list-failed = Impossible de récupérer la liste de courses.
+toast-shopping-fetch-lists-failed = Échec de la récupération des listes de courses.
+toast-shopping-item-check-failed = Échec de la modification de la case à cocher de l'article.
+toast-shopping-item-delete-failed = Impossible de supprimer l’élément de la liste de courses.
+toast-shopping-item-exists = L’article existe déjà dans l’étiquette.
+toast-shopping-item-fetch-failed = Impossible de récupérer l’élément de la liste de courses.
+toast-shopping-item-name-empty = Nom de l’article ne doit pas être vide.
+toast-shopping-item-update-failed = Impossible de mettre à jour l’élément de la liste de courses.
+toast-shopping-label-empty = Le nom de l'étiquette ne peut pas être vide.
+toast-shopping-label-exists = L'étiquette existe déjà dans la liste de courses.
+toast-shopping-label-update-failed = Échec de la mise à jour de l'étiquette de la liste de courses.
+toast-shopping-list-empty = La liste de courses est vide.
+toast-shopping-share-list-failed = Erreur lors de la création du lien vers la liste de courses partagée.
+toast-shopping-title-empty = Titre ne peut pas être vide.
+toast-shopping-title-exists = Titre déjà existant.
+toast-shopping-title-update-failed = Échec de la mise à jour du titre de la liste de courses.
+toast-shopping-write-list-failed = Échec de l’écriture de la liste de courses.
+
+## Fetching recipes
+
+fetch-recipes-failed = Échec de la récupération
+fetch-recipes-exists = Recette existe
+fetch-recipes-none-scraped = Aucun recette n’a été extraite.
+fetch-recipes-no-valid-urls = Aucun URL valide n’a été trouvé.
+
+## Recipe list
+
+list-recipes-figure-alt = Image de la recette { $name }
+sort-recipes-action = Trier
+sort-recipes-default = Par défaut
+sort-recipes-name = Nume:
+sort-recipes-a-to-z = A à Z
+sort-recipes-z-to-a = Z à A
+sort-recipes-date-created = Date de création :
+sort-recipes-new-to-old = Du plus récent au plus ancien
+sort-recipes-old-to-new = Du plus ancien au plus récent
+sort-recipes-random = Aléatoire
+search-favourites-button =
+    .title = Voir toutes les recettes marquées comme favorites
+    .aria-label = Voir toutes les recettes marquées comme favorites
+
+## Recipe page
+
+recipe-page-title-add = Ajouter une recette manuellement
+recipe-page-tab-title-add = { recipe-page-title-add } | { -brand }
+recipe-page-tab-title-view = { $recipe } | { -brand }
+recipe-page-add-to-collection = Ajouter la recette à la collection
+recipe-page-add-to-favourites = Ajouter aux favoris
+recipe-page-edit-recipe = Éditer la recette
+recipe-page-empty-collection = Votre collection de recettes semble un peu vide pour le moment.
+recipe-page-collection-subtext = Pourquoi ne pas commencer à ajouter des recettes en cliquant sur le bouton { $button } en haut ?
+recipe-page-category = Catégorie
+recipe-page-delete-recipe = Supprimer la recette
+recipe-page-delete-recipe-confirm = Êtes-vous certain de vouloir supprimer cette recette ?
+recipe-page-description = Description
+    .placeholder = Ce poulet au curry thaïlandais vous fera saliver.
+recipe-page-duplicate-recipe = Dupliquer la recette
+recipe-page-title-input =
+    .placeholder = Titre de la recette
+recipe-page-image-alt = Image de la recette
+recipe-page-ingredients = Ingrédients
+recipe-page-instructions = Instructions
+recipe-page-favourite = Favori
+recipe-page-media = Média
+recipe-page-media-num = Média { $num }
+recipe-page-media-num-long = Image { $image_num } de la recette
+recipe-page-media-enter-url =
+    .placeholder = Entrez l'URL d'une image
+recipe-page-no-description = Aucune description
+recipe-page-no-tools = Aucun outil
+recipe-page-notes = Notes
+    .placeholder = Write some notes about the recipe…
+recipe-page-paste-image = Coller l’image copiée
+recipe-page-cook-time = Temps de cuisson
+recipe-page-prep-time = Temps de préparation
+recipe-page-total-time = Temps total
+recipe-page-print-recipe = Imprimer la recette
+recipe-page-options-menu = Ouvrir le menu des options de la recette
+recipe-page-section-name = Nom de la section
+recipe-page-servings = Portions
+recipe-page-servings-text =
+    { $count ->
+        [one] { $count } portion
+       *[other] { $count } portions
+    }
+recipe-page-share-recipe = Partager la recette
+recipe-page-source = Source
+recipe-page-source-data-tip = La source peut être un site web, le nom d’un livre de recettes, un proche ou un ami, un magazine, etc.
+recipe-page-source-label = Source :
+recipe-page-source-unknown = Source : Inconnue
+recipe-page-toggle-screen-lock = Basculer le verrouillage de l’écran
+recipe-page-toggle-favourite = Marquer ou décocher comme favori
+recipe-page-tools = Outils
+recipe-page-youtube-video-player = Lecteur vidéo YouTube
+recipe-page-video-currently-processed = Vidéo en cours de traitement.
+recipe-page-please-refresh-later = Veuillez rafraîchir la page plus tard.
+recipe-page-video-num-processed = Vidéo #{ $num } est en cours de traitement.
+recipe-page-start-timer = Démarrer le minuteur de { $duration }
+edit-page-title = Éditer { $recipe }
+edit-page-tab-title = Modifier { $recipe } | { -brand }
+rescrape-page-title = Rescrape { $recipe }
+rescrape-page-tab-title = Rescrape { $recipe } | { -brand }
+rescrape-page-no-keywords = Aucun mot-clé
+rescrape-page-no-images = Aucune image
+section-add = Nouvelle section
+keywords-new = Nouveau mot-clé
+
+## Recipe timeline
+
+recipe-timeline = Chronologie
+recipe-timeline-title = Chronologie de la recette
+recipe-timeline-add = Ajouter un événement à la chronologie
+recipe-timeline-recipe-made = Recette préparée
+recipe-timeline-title-label = Titre
+recipe-timeline-date = Date
+    .placeholder = Choisissez une date
+recipe-timeline-image = Image
+recipe-timeline-comment = Commentaire
+    .placeholder = Comment s’est passée votre préparation aujourd’hui ?
+recipe-timeline-rating = Évaluation
+recipe-timeline-event = Événement de la chronologie
+recipe-timeline-event-image = Image de l’événement
+recipe-timeline-no-image = Aucune image
+recipe-timeline-open = Ouvrir la chronologie
+
+## Add recipe page
+
+add-recipe-page-title = Ajouter une recette
+add-recipe-page-tab-title = { add-recipe-page-title } | { -brand }
+add-recipe-page-standard = standard
+manual-recipe-card-title = Manuel
+manual-recipe-card-image-alt = Écriture sur un morceau de papier avec un stylo traditionnel.
+manual-recipe-card-description = Ajoutez une nouvelle recette en remplissant manuellement son contenu.
+manual-recipe-card-fill-in = Remplir
+scan-card-title = Numériser
+scan-card-image-alt = A mobile phone used as a camera.
+scan-card-description = Téléchargez les fichiers image ou PDF de la recette que vous souhaitez ajouter, ou prenez une photo à l’aide de l’appareil photo de votre appareil.
+scan-card-dialog-title = Scanner la recette
+scan-card-dialog-description = Sélectionnez les images de votre recette triées par page ou un document de recette au format PDF.
+fetch-website-card-title = Site web
+fetch-website-card-image-alt = Terre connectée de bout en bout par les télécommunications.
+fetch-website-card-description = Récupérez une recette ou des recettes depuis les sites web { $supported }. Si le site web n’est pas pris en charge, le logiciel tentera d’extraire la recette, mais cela ne sera pas forcément réussi.
+fetch-website-card-fetch-recipes = Récupérer les recettes
+fetch-website-card-dialog-title = Récupérer des recettes à partir de sites web
+fetch-website-card-dialog-description = Entrez une ou plusieurs URL, chacune sur une nouvelle ligne.
+fetch-website-card-search =
+    .placeholder = Rechercher sur un site web
+import-apps-card-title = Importer
+import-apps-card-image-alt = Un ensemble de conteneurs maritimes sur un navire porte-conteneurs.
+import-apps-card-description = Importez des recettes via l’API depuis Mealie, Tandoor et Nextcloud, ainsi que depuis { $apps }, et des fichiers JSON bruts conformes à la norme { $schema }.
+import-apps-card-various-apps = diverses applications
+import-apps-card-recipe-schema = schéma de recette
+import-apps-card-app = Application
+import-apps-card-file-formats = Formats de fichiers
+import-apps-card-search =
+    .placeholder = Rechercher une application
+import-recipes-dialog-title = Importer des recettes
+import-recipes-dialog-software = Logiciel
+import-recipes-dialog-app = Choisir une application
+    .placeholder = Sélectionner une application
+import-recipes-dialog-select-file = Sélectionner un fichier
+import-recipes-dialog-api = API
+import-recipes-dialog-choose-api = Vyberte rozhranie API
+    .placeholder = Vyberte rozhranie API
+import-recipes-dialog-base-url = URL de base
+raw-json-dialog-beautify = Embellir
+raw-json-dialog-wrap = Envelopper
+raw-json-dialog-copy-example = Copier l'exemple de JSON
+raw-json-dialog-paste-json = Coller le JSON
+raw-json-dialog-paste-json-long = Wklej JSON po lewej stronie, aby wyświetlić tutaj podgląd. Na przykład spróbuj:
+raw-json-dialog-type-json = Prêt – Commencez à taper ou collez du JSON pour voir la coloration syntaxique
+raw-json-dialog-preview = Aperçu
+raw-json-dialog-fetching = Récupération…
+raw-json-dialog-schema = Schéma
+raw-json-dialog-fetch-schema = Récupération du schéma…
+raw-json-dialog-fetch-wait = Veuillez patienter pendant la récupération du schéma…
+bookmarklet-name = { -brand } Bookmarklet
+    .data-tip = Po prostu przeciągnij ten link na pasek zakładek, a następnie kliknij zakładkę podczas przeglądania strony z przepisami. Jeśli schemat przepisu zostanie pomyślnie pobrany, możesz go zaimportować tutaj.
+bookmarklet-description = Vous pouvez également télécharger directement les fichiers de schéma de recette en utilisant le { $bookmarklet }.
+
+## Nutrition
+
+nutrition-per-100g = Nutritional information (per 100 g)
+nutrition-per-serving = Nutritional information (per portion)
+nutrition-facts = Informations nutritionnelles
+nutrition-calories = Calories
+nutrition-serving-size = Taille de la portion
+nutrition-total-carbs = Totala kolhydrater
+nutrition-sugars = Sucres
+nutrition-protein = Protéine
+nutrition-total-fat = Matières grasses totales
+nutrition-sat-fat = Graisse saturée
+nutrition-unsat-fat = Graisse insaturée
+nutrition-trans-fat = Acides gras trans
+nutrition-cholesterol = Cholestérol
+nutrition-sodium = Sodium
+nutrition-fibre = Fibre
+nutrition-sources-dialog-search =
+    .placeholder = Rechercher une source
+nutrition-sources-dialog-last-updated = Dernière mise à jour
+
+## Generic actions
+
+action-actions = Actions
+action-add = Ajouter
+action-cancel = Annuler
+action-clear = Effacer
+action-close = Fermer
+action-copy = Copier
+action-delete = Supprimer
+action-download = Télécharger
+action-duplicate = Dupliquer
+action-edit = Modifier
+action-end = Terminer
+action-export = Exporter
+action-fetch = Récupérer
+action-import = Importer
+action-loading = Chargement…
+action-print = Imprimer
+action-rescrape = Rescrape
+action-restore-original = Restaurer l’original
+action-retry = Réessayer
+action-retry-all = Réessayer tout
+action-see = Voir
+action-share = Partager
+action-submit = Soumettre
+action-support = Prise en charge
+action-update = Mettre à jour
+action-upload = Télécharger
+action-view = Voir
+action-visit = Visiter
+
+## Keyboard shortcuts
+
+shortcuts-hint = Raccourci : { $keys }
+keyboard-shortcuts-title = Raccourcis clavier
+keyboard-shortcuts-global = Global
+keyboard-shortcuts-open-settings-dialog = Ouvrir la boîte de dialogue des paramètres
+keyboard-shortcuts-create-recipe-manually = Créer une nouvelle recette manuellement
+keyboard-shortcuts-open-import-recipes-dialog = Ouvrir la boîte de dialogue d'importation des recettes
+keyboard-shortcuts-open-fetch-recipes-dialog = Ouvrir la boîte de dialogue permettant de récupérer des recettes à partir de sites web
+keyboard-shortcuts-open-reports-page = Ouvrir la page des rapports
+keyboard-shortcuts-manual-recipe-form = Formulaire de recette manuel
+keyboard-shortcuts-save-recipe = Enregistrer la recette
+keyboard-shortcuts-edit-recipe-form = Modifier le formulaire de recette
+keyboard-shortcuts-view-recipe = Voir la recette
+keyboard-shortcuts-duplicate-recipe = Dupliquer la recette
+keyboard-shortcuts-edit-recipe = Modifier la recette
+keyboard-shortcuts-toggle-favourite-recipe = Oznaczyć/odznaczyć przepis jako ulubiony
+keyboard-shortcuts-print-recipe = Imprimer la recette
+keyboard-shortcuts-share-recipe = Partager la recette
+keyboard-shortcuts-delete-recipe = Supprimer la recette
+keyboard-shortcuts-macos-replacement = { $ctrl } peut également être remplacé par { $cmd } pour les utilisateurs de macOS.
+
+## Export and paper sizes
+
+export-data-form = Exporter les données
+    .description = Téléchargez vos données au format de fichier sélectionné.
+export-data-table-favourite = Favori
+export-data-table-rating = Note
+export-data-table-page = Page
+paper-sizes-table-size-mm = Taille (mm)
+paper-sizes-table-size-in = Taille (pouces)
+paper-size-dimensions = { NUMBER($width, maximumFractionDigits: 2) } × { NUMBER($height, maximumFractionDigits: 2) }
+print-view-title = Vue d’impression
+share-link-copy-clipboard = Copier dans le presse-papiers
+simple-page-back-home = Retour à l'accueil
+
+## Navigation
+
+main-logo =
+    .alt = Logo principal
+    .title = { -brand }
+nav-sidebar-aria-label = Ouvrir la barre latérale du menu
+nav-sidebar-new-cookbook-prompt = Entrez le nom de votre livre de recettes
+nav-sidebar-add-cookbook = Ajouter un livre de recettes
+nav-sidebar-close = Fermer la barre latérale
+avatar-menu-button-title = Ouvrir le menu de l'avatar
+avatar-menu-update-available = Nouvelle mise à jour
+avatar-menu-guide = Guide
+settings-dialog-content-loading = Contenu en cours de chargement…
+pagination-aria-label = Page { $page_num }, page actuelle
+pagination-prev-page = Page précédente
+pagination-next-page = Suivant
+pagination-goto-page = Aller à la page { $page_num }
+pagination-summary =
+    Affichage de { NUMBER($from) }-{ NUMBER($to) } sur { NUMBER($total) } { $count ->
+        [one] résultat
+       *[other] résultats
+    }
+
+## Reports
+
+reports-tab-title = { reports } | { -brand }
+reports-no-entries = Aucun rapport
+reports-execution-time = Temps d'exécution : { $duration }
+reports-total = Total
+reports-table-entity = Entité
+reports-table-level = Niveau
+reports-table-error-code = Code d'erreur
+reports-table-error-reason = Motif de l'erreur
+reports-table-duration = Durée
+reports-table-reason = Motif : { $reason }
+reports-table-duration-arg = Durée : { $d }
+reports-table-code-arg = Code : { $code }
+
+## Search help
+
+search-help-title = Aide à la recherche
+search-help-description = Le tableau suivant fournit des exemples de la manière d'effectuer diverses recherches. Vous pouvez combiner n'importe lesquels de ces éléments dans n'importe quel ordre.
+search-help-example = Exemple
+search-help-search = Rechercher
+search-help-any-field = N'importe quel champ
+search-help-any-field-category = N'importe quel champ de la catégorie
+search-help-any-field-name-category = N'importe quel champ, nom et catégorie
+search-help-by-name-category = Par nom et catégorie
+search-help-by =
+    { $field ->
+        [category] Par catégorie
+        [cuisine] Par cuisine
+        [ingredient] Par ingrédient
+        [instruction] Par instruction
+        [keyword] Par mot-clé
+        [source] Par source
+        [subcategory] Par sous-catégorie
+        [tool] Par outil
+       *[name] Par nom
+    }
+search-help-multiple =
+    { $field ->
+        [categories] Plusieurs catégories
+        [cuisines] Plusieurs cuisines
+        [ingredients] Plusieurs ingrédients
+        [instructions] Plusieurs instructions
+        [sources] Plusieurs sources
+        [keywords] Plusieurs mots-clés
+       *[tools] Plusieurs outils
+    }
+
+## Sample search terms
+
+search-help-best = meilleur
+search-help-beverages = boissons
+search-help-big-green-squash = courge verte géante
+search-help-biscuits = biscuits
+search-help-blender = blender
+search-help-breakfast = petit-déjeuner
+search-help-butter = beurre
+search-help-chicken = poulet
+search-help-chicken-kyiv = poulet kyiv
+search-help-cocktails = cocktails
+search-help-dinner = dîner
+search-help-japanese = japonais
+search-help-lunch = déjeuner
+search-help-mardi-gras = Mardi Gras
+search-help-melt-butter = faire fondre le beurre
+search-help-olive-oil = huile d’olive
+search-help-onions = oignons
+search-help-preheat-oven-350 = préchauffer le four à 350
+search-help-thyme = thym
+search-help-ukrainian = Oekraïens
+search-help-wok = wok
+
+## Settings
+
+settings-tabs-general = Général
+settings-tabs-connections = Connexions
+settings-tabs-data = Données
+settings-tabs-server = Serveur
+settings-tabs-admin = Administrateur
+settings-tabs-account = Compte
+settings-tabs-about = À propos
+settings-admin-default-theme = Thème par défaut
+    .description = Définit le thème par défaut pour tous les utilisateurs.
+users-label = Utilisateurs
+users-delete-question = Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+email-configuration-title = Configuration de l’e-mail
+email-configuration-description = Cette connexion est configurée à l’aide de variables d’environnement.
+email-configuration-host = Hôte
+email-configuration-from = De
+email-configuration-username = Nom d'utilisateur
+email-configuration-password = Mot de passe
+settings-connections-azure-ai-document-intelligence = Azure AI Document Intelligence
+    .description = This connection is used to digitise recipe images.
+settings-connections-established = Connexion établie
+settings-connections-no-connection = Aucune connexion
+settings-connections-endpoint = Point de terminaison
+settings-connections-vision-placeholder = URL du point de terminaison Vision
+settings-connections-resource-key = Clé de ressource
+    .placeholder = Clé de ressource
+settings-connections-test = Tester la connexion
+settings-general-no-edit-runtime = Ne peut pas être modifié au moment de l'exécution.
+settings-general-language = Langage
+    .description = Choisissez la langue de l'interface utilisateur.
+settings-general-paper-size = Taille du papier
+    .description = Choisissez la taille de papier préférée pour vos documents.
+settings-general-theme = Thème
+    .description = Sélectionnez votre thème préféré.
+settings-general-themes-credits = Crédits à DaisyUI pour cette liste
+settings-general-timezone = Fuseau horaire
+    .description = Afficher les heures dans le fuseau horaire sélectionné.
+settings-general-view-sizes = Tailles d'affichage
+server-configuration-table-title = Configuration
+server-configuration-table-autologin = Connexion automatique
+    .description = Se connecte automatiquement à l'utilisateur par défaut sans identifiants.
+server-configuration-table-allow-signups = Autoriser les inscriptions
+    .description = Autorise les nouveaux utilisateurs à créer des comptes.
+server-configuration-table-is-demo = Est-ce un mode démo ?
+    .description = Active le mode démo avec des opérations d'écriture restreintes.
+settings-recipes-categories = Catégories
+settings-recipes-new-category = Nouvelle catégorie
+settings-recipes-bold-ingredients = Ingrédients en gras
+    .description = Ingrédients en gras dans les instructions
+settings-recipes-convert-automatically = Převádět automaticky
+    .description = Převádět nové recepty do vámi preferovaného systému měření.
+settings-recipes-measurement-system = Système de mesure
+settings-recipes-nutrition-data-source = Source des données nutritionnelles
+    .description = Choisissez la base de données nutritionnelle utilisée pour calculer les informations nutritionnelles.
+settings-recipes-view-sources = Afficher les sources
+placeholders-title = Espaces réservés
+
+## Shopping
+
+shopping-list-title = Listes de courses
+shopping-list-tab-title = { shopping-list-title } | { -brand }
+shopping-list-add-to-list = Ajouter à la liste de courses
+shopping-list-add-ingredients = Ajouter des ingrédients à la liste de courses
+shopping-list-add-label = Ajouter une étiquette
+shopping-list-delete-list = Supprimer la liste
+shopping-list-delete-list-confirm = Êtes-vous sûr de vouloir supprimer cette liste ?
+shopping-list-empty-data = Aucun données de shopping fournies.
+shopping-list-create-first-list = Créez votre première liste de courses pour commencer.
+shopping-list-for-label = Pour
+shopping-list-select-a-list = Sélectionnez une liste de courses pour afficher ses articles.
+shopping-list-new-list-name = Nieuwe naam voor boodschappenlijst
+shopping-list-no-label = Aucun libellé
+shopping-list-no-list-available = Aucune liste de courses n’est disponible.
+shopping-list-no-items = La liste de courses ne contient aucun article.
+shopping-list-text = Texte
+shopping-list-pick-list = Choisir une liste de courses
+shopping-list-print-list = Imprimer la liste
+shopping-list-share-list = Partager la liste
+shopping-list-item-name =
+    .placeholder = Entrecôte
+shopping-list-item-quantity =
+    .placeholder = 500 g (volledig)
+shopping-list-item-notes =
+    .placeholder = Notes (facultatif)
+add-shopping-list-table-ingredient = Ingrédient
+add-shopping-list-table-quantity = Quantité
+add-shopping-list-table-notes = Notes
+add-shopping-list-table-include = Inclure
+
+## About and updates
+
+modes-view-label = Mode d'affichage
+version = { -brand } version
+update-div-available = (mise à jour disponible)
+update-div-check-for-updates = Vérifier les mises à jour
+update-div-checking = Vérification en cours…
+update-div-latest = (dernier)
+update-div-last-checked-at = Dernière vérification : { $date }
+update-div-last-updated-at = Dernière mise à jour : { $date }
+update-div-read-release-notes = Lisez les { $link }
+update-div-release-notes = notes de version
+supported = pris en charge

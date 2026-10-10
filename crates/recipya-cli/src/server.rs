@@ -5,7 +5,7 @@ use tokio::signal;
 use tokio::{net::TcpListener, sync::watch};
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tower_cookies::CookieManagerLayer;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 use app::jobs::clean_media;
 use app::state::AppState;
@@ -16,15 +16,50 @@ use models::{
 };
 use nutrition::NutritionDataSource;
 use recipya_scraper::AppHttpClient;
-use repository::ModelManager;
+use repository::{ModelManager, create_database_if_not_exists};
 use router::copy_to_fs;
 use router::router;
-use support::fs::{AppFs, FsSupport, get_base_dir};
+use support::{
+    fs::{AppFs, FsSupport, get_base_dir},
+    software,
+};
 
 use crate::error::{Error, Result};
 
 /// Initializes and starts Recipya's web server.
-pub async fn server() -> Result<()> {
+pub async fn run_server() -> Result<()> {
+    info!(
+        "Recipya v{} starting in {} mode",
+        env!("CARGO_PKG_VERSION"),
+        if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        }
+    );
+
+    create_database_if_not_exists("recipya")?;
+
+    if software::is_ffmpeg_installed() {
+        info!("FFmpeg is installed");
+    } else {
+        let mut message = String::from("FFmpeg is not installed. ");
+
+        if cfg!(target_os = "macos") {
+            message.push_str("Please execute: brew install ffmpeg");
+        } else if cfg!(target_os = "linux") {
+            message.push_str("Please consult your package manager to install it.");
+        } else if cfg!(target_os = "windows") {
+            message.push_str("Please install from https://www.gyan.dev/ffmpeg/builds");
+        }
+
+        warn!("{message}");
+    }
+
+    run_server_helper().await
+}
+
+async fn run_server_helper() -> Result<()> {
     let config = Config::load_from_env()?;
 
     let state = AppState::new(

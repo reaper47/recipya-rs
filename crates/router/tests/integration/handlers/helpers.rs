@@ -130,8 +130,8 @@ pub fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         if let Some(v) = n.sodium_mg {
             form = form.add_part("sodium-per-100g", Part::text(v.to_string()));
         }
-        if let Some(v) = n.fiber_g {
-            form = form.add_part("fiber-per-100g", Part::text(v.to_string()));
+        if let Some(v) = n.fibre_g {
+            form = form.add_part("fibre-per-100g", Part::text(v.to_string()));
         }
         if let Some(v) = n.trans_fat_g {
             form = form.add_part("trans-fat-per-100g", Part::text(v.to_string()));
@@ -166,8 +166,8 @@ pub fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         if let Some(v) = n.nutrition.sodium_mg {
             form = form.add_part("sodium-per-serving", Part::text(v.to_string()));
         }
-        if let Some(v) = n.nutrition.fiber_g {
-            form = form.add_part("fiber-per-serving", Part::text(v.to_string()));
+        if let Some(v) = n.nutrition.fibre_g {
+            form = form.add_part("fibre-per-serving", Part::text(v.to_string()));
         }
         if let Some(v) = n.nutrition.trans_fat_g {
             form = form.add_part("trans-fat-per-serving", Part::text(v.to_string()));

@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use app::message::{Broadcaster, IMessage, MessageType, Toast};
 use app::state::AppState;
+use l10n::Messages;
 use models::{
     Error::EntityNotFound,
     Recipe,
@@ -30,8 +31,9 @@ pub async fn broadcast_import_done_toast(
     report: ReportForCreate,
     import_source: String,
     user_id: Uuid,
+    messages: &Messages,
 ) {
-    state.hide_broadcast(user_id).await;
+    state.hide_broadcast(user_id, messages).await;
 
     let num_success = i64::try_from(recipe_ids.len())
         .inspect_err(|err| error!(len = recipe_ids.len(), ?err, "Failed to cast num success"))
@@ -50,8 +52,8 @@ pub async fn broadcast_import_done_toast(
 
     let toast = Toast::builder(
         MessageType::Toast,
-        "Success",
-        format!("Imported {num_success} recipes. Skipped {num_skipped}."),
+        &messages.toast_title_success(),
+        &messages.toast_recipes_import_status(num_success, num_skipped),
     )
     .action(Some(&redirect))
     .build();
@@ -69,12 +71,19 @@ pub async fn broadcast_import_done_toast(
 pub async fn fetch_categories_keywords(
     state: &AppState,
     user_id: Uuid,
+    messages: &Messages,
 ) -> Result<(Vec<Category>, Vec<Keyword>)> {
     let categories = match User::categories(&state.mm, user_id).await {
         Ok(categories) => categories,
         Err(err) => {
             error!(?err, "Error fetching recipe categories");
-            Toast::broadcast_error(state, user_id, "Error fetching recipe categories.").await;
+            Toast::broadcast_error(
+                state,
+                user_id,
+                &messages.toast_settings_fetch_categories_failed(),
+                messages,
+            )
+            .await;
             return Err(Error::Database);
         }
     };
@@ -83,7 +92,13 @@ pub async fn fetch_categories_keywords(
         Ok(keywords) => keywords,
         Err(err) => {
             error!(?err, "Error fetching recipe keywords");
-            Toast::broadcast_error(state, user_id, "Error fetching recipe keywords.").await;
+            Toast::broadcast_error(
+                state,
+                user_id,
+                &messages.toast_recipes_keywords_fetch_failed(),
+                messages,
+            )
+            .await;
             return Err(Error::Database);
         }
     };
@@ -257,12 +272,19 @@ pub async fn fetch_view_recipe(
     state: &AppState,
     user_id: Uuid,
     recipe_id: i64,
+    messages: &Messages,
 ) -> Result<(ViewRecipe, Vec<Category>, Vec<Keyword>)> {
     let recipe = match Recipe::get(&state.mm, user_id, recipe_id).await {
         Ok(recipe) => recipe,
         Err(err) => {
             error!(?recipe_id, ?user_id, ?err, "Error fetching recipe");
-            Toast::broadcast_error(state, user_id, "Recipe not found.").await;
+            Toast::broadcast_error(
+                state,
+                user_id,
+                &messages.toast_recipes_not_found(),
+                messages,
+            )
+            .await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -270,7 +292,7 @@ pub async fn fetch_view_recipe(
         }
     };
 
-    let (categories, keywords) = match fetch_categories_keywords(state, user_id).await {
+    let (categories, keywords) = match fetch_categories_keywords(state, user_id, messages).await {
         Ok(res) => res,
         Err(err) => {
             return Err(err);

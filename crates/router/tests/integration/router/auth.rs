@@ -58,7 +58,7 @@ mod tests_change_password {
             .await;
 
         res.assert_status_bad_request();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Passwords do not match.","status":"alert-error","title":"Operation Failed"}}"#).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Passwords do not match.","status":"alert-error","title":"Operation failed"}}"#).await;
         Ok(())
     }
 
@@ -76,7 +76,7 @@ mod tests_change_password {
             .await;
 
         res.assert_status_bad_request();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-error","title":"Operation Failed"}}"#).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"New password cannot be the same as the current.","status":"alert-error","title":"Operation failed"}}"#).await;
         Ok(())
     }
 
@@ -197,7 +197,7 @@ mod tests_delete_user {
         let res = server.delete(BASE_URI).await;
 
         res.assert_status(StatusCode::FORBIDDEN);
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-error","title":"Operation Failed"}}"#).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Trump is Putin's lap dog. Remove him from office!","status":"alert-error","title":"Operation failed"}}"#).await;
         Ok(())
     }
 
@@ -215,7 +215,7 @@ mod tests_delete_user {
         let res = server.delete(BASE_URI).await;
 
         res.assert_status(StatusCode::FORBIDDEN);
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"This account cannot be deleted.","status":"alert-error","title":"Operation Failed"}}"#).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"This account cannot be deleted.","status":"alert-error","title":"Operation failed"}}"#).await;
         Ok(())
     }
 
@@ -253,9 +253,9 @@ mod tests_forgot_password {
         assert_html(
             &res,
             &[
-                r#"<title hx-swap-oob="true">Forgot Password | Recipya</title>"#,
-                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email"></fieldset>"#,
-                r#"<button class="btn btn-primary btn-block btn-sm">Reset password</button>"#,
+                r#"<title hx-swap-oob="true">Forgot password | Recipya</title>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input class="input" id="email" type="email" required name="email" placeholder="Enter email address" autocomplete="email"></fieldset>"#,
+                r#"<button class="btn btn-primary btn-block btn-sm">Set new password</button>"#,
             ],
         );
         Ok(())
@@ -303,9 +303,9 @@ mod tests_forgot_password {
         assert_html(
             &res,
             &[
-                r#"<h2 class="card-title underline self-center">Password Reset Requested</h2>"#,
+                r#"<h2 class="card-title underline self-center">Password reset requested</h2>"#,
                 r"An email with instructions on how to reset your password has been sent to you.",
-                r#"<a href="/" class="btn btn-primary btn-block btn-sm">Back Home</a>"#,
+                r#"<a href="/" class="btn btn-primary btn-block btn-sm">Back to home</a>"#,
             ],
         );
         Ok(())
@@ -338,7 +338,7 @@ mod tests_forgot_password {
         assert_html(
             &res,
             &[
-                r#"<title hx-swap-oob="true">Token Expired | Recipya</title>"#,
+                r#"<title hx-swap-oob="true">Token expired | Recipya</title>"#,
                 "The token associated with the URL expired.",
             ],
         );
@@ -361,14 +361,14 @@ mod tests_forgot_password {
         assert_html(
             &res,
             &[
-                r#"<title hx-swap-oob="true">Reset Password | Recipya</title>"#,
+                r#"<title hx-swap-oob="true">Reset password | Recipya</title>"#,
                 &format!(
                     r#"<input type="hidden" name="token" value="{}">"#,
                     entry.token
                 ),
-                r#"<fieldset class="fieldset"><label class="label" for="password">New password</label><input id="password" type="password" required placeholder="Enter your new password" class="input" name="password"></fieldset>"#,
-                r#"<fieldset class="fieldset"><label class="label" for="confirm-password">Confirm password</label><input id="confirm-password" type="password" required placeholder="Retype your password" class="input" name="password-confirm"></fieldset>"#,
-                r#"<button class="btn btn-primary btn-block btn-sm">Change</button>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="password">New password</label><input class="input" id="password" type="password" required name="password" autocomplete="new-password" placeholder="Enter new password"></fieldset>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="confirm-password">Confirm password</label><input class="input" id="confirm-password" type="password" required name="password-confirm" autocomplete="new-password" placeholder="Retype password"></fieldset>"#,
+                r#"<button class="btn btn-primary btn-block btn-sm">Set new password</button>"#,
             ],
         );
         Ok(())
@@ -394,7 +394,7 @@ mod tests_forgot_password {
         res.assert_status_bad_request();
         res.assert_header(
             axum_htmx::HX_TRIGGER,
-            r#"{"notification":{"type":"toast","message":"Password is invalid","status":"alert-info","title":"Success"}}"#,
+            r#"{"notification":{"type":"toast","message":"Password is invalid.","status":"alert-info","title":"Success"}}"#,
         );
         Ok(())
     }
@@ -459,10 +459,10 @@ mod tests_login {
                 r#"<form class="card w-80 sm:w-96 bg-base-100 shadow-xl" hx-post="/auth/login">"#,
                 r#"<div class="card-body"><div class="chat chat-end"><div class="chat-image avatar"><div class="w-10 rounded-full"><img alt="Bananacat" src="/data/images/Icon/android-chrome-192x192.png"></div></div><div class="chat-bubble">The stove is hot. Shall we cook?</div></div>"#,
                 r#"<h2 class="card-title self-center underline">Log in to Recipya</h2>"#,
-                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value=""></fieldset>"#,
-                r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value=""></fieldset>"#,
-                r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
-                r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Login</button></div><div class="grid text-center gap-2"><div><div class="divider">OR</div><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Create an account</a></div></div>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input class="input" id="email" type="email" required name="email" placeholder="Enter email address" autocomplete="username" value=""></fieldset>"#,
+                r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input class="input" id="password" type="password" required name="password" placeholder="Enter password" autocomplete="current-password" value=""></fieldset>"#,
+                r#"<label class="fieldset-label py-2"><input class="checkbox" type="checkbox" name="remember-me" checked>Remember me</label>"#,
+                r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log in</button></div><div class="grid text-center gap-2"><div><div class="divider uppercase">or</div><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Create an account</a></div></div>"#,
             ],
         );
         Ok(())
@@ -485,9 +485,9 @@ mod tests_login {
         assert_html(
             &res,
             &[
-                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input id="email" type="email" required placeholder="Enter your email address" class="input" name="email" value="demo@demo.com"></fieldset>"#,
-                r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input id="password" type="password" required placeholder="Enter your password" class="input" name="password" value="demodemo"></fieldset>"#,
-                r#"<label class="fieldset-label py-2"><input name="remember-me" type="checkbox" checked="checked" class="checkbox" checked="checked">Remember me</label>"#,
+                r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input class="input" id="email" type="email" required name="email" placeholder="Enter email address" autocomplete="username" value="demo@demo.com"></fieldset>"#,
+                r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input class="input" id="password" type="password" required name="password" placeholder="Enter password" autocomplete="current-password" value="demodemo"></fieldset>"#,
+                r#"<label class="fieldset-label py-2"><input class="checkbox" type="checkbox" name="remember-me" checked>Remember me</label>"#,
             ],
         );
         Ok(())
@@ -597,7 +597,7 @@ mod tests_login {
         res.assert_status_bad_request();
         res.assert_header(
             axum_htmx::HX_TRIGGER,
-            r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
+            r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation failed"}}"#,
         );
         Ok(())
     }
@@ -618,7 +618,7 @@ mod tests_login {
         res.assert_status_bad_request();
         res.assert_header(
             axum_htmx::HX_TRIGGER,
-            r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation Failed"}}"#,
+            r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation failed"}}"#,
         );
         Ok(())
     }

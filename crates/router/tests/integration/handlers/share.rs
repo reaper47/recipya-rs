@@ -45,11 +45,11 @@ async fn test_default_expires_at_time_ok() -> Result<()> {
         &res,
         &[
             &format!(
-                r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
+                r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly></label>"#,
                 share.link
             ),
             &format!(
-                r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard('http://localhost:8078/shared/r/{}')">Copy</button>"#,
+                r#"<button id="copy-button" class="btn btn-neutral" title="Copy to clipboard" onClick="copyToClipboard('http://localhost:8078/shared/r/{}')">Copy</button>"#,
                 share.link
             ),
         ],
@@ -58,7 +58,7 @@ async fn test_default_expires_at_time_ok() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_custom_expires_at_time_ok() -> Result<()> {
+async fn test_share_custom_expires_at_time_ok() -> Result<()> {
     let (server, state) = build_server_logged_in(default_config()).await?;
     let user_id = User::all(&state.mm).await?[0].id;
     let settings = UserSettingDetails::get(&state.mm, user_id).await?;
@@ -80,11 +80,11 @@ async fn test_custom_expires_at_time_ok() -> Result<()> {
         &res,
         &[
             &format!(
-                r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly="readonly"></label>"#,
+                r#"<label><input class="input" type="url" value="http://localhost:8078/shared/r/{}" readonly></label>"#,
                 share.link
             ),
             &format!(
-                r#"<button class="btn btn-neutral" id="copy-button" title="Copy to clipboard" onClick="copyToClipboard('http://localhost:8078/shared/r/{}')">Copy</button>"#,
+                r#"<button id="copy-button" class="btn btn-neutral" title="Copy to clipboard" onClick="copyToClipboard('http://localhost:8078/shared/r/{}')">Copy</button>"#,
                 share.link
             ),
         ],

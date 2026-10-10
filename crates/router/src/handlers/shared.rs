@@ -1,12 +1,14 @@
 use axum::extract::{OriginalUri, Path, State};
 use axum::response::IntoResponse;
 use axum_htmx::HxRequest;
+use fluent_static::support::axum::RequestLanguage;
 use iso8601::DateTime;
 use tracing::error;
 use uuid::Uuid;
 
 use app::state::AppState;
 use config::States;
+use l10n::Messages;
 use models::Error::EntityNotFound;
 use models::data::{AboutData, Data, ShareData, ShoppingData, ViewRecipe};
 use models::settings::UserSettingDetails;
@@ -21,9 +23,10 @@ use crate::middleware::mw_auth::OptionalAuth;
 pub async fn share_recipe_handler(
     HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
-    State(state): State<AppState>,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     OptionalAuth(user): OptionalAuth,
     Path(link): Path<Uuid>,
+    State(state): State<AppState>,
 ) -> impl IntoResponse {
     let (share, recipe) = match ShareRecipe::get_by_link(&state.mm, link).await {
         Ok(share) => share,
@@ -75,6 +78,7 @@ pub async fn share_recipe_handler(
                     ..Default::default()
                 },
                 &settings,
+                &messages,
             )
         }
         None => templates::recipes::view_recipe(
@@ -105,6 +109,7 @@ pub async fn share_recipe_handler(
                 ..Default::default()
             },
             &UserSettingDetails::default(),
+            &messages,
         ),
     };
 
@@ -121,9 +126,10 @@ pub async fn share_recipe_handler(
 pub async fn share_shopping_list_handler(
     HxRequest(is_hx_request): HxRequest,
     OriginalUri(uri): OriginalUri,
-    State(state): State<AppState>,
+    RequestLanguage(messages): RequestLanguage<l10n::Messages>,
     OptionalAuth(user): OptionalAuth,
     Path(link): Path<Uuid>,
+    State(state): State<AppState>,
 ) -> impl IntoResponse {
     let (share, list) = match ShareShoppingList::get_by_link(&state.mm, link).await {
         Ok(v) => v,
@@ -166,6 +172,7 @@ pub async fn share_shopping_list_handler(
             ..Default::default()
         },
         &user_settings.unwrap_or_default(),
+        &messages,
     )
     .into_response()
 }

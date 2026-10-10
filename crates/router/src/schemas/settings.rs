@@ -29,6 +29,12 @@ pub struct ExportDataPayload {
     pub recipe_ids: Vec<i64>,
 }
 
+/// Represents the payload
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LanguagePayload {
+    pub locale: i64,
+}
+
 /// Represents the payload for the bold ingredients setting.
 #[derive(Deserialize, Serialize)]
 pub struct BoldIngredientsPayload {

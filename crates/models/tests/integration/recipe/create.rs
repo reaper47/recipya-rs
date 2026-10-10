@@ -24,9 +24,7 @@ use test_db::default_config;
 use test_fixtures::insert_user;
 use test_harness::{build_server_logged_in, create_app_state};
 
-use crate::recipe::utils::a_complete_recipe_for_create;
-
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::{Result, recipe::utils::a_complete_recipe_for_create};
 
 mod tests_add_category {
     use super::*;

@@ -1,7 +1,6 @@
 use diesel::prelude::*;
 use diesel::{Identifiable, Queryable, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use strum::{Display, EnumIter, EnumString};
 use time_tz::{TimeZone, Tz, timezones};
 use uuid::Uuid;
 
@@ -10,112 +9,8 @@ use nutrition::{NutritionDataSource, tables::NutritionSource};
 use repository::{ModelManager, schema};
 
 use crate::paper::{PaperSize, PaperSizes};
+use crate::theme::Theme;
 use crate::{Error, Result};
-
-#[derive(Debug, Default, Eq, PartialEq, Display, EnumString, EnumIter)]
-#[strum(serialize_all = "lowercase")]
-pub enum Theme {
-    Default,
-    #[default]
-    System,
-    Light,
-    Dark,
-    Abyss,
-    Acid,
-    Aqua,
-    Autumn,
-    Black,
-    Bumblebee,
-    Business,
-    Caramellatte,
-    Coffee,
-    Corporate,
-    Cmyk,
-    Cupcake,
-    Cyberpunk,
-    Dim,
-    Dracula,
-    Emerald,
-    Fantasy,
-    Forest,
-    Garden,
-    Halloween,
-    Lemonade,
-    Lofi,
-    Luxury,
-    Night,
-    Nord,
-    Pastel,
-    Retro,
-    Silk,
-    Sunset,
-    Synthwave,
-    Valentine,
-    Wireframe,
-    Winter,
-}
-
-impl Theme {
-    pub async fn get_id(&self, mm: &ModelManager) -> Result<i32> {
-        Ok(schema::themes::table
-            .filter(schema::themes::name.eq(self.to_string()))
-            .select(schema::themes::id)
-            .first::<i32>(&mut mm.pool.get().await?)
-            .await?)
-    }
-
-    pub async fn save_default(&self, mm: &ModelManager, user_id: Uuid) -> Result<()> {
-        self.update_theme(mm, user_id, true).await
-    }
-
-    pub async fn save_selected(&self, mm: &ModelManager, user_id: Uuid) -> Result<()> {
-        self.update_theme(mm, user_id, false).await
-    }
-
-    async fn update_theme(&self, mm: &ModelManager, user_id: Uuid, is_default: bool) -> Result<()> {
-        use schema::user_settings;
-
-        let theme_id = self.get_id(mm).await?;
-
-        let mut conn = mm.pool.get().await?;
-
-        if is_default {
-            diesel::update(user_settings::table)
-                .set(user_settings::default_theme.eq(theme_id))
-                .execute(&mut conn)
-                .await?;
-        } else {
-            diesel::update(user_settings::table.filter(user_settings::user_id.eq(user_id)))
-                .set(user_settings::selected_theme.eq(theme_id))
-                .execute(&mut conn)
-                .await?;
-        }
-
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Queryable, Identifiable, Selectable)]
-#[diesel(table_name = schema::themes)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct ThemeModel {
-    pub id: i32,
-    pub name: String,
-}
-
-impl ThemeModel {
-    /// Fetches all the themes from the database.
-    pub async fn all(mm: &ModelManager) -> Result<Vec<Self>> {
-        use schema::themes;
-
-        let mut conn = mm.pool.get().await?;
-
-        Ok(themes::table
-            .select(Self::as_select())
-            .load(&mut conn)
-            .await?)
-    }
-}
 
 /// Represents a user's settings in the database.
 #[allow(dead_code)]
@@ -134,6 +29,7 @@ struct UserSetting {
     convert_automatically: bool,
     cookbooks_view: i32,
     default_theme: i32,
+    language_id: i64,
     selected_theme: i32,
     paper_size_id: i16,
     timezone: String,
@@ -150,6 +46,7 @@ pub struct UserSettingDetails {
     pub cookbooks_view: i32,
     pub default_theme: Theme,
     pub selected_theme: Theme,
+    pub selected_locale: String,
     pub paper_size_id: i16,
     pub paper_sizes: PaperSizes,
     pub timezone: &'static Tz,
@@ -167,6 +64,7 @@ impl Default for UserSettingDetails {
             cookbooks_view: 0,
             default_theme: Theme::default(),
             selected_theme: Theme::default(),
+            selected_locale: "en-CA".into(),
             paper_size_id: 0,
             paper_sizes: PaperSizes::default(),
             timezone: timezones::db::UTC,
@@ -177,31 +75,35 @@ impl Default for UserSettingDetails {
 impl UserSettingDetails {
     /// Retrieves the user settings for the given user ID from the database.
     pub async fn get(mm: &ModelManager, user_id: Uuid) -> Result<Self> {
-        use schema::{themes, user_settings};
-
         let mut conn = mm.pool.get().await?;
 
-        let settings: UserSetting = user_settings::table
-            .filter(user_settings::user_id.eq(user_id))
+        let settings: UserSetting = schema::user_settings::table
+            .filter(schema::user_settings::user_id.eq(user_id))
             .select(UserSetting::as_select())
             .first(&mut conn)
             .await?;
 
-        let default_theme_name: Theme = themes::table
+        let default_theme_name: Theme = schema::themes::table
             .find(settings.default_theme)
-            .select(themes::name)
+            .select(schema::themes::name)
             .first::<String>(&mut conn)
             .await?
             .parse()
             .map_err(|_| Error::ThemeNotFound)?;
 
-        let selected_theme_name: Theme = themes::table
+        let selected_theme_name: Theme = schema::themes::table
             .find(settings.selected_theme)
-            .select(themes::name)
+            .select(schema::themes::name)
             .first::<String>(&mut conn)
             .await?
             .parse()
             .map_err(|_| Error::ThemeNotFound)?;
+
+        let selected_i18n_code: String = schema::languages::table
+            .filter(schema::languages::id.eq(settings.language_id))
+            .select(schema::languages::locale)
+            .first(&mut conn)
+            .await?;
 
         drop(conn);
 
@@ -215,6 +117,7 @@ impl UserSettingDetails {
             cookbooks_view: settings.cookbooks_view,
             default_theme: default_theme_name,
             selected_theme: selected_theme_name,
+            selected_locale: selected_i18n_code,
             paper_size_id: settings.paper_size_id,
             paper_sizes: PaperSize::get_all(mm).await?,
             timezone: timezones::get_by_name(&settings.timezone).unwrap_or(timezones::db::UTC),

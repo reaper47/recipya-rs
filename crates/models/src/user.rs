@@ -289,6 +289,26 @@ impl User {
         Ok(())
     }
 
+    /// Updates the selected language for the user.
+    pub async fn update_language(&self, mm: &ModelManager, new_locale_id: i64) -> Result<String> {
+        use schema::user_settings::dsl::{language_id, user_id, user_settings};
+
+        let mut conn = mm.pool.get().await?;
+
+        diesel::update(user_settings.filter(user_id.eq(self.id)))
+            .set(language_id.eq(new_locale_id))
+            .execute(&mut conn)
+            .await?;
+
+        let locale = schema::languages::table
+            .filter(schema::languages::id.eq(new_locale_id))
+            .select(schema::languages::locale)
+            .first::<String>(&mut conn)
+            .await?;
+
+        Ok(locale)
+    }
+
     /// Updates the user's paper size.
     pub async fn update_paper_size(&self, mm: &ModelManager, new_paper_size_id: i16) -> Result<()> {
         use schema::user_settings::dsl::{paper_size_id, user_id, user_settings};

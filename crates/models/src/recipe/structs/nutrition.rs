@@ -71,7 +71,7 @@ impl From<Nutrition> for NutritionForCreate {
             unsaturated_fat_g: value.unsaturated_fat_g,
             cholesterol_mg: value.cholesterol_mg,
             sodium_mg: value.sodium_mg,
-            fiber_g: value.fiber_g,
+            fibre_g: value.fiber_g,
             trans_fat_g: value.trans_fat_g,
         }
     }
@@ -101,7 +101,7 @@ impl From<&NutritionInformation> for NutritionDetailsForCreate {
                 .first()
                 .map(Mass::to_number::<f64>),
             sodium_mg: schema.sodium_content.first().map(Mass::to_number::<f64>),
-            fiber_g: schema.fiber_content.first().map(Mass::to_number::<f64>),
+            fibre_g: schema.fiber_content.first().map(Mass::to_number::<f64>),
             trans_fat_g: schema.trans_fat_content.first().map(Mass::to_number::<f64>),
         };
 
@@ -211,7 +211,7 @@ pub struct NutritionForCreate {
     pub unsaturated_fat_g: Option<f64>,
     pub cholesterol_mg: Option<f64>,
     pub sodium_mg: Option<f64>,
-    pub fiber_g: Option<f64>,
+    pub fibre_g: Option<f64>,
     pub trans_fat_g: Option<f64>,
 }
 
@@ -227,7 +227,7 @@ impl NutritionForCreate {
             && self.unsaturated_fat_g.is_none()
             && self.cholesterol_mg.is_none()
             && self.sodium_mg.is_none()
-            && self.fiber_g.is_none()
+            && self.fibre_g.is_none()
             && self.trans_fat_g.is_none()
     }
 }
@@ -353,7 +353,7 @@ impl From<&NutritionForCreate> for Nutrition {
             unsaturated_fat_g: n.unsaturated_fat_g,
             cholesterol_mg: n.cholesterol_mg,
             sodium_mg: n.sodium_mg,
-            fiber_g: n.fiber_g,
+            fiber_g: n.fibre_g,
             trans_fat_g: n.trans_fat_g,
             ..Default::default()
         }
@@ -559,7 +559,7 @@ mod tests {
                 unsaturated_fat_g: Some(7.),
                 cholesterol_mg: Some(8.),
                 sodium_mg: Some(9.),
-                fiber_g: Some(10.),
+                fibre_g: Some(10.),
                 trans_fat_g: Some(11.),
             }),
             per_serving: Some(NutritionPerServingDetailsForCreate {
@@ -573,7 +573,7 @@ mod tests {
                     unsaturated_fat_g: Some(18.),
                     cholesterol_mg: Some(19.),
                     sodium_mg: Some(20.),
-                    fiber_g: Some(21.),
+                    fibre_g: Some(21.),
                     trans_fat_g: Some(22.),
                 },
                 serving_size: "2 meatballs".into(),
@@ -597,7 +597,7 @@ mod tests {
             unsaturated_fat_g: None,
             cholesterol_mg: None,
             sodium_mg: None,
-            fiber_g: None,
+            fibre_g: None,
             trans_fat_g: None,
         };
 
@@ -616,7 +616,7 @@ mod tests {
             unsaturated_fat_g: Some(3.),
             cholesterol_mg: Some(100.),
             sodium_mg: Some(500.),
-            fiber_g: Some(2.),
+            fibre_g: Some(2.),
             trans_fat_g: Some(1.),
         };
 
@@ -694,7 +694,7 @@ mod tests {
                 unsaturated_fat_g: Some(6.),
                 cholesterol_mg: Some(50.),
                 sodium_mg: Some(200.),
-                fiber_g: Some(3.),
+                fibre_g: Some(3.),
                 trans_fat_g: Some(0.),
             }
         }

@@ -12,7 +12,7 @@ use test_db::default_config;
 use test_fixtures::insert_user;
 use test_harness::create_app_state;
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::Result;
 
 mod tests_email_token {
     use super::*;
