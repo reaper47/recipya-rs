@@ -63,7 +63,7 @@ async fn test_query_param_must_be_greater_than_0() -> Result<()> {
     let res = server.get(&format!("{}?yield=0", base_uri(1))).await;
 
     res.assert_status_bad_request();
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Yield must be greater than zero.","status":"alert-error","title":"Operation Failed"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Yield must be greater than zero.","status":"alert-error","title":"Operation failed"}}"#).await;
     Ok(())
 }
 
@@ -74,7 +74,7 @@ async fn test_cannot_find_recipe_in_database() -> Result<()> {
     let res = server.get(&format!("{}?yield=8", base_uri(999))).await;
 
     res.assert_status_not_found();
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation failed"}}"#).await;
     Ok(())
 }
 

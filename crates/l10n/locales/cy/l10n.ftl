@@ -593,3 +593,4 @@ update-div-last-checked-at = Diwethaf wedi'i wirio: { $date }
 update-div-last-updated-at = Diweddaraeth: { $date }
 update-div-read-release-notes = Darllen y { $link }
 update-div-release-notes = nodiadau rhyddhau
+supported = Cefnogedig

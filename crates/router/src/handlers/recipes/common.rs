@@ -281,7 +281,7 @@ pub async fn fetch_view_recipe(
             Toast::broadcast_error(
                 state,
                 user_id,
-                &messages.toast_recipes_none_found(),
+                &messages.toast_recipes_not_found(),
                 messages,
             )
             .await;

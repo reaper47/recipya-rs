@@ -589,3 +589,4 @@ update-div-last-checked-at = I tirohia whakamutunga: { $date }
 update-div-last-updated-at = I whakahouwhia whakamutunga: { $date }
 update-div-read-release-notes = Pānui i te { $link }
 update-div-release-notes = Ngā kōrero whakaputanga
+supported = e tautokona ana

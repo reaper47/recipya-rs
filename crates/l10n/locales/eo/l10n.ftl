@@ -593,3 +593,4 @@ update-div-last-checked-at = Lasta kontrolado: { $date }
 update-div-last-updated-at = Lasta ĝisdatigo: { $date }
 update-div-read-release-notes = Legu la { $link }
 update-div-release-notes = eldono-notoj
+supported = subtenata

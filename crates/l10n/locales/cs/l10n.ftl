@@ -593,3 +593,4 @@ update-div-last-checked-at = Naposledy zkontrolováno: { $date }
 update-div-last-updated-at = Naposledy aktualizováno: { $date }
 update-div-read-release-notes = Přečtěte si { $link }
 update-div-release-notes = poznámky k vydání
+supported = podporováno

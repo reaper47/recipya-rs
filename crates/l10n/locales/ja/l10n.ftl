@@ -589,3 +589,4 @@ update-div-last-checked-at = 最終確認日時: { $date }
 update-div-last-updated-at = 最終更新: { $date }
 update-div-read-release-notes = { $link }を読む
 update-div-release-notes = リリースノート
+supported = サポート済み

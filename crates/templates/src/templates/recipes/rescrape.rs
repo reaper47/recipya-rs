@@ -927,9 +927,9 @@ const NUTRITION_FIELDS: &[NutritionField] = &[
     },
     NutritionField {
         label: "Fiber",
-        key: "fiber",
+        key: "fibre",
         unit: "g",
-        extractor: |n| n.fiber_g,
+        extractor: |n| n.fibre_g,
     },
 ];
 

@@ -15,6 +15,7 @@ signup = Sign up
 unknown = Unknown
 of = of
 or = or
+supported = supported
 
 title = { $title }:
 count = { NUMBER($count) }

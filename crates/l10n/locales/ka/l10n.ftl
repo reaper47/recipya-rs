@@ -593,3 +593,4 @@ update-div-last-checked-at = ბოლოს შემოწმებული: 
 update-div-last-updated-at = ბოლო განახლება: { $date }
 update-div-read-release-notes = წაიკითხეთ { $link }
 update-div-release-notes = გამოშვების შენიშვნები
+supported = მხარდაჭერილი

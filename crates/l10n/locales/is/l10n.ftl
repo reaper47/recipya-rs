@@ -593,3 +593,4 @@ update-div-last-checked-at = Síðast athugað: { $date }
 update-div-last-updated-at = Síðast uppfært: { $date }
 update-div-read-release-notes = Lestu { $link }
 update-div-release-notes = útgáfuskýringar
+supported = stytt

@@ -593,3 +593,4 @@ update-div-last-checked-at = Pēdējo reizi pārbaudīts: { $date }
 update-div-last-updated-at = Pēdējo reizi atjaunināts: { $date }
 update-div-read-release-notes = Izlasiet { $link }
 update-div-release-notes = izlaišanas piezīmes
+supported = atbalstīts

@@ -10,7 +10,7 @@ use support::fs::FsSupport;
 
 use crate::recipes::common::list_recipes;
 use crate::recipes::search_bar;
-use crate::templates::helpers::inject_markup_in_message;
+use crate::templates::helpers::{Replace, inject_markup_in_message};
 use crate::templates::layouts::{self, render_empty_nav_extra_content, render_recipe_button};
 use crate::templates::pagination::pagination;
 
@@ -65,7 +65,7 @@ fn render_index(
                     p {
                         (inject_markup_in_message(
                             &messages.recipe_page_collection_subtext(add_recipe_page_title.to_string()),
-                            &[(&add_recipe_page_title, button_markup)])
+                            &[(&add_recipe_page_title, button_markup)], Replace::All)
                         )
                     }
                 }

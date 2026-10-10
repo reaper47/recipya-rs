@@ -148,7 +148,7 @@ pub async fn view_recipe_handler(
     } else {
         let Ok(recipe) = Recipe::get(&state.mm, user.id, recipe_id).await else {
             return Ok(templates::general::simple(
-                &messages.toast_recipes_none_found(),
+                &messages.toast_recipes_not_found(),
                 &messages.toast_recipes_not_found_view(),
                 &messages,
             ));

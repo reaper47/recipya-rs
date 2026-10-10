@@ -593,3 +593,4 @@ update-div-last-checked-at = Վերջին ստուգումը՝ { $date }
 update-div-last-updated-at = Վերջին թարմացումը՝ { $date }
 update-div-read-release-notes = Կարդացեք { $link }-ը
 update-div-release-notes = թողարկման նշումներ
+supported = աջակցվում է

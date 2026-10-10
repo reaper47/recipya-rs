@@ -589,3 +589,4 @@ update-div-last-checked-at = Lần kiểm tra cuối cùng: { $date }
 update-div-last-updated-at = Cập nhật lần cuối: { $date }
 update-div-read-release-notes = Đọc { $link }
 update-div-release-notes = ghi chú phát hành
+supported = được hỗ trợ

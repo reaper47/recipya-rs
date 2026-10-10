@@ -61,7 +61,7 @@ pub async fn recrape_recipe_handler(
                 Toast::broadcast_error(
                     &state,
                     user_id,
-                    &messages.toast_recipes_none_found(),
+                    &messages.toast_recipes_not_found(),
                     &messages,
                 )
                 .await;
@@ -445,7 +445,7 @@ pub async fn recrape_recipe_put_handler(
             trans_fat_g: get("nutrition-new-trans-fat-per-100g"),
             cholesterol_mg: get("nutrition-new-cholesterol-per-100g"),
             sodium_mg: get("nutrition-new-sodium-per-100g"),
-            fiber_g: get("nutrition-new-fiber-per-100g"),
+            fibre_g: get("nutrition-new-fibre-per-100g"),
         };
 
         let per_serving = NutritionForCreate {
@@ -459,7 +459,7 @@ pub async fn recrape_recipe_put_handler(
             trans_fat_g: get("nutrition-new-trans-fat-per-serving"),
             cholesterol_mg: get("nutrition-new-cholesterol-per-serving"),
             sodium_mg: get("nutrition-new-sodium-per-serving"),
-            fiber_g: get("nutrition-new-fiber-per-serving"),
+            fibre_g: get("nutrition-new-fibre-per-serving"),
         };
 
         let serving_size = map

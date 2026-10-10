@@ -595,3 +595,4 @@ update-div-last-checked-at = آخر فحص: { $date }
 update-div-last-updated-at = آخر تحديث: { $date }
 update-div-read-release-notes = اقرأ { $link }
 update-div-release-notes = ملاحظات الإصدار
+supported = مدعوم

@@ -269,7 +269,7 @@ fn search_help_data(messages: &Messages) -> [(Message, String); 20] {
 pub fn no_results(is_favourites: bool, messages: &Messages) -> Markup {
     html! {
         div #list-recipes class="grid place-content-center text-sm text-center h-3/5 md:text-base" {
-            p pt-2 {
+            p .pt-2 {
                 (messages.searchbar_no_results())
             }
         }

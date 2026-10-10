@@ -478,7 +478,7 @@ search-help-multiple =
         [keywords] Mehrere Schlüsselwörter
        *[tools] Mehrere Werkzeuge
     }
-search-help-best = best
+search-help-best = am besten
 search-help-beverages = Getränke
 search-help-big-green-squash = großer grüner Kürbis
 search-help-biscuits = Kekse
@@ -593,3 +593,4 @@ update-div-last-checked-at = Zuletzt überprüft: { $date }
 update-div-last-updated-at = Zuletzt aktualisiert: { $date }
 update-div-read-release-notes = Lesen Sie die { $link }
 update-div-release-notes = Versionshinweise
+supported = unterstützt

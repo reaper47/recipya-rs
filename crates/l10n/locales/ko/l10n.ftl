@@ -589,3 +589,4 @@ update-div-last-checked-at = 마지막으로 확인한 시점: { $date }
 update-div-last-updated-at = 최종 업데이트: { $date }
 update-div-read-release-notes = { $link } 읽기
 update-div-release-notes = 릴리스 노트
+supported = 지원됨

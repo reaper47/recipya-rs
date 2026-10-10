@@ -6,7 +6,7 @@ use integrations::{FileFormat, all_apps};
 use models::data::{Data, PaginationData};
 use models::settings::UserSettingDetails;
 
-use crate::templates::helpers::inject_markup_in_message;
+use crate::templates::helpers::{Replace, inject_markup_in_message};
 use crate::templates::layouts;
 use crate::templates::pagination::pagination;
 
@@ -61,7 +61,8 @@ fn render_add_page(messages: &Messages) -> Markup {
 }
 
 fn render_fetch_websites_card(messages: &Messages) -> Markup {
-    let supported = messages.fetch_website_card_search_placeholder();
+    // let supported = messages.fetch_website_card_search_placeholder();
+    let supported = messages.supported();
     let button_markup = html! {
         button .underline hx-get="/recipes/supported-websites" hx-target="#search-results" _="on click open #supported-websites-dialog" {
             (supported)
@@ -77,7 +78,7 @@ fn render_fetch_websites_card(messages: &Messages) -> Markup {
                 (messages.fetch_website_card_title())
             }
             p {
-                (inject_markup_in_message(&messages.fetch_website_card_description(supported.to_string()), &[(&supported, button_markup)]))
+                (inject_markup_in_message(&messages.fetch_website_card_description(supported.to_string()), &[(&supported, button_markup)], Replace::First))
             }
             div class="card-actions justify-end" {
                 button class="btn btn-outline btn-sm btn-block" _="on click open #websites-dialog" {
@@ -147,7 +148,8 @@ fn render_import_apps_card(messages: &Messages) -> Markup {
                      &[
                          (&various_apps, various_markup),
                          (&schema, schema_markup),
-                     ]
+                     ],
+                     Replace::All,
                 ))
             }
             p {
@@ -155,7 +157,8 @@ fn render_import_apps_card(messages: &Messages) -> Markup {
                     &messages.bookmarklet_description(bookmarklet.to_string()),
                      &[
                          (&bookmarklet, bookmarklet_markup),
-                     ]
+                     ],
+                     Replace::All,
                 ))
             }
             div .card-actions {
@@ -530,7 +533,7 @@ fn supported_websites_dialog(messages: &Messages) -> Markup {
                 }
                 h3 .mb-1 {
                     label .floating-label {
-                        input type="search" placeholder=(messages.fetch_website_card_search()) class="input input-sm w-11/12"
+                        input type="search" placeholder=(messages.fetch_website_card_search_placeholder()) class="input input-sm w-11/12"
                               _=(PreEscaped("on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"));
                     }
                 }

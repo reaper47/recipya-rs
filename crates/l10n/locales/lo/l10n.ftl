@@ -589,3 +589,4 @@ update-div-last-checked-at = ການກວດສອບຄັ້ງຫຼ້າ
 update-div-last-updated-at = ອັບເດດລ່າສຸດ: { $date }
 update-div-read-release-notes = ອ່ານ { $link }
 update-div-release-notes = ເອກະສານບັນທຶກການປ່ຽນແປງ
+supported = ສະໜັບສະໜູນ

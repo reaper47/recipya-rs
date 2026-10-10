@@ -593,3 +593,4 @@ update-div-last-checked-at = Utolsó ellenőrzés: { $date }
 update-div-last-updated-at = Utolsó frissítés: { $date }
 update-div-read-release-notes = Olvasd el a { $link }
 update-div-release-notes = kiadási jegyzetek
+supported = támogatott

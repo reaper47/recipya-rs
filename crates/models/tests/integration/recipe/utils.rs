@@ -77,7 +77,7 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
                     unsaturated_fat_g: n.unsaturated_fat_g,
                     cholesterol_mg: n.cholesterol_mg,
                     sodium_mg: n.sodium_mg,
-                    fiber_g: n.fiber_g,
+                    fiber_g: n.fibre_g,
                     trans_fat_g: n.trans_fat_g,
                 }),
                 per_serving: recipe_c
@@ -177,7 +177,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
                     unsaturated_fat_g: Some(2.),
                     cholesterol_mg: Some(5.),
                     sodium_mg: Some(12.),
-                    fiber_g: Some(10.),
+                    fibre_g: Some(10.),
                     trans_fat_g: Some(3.),
                 }),
                 per_serving: Some(NutritionPerServingDetailsForCreate {
@@ -191,7 +191,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
                         unsaturated_fat_g: Some(7.),
                         cholesterol_mg: Some(12.),
                         sodium_mg: Some(100.),
-                        fiber_g: Some(18.),
+                        fibre_g: Some(18.),
                         trans_fat_g: Some(2.),
                     },
                     serving_size: "2 buns".into(),

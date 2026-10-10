@@ -593,3 +593,4 @@ update-div-last-checked-at = Viimeksi tarkistettu: { $date }
 update-div-last-updated-at = Viimeksi päivitetty: { $date }
 update-div-read-release-notes = Lue { $link }
 update-div-release-notes = julkaisumuistiinnot
+supported = tuettu

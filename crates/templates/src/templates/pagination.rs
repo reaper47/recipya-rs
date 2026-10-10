@@ -5,7 +5,7 @@ use maud::{Markup, html};
 use l10n::Messages;
 use models::data::{PageSlot, PaginationData};
 
-use crate::templates::helpers::inject_markup_in_message;
+use crate::templates::helpers::{Replace, inject_markup_in_message};
 
 /// Renders the pagination strip.
 pub(super) fn pagination(p: &PaginationData, messages: &Messages) -> Markup {
@@ -107,18 +107,16 @@ pub(super) fn pagination(p: &PaginationData, messages: &Messages) -> Markup {
 }
 
 fn render_summary(p: &PaginationData, messages: &Messages) -> Markup {
-    let from = messages.count(calc_start_result(p.selected, p.results_per_page));
+    let from_num = calc_start_result(p.selected, p.results_per_page);
+    let from = messages.count(from_num);
     let from_markup = html! {
         span class="font-semibold text-base-content" {
             (from)
         }
     };
 
-    let to = messages.count(calc_end_result(
-        p.selected,
-        p.results_per_page,
-        p.num_results,
-    ));
+    let to_num = calc_end_result(p.selected, p.results_per_page, p.num_results);
+    let to = messages.count(to_num);
     let to_markup = html! {
         span class="font-semibold text-base-content" {
             (to)
@@ -133,10 +131,10 @@ fn render_summary(p: &PaginationData, messages: &Messages) -> Markup {
     };
 
     let summary = messages.pagination_summary(
-        from.to_string(),
-        to.to_string(),
-        total.to_string(),
-        total.to_string(),
+        from_num.to_string(),
+        to_num.to_string(),
+        p.num_results.to_string(),
+        p.num_results.to_string(),
     );
 
     inject_markup_in_message(
@@ -146,6 +144,7 @@ fn render_summary(p: &PaginationData, messages: &Messages) -> Markup {
             (&to, to_markup),
             (&total, total_markup),
         ],
+        Replace::All,
     )
 }
 

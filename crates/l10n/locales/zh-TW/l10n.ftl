@@ -589,3 +589,4 @@ update-div-last-checked-at = 上次檢查時間：{ $date }
 update-div-last-updated-at = 上次更新：{ $date }
 update-div-read-release-notes = 閱讀 { $link }
 update-div-release-notes = 版本說明
+supported = 已支援

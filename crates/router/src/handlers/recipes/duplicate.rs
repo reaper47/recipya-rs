@@ -39,7 +39,7 @@ pub async fn duplicate_recipe_handler(
                 Toast::broadcast_error(
                     &state,
                     user.id,
-                    &messages.toast_recipes_none_found(),
+                    &messages.toast_recipes_not_found(),
                     &messages,
                 )
                 .await;

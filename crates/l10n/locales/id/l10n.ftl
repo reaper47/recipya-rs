@@ -589,3 +589,4 @@ update-div-last-checked-at = Terakhir diperiksa: { $date }
 update-div-last-updated-at = Terakhir diperbarui: { $date }
 update-div-read-release-notes = Baca { $link }
 update-div-release-notes = catatan rilis
+supported = didukung

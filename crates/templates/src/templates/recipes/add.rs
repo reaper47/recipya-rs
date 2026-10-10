@@ -313,7 +313,7 @@ fn render_nutrition_table(messages: &Messages) -> Markup {
                     (messages.nutrition_trans_fat(), "trans-fat-per-100g", "1.8g"),
                     (messages.nutrition_cholesterol(), "cholesterol-per-100g", "1.1mg"),
                     (messages.nutrition_sodium(), "sodium-per-100g", "100mg"),
-                    (messages.nutrition_fibre(), "fiber-per-100g", "8g"),
+                    (messages.nutrition_fibre(), "fibre-per-100g", "8g"),
                 ] {
                     tr data-nutrition-type="per-100g" {
                         td { (name) }
@@ -337,7 +337,7 @@ fn render_nutrition_table(messages: &Messages) -> Markup {
                     (messages.nutrition_trans_fat(), "trans-fat-per-serving", "0g"),
                     (messages.nutrition_cholesterol(), "cholesterol-per-serving", "100mg"),
                     (messages.nutrition_sodium(), "sodium-per-serving", "25mg"),
-                    (messages.nutrition_fibre(), "fiber-per-serving", "6g"),
+                    (messages.nutrition_fibre(), "fibre-per-serving", "6g"),
                 ] {
                     tr data-nutrition-type="per-serving" .hidden {
                         td { (name) }

@@ -589,3 +589,4 @@ update-div-last-checked-at = शेवटचे तपासले: { $date }
 update-div-last-updated-at = शेवटचे अद्ययन: { $date }
 update-div-read-release-notes = { $link } वाचा
 update-div-release-notes = प्रकाशन टिप्पण्या
+supported = समर्थित

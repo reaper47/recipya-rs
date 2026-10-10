@@ -593,3 +593,4 @@ update-div-last-checked-at = Последно проверено: { $date }
 update-div-last-updated-at = Последно ажурирано: { $date }
 update-div-read-release-notes = Прочитајте ги { $link }
 update-div-release-notes = белешки за верзијата
+supported = поддржано

@@ -330,7 +330,7 @@ fn render_media(
                     } {
                         img src="" alt="" class="mb-2";
                         @if video_exists {
-                            video controls class="mb-2" src={ "/data/videos/{}{EXT_VIDEO}" (video.video) } type="video/webm" {}
+                            video controls class="mb-2" src={ "/data/videos/" (video.video) (EXT_VIDEO) } type="video/webm" {}
                         }
                         span class="grid gap-1 max-w-sm" style="margin: auto auto 0.25rem;" {
                             div class="mr-1 hidden" {
@@ -498,7 +498,7 @@ fn nutrition_per_100g_data<'a>(
         ),
         (
             messages.nutrition_fibre(),
-            "fiber-per-100g",
+            "fibre-per-100g",
             "8g",
             format_nutrition(nutrition.and_then(|n| n.fiber_g), "g"),
         ),
@@ -581,7 +581,7 @@ fn nutrition_per_serving_data<'a>(
         ),
         (
             messages.nutrition_fibre(),
-            "fiber-per-serving",
+            "fibre-per-serving",
             "8g",
             format_nutrition(nutrition.and_then(|n| n.nutrition.fiber_g), "g"),
         ),

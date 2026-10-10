@@ -589,3 +589,4 @@ update-div-last-checked-at = ตรวจสอบล่าสุดเมื่
 update-div-last-updated-at = อัปเดตล่าสุดเมื่อ: { $date }
 update-div-read-release-notes = อ่าน { $link }
 update-div-release-notes = บันทึกการเปลี่ยนแปลง
+supported = รองรับ

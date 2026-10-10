@@ -74,7 +74,7 @@ fn render_lists_index(data: &Data, messages: &Messages) -> Markup {
                 div #shopping-list-view-pane class="p-4 text-center grid" {
                     div .grid {
                         @if shopping.shopping_lists.is_empty() {
-                            p text-left. {
+                            p .text-left {
                                 "← " (messages.shopping_list_create_first_list())
                             }
                             div id=[data.is_hx_request.then_some("navbar-actions")]
@@ -94,7 +94,7 @@ fn render_lists_index(data: &Data, messages: &Messages) -> Markup {
                                     }
                                 }
                                 None => {
-                                    p class="text-left" {
+                                    p .text-left {
                                         "← " (messages.shopping_list_select_a_list())
                                     }
                                 }
@@ -469,7 +469,7 @@ fn action_view_button(selected_mode: &ViewMode, list_id: Uuid, messages: &Messag
             }
             form tabindex="0"
                 class="menu dropdown-content bg-base-200 w-32 text-lg pr-2 left-full top-0 md:left-0 md:top-full"
-                hx-get=(format!("/shopping/lists/{list_id}/view"))
+                hx-get={ "/shopping/lists/" (list_id) "/view" }
                 hx-target="#shopping-list-view-pane"
                 hx-trigger="change"
                 hx-swap="innerHTML transition:true"
@@ -564,7 +564,7 @@ fn action_delete_button(list_id: Uuid, messages: &Messages) -> Markup {
     html! {
         button type="button" title=(messages.shopping_list_delete_list())
             class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
-            hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm=(messages.shopping_list_delete_list_confirm()) {
+            hx-delete={ "/shopping/lists/" (list_id) } hx-confirm=(messages.shopping_list_delete_list_confirm()) {
             span .hidden.md:block {
                 (icons::trash())
             }
@@ -637,7 +637,7 @@ pub fn shopping_list_item<T: AsRef<str>>(
         li class="list-row grid grid-cols-[1fr_auto]" {
             @if let Some(item) = item {
                 form .contents
-                    hx-put={ "/shopping/lists/{list_id}/items/" (item.id) }
+                    hx-put={ "/shopping/lists/" (list_id) "/items/" (item.id) }
                     hx-target="closest li"
                     hx-swap="outerHTML"
                     hx-on--after-request="if(event.detail.successful) { this.reset(); this.querySelector('input').focus(); }" {
@@ -800,7 +800,7 @@ pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Ma
 
             // Edit mode
             span class="hidden text-left cursor-default " {
-                form .flex hx-target="closest summary" hx-swap="outerHTML" hx-put={ "/shopping/lists/" (list_id) "/labels/{label_id}" } {
+            form .flex hx-target="closest summary" hx-swap="outerHTML" hx-put={ "/shopping/lists/" (list_id) "/labels/" (label_id) } {
                     input type="text" required name="name" class="input input-sm" value=(label.as_ref()) list="labels" autocomplete="off";
                     span {
                         button class="btn join-item btn-square btn-sm ml-2 mb-1" {
@@ -992,7 +992,7 @@ fn render_list_item_details(
         div class=[div_class] {
             @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
                 p style=[p_style] {
-                    (item.ingredient) "(" (q) ")"
+                    (item.ingredient) " (" (q) ")"
                 }
             } @else {
                 p style=[p_style] {

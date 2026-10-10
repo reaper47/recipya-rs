@@ -14,7 +14,7 @@ use models::{
 use nutrition::NutritionDataSource;
 
 use crate::templates::common::cancel_submit_form_actions;
-use crate::templates::helpers::inject_markup_in_message;
+use crate::templates::helpers::{Replace, inject_markup_in_message};
 use crate::templates::icons;
 
 /// A Hyperscript snippet for filtering table rows.
@@ -810,7 +810,7 @@ fn new_user_row(num_users: usize, messages: &Messages) -> Markup {
             }
             td {
                 input #password type="password" required
-                       placeholder=(messages.password_input_label())
+                       placeholder=(messages.password_input_placeholder())
                        class="input input-sm mb-1" name="password" autocomplete="off"
                        hx-post="/admin/user"
                        hx-target="#new-row-user"
@@ -1204,7 +1204,7 @@ fn settings_about(data: &Data, messages: &Messages) -> Markup {
                                     a class="link" href="https://recipya.musicavis.ca/about/changelog/v1.3.0" target="_blank" {
                                         (release_notes)
                                     }
-                                })]))
+                                })], Replace::All))
                         }
                     }
                     div class="flex flex-row self-start" {
@@ -1264,7 +1264,7 @@ fn settings_about(data: &Data, messages: &Messages) -> Markup {
                             (inject_markup_in_message(&messages.keyboard_shortcuts_macos_replacement("Ctrl", "Cmd"), &[
                                 ("Ctrl", ctrl_markup),
                                 ("Cmd", cmd_markup),
-                            ]))
+                            ], Replace::All))
                         }
                     }
                 }

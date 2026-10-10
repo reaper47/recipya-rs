@@ -388,7 +388,7 @@ action-view = చూడు
 action-visit = సందర్శించు
 shortcuts-hint = షార్ట్‌కట్: { $keys }
 keyboard-shortcuts-title = కీబోర్డ్ షార్ట్‌కట్‌లు
-keyboard-shortcuts-global = Global
+keyboard-shortcuts-global = ప్రపంచస్థాయి
 keyboard-shortcuts-open-settings-dialog = సెట్టింగ్‌ల డైలాగ్‌ను తెరవండి
 keyboard-shortcuts-create-recipe-manually = కొత్త వంటకాన్ని చేతితో సృష్టించండి
 keyboard-shortcuts-open-import-recipes-dialog = రెసిపీలను దిగుమతి చేసుకోవడం డైలాగ్‌ను తెరవండి
@@ -432,9 +432,9 @@ pagination-prev-page = మునుపటి పేజీ
 pagination-next-page = తదుపరి పేజీ
 pagination-goto-page = పేజీ { $page_num }కు వెళ్లండి
 pagination-summary =
-    Showing { NUMBER($from) }-{ NUMBER($to) } of { NUMBER($total) } { $count ->
-        [one] result
-       *[other] results
+    { NUMBER($from) }-{ NUMBER($to) } ఫలితాలు { NUMBER($total) } ఫలితాల్లో చూపిస్తున్నాము { $count ->
+        [one] ఫలితం
+       *[other] ఫలితాలు
     }
 reports-tab-title = { reports } | { -brand }
 reports-no-entries = ఎటువంటి నివేదికలు లేవు
@@ -498,7 +498,7 @@ search-help-onions = ఉల్లికాయలు
 search-help-preheat-oven-350 = ఓవన్‌ను 350కు ముందుగా వేడి చేయండి
 search-help-thyme = థైమ్
 search-help-ukrainian = యూక్రేనియన్
-search-help-wok = wok
+search-help-wok = వోక్
 settings-tabs-general = సాధారణ
 settings-tabs-connections = కనెక్షన్లు
 settings-tabs-data = డేటా
@@ -593,3 +593,4 @@ update-div-last-checked-at = చివరిగా తనిఖీ చేసి�
 update-div-last-updated-at = చివరిగా నవీకరించబడింది: { $date }
 update-div-read-release-notes = { $link } చదవండి
 update-div-release-notes = విడుదల నోట్స్
+supported = మద్దతు ఇవ్వబడింది

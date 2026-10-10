@@ -593,3 +593,4 @@ update-div-last-checked-at = Ultimo controllo: { $date }
 update-div-last-updated-at = Ultimo aggiornamento: { $date }
 update-div-read-release-notes = Leggi le { $link }
 update-div-release-notes = note di rilascio
+supported = supportato

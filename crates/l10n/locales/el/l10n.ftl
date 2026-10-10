@@ -593,3 +593,4 @@ update-div-last-checked-at = Τελευταίος έλεγχος: { $date }
 update-div-last-updated-at = Τελευταία ενημέρωση: { $date }
 update-div-read-release-notes = Διαβάστε το { $link }
 update-div-release-notes = Σημειώσεις έκδοσης
+supported = υποστηρίζεται
