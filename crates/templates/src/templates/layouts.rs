@@ -47,7 +47,7 @@ pub fn main(
             body class="min-h-screen flex flex-col" hx-ext="sse" sse-connect="/sse" _=(PreEscaped(format!("on load call initTheme('{}', '{}')", user_settings.default_theme, user_settings.selected_theme))) {
                 div sse-swap="message" style="display:none" {}
                 div class="drawer lg:drawer-open" _="on htmx:afterSwap[target is #content] from body set #side-drawer-nav.checked to false" {
-                    input #side-drawer-nav type="checkbox" .drawer-toggle;
+                    input #side-drawer-nav type="checkbox" class="drawer-toggle hidden";
 
                     div class="drawer-content flex flex-col min-h-screen" {
                         header class="navbar bg-base-200 shadow-sm print:hidden shrink-0" {
