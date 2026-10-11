@@ -1,5 +1,8 @@
 use tracing::info;
 
+#[cfg(target_os = "linux")]
+use crate::Result;
+
 pub fn init_sandbox() {
     cfg_select! {
         target_os = "linux" => {
@@ -19,8 +22,6 @@ fn sandbox_helper() -> Result<()> {
     use procfs::sys::kernel::Version;
     use support::fs::get_base_dir;
     use tracing::warn;
-
-    use crate::Result;
 
     let version = Version::current().unwrap();
 
