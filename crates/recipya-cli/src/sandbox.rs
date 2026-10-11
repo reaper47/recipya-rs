@@ -1,6 +1,4 @@
-use tracing::warn;
-
-use crate::Result;
+use tracing::info;
 
 pub fn init_sandbox() {
     cfg_select! {
@@ -20,7 +18,9 @@ fn sandbox_helper() -> Result<()> {
     };
     use procfs::sys::kernel::Version;
     use support::fs::get_base_dir;
-    use tracing::info;
+    use tracing::warn;
+
+    use crate::Result;
 
     let version = Version::current().unwrap();
 

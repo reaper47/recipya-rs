@@ -395,7 +395,7 @@ fn assert_complete_recipe(
         res,
         &[
             r#"<script type="application/ld+json">{"@type":"Recipe","@context":"https://schema.org","#,
-            r#"<button title="Toggle screen lock"#,
+            r#"<button id="wakelock-button" title="Toggle screen lock" data-msg-wakelock-on="Screen lock activated." data-msg-wakelock-off="Screen lock deactivated." _="on load if not navigator.wakeLock hide me end on click call toggleWakeLock()">"#,
             &format!(
                 r##"<button id="edit-recipe" class="ml-2 hidden sm:block" title="Edit recipe" hx-get="/recipes/{recipe_id}/edit" hx-push-url="true" hx-target="#content" hx-swap="innerHTML transition:true">"##
             ),

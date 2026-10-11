@@ -157,7 +157,7 @@ mod tests_recipe {
                     r#"<title hx-swap-oob="true">{} | Recipya</title>"#,
                     recipe.name
                 ),
-                r#"<button title="Toggle screen lock"#,
+                r#"<button id="wakelock-button" title="Toggle screen lock" data-msg-wakelock-on="Screen lock activated." data-msg-wakelock-off="Screen lock deactivated." _="on load if not navigator.wakeLock hide me end on click call toggleWakeLock()">"#,
                 &format!(
                     "<span class=\"text-center pb-2 print:w-full\" itemprop=\"name\">{}</span>",
                     recipe.name
