@@ -594,3 +594,5 @@ update-div-last-updated-at = Сүүлд шинэчлэгдсэн: { $date }
 update-div-read-release-notes = { $link }-ийг унших
 update-div-release-notes = шинэчлэлийн тэмдэглэлүүд
 supported = дэмжигдсэн
+wakelock-activated = Дэлгэцийн түгжээ идэвхжүүлэгдлээ.
+wakelock-deactivated = Дэлгэцийн түгжээ унтрагдлаа.

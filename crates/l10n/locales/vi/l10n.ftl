@@ -590,3 +590,5 @@ update-div-last-updated-at = Cập nhật lần cuối: { $date }
 update-div-read-release-notes = Đọc { $link }
 update-div-release-notes = ghi chú phát hành
 supported = được hỗ trợ
+wakelock-activated = Màn hình khóa đã được kích hoạt.
+wakelock-deactivated = Khóa màn hình đã được tắt.

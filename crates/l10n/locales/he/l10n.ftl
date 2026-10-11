@@ -594,3 +594,5 @@ update-div-last-updated-at = עודכן לאחרונה: { $date }
 update-div-read-release-notes = קרא את ה-{ $link }
 update-div-release-notes = רשימת שינויים
 supported = נתמך
+wakelock-activated = נעילת המסך הופעלה.
+wakelock-deactivated = נעילת המסך הושבתה.

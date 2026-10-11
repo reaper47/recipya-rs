@@ -594,3 +594,5 @@ update-div-last-updated-at = Viimeksi päivitetty: { $date }
 update-div-read-release-notes = Lue { $link }
 update-div-release-notes = julkaisumuistiinnot
 supported = tuettu
+wakelock-activated = Näyttölukko aktivoitu.
+wakelock-deactivated = Näytön lukitus poistettu käytöstä.

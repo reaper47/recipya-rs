@@ -594,3 +594,5 @@ update-div-last-updated-at = Son güncelleme: { $date }
 update-div-read-release-notes = { $link } bağlantısını okuyun
 update-div-release-notes = sürüm notları
 supported = destekleniyor
+wakelock-activated = Ekran kilidi etkinleştirildi.
+wakelock-deactivated = Ekran kilidi devre dışı bırakıldı.

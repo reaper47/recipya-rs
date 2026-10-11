@@ -594,3 +594,5 @@ update-div-last-updated-at = ਆਖ਼ਰੀ ਵਾਰ ਅਪਡੇਟ ਕੀਤ
 update-div-read-release-notes = { $link } ਪੜ੍ਹੋ
 update-div-release-notes = ਰਿਲੀਜ਼ ਨੋਟਸ
 supported = ਸਮਰਥਿਤ
+wakelock-activated = ਸਕ੍ਰੀਨ ਲੌਕ ਸਕ੍ਰਿਆ ਹੋ ਗਿਆ ਹੈ।
+wakelock-deactivated = ਸਕ੍ਰੀਨ ਲੌਕ ਨਿਸ਼ਕ੍ਰਿਆ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ।

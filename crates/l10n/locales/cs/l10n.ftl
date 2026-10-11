@@ -594,3 +594,5 @@ update-div-last-updated-at = Naposledy aktualizováno: { $date }
 update-div-read-release-notes = Přečtěte si { $link }
 update-div-release-notes = poznámky k vydání
 supported = podporováno
+wakelock-activated = Uzamčení obrazovky bylo aktivováno.
+wakelock-deactivated = Uzamčení obrazovky bylo deaktivováno.

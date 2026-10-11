@@ -594,3 +594,5 @@ update-div-last-updated-at = शेवटचे अद्ययन: { $date }
 update-div-read-release-notes = { $link } वाचा
 update-div-release-notes = प्रकाशन टिप्पण्या
 supported = समर्थित
+wakelock-activated = स्क्रीन लॉक सक्रिय झाले आहे.
+wakelock-deactivated = स्क्रीन लॉक निष्क्रिय करण्यात आले.

@@ -594,3 +594,5 @@ update-div-last-updated-at = Seinast dagfest: { $date }
 update-div-read-release-notes = Les { $link }
 update-div-release-notes = útgávueftirfar
 supported = stuðlað
+wakelock-activated = Skermilásingin er virkin.
+wakelock-deactivated = Skermilásingin er avvígð.

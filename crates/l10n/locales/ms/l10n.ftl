@@ -590,3 +590,5 @@ update-div-last-updated-at = Dikemas kini terakhir kali: { $date }
 update-div-read-release-notes = Baca { $link }
 update-div-release-notes = nota keluaran
 supported = disokong
+wakelock-activated = Kunci skrin diaktifkan.
+wakelock-deactivated = Kunci skrin dinyahaktifkan.

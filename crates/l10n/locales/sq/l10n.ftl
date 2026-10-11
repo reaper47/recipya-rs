@@ -594,3 +594,5 @@ update-div-last-updated-at = Përditësuar së fundmi: { $date }
 update-div-read-release-notes = Lexoni { $link }
 update-div-release-notes = shënimet e versionit
 supported = i mbështetur
+wakelock-activated = Kyçja e ekranit është aktivizuar.
+wakelock-deactivated = Bllokimi i ekranit është çaktivizuar.

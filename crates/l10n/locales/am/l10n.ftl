@@ -594,3 +594,5 @@ update-div-last-updated-at = የመጨረሻው ማዘመኛ፦ { $date }
 update-div-read-release-notes = { $link }ን ያንብቡ
 update-div-release-notes = የለቀቃ ማስታወሻዎች
 supported = ይደገፋል
+wakelock-activated = የስክሪን መቆለፊያ ተንቀሳቃሽ ሆኗል።
+wakelock-deactivated = Screen lock deactivated.

@@ -594,3 +594,5 @@ update-div-last-updated-at = கடைசியாகப் புதுப்�
 update-div-read-release-notes = { $link } ஐப் படியுங்கள்
 update-div-release-notes = வெளியீட்டுக் குறிப்புகள்
 supported = ஆதரிக்கப்பட்டது
+wakelock-activated = திரை பூட்டம் செயல்படுத்தப்பட்டது.
+wakelock-deactivated = திரைப் பூட்டம் நீக்கப்பட்டது.

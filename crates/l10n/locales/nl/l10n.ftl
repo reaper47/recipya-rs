@@ -594,3 +594,5 @@ update-div-last-updated-at = Laatst bijgewerkt: { $date }
 update-div-read-release-notes = Lees de { $link }
 update-div-release-notes = release notes
 supported = ondersteund
+wakelock-activated = Schermvergrendeling geactiveerd.
+wakelock-deactivated = Schermvergrendeling is gedeactiveerd.

@@ -594,3 +594,5 @@ update-div-last-updated-at = Zuletzt aktualisiert: { $date }
 update-div-read-release-notes = Lesen Sie die { $link }
 update-div-release-notes = Versionshinweise
 supported = unterstützt
+wakelock-activated = Bildschirmsperre aktiviert.
+wakelock-deactivated = Bildschirmsperre deaktiviert.

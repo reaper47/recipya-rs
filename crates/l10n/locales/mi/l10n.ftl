@@ -590,3 +590,5 @@ update-div-last-updated-at = I whakahouwhia whakamutunga: { $date }
 update-div-read-release-notes = Pānui i te { $link }
 update-div-release-notes = Ngā kōrero whakaputanga
 supported = e tautokona ana
+wakelock-activated = Kua whakahohea te aukati mata.
+wakelock-deactivated = Kua whakawetohia te kati mata.

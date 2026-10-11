@@ -594,3 +594,5 @@ update-div-last-updated-at = শেষ আপডেট: { $date }
 update-div-read-release-notes = { $link } পঢ়ক
 update-div-release-notes = প্ৰকাশনী টোকা
 supported = সমৰ্থিত
+wakelock-activated = স্ক্ৰীন লক সক্ৰিয় কৰা হৈছে।
+wakelock-deactivated = স্ক্ৰীণ লক নিষ্ক্ৰিয় কৰা হৈছে।

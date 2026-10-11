@@ -36,8 +36,10 @@ if (!window.__wakelockLoaded) {
           isWakeLockActivated = true;
         }
 
+        const ref = document.getElementById("wakelock-button");
+
         if (displayToast && isToggledByUser) {
-          showToast("", "Screen lock activated.", "alert-info");
+          showToast("", ref.dataset.msgWakelockOn, "alert-info");
         }
 
         toggleWakeLockIcon(true, baseIdIcon);
@@ -51,7 +53,7 @@ if (!window.__wakelockLoaded) {
           }
 
           if (!isVisibilityStateHidden && isToggledByUser) {
-            showToast("", "Screen lock deactivated.", "alert-warning");
+            showToast("", ref.dataset.msgWakelockOff, "alert-warning");
           }
 
           toggleWakeLockIcon(false, baseIdIcon);

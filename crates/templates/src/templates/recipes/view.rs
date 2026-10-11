@@ -335,7 +335,10 @@ fn render_header(
 fn render_left_controls(recipe_id: i64, data: &Data, messages: &Messages) -> Markup {
     html! {
         span class="grid grid-flow-col place-items-center pb-2 print:hidden" {
-            button title=(messages.recipe_page_toggle_screen_lock()) _="on load if not navigator.wakeLock hide me end on click call toggleWakeLock()" {
+            button #wakelock-button title=(messages.recipe_page_toggle_screen_lock())
+                data-msg-wakelock-on=(messages.wakelock_activated())
+                data-msg-wakelock-off=(messages.wakelock_deactivated())
+                _="on load if not navigator.wakeLock hide me end on click call toggleWakeLock()" {
                 span #bulb-on .hidden {
                     (icons::bulb_on())
                 }

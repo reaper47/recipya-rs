@@ -594,3 +594,5 @@ update-div-last-updated-at = آخرین به‌روزرسانی: { $date }
 update-div-read-release-notes = خواندن { $link }
 update-div-release-notes = یادداشت‌های انتشار
 supported = پشتیبانی‌شده
+wakelock-activated = قفل صفحه فعال شد.
+wakelock-deactivated = قفل صفحه غیرفعال شد.

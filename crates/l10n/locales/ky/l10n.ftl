@@ -594,3 +594,5 @@ update-div-last-updated-at = Акыркы жолу жаңыртылган: { $da
 update-div-read-release-notes = { $link } дүңгүрөтүңүз
 update-div-release-notes = чыгарылыштын белгилемелери
 supported = колдоого алынган
+wakelock-activated = Экрандын кулпусу иштетилди.
+wakelock-deactivated = Экрандын кулпусу өчүрүлдү.

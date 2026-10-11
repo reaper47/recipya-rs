@@ -594,3 +594,5 @@ update-div-last-updated-at = Posljednje ažurirano: { $date }
 update-div-read-release-notes = Pročitajte { $link }
 update-div-release-notes = bilten o izdanju
 supported = podržano
+wakelock-activated = Zaključavanje ekrana je aktivirano.
+wakelock-deactivated = Zaključavanje ekrana je deaktivirano.

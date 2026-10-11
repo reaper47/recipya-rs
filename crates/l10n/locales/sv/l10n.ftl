@@ -594,3 +594,5 @@ update-div-last-updated-at = Senast uppdaterad: { $date }
 update-div-read-release-notes = Läs { $link }
 update-div-release-notes = versionsanteckningar
 supported = stöds
+wakelock-activated = Skärmlåset har aktiverats.
+wakelock-deactivated = Skärmlåset har avaktiverats.

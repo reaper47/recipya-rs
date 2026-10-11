@@ -596,3 +596,5 @@ update-div-last-updated-at = آخر تحديث: { $date }
 update-div-read-release-notes = اقرأ { $link }
 update-div-release-notes = ملاحظات الإصدار
 supported = مدعوم
+wakelock-activated = تم تفعيل قفل الشاشة.
+wakelock-deactivated = تم إيقاف قفل الشاشة.

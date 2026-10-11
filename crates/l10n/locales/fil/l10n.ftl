@@ -594,3 +594,5 @@ update-div-last-updated-at = Huling na-update: { $date }
 update-div-read-release-notes = Basahin ang { $link }
 update-div-release-notes = mga tala ng paglabas
 supported = sinusuportahan
+wakelock-activated = Na-activate ang screen lock.
+wakelock-deactivated = Na-deactivate na ang screen lock.

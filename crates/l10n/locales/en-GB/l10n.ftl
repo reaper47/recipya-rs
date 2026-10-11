@@ -677,3 +677,5 @@ update-div-last-updated-at = Dernière mise à jour : { $date }
 update-div-read-release-notes = Lisez les { $link }
 update-div-release-notes = notes de version
 supported = pris en charge
+wakelock-activated = Écran verrouillé activé.
+wakelock-deactivated = Verrouillage de l'écran désactivé.

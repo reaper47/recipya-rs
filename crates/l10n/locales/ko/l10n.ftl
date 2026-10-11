@@ -590,3 +590,5 @@ update-div-last-updated-at = 최종 업데이트: { $date }
 update-div-read-release-notes = { $link } 읽기
 update-div-release-notes = 릴리스 노트
 supported = 지원됨
+wakelock-activated = 화면 잠금이 활성화되었습니다.
+wakelock-deactivated = 화면 잠금이 비활성화되었습니다.

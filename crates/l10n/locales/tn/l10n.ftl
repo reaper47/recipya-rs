@@ -594,3 +594,5 @@ update-div-last-updated-at = E qetelletse ho ntlafatsoa ka: { $date }
 update-div-read-release-notes = Bala { $link }
 update-div-release-notes = lintlha tsa phetolelo
 supported = e tšehelitsoeng
+wakelock-activated = Senotso sa skrine se sebetse.
+wakelock-deactivated = Leqheka la skrine le ile la timetsoa.

@@ -590,3 +590,5 @@ update-div-last-updated-at = อัปเดตล่าสุดเมื่อ
 update-div-read-release-notes = อ่าน { $link }
 update-div-release-notes = บันทึกการเปลี่ยนแปลง
 supported = รองรับ
+wakelock-activated = การล็อกหน้าจอถูกเปิดใช้งานแล้ว
+wakelock-deactivated = การล็อกหน้าจอถูกปิดใช้งานแล้ว

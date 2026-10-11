@@ -594,3 +594,5 @@ update-div-last-updated-at = Останнє оновлення: { $date }
 update-div-read-release-notes = Прочитайте { $link }
 update-div-release-notes = примітки до випуску
 supported = підтримується
+wakelock-activated = Екран увімкнено.
+wakelock-deactivated = Екран заблоковано скасовано.

@@ -346,6 +346,9 @@ rescrape-page-no-images = No images
 section-add = New section
 keywords-new = New keyword
 
+wakelock-activated = Screen lock activated.
+wakelock-deactivated = Screen lock deactivated.
+
 ## Recipe timeline
 
 recipe-timeline = Timeline

@@ -594,3 +594,5 @@ update-div-last-updated-at = Τελευταία ενημέρωση: { $date }
 update-div-read-release-notes = Διαβάστε το { $link }
 update-div-release-notes = Σημειώσεις έκδοσης
 supported = υποστηρίζεται
+wakelock-activated = Ο αποκλεισμός της οθόνης ενεργοποιήθηκε.
+wakelock-deactivated = Ο αποκλεισμός της οθόνης απενεργοποιήθηκε.

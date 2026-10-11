@@ -594,3 +594,5 @@ update-div-last-updated-at = Paskutinį kartą atnaujinta: { $date }
 update-div-read-release-notes = Perskaitykite { $link }
 update-div-release-notes = naujienų sąrašas
 supported = palaikoma
+wakelock-activated = Ekrano užraktas aktyvuotas.
+wakelock-deactivated = Ekrano užraktas išjungtas.

@@ -594,3 +594,5 @@ update-div-last-updated-at = අවසන් වර යාවත්කාලී�
 update-div-read-release-notes = { $link } කියවන්න
 update-div-release-notes = නිකුතු සටහන්
 supported = සහාය දක්වනු ලබයි
+wakelock-activated = තිර අගුළුව සක්‍රිය කර ඇත.
+wakelock-deactivated = තිර අගුළුව අක්‍රිය කර ඇත.

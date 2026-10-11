@@ -594,3 +594,5 @@ update-div-last-updated-at = Síðast uppfært: { $date }
 update-div-read-release-notes = Lestu { $link }
 update-div-release-notes = útgáfuskýringar
 supported = stytt
+wakelock-activated = Skjálokkun virkjuð.
+wakelock-deactivated = Skjálokkunin var slökkt.

@@ -590,3 +590,5 @@ update-div-last-updated-at = Últimu actualizamientu: { $date }
 update-div-read-release-notes = { $link }-puyay
 update-div-release-notes = anunsikuna
 supported = soportado
+wakelock-activated = Pantay harkayta wakaychasqa.
+wakelock-deactivated = Pantay harkay p'allarisqa.

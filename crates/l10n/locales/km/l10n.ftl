@@ -590,3 +590,5 @@ update-div-last-updated-at = បានធ្វើបច្ចុប្បន្
 update-div-read-release-notes = អាន { $link }
 update-div-release-notes = កំណត់ហេតុការចេញជំនាន់
 supported = ត្រូវបានគាំទ្រ
+wakelock-activated = អ័ព្ទអេក្រង់ត្រូវបានសកម្ម។
+wakelock-deactivated = ការចាក់សោអេក្រង់ត្រូវបានផ្អាក។

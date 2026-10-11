@@ -594,3 +594,5 @@ update-div-last-updated-at = Lasta ĝisdatigo: { $date }
 update-div-read-release-notes = Legu la { $link }
 update-div-release-notes = eldono-notoj
 supported = subtenata
+wakelock-activated = Ekranŝlosilo aktivigita.
+wakelock-deactivated = Ekranŝlosilo malaktivigita.

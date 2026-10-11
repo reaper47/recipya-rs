@@ -594,3 +594,5 @@ update-div-last-updated-at = ފަހުގެ އަޕްޑޭޓް: { $date }
 update-div-read-release-notes = { $link } ކިޔާލައްވާ
 update-div-release-notes = ރިލީޒް ނޯޓްސް
 supported = ތެދުވެރި
+wakelock-activated = ސްކްރީން ލޮކް އެކްޓިވޭޓް ކުރެވިއްޖެ.
+wakelock-deactivated = ސްކްރީން ލޮކް ނިއްވާލެވިއްޖެ.

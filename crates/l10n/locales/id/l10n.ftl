@@ -590,3 +590,5 @@ update-div-last-updated-at = Terakhir diperbarui: { $date }
 update-div-read-release-notes = Baca { $link }
 update-div-release-notes = catatan rilis
 supported = didukung
+wakelock-activated = Kunci layar diaktifkan.
+wakelock-deactivated = Kunci layar dinonaktifkan.

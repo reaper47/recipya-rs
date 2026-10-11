@@ -590,3 +590,5 @@ update-div-last-updated-at = 最終更新: { $date }
 update-div-read-release-notes = { $link }を読む
 update-div-release-notes = リリースノート
 supported = サポート済み
+wakelock-activated = 画面ロックが有効になりました。
+wakelock-deactivated = 画面ロックが解除されました。

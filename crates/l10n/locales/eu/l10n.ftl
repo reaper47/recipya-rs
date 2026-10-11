@@ -594,3 +594,5 @@ update-div-last-updated-at = Azken aldiz eguneratua: { $date }
 update-div-read-release-notes = Irakurri { $link }
 update-div-release-notes = argitalpen-oharrak
 supported = onartuta
+wakelock-activated = Pantaila-blokeoa aktibatuta dago.
+wakelock-deactivated = Pantaila-blokeoa desaktibatuta dago.

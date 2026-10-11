@@ -594,3 +594,5 @@ update-div-last-updated-at = ბოლო განახლება: { $date }
 update-div-read-release-notes = წაიკითხეთ { $link }
 update-div-release-notes = გამოშვების შენიშვნები
 supported = მხარდაჭერილი
+wakelock-activated = ეკრანის ბლოკირება გააქტიურდა.
+wakelock-deactivated = ეკრანის ბლოკირება გამორთულია.

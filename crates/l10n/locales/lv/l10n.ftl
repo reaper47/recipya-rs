@@ -594,3 +594,5 @@ update-div-last-updated-at = Pēdējo reizi atjaunināts: { $date }
 update-div-read-release-notes = Izlasiet { $link }
 update-div-release-notes = izlaišanas piezīmes
 supported = atbalstīts
+wakelock-activated = Ekrāna bloķēšana aktivizēta.
+wakelock-deactivated = Ekrāna bloķēšana ir deaktivizēta.

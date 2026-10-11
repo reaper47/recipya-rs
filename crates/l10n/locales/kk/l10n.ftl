@@ -594,3 +594,5 @@ update-div-last-updated-at = Соңғы жаңартылған: { $date }
 update-div-read-release-notes = { $link } мəтінін оқыңыз
 update-div-release-notes = шығарылым жазбалары
 supported = қолданылады
+wakelock-activated = Экран құлпы белсендірілді.
+wakelock-deactivated = Экран құлпы сөндірілді.

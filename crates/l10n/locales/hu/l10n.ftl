@@ -594,3 +594,5 @@ update-div-last-updated-at = Utolsó frissítés: { $date }
 update-div-read-release-notes = Olvasd el a { $link }
 update-div-release-notes = kiadási jegyzetek
 supported = támogatott
+wakelock-activated = Képernyőzárolás aktiválva.
+wakelock-deactivated = A képernyőzár deaktiválva.

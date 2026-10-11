@@ -594,3 +594,5 @@ update-div-last-updated-at = Imesasishwa hivi karibuni: { $date }
 update-div-read-release-notes = Soma { $link }
 update-div-release-notes = maelezo ya toleo
 supported = inayoungwa mkono
+wakelock-activated = Sakafu imeamilishwa.
+wakelock-deactivated = Sakafu imezimwa.

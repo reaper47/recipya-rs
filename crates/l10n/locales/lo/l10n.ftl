@@ -590,3 +590,5 @@ update-div-last-updated-at = ອັບເດດລ່າສຸດ: { $date }
 update-div-read-release-notes = ອ່ານ { $link }
 update-div-release-notes = ເອກະສານບັນທຶກການປ່ຽນແປງ
 supported = ສະໜັບສະໜູນ
+wakelock-activated = ໄດ້ເປີດໃຊ້ການລັອກໜ້າຈໍ.
+wakelock-deactivated = ໄດ້ປິດການລັອກໜ້າຈໍແລ້ວ.

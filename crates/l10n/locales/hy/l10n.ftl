@@ -594,3 +594,5 @@ update-div-last-updated-at = Վերջին թարմացումը՝ { $date }
 update-div-read-release-notes = Կարդացեք { $link }-ը
 update-div-release-notes = թողարկման նշումներ
 supported = աջակցվում է
+wakelock-activated = Էկրանի կողպեքը ակտիվացված է։
+wakelock-deactivated = Էկրանի կողպեքը անջատվել է։

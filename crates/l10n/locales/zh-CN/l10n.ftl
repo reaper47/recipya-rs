@@ -590,3 +590,5 @@ update-div-last-updated-at = 最后更新时间：{ $date }
 update-div-read-release-notes = 阅读 { $link }
 update-div-release-notes = 发布说明
 supported = 已支持
+wakelock-activated = 屏幕锁定已激活。
+wakelock-deactivated = 屏幕锁定已停用。

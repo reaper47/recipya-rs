@@ -594,3 +594,5 @@ update-div-last-updated-at = Última actualización: { $date }
 update-div-read-release-notes = Leer las { $link }
 update-div-release-notes = Notas de la versión
 supported = compatible
+wakelock-activated = Bloqueo de pantalla activado.
+wakelock-deactivated = Bloqueo de pantalla desactivado.

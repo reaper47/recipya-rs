@@ -594,3 +594,5 @@ update-div-last-updated-at = Ultima actualizare: { $date }
 update-div-read-release-notes = Citiți { $link }
 update-div-release-notes = note de lansare
 supported = acceptat
+wakelock-activated = Blocarea ecranului a fost activată.
+wakelock-deactivated = Blocarea ecranului a fost dezactivată.

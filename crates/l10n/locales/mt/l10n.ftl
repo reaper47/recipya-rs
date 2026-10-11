@@ -594,3 +594,5 @@ update-div-last-updated-at = Aħħar aġġornat: { $date }
 update-div-read-release-notes = Aqra { $link }
 update-div-release-notes = noti tar-rilaxx
 supported = appoġġjat
+wakelock-activated = Is-skrin huwa mblukkat.
+wakelock-deactivated = Is-skrin mhuwiex aktar imblukkat.

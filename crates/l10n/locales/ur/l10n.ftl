@@ -594,3 +594,5 @@ update-div-last-updated-at = آخری بار اپڈیٹ کیا گیا: { $date }
 update-div-read-release-notes = { $link } پڑھیں
 update-div-release-notes = جاری کردہ نوٹس
 supported = زیرِ حمایت
+wakelock-activated = اسکرین لاک فعال کر دیا گیا ہے۔
+wakelock-deactivated = اسکرین لاک غیر فعال کر دیا گیا ہے۔

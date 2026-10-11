@@ -594,3 +594,5 @@ update-div-last-updated-at = Viimati uuendatud: { $date }
 update-div-read-release-notes = Lugege { $link }
 update-div-release-notes = väljalaskemärkmed
 supported = toetatud
+wakelock-activated = Ekraani lukk aktiveeriti.
+wakelock-deactivated = Ekraanilukk on deaktiveeritud.

@@ -594,3 +594,5 @@ update-div-last-updated-at = Uguqulwe okokugqibela: { $date }
 update-div-read-release-notes = Laya { $link }
 update-div-release-notes = mahlebela a phetolelo
 supported = sekeletswa
+wakelock-activated = Seloqo sa skrin se sefumele.
+wakelock-deactivated = Selo sa skrin se yisiwe.
