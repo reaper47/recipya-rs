@@ -1,11 +1,13 @@
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum_htmx::HX_REDIRECT;
+use fluent_static::support::axum::RequestLanguage;
 use reqwest::StatusCode;
 use tracing::error;
 
 use app::message::{Broadcaster, Toast};
 use app::state::AppState;
+use l10n::Messages;
 use models::Recipe;
 
 use crate::middleware::mw_auth::RequireAuth;
@@ -13,6 +15,7 @@ use crate::middleware::mw_auth::RequireAuth;
 /// Handles deleting a user's recipe.
 pub async fn delete_recipe_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
@@ -23,7 +26,13 @@ pub async fn delete_recipe_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error deleting recipe");
-            Toast::broadcast_error(&state, user.id, "Recipe could not be deleted.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_delete_failed(),
+                &messages,
+            )
+            .await;
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }

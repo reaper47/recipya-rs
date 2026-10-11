@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
-use config::DataDir;
+use l10n::Messages;
 use maud::{Markup, html};
+use uuid::Uuid;
+
+use config::DataDir;
 use models::{
     data::Data,
     recipe::structs::{
@@ -17,14 +20,10 @@ use models::{
     time::FormattedTimes,
 };
 use support::fs::FsSupport;
-use uuid::Uuid;
 
 use crate::{
     recipes::common::{format_nutrition, nutrition_table_header, render_rating},
-    templates::{
-        icons::{icon_cooking_pot, icon_cutting_board, icon_globe_alt},
-        layouts,
-    },
+    templates::{icons, layouts},
 };
 
 const OLD: &str = "old";
@@ -45,18 +44,19 @@ pub fn rescrape_recipe_diff(
     user_setting: &UserSettingDetails,
     recipe_id: i64,
     diff: RecipeDiff,
+    messages: &Messages,
 ) -> Markup {
-    let page_title = format!("Rescrape {}", diff.old.name);
-    let content = render_rescrape(data_dir, fs_support, recipe_id, diff);
+    let old_name = diff.old.name.clone();
+    let content = render_rescrape(data_dir, fs_support, recipe_id, diff, messages);
 
     html! {
         @if data.is_hx_request {
             title hx-swap-oob="true" {
-                (page_title) " | Recipya"
+                (messages.rescrape_page_tab_title(old_name))
             }
             (content)
         } @else {
-            (layouts::main(&page_title, &format!("/{recipe_id}/rescrape"), data, &content, user_setting))
+            (layouts::main(&messages.rescrape_page_title(old_name), &format!("/{recipe_id}/rescrape"), data, &content, messages, user_setting))
         }
     }
 }
@@ -67,6 +67,7 @@ fn render_rescrape(
     fs_support: &Arc<dyn FsSupport + Sync + Send>,
     recipe_id: i64,
     diff: RecipeDiff,
+    messages: &Messages,
 ) -> Markup {
     let old_recipe_c = diff.old;
     let new_recipe_c = diff.new;
@@ -76,7 +77,7 @@ fn render_rescrape(
         section .p-2 {
             div class="flex justify-center" {
                 div class="card card-border bg-base-100 w-full border-gray-700 xl:w-[72rem]" {
-                    form .card-body.contents style="padding: 0" hx-put=(&format!("/recipes/{recipe_id}/rescrape")) hx-indicator="#fullscreen-loader" {
+                    form .card-body.contents style="padding: 0" hx-put={ "/recipes/" (recipe_id) "/rescrape" } hx-indicator="#fullscreen-loader" {
                         (render_title(&old_recipe_c.name, &new_recipe_c.name, changes))
                         div {
                             div class="grid md:grid-flow-col md:grid-cols-6" {
@@ -95,12 +96,13 @@ fn render_rescrape(
                                             },
                                         },
                                         changes,
+                                        messages,
                                     ))
                                 }
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid grid-flow-col border-gray-700 col-span-6" {
                                         div class="flex justify-center items-center" {
-                                            (render_rating_diff(old_recipe_c.rating, new_recipe_c.rating, changes))
+                                            (render_rating_diff(old_recipe_c.rating, new_recipe_c.rating, changes, messages))
                                         }
                                     }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
@@ -112,19 +114,19 @@ fn render_rescrape(
                                                 (render_yield(
                                                     &old_recipe_c.r#yield.unwrap_or_default().to_string(),
                                                     &new_recipe_c.r#yield.unwrap_or_default().to_string(),
-                                                    changes)
+                                                    changes, messages)
                                                 )
                                             }
                                         }
                                         div class="relative px-2 pb-2 md:pr-0 grid place-items-center" {
-                                            (render_source(&old_recipe_c.source))
+                                            (render_source(&old_recipe_c.source, messages))
                                         }
                                     }
                                     div class="border-gray-700 border-y col-span-6 md:grid-cols-3" {
                                         (render_keywords(
                                             old_recipe_c.keywords.iter().map(String::as_str).collect(),
                                             new_recipe_c.keywords.iter().map(String::as_str).collect(),
-                                            changes,
+                                            changes, messages,
                                         ))
                                     }
                                     div class="grid grid-flow-col col-span-6 border-b" {
@@ -132,26 +134,26 @@ fn render_rescrape(
                                             (render_times(
                                                 old_recipe_c.times.as_ref(),
                                                 new_recipe_c.times.as_ref(),
-                                                changes,
+                                                changes, messages,
                                             ))
                                         }
                                     }
                                     @if !changes.contains(RecipeField::DESCRIPTION) && !changes.contains(RecipeField::NUTRITION) {
                                         div class="grid grid-flow-col col-span-6" {
                                             div class="flex gray-700" {
-                                                (render_description(old_recipe_c.description.as_deref(), new_recipe_c.description.as_deref(), changes))
+                                                (render_description(old_recipe_c.description.as_deref(), new_recipe_c.description.as_deref(), changes, messages))
                                             }
                                              div class="grid grid-flow-col col-span-6 border-gray-700 overflow-x-auto" {
-                                                (render_nutrition(&old_recipe_c.nutrition, &new_recipe_c.nutrition, changes))
+                                                (render_nutrition(&old_recipe_c.nutrition, &new_recipe_c.nutrition, changes, messages))
                                             }
                                         }
                                     } @else {
                                         div class="grid grid-cols-2 gap-4 col-span-6" {
                                             div class="grid col-span-6 border-gray-700" {
-                                                (render_description(old_recipe_c.description.as_deref(), new_recipe_c.description.as_deref(), changes))
+                                                (render_description(old_recipe_c.description.as_deref(), new_recipe_c.description.as_deref(), changes, messages))
                                             }
                                              div class="grid grid-flow-col col-span-6 border-gray-700 overflow-x-auto" {
-                                                (render_nutrition(&old_recipe_c.nutrition, &new_recipe_c.nutrition, changes))
+                                                (render_nutrition(&old_recipe_c.nutrition, &new_recipe_c.nutrition, changes, messages))
                                             }
                                         }
                                     }
@@ -164,12 +166,12 @@ fn render_rescrape(
                                     div class="col-span-6 border-y md:col-span-2 md:border-r md:border-y-0 dark:border-gray-700" {
                                         (render_tools(old_recipe_c.tools.as_slice(),
                                             new_recipe_c.tools.as_slice(),
-                                            changes,
+                                            changes, messages,
                                         ))
-                                        (render_ingredients(&old_recipe_c.ingredients, &new_recipe_c.ingredients, changes))
+                                        (render_ingredients(&old_recipe_c.ingredients, &new_recipe_c.ingredients, changes, messages))
                                     }
                                     div class="col-span-6 border-gray-700 md:rounded-bl-none md:col-span-4" {
-                                        (render_instructions(&old_recipe_c.instructions, &new_recipe_c.instructions,changes))
+                                        (render_instructions(&old_recipe_c.instructions, &new_recipe_c.instructions,changes, messages))
                                     }
                                 }
                             }
@@ -178,12 +180,12 @@ fn render_rescrape(
                                 div class="col-span-6 border-y md:col-span-2 md:border-r md:border-y-0 dark:border-gray-700" {
                                     (render_tools(old_recipe_c.tools.as_slice(),
                                         new_recipe_c.tools.as_slice(),
-                                        changes,
+                                        changes, messages,
                                     ))
-                                    (render_ingredients(&old_recipe_c.ingredients, &new_recipe_c.ingredients, changes))
+                                    (render_ingredients(&old_recipe_c.ingredients, &new_recipe_c.ingredients, changes, messages))
                                 }
                                 div class="col-span-6 px-6 py-2 border-gray-700 md:rounded-bl-none md:col-span-4" {
-                                    (render_instructions(&old_recipe_c.instructions, &new_recipe_c.instructions,changes))
+                                    (render_instructions(&old_recipe_c.instructions, &new_recipe_c.instructions,changes, messages))
                                 }
                             }
                         }
@@ -191,11 +193,13 @@ fn render_rescrape(
                             (render_notes(
                                 old_recipe_c.notes.as_deref().unwrap_or_default(),
                                 new_recipe_c.notes.as_deref().unwrap_or_default(),
-                                changes,
+                                changes, messages,
                             ))
                         }
                         div class="card-actions justify-end" {
-                            button class="btn btn-primary btn-block btn-sm" { "Submit" }
+                            button class="btn btn-primary btn-block btn-sm" {
+                                (messages.action_submit())
+                            }
                         }
                     }
                 }
@@ -282,14 +286,15 @@ fn render_description(
     old_description: Option<&str>,
     new_description: Option<&str>,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const DESCRIPTION_SOURCE: &str = "description-source";
     const DESCRIPTION_OLD: &str = "description-old";
     const DESCRIPTION_NEW: &str = "description-new";
 
-    const DEFAULT_DESCRIPTION: &str = "No description";
-    let old_description = old_description.unwrap_or(DEFAULT_DESCRIPTION);
-    let new_description = new_description.unwrap_or(DEFAULT_DESCRIPTION);
+    let default_description: &str = &messages.recipe_page_no_description();
+    let old_description = old_description.unwrap_or(default_description);
+    let new_description = new_description.unwrap_or(default_description);
 
     if changes.contains(RecipeField::DESCRIPTION) {
         html! {
@@ -310,7 +315,7 @@ fn render_description(
         }
     } else {
         html! {
-            textarea name="description" placeholder="This Thai curry chicken will make you drool." class="textarea w-full h-full resize-none rounded-none focus:outline-none" {
+            textarea name="description" placeholder=(messages.recipe_page_description_placeholder()) class="textarea w-full h-full resize-none rounded-none focus:outline-none" {
                 (old_description)
             }
             input type="hidden" name=(DESCRIPTION_OLD) value=(old_description);
@@ -324,6 +329,7 @@ fn render_ingredients(
     old_ingredients: &SectionComponents,
     new_ingredients: &SectionComponents,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const INGREDIENTS_SOURCE: &str = "ingredients-source";
     const INGREDIENTS_OLD: &str = "ingredients-old";
@@ -336,7 +342,7 @@ fn render_ingredients(
                     input type="radio" name=(INGREDIENTS_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
                     div .p-2 {
                         h1 class="text-sm font-bold" {
-                            "Ingredients"
+                            (messages.recipe_page_ingredients())
                         }
                         (render_section(old_ingredients, INGREDIENTS_OLD))
                     }
@@ -345,7 +351,7 @@ fn render_ingredients(
                     input type="radio" name=(INGREDIENTS_SOURCE) value=(NEW) class="radio radio-sm radio-error mx-2" checked;
                     div .p-2 {
                         h1 class="text-sm font-bold" {
-                            "Ingredients"
+                            (messages.recipe_page_ingredients())
                         }
                         (render_section(new_ingredients, INGREDIENTS_NEW))
                     }
@@ -355,8 +361,10 @@ fn render_ingredients(
     } else {
         html! {
             div .p-2 {
-                h1 class="text-sm" {
-                    b { "Ingredients" }
+                h1 .text-sm {
+                    b {
+                        (&messages.recipe_page_ingredients())
+                    }
                 }
                 (render_section(old_ingredients, INGREDIENTS_OLD))
             }
@@ -369,6 +377,7 @@ fn render_instructions(
     old_instructions: &SectionComponents,
     new_instructions: &SectionComponents,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const INSTRUCTIONS_SOURCE: &str = "instructions-source";
     const INSTRUCTIONS_OLD: &str = "instructions-old";
@@ -381,7 +390,7 @@ fn render_instructions(
                     input type="radio" name=(INSTRUCTIONS_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
                     div .p-2 {
                         h1 class="text-sm font-bold" {
-                            "Instructions"
+                            (messages.recipe_page_instructions())
                         }
                         (render_section(old_instructions, INSTRUCTIONS_OLD))
                     }
@@ -390,7 +399,7 @@ fn render_instructions(
                     input type="radio" name=(INSTRUCTIONS_SOURCE) value=(NEW) class="radio radio-sm radio-error mx-2" checked;
                     div .p-2 {
                         h1 class="text-sm font-bold" {
-                            "Instructions"
+                            (messages.recipe_page_instructions())
                         }
                         (render_section(new_instructions, INSTRUCTIONS_NEW))
                     }
@@ -400,7 +409,7 @@ fn render_instructions(
     } else {
         html! {
             h1 class="text-sm font-bold" {
-                "Instructions"
+                (messages.recipe_page_instructions())
             }
             (render_section(old_instructions, INSTRUCTIONS_OLD))
             input type="hidden" name=(INSTRUCTIONS_SOURCE) value=(OLD);
@@ -424,10 +433,10 @@ fn render_section(components: &SectionComponents, input_name_base: &str) -> Mark
                                 "column-count: 1"
                             }) {
                                 @for ing in section.items.iter() {
-                                    li class="text-sm" {
+                                    li .text-sm {
                                         (ing.text)
                                     }
-                                    input type="hidden" name=(format!("{input_name_base}<>{}", section.title)) value=(ing.text);
+                                    input type="hidden" name={ (input_name_base) "<>" (section.title) } value=(ing.text);
                                 }
                         }
                     }
@@ -441,7 +450,7 @@ fn render_section(components: &SectionComponents, input_name_base: &str) -> Mark
                         "column-count: 1"
                     }) {
                         @for ing in items.iter() {
-                            li class="text-sm" {
+                            li .text-sm {
                                 (ing.text)
                             }
                             input type="hidden" name=(input_name_base) value=(ing.text);
@@ -456,6 +465,7 @@ fn render_keywords(
     old_keywords: Vec<&str>,
     new_keywords: Vec<&str>,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const KEYWORDS_SOURCE: &str = "keywords-source";
     const KEYWORDS_OLD: &str = "keywords-old";
@@ -465,9 +475,11 @@ fn render_keywords(
         html! {
             label class="flex items-center w-full diff-minus" {
                 input type="radio" name=(KEYWORDS_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
-                div class="p-4" {
+                div .p-4 {
                     @if old_keywords.is_empty() {
-                        p .select-none { "No keywords" }
+                        p .select-none {
+                            (messages.rescrape_page_no_keywords())
+                        }
                     } @else {
                         @for kw in old_keywords {
                             div class="badge badge-sm badge-neutral m-1 flex-auto select-none" { (kw) }
@@ -480,7 +492,9 @@ fn render_keywords(
                 input type="radio" name=(KEYWORDS_SOURCE) value=(NEW) class="radio radio-sm radio-error mx-2" checked;
                 div class="p-4" {
                     @if new_keywords.is_empty() {
-                        p .select-none { "No keywords" }
+                        p .select-none {
+                            (messages.rescrape_page_no_keywords())
+                        }
                     } @else {
                         @for kw in new_keywords {
                             div class="badge badge-sm badge-neutral m-1 flex-auto select-none" { (kw) }
@@ -494,7 +508,7 @@ fn render_keywords(
         html! {}
     } else {
         html! {
-            div class="p-4" {
+            div .p-4 {
                 @for kw in old_keywords {
                     div class="badge badge-sm badge-neutral m-1 flex-auto" { (kw) }
                     input type="hidden" name=(KEYWORDS_OLD) value=(kw);
@@ -531,6 +545,7 @@ fn render_media(
     data_dir: &DataDir,
     diff: &DiffMedia,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const MEDIA_SOURCE: &str = "media-source";
     const MEDIA_NEW_IMAGE: &str = "media-new-image";
@@ -551,7 +566,9 @@ fn render_media(
 
                 div #media-old class="col-span-6 my-2" {
                     @if diff.old.is_empty() {
-                        p .text-center { "No images" }
+                        p .text-center {
+                            (messages.rescrape_page_no_images())
+                        }
                     } @else {
                         @for (idx, &image) in diff.old.images.iter().enumerate() {
                             @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
@@ -561,7 +578,7 @@ fn render_media(
                                 ""
                             };
 
-                            label id=(format!("media-{}", idx+1)) class={
+                            label id={ "media-" (idx+1) } class={
                                 "block"
                                 @if (idx+1) > 1 { " hidden" }
                             } {
@@ -578,12 +595,12 @@ fn render_media(
                             @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
                             @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
 
-                            label id=(format!("media-{}", idx+1+old_num_images)) class={
+                            label id={ "media-" (idx+1+old_num_images) } class={
                                 @if old_num_images > 0 || idx > 0 { "hidden" }
                             } {
-                                img src="" alt="" class="mb-2";
+                                img src="" alt="" .mb-2;
                                 @if video_exists {
-                                    video controls class="mb-2" src=(video_url) type="video/webm" {}
+                                    video controls .mb-2 src=(video_url) type="video/webm" {}
                                     input type="hidden" name=(MEDIA_OLD_VIDEO) value=(video_url);
                                 }
                             }
@@ -595,15 +612,15 @@ fn render_media(
                     div class="buttons-container-old flex flex-col gap-1 p-1" {
                         @if diff.old.videos.is_empty() && diff.old.images.is_empty() {
                             button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
-                                "Media 1"
+                                (messages.recipe_page_media_num(1))
                             }
                         } @else {
                             @for i in 0..(diff.old.videos.len() + diff.old.images.len()) {
-                                button id=(format!("media-button-{}", i+1)) type="button" class={
+                                button id={ "media-button-" (i+1) } type="button" class={
                                     "btn btn-sm btn-ghost"
                                     @if i == 0 { " btn-active" }
                                 } onclick="switchMedia(event, '#media-old', '.buttons-container-old')" {
-                                    (format!("Media {}", i + 1))
+                                    (messages.recipe_page_media_num(i + 1))
                                 }
                             }
                         }
@@ -615,7 +632,9 @@ fn render_media(
 
                 div #media-new class="col-span-6 my-2" {
                     @if diff.new.is_empty() {
-                        p .text-center { "No images" }
+                        p .text-center {
+                            (messages.rescrape_page_no_images())
+                        }
                     } @else {
                         @for (idx, &image) in diff.new.images.iter().enumerate() {
                             @let image_exists = fs_support.is_file_exists(image, &data_dir.images.root, ".webp");
@@ -625,7 +644,7 @@ fn render_media(
                                 ""
                             };
 
-                            label id=(format!("media-{}", idx+1)) class={
+                            label id={ "media-" (idx+1) } class={
                                 "block"
                                 @if (idx+1) > 1 { " hidden" }
                             } {
@@ -633,7 +652,7 @@ fn render_media(
                                     "cropper-wrap mb-2 w-full min-h-[20rem] relative overflow-hidden"
                                     @if image_src.is_empty() { " hidden" }
                                 } {
-                                    img src=(image_src) alt=(format!("Image #{} of the recipe", idx+1)) class="block w-full h-full object-contain";
+                                    img src=(image_src) alt=(messages.recipe_page_media_num_long(idx + 1)) class="block w-full h-full object-contain";
                                     input type="hidden" name=(MEDIA_NEW_IMAGE) value=(image_src);
                                 }
                             }
@@ -642,10 +661,10 @@ fn render_media(
                             @let video_exists = fs_support.is_file_exists(video.video, &data_dir.videos, ".webm");
                             @let video_url = format!("/data/videos/{}{EXT_VIDEO}", video.video);
 
-                            label id=(format!("media-{}", idx+1+new_num_images)) class={
+                            label id={ "media-" (idx+1+new_num_images) } class={
                                 @if new_num_images > 0 || idx > 0 { "hidden" }
                             } {
-                                img src="" alt="" class="mb-2";
+                                img src="" alt="" .mb-2;
                                 @if video_exists {
                                     video controls class="mb-2" src=(video_url) type="video/webm" {}
                                     input type="hidden" name=(MEDIA_NEW_VIDEO) value=(video_url);
@@ -659,15 +678,15 @@ fn render_media(
                     div class="buttons-container-new flex flex-col gap-1 p-1" {
                         @if diff.new.videos.is_empty() && diff.new.images.is_empty() {
                             button #media-button-1 type="button" class="btn btn-sm btn-ghost btn-active" onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
-                                "Media 1"
+                                (messages.recipe_page_media_num(1))
                             }
                         } @else {
                             @for i in 0..(diff.new.videos.len() + diff.new.images.len()) {
-                                button id=(format!("media-button-{}", i+1)) type="button" class={
+                                button id={ "media-button-" (i+1) } type="button" class={
                                     "btn btn-sm btn-ghost"
                                     @if i == 0 { " btn-active" }
                                 } onclick="switchMedia(event, '#media-new', '.buttons-container-new')" {
-                                    (format!("Media {}", i + 1))
+                                    (messages.recipe_page_media_num(i + 1))
                                 }
                             }
                         }
@@ -681,7 +700,7 @@ fn render_media(
                 @match diff.old.len()  {
                     0 => {
                         img style="object-fit: cover"
-                            alt="Image of the recipe"
+                            alt=(messages.recipe_page_image_alt())
                             class="w-full max-h-80 md:max-h-[34rem]"
                             src="/data/images/Placeholders/placeholder.recipe.webp" {}
                     },
@@ -689,22 +708,22 @@ fn render_media(
                         @if old_num_images == 1 {
                             @let image = diff.old.images[0];
                             @if fs_support.is_file_exists(image, &data_dir.images.root, EXT_IMAGE) {
-                                img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src=(format!("/data/images/{image}.webp"));
+                                img #output style="object-fit: cover" alt=(messages.recipe_page_image_alt()) class="w-full max-h-80 md:max-h-[34rem]" src={ "/data/images/" (image) ".webp" };
                             } @else {
-                               img #output style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
+                               img #output style="object-fit: cover" alt=(messages.recipe_page_image_alt()) class="w-full max-h-80 md:max-h-[34rem]" src="/data/images/Placeholders/placeholder.recipe.webp";
                             }
                         } @else if let Some(video) = diff.old.videos.first() {
                             @if let Some(url) = &video.embed_url {
-                                iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
+                                iframe src=(url) title=(messages.recipe_page_youtube_video_player()) frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                             } @else if let Some(url) = &video.content_url {
                                 video controls preload="metadata" src=(url) {}
                             } @else if fs_support.is_file_exists(video.video, &data_dir.videos, ".webm") {
-                                video controls preload="metadata" src=(format!("/data/videos/{}.webm",video.video)) type="video/webm" {}
+                            video controls preload="metadata" src={ "/data/videos/" (video.video) ".webm" } type="video/webm" {}
                             } @else {
                                 p {
-                                    "Video is currently being processed."
+                                    (messages.recipe_page_video_currently_processed())
                                     br;
-                                    "Please refresh the page later."
+                                    (messages.recipe_page_please_refresh_later())
                                 }
                             }
                         }
@@ -712,14 +731,14 @@ fn render_media(
                     _ => {
                         div class="carousel w-full" {
                             @for (idx, &img) in diff.old.images.iter().enumerate() {
-                                div id=(format!("media-{idx}")) class="carousel-item relative w-full" {
+                            div id={ "media-" (idx) } class="carousel-item relative w-full" {
                                     @if fs_support.is_file_exists(img, &data_dir.images.root, ".webp") {
                                          img style="object-fit: cover"
-                                        alt="Image of the recipe"
+                                        alt=(messages.recipe_page_image_alt())
                                         class="w-full max-h-80 md:max-h-[34rem]"
-                                        src=(format!("/data/images/{img}.webp"));
+                                        src={ "/data/images/" (img) ".webp" };
                                     } @else {
-                                          img style="object-fit: cover" alt="Image of the recipe" class="w-full max-h-80 md:max-h-[34rem]"
+                                          img style="object-fit: cover" alt=(messages.recipe_page_image_alt()) class="w-full max-h-80 md:max-h-[34rem]"
                                               src="/data/images/Placeholders/placeholder.recipe.webp";
                                     }
                                     div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
@@ -743,22 +762,23 @@ fn render_media(
                                 }
                             }
                             @for (idx, v) in diff.old.videos.iter().enumerate() {
-                                div id=(format!("media-{}", idx+old_num_images)) class="carousel-item relative w-full" {
+                                div id={ "media-" (idx+old_num_images) } class="carousel-item relative w-full" {
                                     @if let Some(url) = &v.embed_url {
-                                        iframe src=(url) title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
+                                        iframe src=(url) title=(messages.recipe_page_youtube_video_player()) frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen="" style="height: 100%;width: 100%;" {}
                                     } @else if let Some(url) = &v.content_url {
                                         video controls preload="metadata" src=(url) {}
                                     } @else if fs_support.is_file_exists(v.video, &data_dir.videos, ".webm") {
-                                        video controls preload="metadata" src=(format!("/data/videos/{}.webm", v.video)) type="video/webm" {}
+                                        video controls preload="metadata" src={ "/data/videos/" (v.video) ".webm" } type="video/webm" {}
                                     } @else {
                                         p class="grid place-self-center" {
+                                            (messages.recipe_page_video_num_processed(idx+1))
                                             (format!("Video #{} is currently being processed.", idx+1))
                                             br;
-                                            "Please refresh the page later."
+                                            (messages.recipe_page_please_refresh_later())
                                         }
                                     }
                                     div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 bottom-0" {
-                                        a class="btn btn-soft btn-sm" href=(format!("#media-{}", idx.checked_add(old_num_images).and_then(|val| val.checked_sub(1)).unwrap_or(1))) { "❮" }
+                                        a class="btn btn-soft btn-sm" href={ "#media-" (idx.checked_add(old_num_images).and_then(|val| val.checked_sub(1)).unwrap_or(1)) } { "❮" }
                                         a class="btn btn-soft btn-sm"
                                           href=(if idx == diff.old.videos.len() - 1 {
                                                 "#media-0".into()
@@ -777,23 +797,28 @@ fn render_media(
 
             input type="hidden" name=(MEDIA_SOURCE) value=(OLD);
             @for image in diff.old.images {
-                input type="hidden" name=(MEDIA_OLD_IMAGE) value=(format!("/data/images/{image}{EXT_IMAGE}"));
+                input type="hidden" name=(MEDIA_OLD_IMAGE) value={ "/data/images/" (image) (EXT_IMAGE) };
             }
             @for video in diff.old.videos {
-                input type="hidden" name=(MEDIA_OLD_VIDEO) value=(format!("/data/videos/{}{EXT_VIDEO}", video.video));
+                input type="hidden" name=(MEDIA_OLD_VIDEO) value={ "/data/videos/" (video.video) (EXT_VIDEO) };
             }
         }
     }
 }
 
-fn render_notes(old_notes: &str, new_notes: &str, changes: RecipeField) -> Markup {
+fn render_notes(
+    old_notes: &str,
+    new_notes: &str,
+    changes: RecipeField,
+    messages: &Messages,
+) -> Markup {
     const NOTES_SOURCE: &str = "notes-source";
     const NOTES_OLD: &str = "notes-old";
     const NOTES_NEW: &str = "notes-new";
-
-    const PLACEHOLDER: &str = "Write some notes about the recipe...";
     const CLASS: &str =
         "textarea textarea-ghost w-full h-full resize-none rounded-none focus:outline-none";
+
+    let placeholder: &str = &messages.recipe_page_notes_placeholder();
 
     if changes.contains(RecipeField::NOTES) {
         html! {
@@ -801,14 +826,14 @@ fn render_notes(old_notes: &str, new_notes: &str, changes: RecipeField) -> Marku
                 label class="w-full py-2 diff-minus" {
                     input type="radio" name=(NOTES_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
                     div class="col-span-6 dark:border-gray-700" data-notes=(old_notes) data-textarea-id="notes-old" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
-                        textarea #notes-old name="notes-old" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {}
+                        textarea #notes-old name="notes-old" placeholder=(placeholder) rows="8" class=(CLASS) {}
                     }
                     input type="hidden" name=(NOTES_OLD) value=(old_notes);
                 }
                 label class="w-full py-2 diff-plus" {
                     input type="radio" name=(NOTES_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
                     div class="col-span-6 dark:border-gray-700" data-notes=(new_notes) data-textarea-id="notes-new" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
-                        textarea #notes-new name="notes-new" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {}
+                        textarea #notes-new name="notes-new" placeholder=(placeholder) rows="8" class=(CLASS) {}
                     }
                     input type="hidden" name=(NOTES_NEW) value=(new_notes);
                 }
@@ -822,7 +847,7 @@ fn render_notes(old_notes: &str, new_notes: &str, changes: RecipeField) -> Marku
     } else {
         html! {
             div class="col-span-6 w-full dark:border-gray-700" data-notes=(old_notes) data-textarea-id="notes" _="on load call initNotes(me.dataset.textareaId, me.dataset.notes)" {
-                 textarea #notes name="notes" placeholder=(PLACEHOLDER) rows="8" class=(CLASS) {
+                 textarea #notes name="notes" placeholder=(placeholder) rows="8" class=(CLASS) {
                      (old_notes)
                  }
             }
@@ -902,9 +927,9 @@ const NUTRITION_FIELDS: &[NutritionField] = &[
     },
     NutritionField {
         label: "Fiber",
-        key: "fiber",
+        key: "fibre",
         unit: "g",
-        extractor: |n| n.fiber_g,
+        extractor: |n| n.fibre_g,
     },
 ];
 
@@ -913,11 +938,11 @@ fn render_nutrition(
     old_nutrition: &NutritionDetailsForCreate,
     new_nutrition: &NutritionDetailsForCreate,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const NUTRITION_SOURCE: &str = "nutrition-source";
     const NUTRITION_OLD: &str = "nutrition-old";
     const NUTRITION_NEW: &str = "nutrition-new";
-
     const SERVING_SIZE: &str = "serving-size";
 
     let old_per_100g_vals: Vec<_> = NUTRITION_FIELDS
@@ -979,24 +1004,36 @@ fn render_nutrition(
             label class="w-full py-2 diff-minus" {
                 input type="radio" name=(NUTRITION_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
                 table class="table table-zebra table-xs" {
-                    (nutrition_table_header())
+                    (nutrition_table_header(messages))
                     tbody {
                         @for (field, formatted) in &old_per_100g_vals {
                             tr data-nutrition-type="per-100g" {
-                                td { (field.label) }
-                                td { (formatted) }
+                                td {
+                                    (field.label)
+                                }
+                                td {
+                                    (formatted)
+                                }
                             }
                         }
 
                         @if let Some(serving) = old_nutrition.per_serving.as_ref() {
                             tr data-nutrition-type="per-serving" .hidden {
-                                td { "Serving size" }
-                                td { @if serving.serving_size.is_empty() { "-" } @else { (serving.serving_size) } }
+                                td {
+                                    (messages.nutrition_serving_size())
+                                }
+                                td {
+                                    @if serving.serving_size.is_empty() { "-" } @else { (serving.serving_size) }
+                                }
                             }
                             @for (field, formatted) in &old_per_serving_vals {
                                 tr data-nutrition-type="per-serving" .hidden {
-                                    td { (field.label) }
-                                    td { (formatted) }
+                                    td {
+                                        (field.label)
+                                    }
+                                    td {
+                                        (formatted)
+                                    }
                                 }
                             }
                         }
@@ -1017,23 +1054,35 @@ fn render_nutrition(
             label class="w-full py-2 diff-plus" {
                 input type="radio" name=(NUTRITION_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
                 table class="table table-zebra table-xs" {
-                    (nutrition_table_header())
+                    (nutrition_table_header(messages))
                     tbody {
                         @for (field, formatted) in &new_per_100g_vals {
                             tr data-nutrition-type="per-100g" {
-                                td { (field.label) }
-                                td { (formatted) }
+                                td {
+                                    (field.label)
+                                }
+                                td {
+                                    (formatted)
+                                }
                             }
                         }
 
                         tr data-nutrition-type="per-serving" .hidden {
-                            td { "Serving size" }
-                            td { @if new_serving_size.is_empty() { "-" } @else { (new_serving_size) } }
+                            td {
+                                (messages.nutrition_serving_size())
+                            }
+                            td {
+                                @if new_serving_size.is_empty() { "-" } @else { (new_serving_size) }
+                            }
                         }
                         @for (field, formatted) in &new_per_serving_vals {
                             tr data-nutrition-type="per-serving" .hidden {
-                                td { (field.label) }
-                                td { (formatted) }
+                                td {
+                                    (field.label)
+                                }
+                                td {
+                                    (formatted)
+                                }
                             }
                         }
                     }
@@ -1054,23 +1103,35 @@ fn render_nutrition(
     } else {
         html! {
             table class="table table-zebra table-xs" {
-                (nutrition_table_header())
+                (nutrition_table_header(messages))
                 tbody {
                     @for (field, formatted) in &old_per_100g_vals {
                         tr data-nutrition-type="per-100g" {
-                            td { (field.label) }
-                            td { (formatted) }
+                            td {
+                                (field.label)
+                            }
+                            td {
+                                (formatted)
+                            }
                         }
                     }
 
                     tr data-nutrition-type="per-serving" .hidden {
-                        td { "Serving size" }
-                        td { @if old_serving_size.is_empty() { "-" } @else { (old_serving_size) } }
+                        td {
+                            (messages.nutrition_serving_size())
+                        }
+                        td {
+                            @if old_serving_size.is_empty() { "-" } @else { (old_serving_size) }
+                        }
                     }
                     @for (field, formatted) in &old_per_serving_vals {
                         tr data-nutrition-type="per-serving" .hidden {
-                            td { (field.label) }
-                            td { (formatted) }
+                            td {
+                                (field.label)
+                            }
+                            td {
+                                (formatted)
+                            }
                         }
                     }
                 }
@@ -1091,11 +1152,11 @@ fn render_nutrition(
     }
 }
 
-fn render_source(source: &Source) -> Markup {
+fn render_source(source: &Source, messages: &Messages) -> Markup {
     html! {
         a class="btn btn-sm btn-outline no-underline" href=(source.as_str()) target="_blank" {
-            (icon_globe_alt())
-            "Source"
+            (icons::globe_alt())
+            (messages.recipe_page_source())
         }
     }
 }
@@ -1104,6 +1165,7 @@ fn render_rating_diff(
     old_rating: Option<i16>,
     new_rating: Option<i16>,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const RATING_SOURCE: &str = "rating-source";
     const RATING_OLD: &str = "rating-old";
@@ -1113,18 +1175,18 @@ fn render_rating_diff(
         html! {
             label class="w-full py-2 diff-minus" {
                 input type="radio" name=(RATING_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
-                (render_rating("rating", old_rating, None, true, None));
-                input type="hidden" name=(RATING_OLD) value=(old_rating.unwrap_or(0));
+                (render_rating("rating", old_rating, None, true, None, messages));
+                input type="hidden" name=(RATING_OLD) value=(old_rating.unwrap_or_default());
             }
             label class="w-full py-2 diff-plus" {
                 input type="radio" name=(RATING_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
-                (render_rating("rating", new_rating, None, true, None));
-                input type="hidden" name=(RATING_NEW) value=(new_rating.unwrap_or(0));
+                (render_rating("rating", new_rating, None, true, None, messages));
+                input type="hidden" name=(RATING_NEW) value=(new_rating.unwrap_or_default());
             }
         }
     } else {
         html! {
-            (render_rating("rating", old_rating, None, true, None))
+            (render_rating("rating", old_rating, None, true, None, messages))
             input type="hidden" name=(RATING_OLD) value=(old_rating.unwrap_or(0));
             input type="hidden" name=(RATING_SOURCE) value=(OLD);
         }
@@ -1136,6 +1198,7 @@ fn render_times(
     old_times: Option<&TimesForCreate>,
     new_times: Option<&TimesForCreate>,
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const DEFAULT_TIME: &str = "00:15:00";
     const DEFAULT_DATETIME: &str = "PT15M";
@@ -1217,12 +1280,12 @@ fn render_times(
             label class="flex w-full py-2 diff-minus" {
                 input type="radio" name=(TIMES_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
                 div .grid {
-                    div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
-                        (icon_cutting_board())
+                    div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_prep_time()) {
+                        (icons::cutting_board())
                         time datetime=(old_prep_datetime) { (old_prep) }
                     }
-                    div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
-                        (icon_cooking_pot())
+                    div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_cook_time()) {
+                        (icons::cooking_pot())
                         time datetime=(old_cook_datetime) { (old_cook) }
                     }
                 }
@@ -1232,12 +1295,12 @@ fn render_times(
             label class="flex w-full py-2 diff-plus" {
                 input type="radio" name=(TIMES_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
                 div .grid {
-                    div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
-                        (icon_cutting_board())
+                    div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_prep_time()) {
+                        (icons::cutting_board())
                         time datetime=(new_prep_datetime) { (new_prep) }
                     }
-                    div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
-                        (icon_cooking_pot())
+                    div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_cook_time()) {
+                        (icons::cooking_pot())
                         time datetime=(new_cook_datetime) { (new_cook) }
                     }
                 }
@@ -1247,12 +1310,12 @@ fn render_times(
         }
     } else {
         html! {
-            div class="flex justify-self-center items-center gap-1 cursor-default" title="Prep time" {
-                (icon_cutting_board())
+            div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_prep_time()) {
+                (icons::cutting_board())
                 time datetime=(old_prep_datetime) { (old_prep) }
             }
-            div class="flex justify-self-center items-center gap-1 cursor-default" title="Cooking time" {
-                (icon_cooking_pot())
+            div class="flex justify-self-center items-center gap-1 cursor-default" title=(messages.recipe_page_cook_time()) {
+                (icons::cooking_pot())
                 time datetime=(old_cook_datetime) { (old_cook) }
             }
 
@@ -1267,6 +1330,7 @@ fn render_tools(
     old_tools: &[ToolForCreate],
     new_tools: &[ToolForCreate],
     changes: RecipeField,
+    messages: &Messages,
 ) -> Markup {
     const TOOLS_SOURCE: &str = "tools-source";
     const TOOLS_OLD: &str = "tools-old";
@@ -1278,8 +1342,10 @@ fn render_tools(
                 label class="w-full diff-minus" {
                     input type="radio" name=(TOOLS_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
                     div .p-2 {
-                        h1 class="text-sm" {
-                            b { "Tools" }
+                        h1 .text-sm {
+                            b {
+                                (messages.recipe_page_tools())
+                            }
                         }
                         ol class="col-span-6 w-full mb-4 list-disc list-inside"
                             style=(if old_tools.len() > 10 {
@@ -1288,10 +1354,12 @@ fn render_tools(
                                 "column-count: 1"
                             }) {
                             @if old_tools.is_empty() {
-                                p { "No tools" }
+                                p {
+                                    (messages.recipe_page_no_tools())
+                                }
                             } @else {
                                 @for t in old_tools {
-                                    li class="text-sm" {
+                                    li .text-sm {
                                         (t.quantity.to_string()) " " (t.name)
                                         input type="hidden" name=(TOOLS_OLD) value=(t.name);
                                     }
@@ -1304,7 +1372,9 @@ fn render_tools(
                     input type="radio" name=(TOOLS_SOURCE) value=(NEW) class="radio radio-sm radio-error mx-2" checked;
                     div .p-2 {
                         h1 class="text-sm" {
-                            b { "Tools" }
+                            b {
+                                (messages.recipe_page_tools())
+                            }
                         }
                         ol class="col-span-6 w-full mb-4 list-disc list-inside"
                             style=(if new_tools.len() > 10 {
@@ -1313,10 +1383,12 @@ fn render_tools(
                                 "column-count: 1"
                             }) {
                             @if new_tools.is_empty() {
-                                p { "No tools" }
+                                p {
+                                    (messages.recipe_page_no_tools())
+                                }
                             } @else {
                                 @for t in new_tools {
-                                    li class="text-sm" {
+                                    li .text-sm {
                                         (t.quantity.to_string()) " " (t.name)
                                         input type="hidden" name=(TOOLS_NEW) value=(t.name);
                                     }
@@ -1329,8 +1401,10 @@ fn render_tools(
         }
     } else if !old_tools.is_empty() {
         html! {
-            h1 class="text-sm" {
-                b { "Tools" }
+            h1 .text-sm {
+                b {
+                    (messages.recipe_page_tools())
+                }
             }
             ol class="col-span-6 w-full mb-4 list-disc list-inside"
                 style=(if old_tools.len() > 10 {
@@ -1339,7 +1413,7 @@ fn render_tools(
                     "column-count: 1"
                 }) {
                 @for t in old_tools {
-                    li class="text-sm" {
+                    li .text-sm {
                         (t.quantity.to_string()) " " (t.name)
                         input type="hidden" name=(TOOLS_OLD) value=(t.name);
                     }
@@ -1352,7 +1426,12 @@ fn render_tools(
     }
 }
 
-fn render_yield(old_yield: &str, new_yield: &str, changes: RecipeField) -> Markup {
+fn render_yield(
+    old_yield: &str,
+    new_yield: &str,
+    changes: RecipeField,
+    messages: &Messages,
+) -> Markup {
     const YIELD_SOURCE: &str = "yield-source";
     const YIELD_OLD: &str = "yield-old";
     const YIELD_NEW: &str = "yield-new";
@@ -1363,8 +1442,8 @@ fn render_yield(old_yield: &str, new_yield: &str, changes: RecipeField) -> Marku
                 label class="label grid" {
                     fieldset class="flex diff-minus h-full place-items-center pl-2" {
                         input type="radio" name=(YIELD_SOURCE) value=(OLD) class="radio radio-sm radio-error";
-                        p class="text-center" {
-                            (old_yield) " servings"
+                        p class="text-center lowercase" {
+                            (old_yield) " " (messages.recipe_page_servings())
                         }
                         input type="hidden" name=(YIELD_OLD) value=(old_yield);
                     }
@@ -1372,8 +1451,8 @@ fn render_yield(old_yield: &str, new_yield: &str, changes: RecipeField) -> Marku
                 label class="label grid" {
                     fieldset class="flex diff-plus h-full place-items-center pl-2" {
                         input type="radio" name=(YIELD_SOURCE) value=(NEW) class="radio radio-sm radio-error" readonly checked;
-                        p class="text-center" {
-                            (new_yield) " servings"
+                        p class="text-center lowercase" {
+                            (new_yield) " " (messages.recipe_page_servings())
                         }
                         input type="hidden" name=(YIELD_NEW) value=(new_yield);
                     }
@@ -1382,8 +1461,8 @@ fn render_yield(old_yield: &str, new_yield: &str, changes: RecipeField) -> Marku
         }
     } else {
         html! {
-            p class="text-center p-0 pt-2 md:col-span-1" {
-                (old_yield) " servings"
+            p class="text-center p-0 pt-2 lowercase md:col-span-1" {
+                (old_yield) " " (messages.recipe_page_servings())
             }
             input type="hidden" name=(YIELD_OLD) value=(old_yield);
             input type="hidden" name=(YIELD_SOURCE) value=(OLD);

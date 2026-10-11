@@ -1,0 +1,20 @@
+[package]
+name = "l10n"
+version = "0.0.0"
+build = "build.rs"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fluent-static.workspace = true
+
+[build-dependencies]
+fluent-static-codegen = "0.6.3"

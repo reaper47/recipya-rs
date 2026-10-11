@@ -8,6 +8,7 @@ use std::{
 };
 
 use axum::{Form, extract::State, response::IntoResponse};
+use fluent_static::support::axum::RequestLanguage;
 use futures_util::lock::Mutex;
 use itertools::Itertools;
 use rand::RngExt;
@@ -19,6 +20,7 @@ use uuid::Uuid;
 
 use app::message::{Broadcaster, IMessage, MessageStatus, MessageType, Toast};
 use app::state::AppState;
+use l10n::Messages;
 use models::{
     Recipe,
     reports::{
@@ -71,7 +73,12 @@ impl FetchWebsiteContext {
         }
     }
 
-    async fn send_toast_after_processing(&self, state: &AppState, user_id: Uuid) {
+    async fn send_toast_after_processing(
+        &self,
+        state: &AppState,
+        user_id: Uuid,
+        messages: &Messages,
+    ) {
         let count_success = self.count_success.load(Ordering::SeqCst);
         let count_error = self.count_error.load(Ordering::SeqCst);
         let count_warning = self.count_warning.load(Ordering::SeqCst);
@@ -102,7 +109,7 @@ impl FetchWebsiteContext {
                 .action(Some(&view_recipe_link))
                 .build()
             } else {
-                Toast::error("No recipe has been scraped.")
+                Toast::error(&messages.fetch_recipes_none_scraped(), messages)
             }
         } else {
             let message = format!(
@@ -123,6 +130,7 @@ impl FetchWebsiteContext {
 /// Handles scraping recipes from websites.
 pub async fn add_website_post_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<RecipeScrapeForm>,
 ) -> impl IntoResponse {
@@ -140,17 +148,23 @@ pub async fn add_website_post_handler(
         .collect::<Vec<_>>();
 
     if urls.is_empty() {
-        Toast::broadcast_error(&state, user.id, "No valid URLs found.").await;
+        Toast::broadcast_error(
+            &state,
+            user.id,
+            &messages.fetch_recipes_no_valid_urls(),
+            &messages,
+        )
+        .await;
         return Error::InvalidPayload.into_response();
     }
 
-    scrape_recipes(state, urls, user.id);
+    scrape_recipes(state, urls, user.id, messages);
 
     (StatusCode::ACCEPTED, "").into_response()
 }
 
 #[allow(clippy::too_many_lines)]
-fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
+fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid, messages: Messages) {
     tokio::spawn(async move {
         let num_urls = urls.len();
         let (tx, mut rx) = mpsc::channel::<()>(num_urls.min(64));
@@ -206,7 +220,14 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             .unwrap_or(i64::MAX);
 
         state
-            .broadcast_progress("Fetching recipes", 0, num_urls, true, user_id)
+            .broadcast_progress(
+                &messages.toast_recipes_fetch_progress(),
+                0,
+                num_urls,
+                true,
+                user_id,
+                &messages,
+            )
             .await;
 
         let mut processed = 0;
@@ -215,19 +236,22 @@ fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid) {
             if fetch_ctx.total > 1 {
                 state
                     .broadcast_progress(
-                        "Fetching recipes",
+                        &messages.toast_recipes_fetch_progress(),
                         processed,
                         fetch_ctx.total,
                         true,
                         user_id,
+                        &messages,
                     )
                     .await;
             }
         }
 
-        state.hide_broadcast(user_id).await;
+        state.hide_broadcast(user_id, &messages).await;
         let items = Items::from(&fetch_ctx);
-        fetch_ctx.send_toast_after_processing(&state, user_id).await;
+        fetch_ctx
+            .send_toast_after_processing(&state, user_id, &messages)
+            .await;
 
         let report = ReportForCreate::new(
             ReportTypeFull::website(),

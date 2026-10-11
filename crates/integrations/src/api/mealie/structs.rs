@@ -108,7 +108,7 @@ pub struct MealieNutrition {
     pub carbohydrate_content: Option<String>,
     pub cholesterol_content: Option<String>,
     pub fat_content: Option<String>,
-    pub fiber_content: Option<String>,
+    pub fibre_content: Option<String>,
     pub protein_content: Option<String>,
     pub saturated_fat_content: Option<String>,
     pub sodium_content: Option<String>,
@@ -135,7 +135,7 @@ impl From<MealieNutrition> for NutritionInformation {
                 .map(|s| vec![Mass::new(s)])
                 .unwrap_or_default(),
             fiber_content: n
-                .fiber_content
+                .fibre_content
                 .map(|s| vec![Mass::new(s)])
                 .unwrap_or_default(),
             protein_content: n

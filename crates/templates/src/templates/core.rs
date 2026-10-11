@@ -1,4 +1,5 @@
-use maud::{Markup, html};
+use l10n::Messages;
+use maud::{Markup, PreEscaped, html};
 
 const BUILD_HASH: &str = env!("BUILD_HASH");
 
@@ -20,16 +21,14 @@ pub(super) fn head(title: &str) -> Markup {
             meta name="keywords" content="Cooking, Lifestyle, Recipes, Groceries, Fast";
             meta name="msapplication-TileColor" content="#da532c";
             meta name="theme-color" content="#ffffff";
-            link rel="canonical" href="https://www.recipya.ca/";
 
+            link rel="canonical" href="https://www.recipya.ca/";
             link rel="icon" href="/data/images/Icon/favicon.ico" sizes="48x48";
             link rel="icon" type="image/png" sizes="32x32" href="/data/images/Icon/favicon-32x32.png";
             link rel="icon" type="image/png" sizes="16x16" href="/data/images/Icon/favicon-16x16.png";
             link rel="apple-touch-icon" sizes="180x180" href="/data/images/Icon/apple-touch-icon.png";
             link rel="mask-icon" href="/data/images/Icon/safari-pinned-tab.svg" color="#5bbad5";
-
             link rel="manifest" href="/public/site.webmanifest";
-
             link rel="stylesheet" href=(format!("/public/css/tailwind.css?v={BUILD_HASH}"));
             link rel="stylesheet" href=(format!("/public/css/app.css?v={BUILD_HASH}"));
             link rel="stylesheet" href=(format!("/public/css/vendor/easymde.min.css?v={BUILD_HASH}"));
@@ -54,18 +53,18 @@ pub(super) fn head(title: &str) -> Markup {
 }
 
 /// Renders a notification toast.
-pub(super) fn toast() -> Markup {
+pub(super) fn toast(messages: &Messages) -> Markup {
     html! {
-        div #toast-container .toast.toast-top.toast-end.hidden.z-20.cursor-default {
-            div .hidden.alert-error.alert-info.alert-success.alert-warning {}
-            div #toast-alert .alert.shadow-lg.hidden role="alert" {
-                svg #toast-icon .stroke-current.shrink-0.w-6.h-6 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {}
+        div #toast-container class="toast toast-top toast-end hidden z-20 cursor-default" {
+            div class="hidden alert-error alert-info alert-success alert-warning" {}
+            div #toast-alert class="alert shadow-lg hidden" role="alert" {
+                svg #toast-icon class="stroke-current shrink-0 w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {}
                 div .text-left {
                     h3 #toast-title .font-bold {}
                     div #toast-message .text-xs {}
                 }
-                button #toast-button .btn.btn-sm {
-                    "See"
+                button #toast-button class="btn btn-sm" {
+                    (messages.action_see())
                 }
             }
         }
@@ -73,9 +72,14 @@ pub(super) fn toast() -> Markup {
 }
 
 /// Renders a notification toast through SSE.
-pub(super) fn toast_sse(title: &str, content: &str, is_toast_visible: bool) -> Markup {
+pub(super) fn toast_sse(
+    title: &str,
+    content: &str,
+    is_toast_visible: bool,
+    messages: &Messages,
+) -> Markup {
     html! {
-        (toast())
+        (toast(messages))
         div #sse-notification-container class={
             "z-20 fixed bottom-0 right-0 p-6 cursor-default"
             @if !is_toast_visible {
@@ -86,7 +90,7 @@ pub(super) fn toast_sse(title: &str, content: &str, is_toast_visible: bool) -> M
                 p class="font-medium text-center pb-1" {
                     (title)
                 }
-                (maud::PreEscaped(content))
+                (PreEscaped(content))
             }
         }
     }

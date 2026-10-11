@@ -30,7 +30,7 @@ pub struct CuisineRecipe<'a> {
     #[serde(rename = "Cooking Time")]
     cooking_time: Cow<'a, str>,
     #[serde(rename = "Dietary Fiber")]
-    dietary_fiber: StringOrNumber<'a>,
+    dietary_fibre: StringOrNumber<'a>,
     #[serde(rename = "Ingredients 3 Final")]
     ingredients_3_final: Cow<'a, str>,
     #[allow(unused)]
@@ -142,7 +142,7 @@ where
             nut.cholesterol_content = vec![Mass::new(format!("{n} mg"))];
         }
 
-        if let StringOrNumber::Integer(n) = recipe.dietary_fiber
+        if let StringOrNumber::Integer(n) = recipe.dietary_fibre
             && n > 0
         {
             nut.fiber_content = vec![Mass::new(format!("{n} g"))];

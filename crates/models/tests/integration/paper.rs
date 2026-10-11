@@ -2,7 +2,7 @@ use models::paper::PaperSize;
 use test_db::default_config;
 use test_harness::create_app_state;
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::Result;
 
 #[tokio::test]
 async fn test_get_all_paper_sizes_ok() -> Result<()> {

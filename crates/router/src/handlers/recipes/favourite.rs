@@ -4,12 +4,14 @@ use axum::{
     http::Uri,
     response::IntoResponse,
 };
+use fluent_static::support::axum::RequestLanguage;
 use tracing::error;
 
 use app::{
     message::{Broadcaster, Toast},
     state::AppState,
 };
+use l10n::Messages;
 use models::{Recipe, data::ViewRecipe, time::FormattedTimes};
 
 use crate::{Error, middleware::mw_auth::RequireAuth, params::FavouriteParams};
@@ -18,6 +20,7 @@ use crate::{Error, middleware::mw_auth::RequireAuth, params::FavouriteParams};
 pub async fn toggle_favourite_handler(
     uri: Uri,
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     Form(params): Form<FavouriteParams>,
@@ -26,7 +29,13 @@ pub async fn toggle_favourite_handler(
         Ok(v) => v,
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error toggling the favourite state of recipe");
-            Toast::broadcast_error(&state, user.id, "Error toggling favourite.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_toggle_favourites_failed(),
+                &messages,
+            )
+            .await;
             return Error::Database.into_response();
         }
     };
@@ -52,6 +61,7 @@ pub async fn toggle_favourite_handler(
         is_favourite,
         is_deletable,
         params.is_view_recipe.unwrap_or_default(),
+        &messages,
     )
     .into_response()
 }

@@ -45,7 +45,7 @@ async fn test_no_input_ok() -> Result<()> {
         .await;
 
     res.assert_status_bad_request();
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"No valid URLs found.","status":"alert-error","title":"Operation Failed"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"No valid URLs found.","status":"alert-error","title":"Operation failed"}}"#).await;
     Ok(())
 }
 
@@ -61,7 +61,7 @@ async fn test_no_valid_urls_ok() -> Result<()> {
         .await;
 
     res.assert_status_bad_request();
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"No valid URLs found.","status":"alert-error","title":"Operation Failed"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"No valid URLs found.","status":"alert-error","title":"Operation failed"}}"#).await;
     Ok(())
 }
 
@@ -77,7 +77,7 @@ async fn test_add_one_valid_url_from_unsupported_websites_ok() -> Result<()> {
         .await;
 
     res.assert_status(StatusCode::ACCEPTED);
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes…</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"#).await;
     assert_sse_message(&mut ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default hidden\"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\"></p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">-1 of -1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"#).await;
     assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-error","title":"Error"}}"#).await;
     tokio::time::sleep(Duration::from_millis(500)).await;
@@ -117,7 +117,7 @@ async fn test_add_one_valid_url_from_supported_websites_ok() -> Result<()> {
     );
     pretty_assertions::assert_eq!(messages[1], HIDDEN_SSE_NOTIFICATION);
     let success_msg = r#"{"notification":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Success"}}"#;
-    let failure_msg = r#"{"notification":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation Failed"}}"#;
+    let failure_msg = r#"{"notification":{"type":"toast","action":"View /reports?view=latest","message":"Fetching the recipe failed.","status":"alert-info","title":"Operation failed"}}"#;
     assert!(
         messages[2] == success_msg || messages[2] == failure_msg,
         "Unexpected message: {}",

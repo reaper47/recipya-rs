@@ -5,6 +5,7 @@ use axum::{
     extract::State,
     response::{Html, IntoResponse},
 };
+use fluent_static::support::axum::RequestLanguage;
 use reqwest::StatusCode;
 use tracing::error;
 
@@ -13,6 +14,7 @@ use app::{
     state::AppState,
 };
 use config::States;
+use l10n::Messages;
 use models::{
     RecipeDetails,
     data::{AboutData, Data, PaginationData, SearchbarData, ShareData, ViewRecipe},
@@ -25,6 +27,7 @@ use crate::{Error, Result, middleware::mw_auth::RequireAuth, params::PreviewForm
 /// Handles generating a preview of the recipe based on the input JSON recipe schema.
 pub async fn add_recipe_import_preview_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Form(form): Form<PreviewForm>,
 ) -> Result<impl IntoResponse> {
@@ -66,12 +69,18 @@ pub async fn add_recipe_import_preview_handler(
                     recipes: vec![view_recipe],
                     ..Default::default()
                 },
+                &messages,
             ) {
                 Ok(res) => Ok(res.into_response()),
                 Err(err) => {
                     error!(user = ?user.id, ?err, "Error rendering view recipe page preview");
-                    Toast::broadcast_error(&state, user.id, "Error rendering recipe preview.")
-                        .await;
+                    Toast::broadcast_error(
+                        &state,
+                        user.id,
+                        &messages.toast_recipes_preview_failed(),
+                        &messages,
+                    )
+                    .await;
                     Err(Error::Templates)
                 }
             }

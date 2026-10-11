@@ -14,12 +14,13 @@ mod shopping_router;
 pub mod middleware;
 pub mod schemas;
 pub mod static_files_router;
+use fluent_static::support::axum::RequestLanguageConfig;
 pub use recipes_router::params;
 
 pub use error::{Error, Result};
 pub use handlers::{shopping::SHOPPING_VIEW_COOKIE_NAME, static_files::copy_to_fs};
 
-use axum::Router;
+use axum::{Extension, Router};
 
 use app::state::AppState;
 
@@ -34,6 +35,10 @@ use crate::static_files_router::static_files_routes;
 
 /// Creates the Router for the web server.
 pub fn router(state: &AppState) -> Result<Router<AppState>> {
+    let request_lang_config = RequestLanguageConfig::builder()
+        .language_cookie_name("lang")
+        .build();
+
     let router = Router::new()
         .nest("/admin", admin_routes(state))
         .nest("/auth", auth_routes(state))
@@ -43,7 +48,8 @@ pub fn router(state: &AppState) -> Result<Router<AppState>> {
         .nest("/shared", shared_routes())
         .nest("/shopping", shopping_routes(state))
         .merge(general_routes(state))
-        .merge(static_files_routes(state));
+        .merge(static_files_routes(state))
+        .layer(Extension(request_lang_config));
 
     Ok(router)
 }

@@ -1,6 +1,7 @@
 use maud::{Markup, PreEscaped, html};
 use uuid::Uuid;
 
+use l10n::Messages;
 use models::{
     data::{Data, PaginationData, ShoppingData},
     settings::UserSettingDetails,
@@ -9,33 +10,33 @@ use models::{
 };
 
 use crate::templates::{
-    common::cancel_submit_form_actions,
-    icons::{
-        icon_arrow_down_tray, icon_carrot, icon_check, icon_check_circle, icon_clipboard_document,
-        icon_paper_clip, icon_pencil, icon_plus, icon_plus_circle, icon_printer, icon_scale,
-        icon_share, icon_trash,
-    },
-    layouts,
-    pagination::pagination,
+    common::cancel_submit_form_actions, icons, layouts, pagination::pagination,
 };
 
 /// Renders the searchbar.
-pub fn lists_index(path: &str, data: &Data, user_setting: &UserSettingDetails) -> Markup {
-    let content = render_lists_index(data);
+pub fn lists_index(
+    path: &str,
+    data: &Data,
+    user_setting: &UserSettingDetails,
+    messages: &Messages,
+) -> Markup {
+    let content = render_lists_index(data, messages);
 
     html! {
         @if data.is_hx_request {
-            title hx-swap-oob="true" { "Shopping Lists | Recipya" }
+            title hx-swap-oob="true" {
+                (messages.shopping_list_tab_title())
+            }
             (content)
-            (pagination(&PaginationData::hidden()))
+            (pagination(&PaginationData::hidden(), messages))
         } @else {
-            (layouts::main("Shopping Lists", path, data, &content, user_setting))
-            (pagination(&PaginationData::hidden()))
+            (layouts::main(&messages.shopping_list_title(), path, data, &content, messages, user_setting))
+            (pagination(&PaginationData::hidden(), messages))
         }
     }
 }
 
-fn render_lists_index(data: &Data) -> Markup {
+fn render_lists_index(data: &Data, messages: &Messages) -> Markup {
     html! {
         @if !matches!(&data.share, Some(share) if share.is_shared) {
              dialog #share-dialog .modal {
@@ -44,7 +45,7 @@ fn render_lists_index(data: &Data) -> Markup {
                     div class="modal-action block mt-4" {
                         form method="dialog" {
                             button class="btn btn-block btn-outline btn-sm" {
-                                "Close"
+                                (messages.action_close())
                             }
                         }
                     }
@@ -54,7 +55,9 @@ fn render_lists_index(data: &Data) -> Markup {
 
         @let Some(shopping) = data.shopping.as_ref() else {
             return html! {
-                p { "No shopping data provided." }
+                p {
+                    (messages.shopping_list_empty_data())
+                }
             };
         };
 
@@ -63,36 +66,36 @@ fn render_lists_index(data: &Data) -> Markup {
                 input #selected-shopping-list-id type="hidden" name="selected"
                       value=(shopping.selected_shopping_list.as_ref().map(|r| r.id).unwrap_or_default());
                 div #shopping-list-container .hidden.md:block {
-                    (render_shopping_lists_list(shopping, true))
+                    (render_shopping_lists_list(shopping, true, messages))
                 }
             }
             div class="hidden md:flex order-1 divider my-0 md:order-2 md:divider-horizontal md:mx-0" {}
             div class="order-0 flex-1 overflow-y-auto min-h-0 md:order-3 max-h-[94vh]" {
                 div #shopping-list-view-pane class="p-4 text-center grid" {
-                    div class="grid" {
+                    div .grid {
                         @if shopping.shopping_lists.is_empty() {
-                            p class="text-left" {
-                                "← Create your first shopping list to get started."
+                            p .text-left {
+                                "← " (messages.shopping_list_create_first_list())
                             }
-                            div id=[if data.is_hx_request { Some("navbar-actions") } else { None }]
-                                hx-swap-oob=[if data.is_hx_request { Some("true") } else { None }]
+                            div id=[data.is_hx_request.then_some("navbar-actions")]
+                                hx-swap-oob=[data.is_hx_request.then_some("true")]
                                 hidden=[if data.is_hx_request { None } else { Some("") }]
                                 class="join border border-gray-700 mb-2 w-fit" {}
                         } @else {
                             @match shopping.selected_shopping_list {
                                 Some(ref list) => {
                                     (match shopping.selected_view_mode {
-                                        ViewMode::Edit | ViewMode::Print => render_shopping_list_view_edit(list, data.is_hx_request),
-                                        ViewMode::View => render_shopping_list_view_view(list, data.is_hx_request),
+                                        ViewMode::Edit | ViewMode::Print => render_shopping_list_view_edit(list, data.is_hx_request, messages),
+                                        ViewMode::View => render_shopping_list_view_view(list, data.is_hx_request, messages),
                                     })
 
                                     @if data.is_hx_request {
-                                        (render_shopping_list_actions(data.is_hx_request, &shopping.selected_view_mode, list.id))
+                                        (render_shopping_list_actions(data.is_hx_request, &shopping.selected_view_mode, list.id, messages))
                                     }
                                 }
                                 None => {
-                                    p class="text-left" {
-                                        "← Select a shopping list to view its items."
+                                    p .text-left {
+                                        "← " (messages.shopping_list_select_a_list())
                                     }
                                 }
                             }
@@ -103,27 +106,29 @@ fn render_lists_index(data: &Data) -> Markup {
         }
 
         @if let Some(labels) = &shopping.labels {
-            datalist id="labels" {
+            datalist #labels {
                 @for label in labels {
-                    option { (label) }
+                    option {
+                        (label)
+                    }
                 }
             }
         }
 
         @if data.is_hx_request {
-            (render_shopping_list_mobile(shopping))
+            (render_shopping_list_mobile(shopping, messages))
         }
     }
 }
 
-pub(super) fn render_shopping_list_mobile(shopping: &ShoppingData) -> Markup {
+pub(super) fn render_shopping_list_mobile(shopping: &ShoppingData, messages: &Messages) -> Markup {
     html! {
         div #navbar-extra-content class="lg:hidden w-full p-2 bg-base-100 flex-1 min-h-0" hx-swap-oob="true" {
             div .divider.my-0 {}
-            (render_shopping_lists_list(shopping, false))
-            div .divider.my-0 {}
+            (render_shopping_lists_list(shopping, false, messages))
+            div class="divider my-0" {}
             @if let Some(list) = &shopping.selected_shopping_list {
-                (render_shopping_list_mobile_actions(&shopping.selected_view_mode, list.id, false))
+                (render_shopping_list_mobile_actions(&shopping.selected_view_mode, list.id, false, messages))
             }
         }
     }
@@ -133,19 +138,24 @@ fn render_shopping_list_mobile_actions(
     selected_view_mode: &ViewMode,
     list_id: Uuid,
     is_oob_swap: bool,
+    messages: &Messages,
 ) -> Markup {
     html! {
-        div #shopping-list-actions-mobile .grid.gap-1 hx-swap-oob=[is_oob_swap.then_some("true")] {
-            (action_view_button(selected_view_mode, list_id))
-            (action_export_button())
-            (action_print_button(list_id))
-            (action_share_button(list_id))
-            (action_delete_button(list_id))
+        div #shopping-list-actions-mobile class="grid gap-1" hx-swap-oob=[is_oob_swap.then_some("true")] {
+            (action_view_button(selected_view_mode, list_id, messages))
+            (action_export_button(messages))
+            (action_print_button(list_id, messages))
+            (action_share_button(list_id, messages))
+            (action_delete_button(list_id, messages))
         }
     }
 }
 
-fn render_shopping_lists_list(shopping: &ShoppingData, is_mobile: bool) -> Markup {
+fn render_shopping_lists_list(
+    shopping: &ShoppingData,
+    is_mobile: bool,
+    messages: &Messages,
+) -> Markup {
     let shopping_lists = shopping.shopping_lists.as_slice();
     let selected = shopping.selected_shopping_list.as_ref();
 
@@ -158,7 +168,7 @@ fn render_shopping_lists_list(shopping: &ShoppingData, is_mobile: bool) -> Marku
     html! {
         div class="grid grid-flow-col gap-2 place-items-center" {
             p class="text-center font-semibold text-lg underline" {
-                "Shopping Lists"
+                (messages.shopping_list_title())
             }
             button type="button"
                 class="btn btn-xs btn-square btn-ghost"
@@ -167,7 +177,7 @@ fn render_shopping_lists_list(shopping: &ShoppingData, is_mobile: bool) -> Marku
                 hx-target="#shopping-lists"
                 hx-swap="afterbegin"
                 hx-on:htmx:after-request="addNewShoppingList()" {
-                (icon_plus_circle())
+                (icons::plus_circle())
             }
         }
         ul id=(container_id) class={
@@ -183,7 +193,7 @@ fn render_shopping_lists_list(shopping: &ShoppingData, is_mobile: bool) -> Marku
 
                 li id=(list_id)
                     class=[selected.as_ref().map_or(idx == 0, |l| l.id == list.id).then_some("bg-base-300")]
-                    hx-get=(format!("/shopping/lists/{}", list.id))
+                    hx-get={ "/shopping/lists/" (list.id) }
                     hx-target="#shopping-list-view-pane"
                     hx-push-url="false"
                     hx-trigger="mousedown"
@@ -210,6 +220,7 @@ pub fn render_shopping_list_items<T: AsRef<str>>(
     list_id: Uuid,
     items: &[&ShoppingListItemDetails],
     is_add_new_label: bool,
+    messages: &Messages,
 ) -> Markup {
     let label = label.as_ref();
     let label_no_spaces = label
@@ -220,55 +231,59 @@ pub fn render_shopping_list_items<T: AsRef<str>>(
     html! {
         details open {
             (render_label(label, list_id, items.first().map_or(1, |i| i.label_id)))
-            ol id=(format!("shopping-list-items-container-{label_no_spaces}"))
+            ol id={ "shopping-list-items-container-" (label_no_spaces) }
                 class="list bg-base-100 rounded-box shadow-md"
                 data-drag-list
                 data-list-id=(list_id) {
                 @for item in items {
-                    (render_shopping_list_item(list_id, item, false))
+                    (render_shopping_list_item(list_id, item, false, messages))
                 }
-                (new_shopping_list_item(list_id, Some(label)))
+                (new_shopping_list_item(list_id, Some(label), messages))
             }
         }
         @if is_add_new_label {
-            (add_label(list_id))
+            (add_label(list_id, messages))
         }
     }
 }
 
 /// Renders the shopping list in edit mode.
-pub fn render_shopping_list_view_edit(list: &ShoppingListDetails, is_hx_request: bool) -> Markup {
+pub fn render_shopping_list_view_edit(
+    list: &ShoppingListDetails,
+    is_hx_request: bool,
+    messages: &Messages,
+) -> Markup {
     html! {
         div {
             (shopping_list_title(list.id, &list.name))
-            div class="grid" {
-                (item_sections(list))
+            div .grid {
+                (item_sections(list, messages))
             }
         }
         @if is_hx_request {
-            (render_shopping_list_actions(true, &ViewMode::Edit, list.id))
-            (render_shopping_list_mobile_actions(&ViewMode::Edit, list.id, true))
+            (render_shopping_list_actions(true, &ViewMode::Edit, list.id, messages))
+            (render_shopping_list_mobile_actions(&ViewMode::Edit, list.id, true, messages))
         }
     }
 }
 
-fn item_sections(list: &ShoppingListDetails) -> Markup {
+fn item_sections(list: &ShoppingListDetails, messages: &Messages) -> Markup {
     html! {
         div class="w-full max-w-[33rem] place-self-center" {
             @if list.items.is_empty() {
                 details .mt-4 open {
-                    (render_label("No label", list.id, 1))
+                    (render_label(messages.shopping_list_no_label().to_string(), list.id, 1))
                     ol #shopping-list-items-container class="list bg-base-100 rounded-box shadow-md" {
-                        (new_shopping_list_item(list.id, None))
+                        (new_shopping_list_item(list.id, None, messages))
                     }
                 }
             } @else {
                 @let items = list.items_per_label();
                 @for (label, items) in items {
-                    (render_shopping_list_items(label, list.id, items.as_slice(), false))
+                    (render_shopping_list_items(label, list.id, items.as_slice(), false, messages))
                 }
             }
-            (add_label(list.id))
+            (add_label(list.id, messages))
         }
     }
 }
@@ -278,6 +293,7 @@ pub fn render_new_shopping_list<T: AsRef<str>>(
     selected_mode: &ViewMode,
     list_id: Uuid,
     title: T,
+    messages: &Messages,
 ) -> Markup {
     let title: &str = title.as_ref();
 
@@ -288,20 +304,20 @@ pub fn render_new_shopping_list<T: AsRef<str>>(
         div #shopping-list-view-pane hx-swap-oob="innerHTML" {
             div {
                 (shopping_list_title(list_id, title))
-                div class="grid" {
+                div .grid {
                     div class="w-full max-w-[33rem] place-self-center" {
                         details open {
-                            (render_label("No label", list_id, 1))
+                            (render_label(messages.shopping_list_no_label().to_string(), list_id, 1))
                             ol class="list bg-base-100 rounded-box shadow-md" {
-                                (new_shopping_list_item(list_id, None))
+                                (new_shopping_list_item(list_id, None, messages))
                             }
                         }
-                        (add_label(list_id))
+                        (add_label(list_id, messages))
                     }
                 }
             }
         }
-        (render_shopping_list_actions(true, selected_mode, list_id))
+        (render_shopping_list_actions(true, selected_mode, list_id, messages))
     }
 }
 
@@ -313,15 +329,14 @@ fn new_shopping_list_element(list_id: Uuid, title: &str, is_oob_swap: bool) -> M
     };
 
     let li = html! {
-        li id=(element_id)
-            class="bg-base-300"
-            hx-get=(&format!("/shopping/lists/{list_id}"))
+        li id=(element_id) .bg-base-300
+            hx-get={ "/shopping/lists/" (list_id) }
             hx-target="#shopping-list-view-pane"
             hx-push-url="false"
             hx-trigger="mousedown"
             hx-on:mousedown=(format!("switchShoppingList('{list_id}')")) {
             div class="flex justify-between items-center gap-2 w-full" {
-                div class="min-w-0" {
+                div .min-w-0 {
                     p class="font-bold text-sm" {
                         (title)
                     }
@@ -346,7 +361,7 @@ fn new_shopping_list_element(list_id: Uuid, title: &str, is_oob_swap: bool) -> M
 
 pub fn render_shopping_list_item_count(list_id: Uuid, num_items: i64, is_swap_oob: bool) -> Markup {
     html! {
-        div id=(format!("shopping-list-item-count-{list_id}"))
+        div id={ "shopping-list-item-count-" (list_id) }
             class="badge badge-xs badge-primary"
             hx-swap-oob=[is_swap_oob.then_some("true")] {
             (num_items)
@@ -360,45 +375,44 @@ pub(super) fn render_shopping_list_actions(
     is_oob_swap: bool,
     selected_view_mode: &ViewMode,
     list_id: Uuid,
+    messages: &Messages,
 ) -> Markup {
     html! {
         div id=[is_oob_swap.then_some("navbar-actions")]
             hx-swap-oob=[is_oob_swap.then_some("true")] {
             div class="hidden md:block join border border-gray-700 mb-2 w-fit" {
-                (action_view_button(selected_view_mode, list_id))
+                (action_view_button(selected_view_mode, list_id, messages))
                 // TODO: Implement upload to apps (todoist)
                 // button class="btn join-item" {
                 //     "Upload to app"
                 // }
-                (action_export_button())
-                (action_print_button(list_id))
-                (action_share_button(list_id))
-                (action_delete_button(list_id))
+                (action_export_button(messages))
+                (action_print_button(list_id, messages))
+                (action_share_button(list_id, messages))
+                (action_delete_button(list_id, messages))
             }
         }
 
-        div #shopping-list-copy-popover
-            class="dropdown dropdown-right w-full md:w-auto rounded-box bg-base-100 shadow-sm"
-            popover  {
+        div #shopping-list-copy-popover class="dropdown dropdown-right w-full md:w-auto rounded-box bg-base-100 shadow-sm" popover {
             ul class="list bg-base-200 rounded-box shadow-md" {
                 li class="list-row p-0 pl-4" {
                     p .place-content-center {
-                        "Text"
+                        (messages.shopping_list_text())
                     }
                     div class="place-self-end grid grid-flow-col" {
-                        button title="Copy" class="btn btn-square btn-ghost"
-                            hx-get=(format!("/shopping/lists/{list_id}/copy?format=text"))
+                        button title=(messages.action_copy()) class="btn btn-square btn-ghost"
+                            hx-get={ "/shopping/lists/" (list_id) "/copy?format=text" }
                             hx-swap="none"
                             hx-on--after-request="copyHtmxResponseToClipboard(event)"
                             _="on click call closeShoppingSidebarAndExportPopover()" {
-                            (icon_clipboard_document())
+                            (icons::clipboard_document())
                         }
-                        form title="Download"
-                            hx-get=(format!("/shopping/lists/{list_id}/export?format=text"))
+                        form title=(messages.action_download())
+                            hx-get={ "/shopping/lists/" (list_id) "/export?format=text" }
                             hx-swap="none"
                             hx-on:download-ready="closeShoppingSidebarAndExportPopover(); window.location.href = event.detail.url;" {
-                                button title="Download" class="btn btn-square btn-ghost" {
-                                    (icon_arrow_down_tray())
+                                button title=(messages.action_download()) class="btn btn-square btn-ghost" {
+                                    (icons::arrow_down_tray())
                                 }
                             }
                     }
@@ -408,19 +422,19 @@ pub(super) fn render_shopping_list_actions(
                         "Markdown"
                     }
                     div class="place-self-end grid grid-flow-col" {
-                        button title="Copy" class="btn btn-square btn-ghost"
-                            hx-get=(format!("/shopping/lists/{list_id}/copy?format=markdown"))
+                        button title=(messages.action_copy()) class="btn btn-square btn-ghost"
+                            hx-get={ "/shopping/lists/" (list_id) "/copy?format=markdown" }
                             hx-swap="none"
                             hx-on--after-request="copyHtmxResponseToClipboard(event)"
                             _="on click call closeShoppingSidebarAndExportPopover()" {
-                            (icon_clipboard_document())
+                            (icons::clipboard_document())
                         }
-                        form title="Download"
-                            hx-get=(format!("/shopping/lists/{list_id}/export?format=markdown"))
+                        form title=(messages.action_download())
+                            hx-get={ "/shopping/lists/" (list_id) "/export?format=markdown" }
                             hx-swap="none"
                             hx-on:download-ready="closeShoppingSidebarAndExportPopover(); window.location.href = event.detail.url;" {
-                                button title="Download" class="btn btn-square btn-ghost" {
-                                    (icon_arrow_down_tray())
+                                button title=(messages.action_download()) class="btn btn-square btn-ghost" {
+                                    (icons::arrow_down_tray())
                                 }
                             }
                     }
@@ -430,12 +444,12 @@ pub(super) fn render_shopping_list_actions(
                         "PDF"
                     }
                     div class="place-self-end grid grid-flow-col" {
-                        form title="Download"
-                            hx-get=(format!("/shopping/lists/{list_id}/export?format=pdf"))
+                        form title=(messages.action_download())
+                            hx-get={ "/shopping/lists/" (list_id) "/export?format=pdf" }
                             hx-swap="none"
                             hx-on:download-ready="closeShoppingSidebarAndExportPopover(); window.location.href = event.detail.url;" {
-                                button title="Download" class="btn btn-square btn-ghost" {
-                                    (icon_arrow_down_tray())
+                                button title=(messages.action_download()) class="btn btn-square btn-ghost" {
+                                    (icons::arrow_down_tray())
                                 }
                             }
                     }
@@ -445,17 +459,17 @@ pub(super) fn render_shopping_list_actions(
     }
 }
 
-fn action_view_button(selected_mode: &ViewMode, list_id: Uuid) -> Markup {
+fn action_view_button(selected_mode: &ViewMode, list_id: Uuid, messages: &Messages) -> Markup {
     html! {
         div class="dropdown w-full md:w-auto" {
             div tabindex="0" role="button" class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto" {
-                "View Mode"
+                (messages.modes_view_label())
                 span class="hidden md:inline mb-1" { "⌄" }
                 span class="inline md:hidden" { "→" }
             }
             form tabindex="0"
                 class="menu dropdown-content bg-base-200 w-32 text-lg pr-2 left-full top-0 md:left-0 md:top-full"
-                hx-get=(format!("/shopping/lists/{list_id}/view"))
+                hx-get={ "/shopping/lists/" (list_id) "/view" }
                 hx-target="#shopping-list-view-pane"
                 hx-trigger="change"
                 hx-swap="innerHTML transition:true"
@@ -471,21 +485,19 @@ fn action_view_button(selected_mode: &ViewMode, list_id: Uuid) -> Markup {
                             checked=[if selected_mode == &ViewMode::Edit { Some("") } else { None }];
 
                         span class="ml-1" {
-                            "Edit"
+                            (messages.action_edit())
                         }
                     }
                 }
                 fieldset class="fieldset flex" {
                     label class="label cursor-pointer text-inherit w-full p-2" {
-                        input type="radio"
-                            name="mode"
-                            autocomplete="off"
+                        input type="radio" name="mode" autocomplete="off"
                             class="radio radio-sm view-option"
                             value="view"
                             checked=[if selected_mode == &ViewMode::View { Some("") } else { None }];
 
                         span class="ml-1" {
-                            "View"
+                            (messages.action_view())
                         }
                     }
                 }
@@ -494,39 +506,38 @@ fn action_view_button(selected_mode: &ViewMode, list_id: Uuid) -> Markup {
     }
 }
 
-fn action_export_button() -> Markup {
+fn action_export_button(messages: &Messages) -> Markup {
     html! {
-        button type="button" class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
-            style="anchor-name:--anchor-copy-list"
-            popovertarget="shopping-list-copy-popover" {
-            "Export"
+        button type="button" class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto" style="anchor-name:--anchor-copy-list" popovertarget="shopping-list-copy-popover" {
+            (messages.action_export())
             span class="hidden md:inline mb-1" { "⌄" }
             span class="inline md:hidden" { "→" }
         }
     }
 }
 
-fn action_print_button(list_id: Uuid) -> Markup {
+fn action_print_button(list_id: Uuid, messages: &Messages) -> Markup {
     html! {
-        a #print-shopping-list-button
-            title="Print list"
+        a #print-shopping-list-button title=(messages.shopping_list_print_list())
             class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
-            href=(format!("/shopping/lists/{list_id}/print"))
+            href={ "/shopping/lists/" (list_id) "/print" }
             target="_blank"
             "hx-on:click"="closeShoppingSidebar()" {
             span .hidden.md:block {
-                (icon_printer())
+                (icons::printer())
             }
-            span .md:hidden { "Print" }
+            span .md:hidden {
+                (messages.action_print())
+            }
         }
     }
 }
 
-fn action_share_button(list_id: Uuid) -> Markup {
+fn action_share_button(list_id: Uuid, messages: &Messages) -> Markup {
     html! {
-        button type="button" title="Share list"
+        button type="button" title=(messages.shopping_list_share_list())
             class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
-            hx-post=(format!("/shopping/lists/{list_id}/share"))
+            hx-post={ "/shopping/lists/" (list_id) "/share" }
             hx-target="#share-dialog-result"
             hx-push-url="false"
             hx-on--after-request="closeShoppingSidebar()"
@@ -540,32 +551,32 @@ fn action_share_button(list_id: Uuid) -> Markup {
                         open #share-dialog
                 end" {
             span .hidden.md:block {
-                (icon_share())
+                (icons::share())
             }
             span .md:hidden {
-                "Share"
+                (messages.action_share())
             }
         }
     }
 }
 
-fn action_delete_button(list_id: Uuid) -> Markup {
+fn action_delete_button(list_id: Uuid, messages: &Messages) -> Markup {
     html! {
-        button type="button" title="Delete list"
+        button type="button" title=(messages.shopping_list_delete_list())
             class="btn btn-sm btn-wide md:btn-md md:join-item md:w-auto"
-            hx-delete=(format!("/shopping/lists/{list_id}")) hx-confirm="Are you sure you wish to delete this list?" {
+            hx-delete={ "/shopping/lists/" (list_id) } hx-confirm=(messages.shopping_list_delete_list_confirm()) {
             span .hidden.md:block {
-                (icon_trash())
+                (icons::trash())
             }
             span .md:hidden {
-                "Delete"
+                (messages.action_delete())
             }
         }
     }
 }
 
-fn new_shopping_list_item(list_id: Uuid, label: Option<&str>) -> Markup {
-    shopping_list_item(list_id, label, None)
+fn new_shopping_list_item(list_id: Uuid, label: Option<&str>, messages: &Messages) -> Markup {
+    shopping_list_item(list_id, label, None, messages)
 }
 
 /// Renders a new shopping list item form as an HTML list item.
@@ -573,6 +584,7 @@ pub fn shopping_list_item<T: AsRef<str>>(
     list_id: Uuid,
     label: Option<T>,
     item: Option<&ShoppingListItemDetails>,
+    messages: &Messages,
 ) -> Markup {
     let ingredient = item
         .as_ref()
@@ -592,16 +604,16 @@ pub fn shopping_list_item<T: AsRef<str>>(
     let label = html! {
         div class="grid gap-1 min-w-0" {
             label class="input input-sm" {
-                (icon_carrot())
-                input required type="text" placeholder="Surloin steak" name="item" value=(ingredient);
+                (icons::carrot())
+                input required type="text" placeholder=(messages.shopping_list_item_name_placeholder()) name="item" value=(ingredient);
             }
             label class="input input-sm" {
-                (icon_scale())
-                input type="text" placeholder="500g (optional)" name="quantity" value=(quantity);
+                (icons::scale())
+                input type="text" placeholder=(messages.shopping_list_item_quantity_placeholder()) name="quantity" value=(quantity);
             }
             label class="input input-sm" {
-                (icon_paper_clip())
-                input type="text" placeholder="Notes (optional)" name="notes" value=(notes) autocomplete="off";
+                (icons::paper_clip())
+                input type="text" placeholder=(messages.shopping_list_item_notes_placeholder()) name="notes" value=(notes) autocomplete="off";
             }
             @if let Some(label) = label.map(|l| l.as_ref().to_string()) {
                 input type="hidden" name="label" value=(label);
@@ -624,23 +636,23 @@ pub fn shopping_list_item<T: AsRef<str>>(
     html! {
         li class="list-row grid grid-cols-[1fr_auto]" {
             @if let Some(item) = item {
-                form class="contents"
-                    hx-put=(format!("/shopping/lists/{list_id}/items/{}", item.id))
+                form .contents
+                    hx-put={ "/shopping/lists/" (list_id) "/items/" (item.id) }
                     hx-target="closest li"
                     hx-swap="outerHTML"
                     hx-on--after-request="if(event.detail.successful) { this.reset(); this.querySelector('input').focus(); }" {
                     (label)
-                    (action(icon_check()))
+                    (action(icons::check()))
                 }
                 script { "focusListItemInput(document.currentScript.closest('li'));" }
             } @else {
-                form class="contents"
-                    hx-post=(format!("/shopping/lists/{list_id}/items"))
+                form .contents
+                    hx-post={ "/shopping/lists/" (list_id) "/items" }
                     hx-target="closest li"
                     hx-swap="beforebegin"
                     hx-on--after-request="if(event.detail.successful) { this.reset(); this.querySelector('input').focus(); }" {
                     (label)
-                    (action(icon_plus()))
+                    (action(icons::plus()))
                 }
             }
         }
@@ -658,16 +670,15 @@ pub fn render_shopping_list_title<T: AsRef<str>>(
     html! {
         (shopping_list_title(list_id, title))
 
-        li id=(format!("shopping-list-sidebar-{list_id}"))
-            class="bg-base-300"
+        li id={ "shopping-list-sidebar-" (list_id) } .bg-base-300
             hx-swap-oob="true"
-            hx-get=(format!("/shopping/lists/{list_id}"))
+            hx-get={ "/shopping/lists/" (list_id) }
             hx-target="#shopping-list-view-pane"
             hx-push-url="false"
             hx-trigger="mousedown"
             hx-on:mousedown=(format!("switchShoppingList('{list_id}')")) {
             div class="flex justify-between items-center gap-2 w-full" {
-                div class="min-w-0" {
+                div .min-w-0 {
                     p class="font-bold text-sm" {
                         (title)
                     }
@@ -687,25 +698,24 @@ fn shopping_list_title<T: AsRef<str>>(list_id: Uuid, title: T) -> Markup {
         div {
             h1 class="text-2xl font-bold underline p-2" {
                 (title.as_ref())
-                span class="ml-2" {
+                span .ml-2 {
                     button type="button" class="btn join-item btn-square btn-sm"
                         _="on click add .hidden to closest <h1/> then remove .hidden from next <form/> from closest <h1/> then call (next <input/> from closest <h1/>).select()" {
-                        (icon_pencil(false))
+                        (icons::pencil(false))
                     }
                 }
             }
-            form class="hidden" hx-put=(format!("/shopping/lists/{list_id}")) hx-swap="outerHTML" {
+            form .hidden hx-put={ "/shopping/lists/" (list_id) } hx-swap="outerHTML" {
                 h1 class="text-2xl font-bold underline p-2" {
-                    input type="text" required
-                        name="name"
+                    input type="text" required name="name"
                         class="input input-lg text-center mr-1"
                         value=(title.as_ref())
                         list="labels"
                         autocomplete="off";
 
-                    span class="ml-2" {
+                    span .ml-2 {
                         button class="btn join-item btn-square btn-lg" {
-                            (icon_check())
+                            (icons::check())
                         }
                     }
                 }
@@ -720,9 +730,10 @@ pub fn render_shopping_list_item_with_count(
     item: &ShoppingListItemDetails,
     num_items: i64,
     readonly: bool,
+    messages: &Messages,
 ) -> Markup {
     html! {
-        (render_shopping_list_item(list_id, item, readonly))
+        (render_shopping_list_item(list_id, item, readonly, messages))
         (render_shopping_list_item_count(list_id, num_items, true))
     }
 }
@@ -732,18 +743,15 @@ pub fn render_shopping_list_item(
     list_id: Uuid,
     item: &ShoppingListItemDetails,
     readonly: bool,
+    messages: &Messages,
 ) -> Markup {
     html! {
         li class="list-row grid grid-cols-[1fr_auto]" data-item-id=(item.id) data-drag-row {
             div class="grid grid-flow-col" data-drageable draggable="true" {
                 div class="grid gap-1 min-w-0" {
                     label class="label text-base-content" {
-                        input type="checkbox"
-                            class="checkbox peer"
-                            hx-post=(format!("/shopping/lists/items/{}/toggle", item.id))
-                            checked[item.is_checked];
-
-                        (render_list_item_details(item, &ViewMode::Edit))
+                        input type="checkbox" class="checkbox peer" hx-post={ "/shopping/lists/items/" (item.id) "/toggle" } checked[item.is_checked];
+                        (render_list_item_details(item, &ViewMode::Edit, messages))
                     }
                 }
                 @if !readonly {
@@ -751,14 +759,14 @@ pub fn render_shopping_list_item(
                         button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:hidden transition-all"
                             hx-target="closest li"
                             hx-swap="outerHTML"
-                            hx-get=(format!("/shopping/lists/{list_id}/items/{}/edit", item.id)) {
-                            (icon_pencil(false))
+                            hx-get={ "/shopping/lists/" (list_id) "/items/" (item.id) "/edit" } {
+                            (icons::pencil(false))
                         }
                         button class="btn join-item btn-square btn-sm [li:has(input:checked)_&]:opacity-50 transition-all"
                             hx-target="closest li"
                             hx-swap="delete"
-                            hx-delete=(format!("/shopping/lists/{list_id}/items/{}", item.id)) {
-                            (icon_trash())
+                            hx-delete={ "/shopping/lists/" (list_id) "/items/" (item.id) } {
+                            (icons::trash())
                         }
                         div class="inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl [li:has(input:checked)_&]:hidden transition-all" data-drag-handle {
                             "⠿"
@@ -786,24 +794,17 @@ pub fn render_label<T: AsRef<str>>(label: T, list_id: Uuid, label_id: i64) -> Ma
                         add .inline-flex to next <span/> from closest <span/>
                         call (next <input/> from closest <span/>).select()
                         call (next <input/> from closest <span/>).focus()" {
-                    (icon_pencil(false))
+                    (icons::pencil(false))
                 }
             }
 
             // Edit mode
             span class="hidden text-left cursor-default " {
-                form .flex hx-target="closest summary" hx-swap="outerHTML" hx-put=(format!("/shopping/lists/{list_id}/labels/{label_id}")) {
-                    input type="text"
-                        required
-                        name="name"
-                        class="input input-sm"
-                        value=(label.as_ref())
-                        list="labels"
-                        autocomplete="off";
-
+            form .flex hx-target="closest summary" hx-swap="outerHTML" hx-put={ "/shopping/lists/" (list_id) "/labels/" (label_id) } {
+                    input type="text" required name="name" class="input input-sm" value=(label.as_ref()) list="labels" autocomplete="off";
                     span {
                         button class="btn join-item btn-square btn-sm ml-2 mb-1" {
-                            (icon_check())
+                            (icons::check())
                         }
                     }
                 }
@@ -816,46 +817,53 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
     path: T,
     data: &Data,
     user_settings: &UserSettingDetails,
+    messages: &Messages,
 ) -> Markup {
     let content = data.shopping.as_ref().map_or_else(
         || {
             html! {
-                "No shopping list available."
+                (messages.shopping_list_no_list_available())
             }
         },
         |shopping| {
             shopping
                 .selected_shopping_list
                 .as_ref()
-                .map(|l| render_shopping_list_view_view(l, data.is_hx_request))
+                .map(|l| render_shopping_list_view_view(l, data.is_hx_request, messages))
                 .unwrap_or_default()
         },
     );
 
     html! {
         @if data.is_hx_request {
-            title hx-swap-oob="true" { "Shopping Lists | Recipya" }
+            title hx-swap-oob="true" {
+                (messages.shopping_list_tab_title())
+            }
             (content)
-            (pagination(&PaginationData::hidden()))
+            (pagination(&PaginationData::hidden(), messages))
         } @else {
-            (layouts::main("Shopping Lists", path.as_ref(), data, &content, user_settings))
-            (pagination(&PaginationData::hidden()))
+            (layouts::main(&messages.shopping_list_title(), path.as_ref(), data, &content, messages, user_settings))
+            (pagination(&PaginationData::hidden(), messages))
         }
     }
 }
 
 /// Renders the shopping list view in view mode.
-pub fn render_shopping_list_view_view(list: &ShoppingListDetails, is_hx_request: bool) -> Markup {
+pub fn render_shopping_list_view_view(
+    list: &ShoppingListDetails,
+    is_hx_request: bool,
+    messages: &Messages,
+) -> Markup {
     html! {
         div .p-2 {
             h1 class="text-center text-2xl font-bold underline p-2" {
                 (list.name)
             }
-            div class="grid" {
+            div .grid {
                 @if list.items.is_empty() {
-                    div class="place-self-center" {
+                    div .place-self-center {
                         p .text-center {
-                            "Shopping list has no items."
+                            (messages.shopping_list_no_items())
                         }
                     }
                 } @else {
@@ -868,7 +876,7 @@ pub fn render_shopping_list_view_view(list: &ShoppingListDetails, is_hx_request:
                                 }
                                 ol class="list bg-base-100 rounded-box shadow-md" {
                                     @for item in items {
-                                        (render_shopping_list_item(list.id, item,  true))
+                                        (render_shopping_list_item(list.id, item,  true, messages))
                                     }
                                 }
                             }
@@ -878,18 +886,18 @@ pub fn render_shopping_list_view_view(list: &ShoppingListDetails, is_hx_request:
             }
         }
         @if is_hx_request {
-            (render_shopping_list_actions(true, &ViewMode::View, list.id))
-            (render_shopping_list_mobile_actions(&ViewMode::View, list.id, true))
+            (render_shopping_list_actions(true, &ViewMode::View, list.id, messages))
+            (render_shopping_list_mobile_actions(&ViewMode::View, list.id, true, messages))
         }
     }
 }
 
-fn add_label(list_id: Uuid) -> Markup {
+fn add_label(list_id: Uuid, messages: &Messages) -> Markup {
     html! {
         div .divider {
             div class="grid grid-flow-col gap-2 w-full" {
-                button class="btn btn-sm btn-outline" hx-get=(format!("/shopping/lists/{list_id}/labels/new")) hx-swap="outerHTML" {
-                    "Add label"
+                button class="btn btn-sm btn-outline" hx-get={ "/shopping/lists/" (list_id) "/labels/new" } hx-swap="outerHTML" {
+                    (messages.shopping_list_add_label())
                 }
             }
         }
@@ -898,31 +906,24 @@ fn add_label(list_id: Uuid) -> Markup {
 
 pub fn render_label_new(list_id: Uuid) -> Markup {
     html! {
-        form hx-post=(format!("/shopping/lists/{list_id}/labels")) hx-target="closest div.divider" hx-swap="outerHTML" {
-            input type="text"
-                autofocus
-                required
-                name="name"
-                class="input input-sm gap-1"
-                list="labels"
-                autocomplete="off";
-
+        form hx-post={ "/shopping/lists/" (list_id) "/labels" } hx-target="closest div.divider" hx-swap="outerHTML" {
+            input type="text" autofocus required name="name" class="input input-sm gap-1" list="labels" autocomplete="off";
             button type="submit" class="btn btn-sm btn-ghost" {
-                (icon_check_circle())
+                (icons::check_circle())
             }
         }
     }
 }
 
-pub fn render_shopping_list_print_mode(list: &ShoppingListDetails) -> Markup {
+pub fn render_shopping_list_print_mode(list: &ShoppingListDetails, messages: &Messages) -> Markup {
     let render_list = |items: &[&ShoppingListItemDetails]| {
         html! {
             ul {
                 @for item in items {
                     li style="list-style-type: none;" {
                         label style="display: flex;" {
-                            input class="checkbox" type="checkbox" style="margin-right: .5rem;";
-                            (render_list_item_details(item, &ViewMode::Print))
+                            input .checkbox type="checkbox" style="margin-right: .5rem;";
+                            (render_list_item_details(item, &ViewMode::Print, messages))
                         }
                     }
                 }
@@ -937,7 +938,7 @@ pub fn render_shopping_list_print_mode(list: &ShoppingListDetails) -> Markup {
         div {
             @if list.items.is_empty() {
                 p {
-                    "Shopping list has no items."
+                    (messages.shopping_list_no_items())
                 }
             } @else {
                 @let items = list.items_per_label();
@@ -958,7 +959,11 @@ pub fn render_shopping_list_print_mode(list: &ShoppingListDetails) -> Markup {
     }
 }
 
-fn render_list_item_details(item: &ShoppingListItemDetails, view: &ViewMode) -> Markup {
+fn render_list_item_details(
+    item: &ShoppingListItemDetails,
+    view: &ViewMode,
+    messages: &Messages,
+) -> Markup {
     let div_class = match view {
         ViewMode::Edit | ViewMode::View => Some(
             "text-left [input:checked~&]:line-through [input:checked~&]:opacity-50 transition-all",
@@ -987,7 +992,7 @@ fn render_list_item_details(item: &ShoppingListItemDetails, view: &ViewMode) -> 
         div class=[div_class] {
             @if let Some(q) = item.quantity.as_ref() && !q.is_empty() {
                 p style=[p_style] {
-                    (format!("{} ({q})", item.ingredient))
+                    (item.ingredient) " (" (q) ")"
                 }
             } @else {
                 p style=[p_style] {
@@ -999,8 +1004,8 @@ fn render_list_item_details(item: &ShoppingListItemDetails, view: &ViewMode) -> 
             }
             @if let Some(recipe) = &item.recipe {
                 p class=[notes_class] style=[notes_style] {
-                    "For "
-                    a href=(format!("/recipes/{}", recipe.id)) target="_blank" class="link" { (recipe.name) }
+                    (messages.shopping_list_for_label()) " "
+                    a href={ "/recipes/" (recipe.id) } target="_blank" .link { (recipe.name) }
                 }
             }
         }
@@ -1056,20 +1061,25 @@ pub fn render_recipe_add_shopping_dialog_content(
     recipe_id: i64,
     shopping_lists: Vec<ShoppingList>,
     ingredients: Vec<AddShoppingIngredient>,
+    messages: &Messages,
 ) -> Markup {
     html! {
         form class="card bg-base-100 shadow-sm"
-            hx-post=(format!("/shopping/recipes/{recipe_id}/ingredients"))
+            hx-post={ "/shopping/recipes/" (recipe_id) "/ingredients" }
             hx-indicator="#add-ingredients-submit-button-spinner"
             hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()" {
-            div class="card-body" {
+            div .card-body {
                 h3 class="mb-1 grid grid-flow-col" {
-                    p .text-lg { "Add ingredients to shopping list" }
+                    p .text-lg {
+                        (messages.shopping_list_add_ingredients())
+                    }
                     @if shopping_lists.is_empty() {
-                        input type="text" required class="input input-sm max-w-sm" placeholder="New shopping list name" name="list" value="";
+                        input type="text" required class="input input-sm max-w-sm" placeholder=(messages.shopping_list_new_list_name()) name="list" value="";
                     } @else {
-                        select #add-to-shopping-list-select class="select" name="list" required {
-                          option disabled { "Pick a shopping list" }
+                        select #add-to-shopping-list-select .select name="list" required {
+                          option disabled {
+                              (messages.shopping_list_pick_list())
+                          }
                           @for list in shopping_lists {
                               option value=(list.id) { (&list.name) }
                           }
@@ -1081,13 +1091,21 @@ pub fn render_recipe_add_shopping_dialog_content(
                         thead {
                             tr .text-center {
                                 th class="py-1 text-left" {
-                                    input type="checkbox" checked class="checkbox"
+                                    input type="checkbox" checked .checkbox
                                         _="on change set <input.checkbox-ingredient/>'s checked to my checked then send masterToggled to <input.ingredient-element/> then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')";
                                 }
-                                th .py-1 { "Ingredient" }
-                                th .py-1 { "Quantity" }
-                                th .py-1 { "Notes" }
-                                th .py-1 { "Include" br; "Quantity" }
+                                th .py-1 {
+                                    (messages.add_shopping_list_table_ingredient())
+                                }
+                                th .py-1 {
+                                    (messages.add_shopping_list_table_quantity())
+                                }
+                                th .py-1 {
+                                    (messages.add_shopping_list_table_notes())
+                                }
+                                th .py-1 {
+                                    (messages.add_shopping_list_table_include()) br; (messages.add_shopping_list_table_quantity())
+                                }
                             }
                         }
                         tbody {
@@ -1116,7 +1134,7 @@ pub fn render_recipe_add_shopping_dialog_content(
                         }
                     }
                 }
-                (cancel_submit_form_actions(&html! { "Submit" }, "add-ingredients-submit-button", false))
+                (cancel_submit_form_actions(&html! { "Submit" }, "add-ingredients-submit-button", false, messages))
             }
         }
     }

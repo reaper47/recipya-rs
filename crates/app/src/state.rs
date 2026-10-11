@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use config::{Config, DataDir};
 use email::EmailClient;
+use l10n::Messages;
 use models::data::ViewRecipe;
 use models::recipe::{RecipeCache, RecipeCacheKey};
 use recipya_scraper::{HttpClient, Scraper};
@@ -164,8 +165,9 @@ impl AppState {
     }
 
     /// Hides the SSE's frontend notification.
-    pub async fn hide_broadcast(&self, user_id: Uuid) {
-        self.broadcast_progress("", -1, -1, false, user_id).await;
+    pub async fn hide_broadcast(&self, user_id: Uuid, messages: &Messages) {
+        self.broadcast_progress("", -1, -1, false, user_id, messages)
+            .await;
     }
 
     /// Sends an HX-Trigger event over SSE.
@@ -183,6 +185,7 @@ impl AppState {
         total: i64,
         is_notification_visible: bool,
         user_id: Uuid,
+        messages: &Messages,
     ) {
         let percentage = if total.gt(&0) {
             (current_value as f64 / total as f64) * 100.0
@@ -196,7 +199,7 @@ impl AppState {
                     <p class="font-medium text-center pb-1">{title}</p>
 
                     <div class="flex justify-between items-center text-sm mb-2">
-                        <span class="font-semibold">{current_value} of {total}</span>
+                        <span class="font-semibold">{current_value} {} {total}</span>
                         <span class="font-semibold">{percentage:.1}%</span>
                     </div>
 
@@ -205,10 +208,11 @@ impl AppState {
                     </div>
                 </div>
             </div>"#,
-            if is_notification_visible { "" } else { "hidden" }
+            if is_notification_visible { "" } else { "hidden" },
+            messages.of()
         ).lines().map(str::trim).collect::<Vec<_>>().join("");
 
-        Snack::broadcast_success(self, user_id, &content).await;
+        Snack::broadcast_success(self, user_id, &content, messages).await;
     }
 
     /// Gets a recipe from the cache if present.

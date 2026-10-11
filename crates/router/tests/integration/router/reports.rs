@@ -15,6 +15,8 @@ use test_db::default_config;
 use test_harness::assert_html;
 use test_harness::{assert_must_be_logged_in, build_server_logged_in};
 
+use crate::{FSI, PDI};
+
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 mod tests_reports {
@@ -38,7 +40,7 @@ mod tests_reports {
             &res,
             &[
                 r#"<ul id="report-menu" class="menu block bg-base-100 w-full overflow-y-auto max-h-[40vh] md:max-h-[89vh] pb-16 md:pb-0 h-full"></ul>"#,
-                r#"<p class="p-4">No reports found.</p>"#,
+                r#"<p class="p-4">No reports</p>"#,
             ],
         );
         Ok(())
@@ -66,7 +68,9 @@ mod tests_reports {
             &res,
             &[
                 r#"<table class="table table-sm"><thead><tr><th></th><th>Entity</th><th>Level</th><th>Error code</th><th>Error reason</th><th>Duration</th><th>Actions</th></tr></thead><tbody><tr><td>1</td><td class="max-w-xs truncate">Raspberry Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>167ms</td><td></td></tr><tr><td>2</td><td class="max-w-xs truncate">Orange Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>544ms</td><td></td></tr><tr><td>3</td><td class="max-w-xs truncate">Pink Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>78ms</td><td></td></tr></tbody></table>"#,
-                r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">1</span>-<span class="font-semibold text-base-content">2</span> of <span id="search-count" class="font-medium">2</span> results</p></div></footer>"#,
+                &format!(
+                    r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page {FSI}1{PDI}, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">{FSI}1{PDI}</span>-<span class="font-semibold text-base-content">{FSI}2{PDI}</span> of <span class="font-semibold text-base-content">{FSI}2{PDI}</span> results</p></div></footer>"#
+                ),
             ],
         );
         Ok(())
@@ -112,7 +116,9 @@ mod tests_report {
         assert_html(
             &res,
             &[
-                r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">1</span>-<span class="font-semibold text-base-content">2</span> of <span id="search-count" class="font-medium">2</span> results</p></div></footer>"#,
+                &format!(
+                    r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page {FSI}1{PDI}, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">{FSI}1{PDI}</span>-<span class="font-semibold text-base-content">{FSI}2{PDI}</span> of <span class="font-semibold text-base-content">{FSI}2{PDI}</span> results</p></div></footer>"#
+                ),
                 r#"<table class="table table-sm"><thead><tr><th></th><th>Entity</th><th>Level</th><th>Error code</th><th>Error reason</th><th>Duration</th><th>Actions</th></tr></thead><tbody><tr><td>1</td><td class="max-w-xs truncate">Raspberry Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>167ms</td><td></td></tr><tr><td>2</td><td class="max-w-xs truncate">Orange Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>544ms</td><td></td></tr><tr><td>3</td><td class="max-w-xs truncate">Pink Pi</td><td><span class="badge badge-xs w-14 badge-success">success</span></td><td>-</td><td>-</td><td>78ms</td><td></td></tr></tbody></table>"#,
             ],
         );
@@ -180,9 +186,9 @@ mod tests_list {
         res.assert_text_contains(r#"badge-primary">import<"#);
         assert_html(
             &res,
-            &[
-                r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page 1, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">1</span>-<span class="font-semibold text-base-content">2</span> of <span id="search-count" class="font-medium">2</span> results</p></div></footer>"#,
-            ],
+            &[&format!(
+                r#"<footer id="pagination-reports" class="footer footer-center bg-base-200 p-2 gap-2 md:pb-2 mt-auto shrink-0 absolute bottom-0" style="grid-auto-flow: row;" onload="updateAddCookbookUrl(1)"><div class="join gap-0"><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Previous page" aria-label="Previous page">‹</button><button class="join-item btn btn-active btn-xs md:btn-sm w-8 md:w-12" aria-current="page" aria-label="Page {FSI}1{PDI}, current page">1</button><button class="join-item btn btn-disabled btn-xs md:btn-sm w-8 md:w-12" title="Next page" aria-label="Next page">›</button></div><div class="text-center"><p class="text-xs md:text-sm">Showing <span class="font-semibold text-base-content">{FSI}1{PDI}</span>-<span class="font-semibold text-base-content">{FSI}2{PDI}</span> of <span class="font-semibold text-base-content">{FSI}2{PDI}</span> results</p></div></footer>"#
+            )],
         );
         let body = res.text();
         assert_eq!(body.matches(r#"hx-get="/reports/"#).count(), 2);

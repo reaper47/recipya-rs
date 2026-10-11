@@ -1,11 +1,7 @@
 use axum::http::{Method, StatusCode};
 
 use config::DemoState;
-use models::{
-    Recipe,
-    settings::{Theme, UserSettingDetails},
-    user::User,
-};
+use models::{Recipe, settings::UserSettingDetails, theme::Theme, user::User};
 use nutrition::NutritionDataSource;
 use router::schemas::settings::{
     BoldIngredientsPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload, TzPayload,
@@ -109,7 +105,7 @@ mod tests_settings {
         assert_html(
             &res,
             &[
-                r#"<div class="flex flex-col menu-sm sm:flex-row sm:menu-md">"#,
+                r#"<div class="flex flex-col menu-sm sm:flex-row sm:menu-md" hx-get="/settings" hx-trigger="language-changed from:body" _="install ReselectTab"><ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical" _="on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target">"#,
                 r#"<ul class="menu menu-horizontal flex-nowrap overflow-x-auto w-full sm:overflow-x-clip sm:w-48 sm:menu-vertical" _="on click remove .menu-active from .setting-tab then add .menu-active to closest <a/> to event.target">"#,
                 r#"<a class="setting-tab menu-active" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-recipes">"#,
                 r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-general">"#,
@@ -121,7 +117,7 @@ mod tests_settings {
                 r#"<a class="setting-tab" _="on mousedown add .hidden to the children of #settings-blocks then remove .hidden from #settings-about">"#,
                 r#"<div id="settings-blocks" class="w-full md:h-[50vh] md:max-h-[50vh]" style="padding-right: 1rem">"#,
                 r#"<div id="settings-recipes" class="p-3 md:h-[50vh] overflow-y-auto">"#,
-                r#"<div id="settings-general" class="p-3 overflow-y-auto max-h-96 hidden">"#,
+                r#"<div id="settings-general" class="p-3 max-h-96 hidden">"#,
                 r#"<div id="settings-connections" class="p-3 overflow-y-auto max-h-96 hidden">"#,
                 r#"<div id="settings-server" class="hidden p-3 md:max-h-96">"#,
                 r#"<div id="settings-data" class="hidden p-3">"#,
@@ -158,7 +154,7 @@ mod tests_export {
             let res = server.get(BASE_URI).await;
 
             res.assert_status_not_found();
-            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"No recipes found for export.","status":"alert-warning","title":"Attention"}}"# ).await;
+            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"No recipes found.","status":"alert-warning","title":"Attention"}}"# ).await;
             Ok(())
         }
 
@@ -183,7 +179,7 @@ mod tests_export {
                     r##"<form class="card bg-base-100 shadow-sm min-w-[50vw]" hx-post="/settings/export-data" hx-indicator="#export-data-spinner" hx-on:download-ready="document.querySelector('#export-data-dialog').close(); window.location.href = event.detail.url;">"##,
                     r#"<div class="card-body"><h3 class="mb-1 grid grid-flow-col"><label class="input input-sm"><svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg><input type="search" placeholder="Search a recipe" _="on input show <tbody>tr/> in next <table/> when its textContent.toLowerCase() contains my value.toLowerCase()"></label><select required name="type" class="[display:ruby] md:block select select-sm w-fit place-self-end"><option value="json" selected>JSON</option><option value="markdown">Markdown</option><option value="pdf">PDF</option><option value="text">Text</option></select></h3>"#,
                     r#"<div class="overflow-auto h-[50vh]"><table class="table table-zebra table-sm"><thead><tr class="text-center"><th class="py-1 text-left"><label><input type="checkbox" class="checkbox" _="on change set &lt;input.checkbox-recipe-id/&gt;'s checked to my checked then call checkDataSubmit('checkbox-recipe-id', 'export-data-submit-button')"></label></th><th class="py-1">Name</th><th class="py-1">Favourite</th><th class="py-1">Rating</th><th class="py-1">Page</th><th class="py-1">Source</th></tr></thead><tbody id="search-results">"#,
-                    r#"</tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="export-data-submit-button" type="submit" class="btn btn-sm" disabled=""><img id="export-data-submit-button-spinner" class="htmx-indicator" src="/public/img/bars.svg" alt="Loading..."><svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></div></form>"#,
+                    r#"</tbody></table></div><div class="card-actions justify-end"><button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()">Cancel</button><div class="cursor-not-allowed"><button id="export-data-submit-button" type="submit" class="btn btn-sm" disabled=""><img class="htmx-indicator" id="export-data-submit-button-spinner" src="/public/img/bars.svg" alt="Loading…"><svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11v5H2v-5H0v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z"></path><path d="m9 14 5-6h-4V0H8v8H4z"></path></svg></button></div></div></div></form>"#,
                 ],
             );
             Ok(())
@@ -312,7 +308,7 @@ mod tests_export {
             res.assert_status_internal_server_error();
             assert_sse_message(
                     &mut ws_server,
-                    r#"{"notification":{"type":"toast","message":"Failed to fetch recipes.","status":"alert-error","title":"Operation Failed"}}"#,
+                    r#"{"notification":{"type":"toast","message":"Error fetching recipes.","status":"alert-error","title":"Operation failed"}}"#,
                 )
                 .await;
             Ok(())
@@ -399,6 +395,42 @@ mod tests_bold_ingredients {
     }
 }
 
+mod tests_language {
+    use models::language::Language;
+    use router::schemas::settings::LanguagePayload;
+
+    use super::*;
+
+    const BASE_URI: &str = "/settings/language";
+
+    #[tokio::test]
+    async fn test_language_must_be_logged_in_ok() -> Result<()> {
+        assert_must_be_logged_in(Method::POST, BASE_URI).await
+    }
+
+    #[tokio::test]
+    async fn test_set_new_language_ok() -> Result<()> {
+        let (server, state) = build_server_logged_in(default_config()).await?;
+        let user_id = User::all(&state.mm).await?[0].id;
+        let id = Language::get_all(&state.mm)
+            .await?
+            .iter()
+            .find(|l| &l.locale == "fr-CA")
+            .map(|l| l.id)
+            .unwrap_or_default();
+
+        let res = server
+            .post(BASE_URI)
+            .form(&LanguagePayload { locale: id })
+            .await;
+
+        res.assert_status_no_content();
+        let got = UserSettingDetails::get(&state.mm, user_id).await?;
+        assert_eq!(got.selected_locale, "fr-CA");
+        Ok(())
+    }
+}
+
 mod tests_paper_size {
     use super::*;
 
@@ -447,7 +479,7 @@ mod tests_timezone {
             .await;
 
         res.assert_status_bad_request();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Invalid timezone.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Invalid timezone.","status":"alert-error","title":"Operation failed"}}"# ).await;
         let user = UserSettingDetails::get(&state.mm, user_id).await?;
         assert_eq!(user.tz_name(), "UTC");
         Ok(())

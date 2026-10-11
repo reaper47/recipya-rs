@@ -3,6 +3,7 @@ use axum::{
     extract::{Path, State},
     response::IntoResponse,
 };
+use fluent_static::support::axum::RequestLanguage;
 use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 
@@ -10,6 +11,7 @@ use app::{
     message::{Broadcaster, Toast},
     state::AppState,
 };
+use l10n::Messages;
 use models::share::ShareRecipe;
 
 use crate::{Error, middleware::mw_auth::RequireAuth, params::ShareRecipeForm};
@@ -17,6 +19,7 @@ use crate::{Error, middleware::mw_auth::RequireAuth, params::ShareRecipeForm};
 /// Handles generating a link for the recipe to share.
 pub async fn share_recipe_post_handler(
     RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
     Form(form): Form<ShareRecipeForm>,
@@ -53,11 +56,17 @@ pub async fn share_recipe_post_handler(
                 state.config.read().await.base_url,
                 share.link
             );
-            templates::general::share_link(&url).into_response()
+            templates::general::share_link(&url, &messages).into_response()
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error generating shared recipe link");
-            Toast::broadcast_error(&state, user.id, "Error creating shared recipe link.").await;
+            Toast::broadcast_error(
+                &state,
+                user.id,
+                &messages.toast_recipes_share_link_failed(),
+                &messages,
+            )
+            .await;
             Error::BadTimeFormat.into_response()
         }
     }

@@ -22,6 +22,7 @@ derive_more.workspace = true
 diesel.workspace = true
 diesel-async.workspace = true
 email.workspace = true
+l10n.workspace = true
 models.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true

@@ -169,7 +169,7 @@ where
                 "cholesterol-per-100g" => {
                     nutrition_per_100g.cholesterol_mg = parse_i16(field).await;
                 }
-                "fiber-per-100g" => nutrition_per_100g.fiber_g = parse_i16(field).await,
+                "fibre-per-100g" => nutrition_per_100g.fibre_g = parse_i16(field).await,
                 "protein-per-100g" => nutrition_per_100g.protein_g = parse_i16(field).await,
                 "total-carbohydrates-per-100g" => {
                     nutrition_per_100g.total_carbohydrates = parse_i16(field).await;
@@ -191,8 +191,8 @@ where
                 "cholesterol-per-serving" => {
                     nutrition_per_serving.nutrition.cholesterol_mg = parse_i16(field).await;
                 }
-                "fiber-per-serving" => {
-                    nutrition_per_serving.nutrition.fiber_g = parse_i16(field).await;
+                "fibre-per-serving" => {
+                    nutrition_per_serving.nutrition.fibre_g = parse_i16(field).await;
                 }
                 "protein-per-serving" => {
                     nutrition_per_serving.nutrition.protein_g = parse_i16(field).await;

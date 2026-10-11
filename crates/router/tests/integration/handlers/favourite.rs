@@ -31,7 +31,7 @@ async fn test_recipe_does_not_exist_ok() -> Result<()> {
     let res = server.post(&base_uri(20)).form(&form()).await;
 
     res.assert_status_internal_server_error();
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Error toggling favourite.","status":"alert-error","title":"Operation Failed"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Error toggling favourite.","status":"alert-error","title":"Operation failed"}}"#).await;
     Ok(())
 }
 
@@ -48,7 +48,7 @@ async fn test_mark_as_favourite_ok() -> Result<()> {
     assert_html(
         &res,
         &[&format!(
-            r##"<button id="favourite-{recipe_id}" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:false}}" aria-label="Add to favorites" aria-pressed="true" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor""##
+            r##"<button id="favourite-{recipe_id}" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:false}}" aria-label="Add to favourites" aria-pressed="true" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor""##
         )],
     );
     Ok(())
@@ -68,7 +68,7 @@ async fn test_mark_as_favourite_already_favourite_ok() -> Result<()> {
     assert_html(
         &res,
         &[&format!(
-            r##"<button id="favourite-{recipe_id}" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:false}}" aria-label="Add to favorites" aria-pressed="false" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor""##
+            r##"<button id="favourite-{recipe_id}" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:false}}" aria-label="Add to favourites" aria-pressed="false" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor""##
         )],
     );
     Ok(())
@@ -88,7 +88,7 @@ async fn test_mark_twice_in_a_row_ok() -> Result<()> {
     assert_html(
         &res,
         &[&format!(
-            r##"<button id="favourite-{recipe_id}" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:false}}" aria-label="Add to favorites" aria-pressed="false" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="none""##
+            r##"<button id="favourite-{recipe_id}" class="btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:false}}" aria-label="Add to favourites" aria-pressed="false" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="none""##
         )],
     );
     Ok(())
@@ -112,7 +112,7 @@ async fn test_mark_as_favourite_view_recipe_ok() -> Result<()> {
     assert_html(
         &res,
         &[&format!(
-            r##"<button id="favourite-{recipe_id}" class="mr-2 hidden sm:block hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:true}}" aria-label="Add to favorites" aria-pressed="true" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor""##
+            r##"<button id="favourite-{recipe_id}" class="mr-2 hidden sm:block hover:text-secondary" title="Add to favourites" hx-post="/recipes/{recipe_id}/favourite" hx-target="#favourite-{recipe_id}" hx-swap="outerHTML" hx-push-url="false" hx-vals="{{&quot;view-recipe&quot;:true}}" aria-label="Add to favourites" aria-pressed="true" _="on mousedown halt the event"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor""##
         )],
     );
     Ok(())

@@ -39,7 +39,7 @@ pub struct Nutrition {
     pub carbohydrate_content: Option<String>,
     pub cholesterol_content: Option<String>,
     pub fat_content: Option<String>,
-    pub fiber_content: Option<String>,
+    pub fibre_content: Option<String>,
     pub protein_content: Option<String>,
     pub saturated_fat_content: Option<String>,
     pub serving_size: Option<String>,
@@ -62,7 +62,7 @@ impl From<Nutrition> for NutritionInformation {
             }),
             carbohydrate_content: new_mass(n.carbohydrate_content),
             fat_content: new_mass(n.fat_content),
-            fiber_content: new_mass(n.fiber_content),
+            fiber_content: new_mass(n.fibre_content),
             protein_content: new_mass(n.protein_content),
             serving_size: n.serving_size.map_or_else(Vec::new, |serving_size| {
                 if serving_size.is_empty() {
@@ -99,7 +99,7 @@ impl Nutrition {
             && is_opt_field_empty(self.carbohydrate_content.as_ref())
             && is_opt_field_empty(self.cholesterol_content.as_ref())
             && is_opt_field_empty(self.fat_content.as_ref())
-            && is_opt_field_empty(self.fiber_content.as_ref())
+            && is_opt_field_empty(self.fibre_content.as_ref())
             && is_opt_field_empty(self.protein_content.as_ref())
             && is_opt_field_empty(self.saturated_fat_content.as_ref())
             && is_opt_field_empty(self.serving_size.as_ref())

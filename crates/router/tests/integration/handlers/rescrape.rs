@@ -48,7 +48,7 @@ mod tests_get {
         let res = server.get(&base_uri(99)).await;
 
         res.assert_status_not_found();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Recipe not found.","status":"alert-error","title":"Operation failed"}}"# ).await;
         Ok(())
     }
 
@@ -65,7 +65,7 @@ mod tests_get {
         let res = server.get(&base_uri(recipe_id)).await;
 
         res.assert_status_internal_server_error();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Error scraping recipe or recipe source is not a URL.","status":"alert-error","title":"Operation Failed"}}"# ).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Error scraping recipe or recipe source is not a URL.","status":"alert-error","title":"Operation failed"}}"# ).await;
         Ok(())
     }
 
@@ -171,7 +171,7 @@ mod tests_get {
                 r#"<input type="hidden" name="nutrition-old-trans-fat-per-100g" value="-">"#,
                 r#"<input type="hidden" name="nutrition-old-cholesterol-per-100g" value="-">"#,
                 r#"<input type="hidden" name="nutrition-old-sodium-per-100g" value="-">"#,
-                r#"<input type="hidden" name="nutrition-old-fiber-per-100g" value="-">"#,
+                r#"<input type="hidden" name="nutrition-old-fibre-per-100g" value="-">"#,
                 // Rating
                 r#"<input type="hidden" name="rating-source" value="old">"#,
                 r#"<input type="hidden" name="rating-old" value="0">"#,
@@ -339,7 +339,7 @@ mod tests_get {
                 r#"<input type="hidden" name="nutrition-old-trans-fat-per-100g" value="-">"#,
                 r#"<input type="hidden" name="nutrition-old-cholesterol-per-100g" value="-">"#,
                 r#"<input type="hidden" name="nutrition-old-sodium-per-100g" value="280mg">"#,
-                r#"<input type="hidden" name="nutrition-old-fiber-per-100g" value="2g">"#,
+                r#"<input type="hidden" name="nutrition-old-fibre-per-100g" value="2g">"#,
                 r#"<input type="hidden" name="serving-size" value="4 cups">"#,
                 r#"<input type="hidden" name="nutrition-old-calories-per-serving" value="432 kcal">"#,
                 r#"<input type="hidden" name="nutrition-old-total-carbohydrates-per-serving" value="79g">"#,
@@ -351,7 +351,7 @@ mod tests_get {
                 r#"<input type="hidden" name="nutrition-old-trans-fat-per-serving" value="-">"#,
                 r#"<input type="hidden" name="nutrition-old-cholesterol-per-serving" value="-">"#,
                 r#"<input type="hidden" name="nutrition-old-sodium-per-serving" value="2688mg">"#,
-                r#"<input type="hidden" name="nutrition-old-fiber-per-serving" value="17g">"#,
+                r#"<input type="hidden" name="nutrition-old-fibre-per-serving" value="17g">"#,
                 r#"<input type="radio" name="nutrition-source" value="new" class="radio radio-sm radio-success mx-2" checked>"#,
                 r#"<input type="hidden" name="nutrition-new-calories-per-100g" value="-">"#,
                 r#"<input type="hidden" name="nutrition-new-total-carbohydrates-per-100g" value="-">"#,
@@ -363,7 +363,7 @@ mod tests_get {
                 r#"<input type="hidden" name="nutrition-new-trans-fat-per-100g" value="-">"#,
                 r#"<input type="hidden" name="nutrition-new-cholesterol-per-100g" value="-">"#,
                 r#"<input type="hidden" name="nutrition-new-sodium-per-100g" value="-">"#,
-                r#"<input type="hidden" name="nutrition-new-fiber-per-100g" value="-">"#,
+                r#"<input type="hidden" name="nutrition-new-fibre-per-100g" value="-">"#,
                 // Rating
                 r#"<input type="radio" name="rating-source" value="old" class="radio radio-sm radio-error mx-2">"#,
                 r#"<input type="radio" name="rating-source" value="new" class="radio radio-sm radio-success mx-2" checked>"#,
@@ -844,8 +844,8 @@ mod tests_put {
                 ("nutrition-new-cholesterol-per-serving", "18g"),
                 ("nutrition-new-sodium-per-100g", "19g"),
                 ("nutrition-new-sodium-per-serving", "20g"),
-                ("nutrition-new-fiber-per-100g", "21g"),
-                ("nutrition-new-fiber-per-serving", "22g"),
+                ("nutrition-new-fibre-per-100g", "21g"),
+                ("nutrition-new-fibre-per-serving", "22g"),
             ])
             .add_header(axum_htmx::HX_REQUEST, "true")
             .await;
@@ -977,7 +977,7 @@ async fn insert_zweigles_recipe(
     let res = server.post("/recipes/add/website").form(&form).await;
 
     res.assert_status(StatusCode::ACCEPTED);
-    assert_sse_message(ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"# ).await;
+    assert_sse_message(ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes…</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"# ).await;
     assert_sse_message(ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default hidden\"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\"></p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">-1 of -1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"# ).await;
     let user_id = User::all(&state.mm).await?[0].id;
     let last_recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;

@@ -46,7 +46,7 @@ async fn test_post_user_already_has_category_ok() -> Result<()> {
         .await;
 
     res.assert_status_internal_server_error();
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Failed to add recipe category.","status":"alert-error","title":"Operation Failed"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Failed to add recipe category.","status":"alert-error","title":"Operation failed"}}"#).await;
     Ok(())
 }
 
@@ -119,6 +119,6 @@ async fn send_delete_400(category: String) -> Result<()> {
         .await;
 
     res.assert_status_bad_request();
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Category cannot be empty or uncategorized.","status":"alert-error","title":"Operation Failed"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Category cannot be empty or uncategorised.","status":"alert-error","title":"Operation failed"}}"#).await;
     Ok(())
 }

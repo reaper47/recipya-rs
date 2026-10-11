@@ -6,6 +6,8 @@ use axum::response::Response;
 use serde::Serialize;
 use uuid::Uuid;
 
+use l10n::Messages;
+
 use crate::state::AppState;
 
 /// A trait defining message toasts broadcasting methods for structured responses.
@@ -15,6 +17,7 @@ pub trait Broadcaster {
         state: &AppState,
         user_id: Uuid,
         message: &str,
+        messages: &Messages,
     ) -> impl Future<Output = ()> + Send;
 
     /// Broadcasts a warning toast to all active SSE connections of a given user.
@@ -22,6 +25,7 @@ pub trait Broadcaster {
         state: &AppState,
         user_id: Uuid,
         message: &str,
+        messages: &Messages,
     ) -> impl Future<Output = ()> + Send;
 
     /// Broadcasts an error toast to all active SSE connections of a given user.
@@ -29,19 +33,16 @@ pub trait Broadcaster {
         state: &AppState,
         user_id: Uuid,
         message: &str,
+        messages: &Messages,
     ) -> impl Future<Output = ()> + Send;
 }
 
 /// A trait defining message creation methods for structured responses.
 pub trait IMessage {
-    fn builder(
-        message_type: MessageType,
-        title: impl Into<String>,
-        message: impl Into<String>,
-    ) -> MessageBuilder;
-    fn error(message: impl Into<String>) -> Self;
-    fn success(message: impl Into<String>) -> Self;
-    fn warning(message: impl Into<String>) -> Self;
+    fn builder(message_type: MessageType, title: &str, message: &str) -> MessageBuilder;
+    fn error(message: &str, messages: &Messages) -> Self;
+    fn success(message: &str, messages: &Messages) -> Self;
+    fn warning(message: &str, messages: &Messages) -> Self;
 }
 
 /// Represents an HTMX-compatible message usually displayed in the top-right
@@ -143,11 +144,7 @@ impl MessageBuilder {
 }
 
 impl IMessage for Toast {
-    fn builder(
-        message_type: MessageType,
-        title: impl Into<String>,
-        message: impl Into<String>,
-    ) -> MessageBuilder {
+    fn builder(message_type: MessageType, title: &str, message: &str) -> MessageBuilder {
         MessageBuilder {
             title: title.into(),
             message: message.into(),
@@ -156,32 +153,32 @@ impl IMessage for Toast {
         }
     }
 
-    fn error(message: impl Into<String>) -> Self {
+    fn error(message: &str, messages: &Messages) -> Self {
         Self {
             content: Content {
                 message: message.into(),
-                title: "Operation Failed".into(),
+                title: messages.toast_title_error().to_string(),
                 status: MessageStatus::Error,
                 ..Default::default()
             },
         }
     }
 
-    fn success(message: impl Into<String>) -> Self {
+    fn success(message: &str, messages: &Messages) -> Self {
         Self {
             content: Content {
                 message: message.into(),
-                title: "Success".into(),
+                title: messages.toast_title_success().to_string(),
                 ..Default::default()
             },
         }
     }
 
-    fn warning(message: impl Into<String>) -> Self {
+    fn warning(message: &str, messages: &Messages) -> Self {
         Self {
             content: Content {
                 message: message.into(),
-                title: "Attention".into(),
+                title: messages.toast_title_warning().to_string(),
                 status: MessageStatus::Warning,
                 ..Default::default()
             },
@@ -190,11 +187,7 @@ impl IMessage for Toast {
 }
 
 impl IMessage for Snack {
-    fn builder(
-        message_type: MessageType,
-        title: impl Into<String>,
-        message: impl Into<String>,
-    ) -> MessageBuilder {
+    fn builder(message_type: MessageType, title: &str, message: &str) -> MessageBuilder {
         MessageBuilder {
             message_type,
             title: title.into(),
@@ -203,34 +196,34 @@ impl IMessage for Snack {
         }
     }
 
-    fn error(message: impl Into<String>) -> Self {
+    fn error(message: &str, messages: &Messages) -> Self {
         Self {
             content: Content {
                 r#type: MessageType::Snack,
                 message: message.into(),
-                title: "Operation Failed".to_string(),
+                title: messages.toast_title_error().to_string(),
                 ..Default::default()
             },
         }
     }
 
-    fn success(message: impl Into<String>) -> Self {
+    fn success(message: &str, messages: &Messages) -> Self {
         Self {
             content: Content {
                 r#type: MessageType::Snack,
                 message: message.into(),
-                title: "Success".to_string(),
+                title: messages.toast_title_success().to_string(),
                 ..Default::default()
             },
         }
     }
 
-    fn warning(message: impl Into<String>) -> Self {
+    fn warning(message: &str, messages: &Messages) -> Self {
         Self {
             content: Content {
                 r#type: MessageType::Snack,
                 message: message.into(),
-                title: "Attention".to_string(),
+                title: messages.toast_title_warning().to_string(),
                 ..Default::default()
             },
         }
@@ -238,22 +231,32 @@ impl IMessage for Snack {
 }
 
 impl Broadcaster for Toast {
-    async fn broadcast_success(state: &AppState, user_id: Uuid, message: &str) {
-        let toast = Self::success(message);
+    async fn broadcast_success(
+        state: &AppState,
+        user_id: Uuid,
+        message: &str,
+        messages: &Messages,
+    ) {
+        let toast = Self::success(message, messages);
         if let Ok(json) = serde_json::to_string(&toast) {
             state.channels.broadcast_to_client(&json, user_id).await;
         }
     }
 
-    async fn broadcast_warning(state: &AppState, user_id: Uuid, message: &str) {
-        let toast = Self::warning(message);
+    async fn broadcast_warning(
+        state: &AppState,
+        user_id: Uuid,
+        message: &str,
+        messages: &Messages,
+    ) {
+        let toast = Self::warning(message, messages);
         if let Ok(json) = serde_json::to_string(&toast) {
             state.channels.broadcast_to_client(&json, user_id).await;
         }
     }
 
-    async fn broadcast_error(state: &AppState, user_id: Uuid, message: &str) {
-        let toast = Self::error(message);
+    async fn broadcast_error(state: &AppState, user_id: Uuid, message: &str, messages: &Messages) {
+        let toast = Self::error(message, messages);
         if let Ok(json) = serde_json::to_string(&toast) {
             state.channels.broadcast_to_client(&json, user_id).await;
         }
@@ -261,22 +264,32 @@ impl Broadcaster for Toast {
 }
 
 impl Broadcaster for Snack {
-    async fn broadcast_success(state: &AppState, user_id: Uuid, message: &str) {
-        let snack = Self::success(message);
+    async fn broadcast_success(
+        state: &AppState,
+        user_id: Uuid,
+        message: &str,
+        messages: &Messages,
+    ) {
+        let snack = Self::success(message, messages);
         if let Ok(json) = serde_json::to_string(&snack) {
             state.channels.broadcast_to_client(&json, user_id).await;
         }
     }
 
-    async fn broadcast_warning(state: &AppState, user_id: Uuid, message: &str) {
-        let snack = Self::warning(message);
+    async fn broadcast_warning(
+        state: &AppState,
+        user_id: Uuid,
+        message: &str,
+        messages: &Messages,
+    ) {
+        let snack = Self::warning(message, messages);
         if let Ok(json) = serde_json::to_string(&snack) {
             state.channels.broadcast_to_client(&json, user_id).await;
         }
     }
 
-    async fn broadcast_error(state: &AppState, user_id: Uuid, message: &str) {
-        let snack = Self::error(message);
+    async fn broadcast_error(state: &AppState, user_id: Uuid, message: &str, messages: &Messages) {
+        let snack = Self::error(message, messages);
         if let Ok(json) = serde_json::to_string(&snack) {
             state.channels.broadcast_to_client(&json, user_id).await;
         }

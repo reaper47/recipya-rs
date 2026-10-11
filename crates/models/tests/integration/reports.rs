@@ -13,7 +13,7 @@ use models::reports::{
     report_types::{ReportTypePrimary, ReportTypeSecondary, ReportTypeTertiary},
 };
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::Result;
 
 mod tests_view {
     use super::*;

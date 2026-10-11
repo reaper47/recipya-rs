@@ -9,7 +9,7 @@ use models::{
 use test_db::default_config;
 use test_harness::build_server_anonymous;
 
-type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+use crate::Result;
 
 fn test_file_path() -> std::path::PathBuf {
     std::env::temp_dir().join("recipes.zip")
