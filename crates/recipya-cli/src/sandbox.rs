@@ -6,7 +6,7 @@ pub fn init_sandbox() {
             sandbox_helper().unwrap();
         }
         _ => {
-            info!("Landlock sandboxing is not supported on this platform")
+            info!("Landlock sandboxing is not supported on this platform");
         }
     }
 }
