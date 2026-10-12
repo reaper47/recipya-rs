@@ -46,7 +46,9 @@ To be detailed once the new documentation website will go live.
 
 ## Translations
 
-To be detailed once the l10n system is implemented.
+You can help existing translations or add new languages by using Recipya's self-hosted instance of [Mozilla Pontoon](https://pontoon.mozilla.org/docs/) at [translate.recipya.ca](https://translate.recipya.ca/). You will need to create an account.
+
+The project's localisation system uses [Mozilla Fluent](https://projectfluent.org/).
 
 ## Contributing code to Recipya
 
