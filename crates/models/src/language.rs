@@ -20,6 +20,7 @@ impl Language {
     /// Gets all the languages for internationalisation.
     pub async fn get_all(mm: &ModelManager) -> Result<Vec<Self>> {
         Ok(schema::languages::table
+            .order_by(schema::languages::name.asc())
             .load::<Self>(&mut mm.pool.get().await?)
             .await?)
     }
