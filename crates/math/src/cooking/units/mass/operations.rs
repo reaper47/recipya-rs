@@ -303,7 +303,7 @@ mod tests {
 
         for mass in masses {
             let debug_str = format!("{mass:?}");
-            assert!(!debug_str.is_empty());
+            assert_ne!(debug_str, "");
 
             // Verify the debug string contains the variant name
             match mass {
@@ -324,7 +324,7 @@ mod tests {
 
         for unit in units {
             let debug_str = format!("{unit:?}");
-            assert!(!debug_str.is_empty());
+            assert_ne!(debug_str, "");
 
             // Verify the debug string contains the unit name
             match unit {

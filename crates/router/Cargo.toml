@@ -50,6 +50,7 @@ serde_json.workspace = true
 strum_macros.workspace = true
 support.workspace = true
 templates.workspace = true
+thiserror = "2.0.21"
 time.workspace = true
 tokio.workspace = true
 tokio-stream = { version = "0.1.19", features = ["sync"] }

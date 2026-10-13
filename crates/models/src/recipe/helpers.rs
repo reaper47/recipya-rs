@@ -33,7 +33,7 @@ use crate::recipe::structs::section::{SectionComponents, SectionForInsert};
 use crate::recipe::structs::tool::{ToolForCreate, ToolForInsert, ToolRecipeForInsert};
 use crate::user::UserKeyword;
 
-pub async fn get_category_id<C>(mut conn: &mut C, category: Option<&String>) -> Result<i64>
+pub async fn get_category_id<C>(conn: &mut C, category: Option<&String>) -> Result<i64>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -55,11 +55,11 @@ where
         .do_update()
         .set(schema::categories::name.eq(category.unwrap_or(default)))
         .returning(schema::categories::id)
-        .get_result::<i64>(&mut conn)
+        .get_result::<i64>(&mut *conn)
         .await?)
 }
 
-pub async fn get_cuisine_id<C>(mut conn: &mut C, cuisine: String) -> Result<i64>
+pub async fn get_cuisine_id<C>(conn: &mut C, cuisine: String) -> Result<i64>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -71,12 +71,12 @@ where
         .do_update()
         .set(schema::cuisines::name.eq(excluded(schema::cuisines::name)))
         .returning(schema::cuisines::id)
-        .get_result::<i64>(&mut conn)
+        .get_result::<i64>(&mut *conn)
         .await?)
 }
 
 pub async fn insert_additional_images<C>(
-    mut conn: &mut C,
+    conn: &mut C,
     recipe_id: i64,
     additional_images: Vec<Uuid>,
 ) -> Result<()>
@@ -90,7 +90,7 @@ where
                 .map(|image| AdditionalImageForInsert { recipe_id, image })
                 .collect::<Vec<_>>(),
         )
-        .execute(&mut conn)
+        .execute(&mut *conn)
         .await?;
 
     Ok(())
@@ -313,7 +313,7 @@ where
 }
 
 pub async fn insert_keywords<C>(
-    mut conn: &mut C,
+    conn: &mut C,
     keywords: &[String],
     user_id: Uuid,
     recipe_id: i64,
@@ -347,7 +347,7 @@ where
         .do_update()
         .set(schema::keywords::name.eq(excluded(schema::keywords::name)))
         .returning(schema::keywords::id)
-        .get_results(&mut conn)
+        .get_results(&mut *conn)
         .await?;
 
     diesel::insert_into(schema::users_keywords::table)
@@ -361,7 +361,7 @@ where
                 .collect::<Vec<_>>(),
         )
         .on_conflict_do_nothing()
-        .execute(&mut conn)
+        .execute(&mut *conn)
         .await?;
 
     diesel::insert_into(schema::keywords_recipes::table)
@@ -374,7 +374,7 @@ where
                 })
                 .collect::<Vec<_>>(),
         )
-        .execute(&mut conn)
+        .execute(&mut *conn)
         .await?;
 
     Ok(())
@@ -487,7 +487,7 @@ pub async fn insert_nutrition(
 }
 
 pub async fn insert_sections<C>(
-    mut conn: &mut C,
+    conn: &mut C,
     recipe_c: &RecipeForCreate,
 ) -> Result<HashMap<String, i64>>
 where
@@ -519,7 +519,7 @@ where
             .do_update()
             .set(schema::sections::name.eq(excluded(schema::sections::name)))
             .returning((schema::sections::id, schema::sections::name))
-            .get_results::<(i64, String)>(&mut conn)
+            .get_results::<(i64, String)>(&mut *conn)
             .await?
             .into_iter()
             .map(|(id, name)| (name, id))
@@ -527,11 +527,7 @@ where
     }
 }
 
-pub async fn insert_tools<C>(
-    mut conn: &mut C,
-    tools: &[ToolForCreate],
-    recipe_id: i64,
-) -> Result<()>
+pub async fn insert_tools<C>(conn: &mut C, tools: &[ToolForCreate], recipe_id: i64) -> Result<()>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -558,7 +554,7 @@ where
         .do_update()
         .set(schema::tools::name.eq(excluded(schema::tools::name)))
         .returning((schema::tools::id, schema::tools::name))
-        .get_results::<(i64, String)>(&mut conn)
+        .get_results::<(i64, String)>(&mut *conn)
         .await?
         .into_iter()
         .map(|(id, name)| (name, id))
@@ -583,17 +579,13 @@ where
 
     diesel::insert_into(schema::tools_recipes::table)
         .values(&tool_recipes)
-        .execute(&mut conn)
+        .execute(&mut *conn)
         .await?;
 
     Ok(())
 }
 
-pub async fn insert_videos<C>(
-    mut conn: &mut C,
-    videos: &[VideoForCreate],
-    recipe_id: i64,
-) -> Result<()>
+pub async fn insert_videos<C>(conn: &mut C, videos: &[VideoForCreate], recipe_id: i64) -> Result<()>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -643,7 +635,7 @@ where
                     })
                     .collect::<Vec<_>>(),
             )
-            .execute(&mut conn)
+            .execute(&mut *conn)
             .await?;
     }
 
@@ -689,7 +681,7 @@ pub async fn text_trim(field: Field<'_>) -> Option<String> {
 }
 
 pub async fn update_category<C>(
-    mut conn: &mut C,
+    conn: &mut C,
     user_id: Uuid,
     recipe_id: i64,
     category: Option<&String>,
@@ -704,7 +696,7 @@ where
             .filter(schema::categories_recipes::recipe_id.eq(recipe_id)),
     )
     .set(schema::categories_recipes::category_id.eq(category_id))
-    .execute(&mut conn)
+    .execute(&mut *conn)
     .await?;
 
     diesel::insert_into(schema::users_categories::table)
@@ -713,7 +705,7 @@ where
             schema::users_categories::category_id.eq(category_id),
         ))
         .on_conflict_do_nothing()
-        .execute(&mut conn)
+        .execute(&mut *conn)
         .await?;
 
     Ok(())

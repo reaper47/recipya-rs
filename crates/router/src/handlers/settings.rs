@@ -13,10 +13,7 @@ use tower_cookies::Cookies;
 use tracing::error;
 use uuid::Uuid;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use config::{DemoState, ProductionState, States};
 use l10n::Messages;
 use models::{
@@ -31,6 +28,7 @@ use models::{
 };
 use nutrition::NutritionDataSource;
 use repository::ModelManager;
+use support::states::AuthenticatedState;
 use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::{
@@ -53,18 +51,15 @@ pub async fn settings_handler(
 ) -> impl IntoResponse {
     let caller_user = user;
     let caller_user_id = caller_user.id;
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, caller_user_id, &messages);
 
     let settings = match UserSettingDetails::get(&state.mm, caller_user_id).await {
         Ok(settings) => settings,
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching user settings");
-            Toast::broadcast_error(
-                &state,
-                caller_user_id,
-                &messages.toast_users_fetch_settings_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_users_fetch_settings_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -76,13 +71,9 @@ pub async fn settings_handler(
             .collect::<Vec<_>>(),
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching categories");
-            Toast::broadcast_error(
-                &state,
-                caller_user_id,
-                &messages.toast_settings_fetch_categories_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_settings_fetch_categories_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -91,13 +82,9 @@ pub async fn settings_handler(
         Ok(l) => l,
         Err(err) => {
             error!(?caller_user_id, ?err, "Error fetching languages");
-            Toast::broadcast_error(
-                &state,
-                caller_user_id,
-                &messages.toast_settings_fetch_languages_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_settings_fetch_languages_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -163,29 +150,19 @@ pub async fn export_data_handler(
     HxCurrentUrl(hx_current_url): HxCurrentUrl,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let recipes = match Recipe::all(&state.mm, user.id).await {
         Ok(recipes) => recipes,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to retrieve recipes");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_fetch_failed()).await;
             return Error::Database.into_response();
         }
     };
 
     if recipes.is_empty() {
-        Toast::broadcast_warning(
-            &state,
-            user.id,
-            &messages.toast_recipes_none_found(),
-            &messages,
-        )
-        .await;
+        toast.warning(&messages.toast_recipes_none_found()).await;
         return StatusCode::NOT_FOUND.into_response();
     }
 
@@ -212,14 +189,12 @@ pub async fn export_data_post_handler(
     State(state): State<AppState>,
     axum_extra::extract::Form(payload): axum_extra::extract::Form<ExportDataPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if payload.recipe_ids.is_empty() {
-        Toast::broadcast_warning(
-            &state,
-            user.id,
-            &messages.toast_recipes_none_selected_export(),
-            &messages,
-        )
-        .await;
+        toast
+            .warning(&messages.toast_recipes_none_selected_export())
+            .await;
         return StatusCode::BAD_REQUEST.into_response();
     }
 
@@ -227,25 +202,13 @@ pub async fn export_data_post_handler(
         Ok(r) => r,
         Err(err) => {
             error!(user = ?user.id, ?payload, ?err, "Failed to fetch recipes");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_fetch_failed()).await;
             return Error::Database.into_response();
         }
     };
 
     if recipes.is_empty() {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_recipes_fetch_failed(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_recipes_fetch_failed()).await;
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
@@ -256,13 +219,7 @@ pub async fn export_data_post_handler(
         Ok(file) => file,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to export recipes");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_export_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_export_failed()).await;
             return Error::Fs.into_response();
         }
     };
@@ -272,13 +229,7 @@ pub async fn export_data_post_handler(
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
         error!(user = ?user.id, ?err, "Failed to create download");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_export_data_failed(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_export_data_failed()).await;
         return Error::Database.into_response();
     }
 
@@ -297,13 +248,7 @@ pub async fn export_data_post_handler(
         Ok(res) => res,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to create response");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_export_data_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_export_data_failed()).await;
             Error::Fs.into_response()
         }
     }
@@ -317,6 +262,8 @@ pub async fn language_post_handler(
     State(state): State<AppState>,
     Form(form): Form<LanguagePayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     match user.update_language(&state.mm, form.locale).await {
         Ok(locale) => {
             set_language_cookie(
@@ -333,13 +280,9 @@ pub async fn language_post_handler(
         }
         Err(err) => {
             error!(?form, user = ?user.id, ?err, "Error updating language");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_settings_update_language_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_settings_update_language_failed())
+                .await;
             Error::Database.into_response()
         }
     }
@@ -352,6 +295,8 @@ pub async fn set_bold_ingredients_handler(
     State(state): State<AppState>,
     Form(form): Form<BoldIngredientsPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if let Err(err) = user
         .update_bold_ingredients(
             &state.mm,
@@ -360,13 +305,9 @@ pub async fn set_bold_ingredients_handler(
         .await
     {
         error!(user = ?user.id, ?err, "Error updating paper size");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_settings_update_paper_size_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_settings_update_paper_size_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -380,30 +321,24 @@ pub async fn set_nutrition_source_handler(
     State(state): State<AppState>,
     Form(payload): Form<NutritionSourcePayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let Ok(source) = payload.nutrition_source.parse::<NutritionDataSource>() else {
         error!(
             payload = payload.nutrition_source,
             "Invalid nutrition source"
         );
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_settings_invalid_nutrition_source(&payload.nutrition_source),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_settings_invalid_nutrition_source(&payload.nutrition_source))
+            .await;
         return Error::InvalidPayload.into_response();
     };
 
     if let Err(err) = source.save(&state.mm, user.id).await {
         error!(user = ?user.id, ?err, "Error saving selected nutrition source");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_settings_save_nutrition_source_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_settings_save_nutrition_source_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -418,14 +353,11 @@ pub async fn set_paper_size_handler(
     Form(form): Form<PaperSizeForm>,
 ) -> impl IntoResponse {
     if let Err(err) = user.update_paper_size(&state.mm, form.paper_size).await {
+        let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
         error!(user = ?user.id, ?err, "Error updating paper size");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_settings_update_paper_size_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_settings_update_paper_size_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -474,28 +406,22 @@ pub async fn set_selected_timezone_handler(
     State(state): State<AppState>,
     Form(payload): Form<TzPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     match user.update_timezone(&state.mm, &payload.tz).await {
         Ok(()) => ().into_response(),
         Err(models::Error::Time) => {
             error!(tz = ?payload.tz, "Selected tz is invalid");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_settings_invalid_timezone(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_settings_invalid_timezone())
+                .await;
             Error::InvalidPayload.into_response()
         }
         Err(err) => {
             error!(user = ?user.id, ?err, "Error updating timezone");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_settings_update_timezone_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_settings_update_timezone_failed())
+                .await;
             Error::Database.into_response()
         }
     }
@@ -512,27 +438,21 @@ where
     F: FnOnce(Theme, ModelManager, Uuid) -> Fut,
     Fut: Future<Output = Result<(), models::Error>> + Send,
 {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, messages);
+
     let Ok(theme) = payload.theme.parse::<Theme>() else {
         error!(theme = payload.theme, "Invalid theme");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_settings_invalid_theme(&payload.theme),
-            messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_settings_invalid_theme(&payload.theme))
+            .await;
         return Error::InvalidPayload.into_response();
     };
 
     if let Err(err) = save_operation(theme, state.mm.clone(), user.id).await {
         error!(user = ?user.id, ?err, "Error saving selected theme");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_settings_update_theme_failed(),
-            messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_settings_update_theme_failed())
+            .await;
         return Error::Database.into_response();
     }
 

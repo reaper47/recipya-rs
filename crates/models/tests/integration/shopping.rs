@@ -349,7 +349,10 @@ async fn test_delete_item_ok() -> Result<()> {
     ShoppingList::delete_item(&state.mm, list_id, item.id, user_id).await?;
 
     let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
-    assert!(got.items.is_empty());
+    assert_eq!(
+        got.items,
+        [] as [models::shopping::ShoppingListItemDetails; 0]
+    );
     Ok(())
 }
 
@@ -453,7 +456,7 @@ async fn test_delete_shopping_list_ok() -> Result<()> {
     ShoppingList::delete(&state.mm, list_id, user_id).await?;
 
     let got = ShoppingList::get_all(&state.mm, user_id).await?;
-    assert!(got.is_empty());
+    assert_eq!(got, [] as [models::shopping::ShoppingList; 0]);
     let got_res = ShoppingListDetails::get(&state.mm, list_id, user_id).await;
     assert!(got_res.is_err());
     Ok(())

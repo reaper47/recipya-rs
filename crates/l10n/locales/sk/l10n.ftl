@@ -596,3 +596,4 @@ update-div-release-notes = poznámky k vydaniu
 supported = podporované
 wakelock-activated = Blokovanie obrazovky je aktivované.
 wakelock-deactivated = Zámka obrazovky bola deaktivovaná.
+recipe-page-added-to-collection = Recept bol pridaný do vašej zbierky.

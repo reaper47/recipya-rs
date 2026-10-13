@@ -596,3 +596,4 @@ update-div-release-notes = გამოშვების შენიშვნ�
 supported = მხარდაჭერილი
 wakelock-activated = ეკრანის ბლოკირება გააქტიურდა.
 wakelock-deactivated = ეკრანის ბლოკირება გამორთულია.
+recipe-page-added-to-collection = რეცეპტი დაემატა თქვენს კოლექციას.

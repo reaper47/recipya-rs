@@ -323,7 +323,7 @@ mod tests_list {
 
         res.assert_status_see_other();
         let lists = ShoppingList::get_all(&c.state.mm, c.user_id).await?;
-        assert!(lists.is_empty());
+        assert_eq!(lists, [] as [models::shopping::ShoppingList; 0]);
         res.assert_header(HX_REDIRECT, "/shopping/lists");
         Ok(())
     }
@@ -337,7 +337,7 @@ mod tests_list {
 
         res.assert_status_see_other();
         let lists = ShoppingList::get_all(&state.mm, user_id).await?;
-        assert!(lists.is_empty());
+        assert_eq!(lists, [] as [models::shopping::ShoppingList; 0]);
         res.assert_header(HX_REDIRECT, "/shopping/lists");
         Ok(())
     }
@@ -596,7 +596,10 @@ mod tests_list_items {
 
         res.assert_status_ok();
         let list = ShoppingListDetails::get(&c.state.mm, c.list_id, c.user_id).await?;
-        assert!(list.items.is_empty());
+        assert_eq!(
+            list.items,
+            [] as [models::shopping::ShoppingListItemDetails; 0]
+        );
         Ok(())
     }
 
@@ -613,7 +616,10 @@ mod tests_list_items {
 
         res.assert_status_ok();
         let list = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;
-        assert!(list.items.is_empty());
+        assert_eq!(
+            list.items,
+            [] as [models::shopping::ShoppingListItemDetails; 0]
+        );
         let count = ShoppingList::items_count(&state.mm, list_id)
             .await
             .unwrap_or_default();

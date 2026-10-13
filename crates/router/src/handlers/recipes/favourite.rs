@@ -7,12 +7,10 @@ use axum::{
 use fluent_static::support::axum::RequestLanguage;
 use tracing::error;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use l10n::Messages;
 use models::{Recipe, data::ViewRecipe, time::FormattedTimes};
+use support::states::AuthenticatedState;
 
 use crate::{Error, middleware::mw_auth::RequireAuth, params::FavouriteParams};
 
@@ -28,14 +26,11 @@ pub async fn toggle_favourite_handler(
     let is_favourite = match Recipe::toggle_favourite(&state.mm, user.id, recipe_id).await {
         Ok(v) => v,
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?recipe_id, user = ?user.id, ?err, "Error toggling the favourite state of recipe");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_toggle_favourites_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_recipes_toggle_favourites_failed())
+                .await;
             return Error::Database.into_response();
         }
     };

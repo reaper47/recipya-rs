@@ -596,3 +596,4 @@ update-div-release-notes = eldono-notoj
 supported = subtenata
 wakelock-activated = Ekranŝlosilo aktivigita.
 wakelock-deactivated = Ekranŝlosilo malaktivigita.
+recipe-page-added-to-collection = La recepto estis aldonita al via kolekto.

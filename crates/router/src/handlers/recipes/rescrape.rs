@@ -13,10 +13,7 @@ use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use config::States;
 use l10n::Messages;
 use models::{
@@ -32,7 +29,7 @@ use models::{
     },
 };
 use models::{Recipe, recipe::structs::recipe::RecipeForCreate};
-use support::strings::calc_seconds_from_parts;
+use support::{states::AuthenticatedState, strings::calc_seconds_from_parts};
 use templates::recipes::RecipeDiff;
 
 use crate::{
@@ -49,6 +46,7 @@ pub async fn recrape_recipe_handler(
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
     let user_id = user.id;
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
 
     let (old_recipe_c, is_nutrition_calculated_by_source) =
         match Recipe::get(&state.mm, user_id, recipe_id).await {
@@ -58,13 +56,7 @@ pub async fn recrape_recipe_handler(
             }
             Err(err) => {
                 error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-                Toast::broadcast_error(
-                    &state,
-                    user_id,
-                    &messages.toast_recipes_not_found(),
-                    &messages,
-                )
-                .await;
+                toast.error(&messages.toast_recipes_not_found()).await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",
@@ -76,13 +68,7 @@ pub async fn recrape_recipe_handler(
         Ok(r) => schema_to_recipe_for_create(&state, r).await,
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error scraping recipe");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_scrape_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_scrape_failed()).await;
             return Err(Error::FailFetch);
         }
     };
@@ -90,13 +76,7 @@ pub async fn recrape_recipe_handler(
     let changes = new_recipe_c.diff(&old_recipe_c, is_nutrition_calculated_by_source);
 
     if changes.is_empty() {
-        Toast::broadcast_warning(
-            &state,
-            user.id,
-            &messages.toast_recipes_not_changed(),
-            &messages,
-        )
-        .await;
+        toast.warning(&messages.toast_recipes_not_changed()).await;
         return Ok(().into_response());
     }
 
@@ -152,14 +132,9 @@ pub async fn recrape_recipe_put_handler(
     let mut recipe = match Recipe::get(&state.mm, user.id, recipe_id).await {
         Ok(r) => RecipeForCreate::from(r),
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_none_found(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_none_found()).await;
             return Err(Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -481,14 +456,11 @@ pub async fn recrape_recipe_put_handler(
             state.remove_cached_recipe((user.id, recipe_id)).await;
         }
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_add_collection_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_recipes_add_collection_failed())
+                .await;
             return Err(Error::Database);
         }
     }

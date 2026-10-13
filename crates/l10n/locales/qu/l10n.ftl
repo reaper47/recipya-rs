@@ -592,3 +592,4 @@ update-div-release-notes = anunsikuna
 supported = soportado
 wakelock-activated = Pantay harkayta wakaychasqa.
 wakelock-deactivated = Pantay harkay p'allarisqa.
+recipe-page-added-to-collection = Receta kayman tukuraykuymanmi.

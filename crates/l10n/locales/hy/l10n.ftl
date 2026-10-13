@@ -596,3 +596,4 @@ update-div-release-notes = թողարկման նշումներ
 supported = աջակցվում է
 wakelock-activated = Էկրանի կողպեքը ակտիվացված է։
 wakelock-deactivated = Էկրանի կողպեքը անջատվել է։
+recipe-page-added-to-collection = Բաղադրատոմսը ավելացվել է ձեր հավաքածուին։

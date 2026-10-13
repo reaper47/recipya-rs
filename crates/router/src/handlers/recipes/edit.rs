@@ -12,10 +12,7 @@ use reqwest::StatusCode;
 use tracing::error;
 use uuid::Uuid;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use config::States;
 use l10n::Messages;
 use models::{
@@ -24,6 +21,7 @@ use models::{
     recipe::{RecipeForm, structs::recipe::RecipeForCreate},
 };
 use models::{data::Data, recipe::structs::media::VideoForCreate};
+use support::states::AuthenticatedState;
 
 use crate::{
     Error, Result,
@@ -45,14 +43,9 @@ pub async fn edit_recipe_handler(
         match fetch_view_recipe(&state, user.id, recipe_id, &messages).await {
             Ok(res) => res,
             Err(err) => {
+                let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
                 error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
-                Toast::broadcast_error(
-                    &state,
-                    user.id,
-                    &messages.toast_recipes_none_found(),
-                    &messages,
-                )
-                .await;
+                toast.error(&messages.toast_recipes_none_found()).await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",
@@ -168,14 +161,11 @@ pub async fn edit_recipe_put_handler(
             state.remove_cached_recipe((user.id, recipe_id)).await;
         }
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?recipe_id, user = ?user.id, ?err, "Failed to update recipe user");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_add_collection_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_recipes_add_collection_failed())
+                .await;
             return Error::Database.into_response();
         }
     }

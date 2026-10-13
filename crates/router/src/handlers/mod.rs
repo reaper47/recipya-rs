@@ -9,10 +9,11 @@ pub mod shopping;
 pub mod static_files;
 
 use l10n::Messages;
+use support::states::AuthenticatedState;
 use tracing::error;
 use uuid::Uuid;
 
-use app::message::{Broadcaster, Toast};
+use app::message::ToastCtx;
 use app::state::AppState;
 use models::settings::UserSettingDetails;
 
@@ -27,14 +28,11 @@ pub async fn get_settings(
     match UserSettingDetails::get(&state.mm, user_id).await {
         Ok(settings) => Ok(settings),
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(state, user_id, messages);
             error!(?user_id, ?err, "Error fetching user settings");
-            Toast::broadcast_error(
-                state,
-                user_id,
-                &messages.toast_users_fetch_settings_failed(),
-                messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_users_fetch_settings_failed())
+                .await;
             Err(Error::Database)
         }
     }

@@ -7,5 +7,6 @@ pub mod net;
 pub mod numbers;
 pub mod regexp;
 pub mod software;
+pub mod states;
 pub mod strings;
 pub mod time;

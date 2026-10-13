@@ -5,10 +5,11 @@ use fluent_static::support::axum::RequestLanguage;
 use reqwest::StatusCode;
 use tracing::error;
 
-use app::message::{Broadcaster, Toast};
+use app::message::ToastCtx;
 use app::state::AppState;
 use l10n::Messages;
 use models::Recipe;
+use support::states::AuthenticatedState;
 
 use crate::middleware::mw_auth::RequireAuth;
 
@@ -25,14 +26,9 @@ pub async fn delete_recipe_handler(
             (StatusCode::NO_CONTENT, [(HX_REDIRECT, "/")]).into_response()
         }
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?recipe_id, user = ?user.id, ?err, "Error deleting recipe");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_delete_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_delete_failed()).await;
             StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }

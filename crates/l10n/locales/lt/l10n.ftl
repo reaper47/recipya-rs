@@ -596,3 +596,4 @@ update-div-release-notes = naujienų sąrašas
 supported = palaikoma
 wakelock-activated = Ekrano užraktas aktyvuotas.
 wakelock-deactivated = Ekrano užraktas išjungtas.
+recipe-page-added-to-collection = Receptas pridėtas prie jūsų kolekcijos.

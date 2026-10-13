@@ -201,7 +201,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
 
         let mut conn = mm.pool.get().await?;
 
-        conn.transaction::<_, Error, _>(async |mut conn| {
+        conn.transaction::<_, Error, _>(async |conn| {
             diesel::sql_query(
                 "TRUNCATE TABLE
                         fdc_foods,
@@ -230,7 +230,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                         .collect::<Vec<_>>(),
                 )
                 .returning(schema::fdc_foods::id)
-                .get_results(&mut conn)
+                .get_results(&mut *conn)
                 .await?;
 
             // fdc_nutrients
@@ -259,7 +259,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                         schema::fdc_nutrients::unit_name,
                     ))
                     .do_nothing()
-                    .execute(&mut conn)
+                    .execute(&mut *conn)
                     .await?;
             }
 
@@ -269,7 +269,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                     schema::fdc_nutrients::name,
                     schema::fdc_nutrients::unit_name,
                 ))
-                .load(&mut conn)
+                .load(&mut *conn)
                 .await?;
 
             let fdc_nutrients_map: HashMap<(String, String), i64> = fdc_nutrients
@@ -316,7 +316,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
             for chunk in records.chunks(BATCH_SIZE) {
                 diesel::insert_into(schema::fdc_foods_fdc_nutrients::table)
                     .values(chunk)
-                    .execute(&mut conn)
+                    .execute(&mut *conn)
                     .await?;
             }
 
@@ -341,7 +341,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                 let ids: Vec<i64> = diesel::insert_into(schema::fdc_food_portions::table)
                     .values(chunk)
                     .returning(schema::fdc_food_portions::id)
-                    .get_results(&mut conn)
+                    .get_results(&mut *conn)
                     .await?;
 
                 portion_ids.extend(ids);
@@ -368,7 +368,7 @@ impl DataFetched for FdcParser<'_, DataFetchedState> {
                         })
                         .collect::<Vec<_>>(),
                 )
-                .execute(&mut conn)
+                .execute(&mut *conn)
                 .await?;
 
             Ok(())

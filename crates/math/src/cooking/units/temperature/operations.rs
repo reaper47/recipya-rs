@@ -293,7 +293,7 @@ mod tests {
 
         for temperature in temperatures {
             let debug_str = format!("{temperature:?}");
-            assert!(!debug_str.is_empty());
+            assert_ne!(debug_str, "");
 
             match temperature {
                 Temperature::Celsius(_) => assert!(debug_str.contains("Celsius")),
@@ -308,7 +308,7 @@ mod tests {
 
         for unit in units {
             let debug_str = format!("{unit:?}");
-            assert!(!debug_str.is_empty());
+            assert_ne!(debug_str, "");
 
             match unit {
                 TemperatureUnit::Celsius => assert!(debug_str.contains("Celsius")),

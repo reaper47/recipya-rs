@@ -15,7 +15,7 @@ use tokio_util::bytes;
 use tracing::{error, warn};
 use uuid::Uuid;
 
-use app::message::{Broadcaster, Toast};
+use app::message::ToastCtx;
 use app::state::AppState;
 use l10n::Messages;
 use models::Error::DuplicateEntityWithID;
@@ -27,6 +27,7 @@ use models::reports::report_types::{
     Import, PrimaryReportType, ReportTypeFull, TertiaryReportType,
 };
 use models::settings::UserSettingDetails;
+use support::states::AuthenticatedState;
 
 use crate::handlers::recipes::common::{broadcast_import_done_toast, schema_to_recipe_for_create};
 use crate::params::ImportFromAppForm;
@@ -57,6 +58,7 @@ fn save_parsed_recipes(
     messages: Messages,
 ) {
     tokio::spawn(async move {
+        let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
         let app = form.app.clone();
         let start_time = Arc::new(Instant::now());
 
@@ -64,24 +66,12 @@ fn save_parsed_recipes(
             Ok(r) => r,
             Err(Error::NoRecipe) => {
                 state.hide_broadcast(user_id, &messages).await;
-                Toast::broadcast_warning(
-                    &state,
-                    user_id,
-                    &messages.toast_recipes_not_found(),
-                    &messages,
-                )
-                .await;
+                toast.warning(&messages.toast_recipes_not_found()).await;
                 return;
             }
             Err(_) => {
                 state.hide_broadcast(user_id, &messages).await;
-                Toast::broadcast_error(
-                    &state,
-                    user_id,
-                    &messages.toast_recipes_parsing_failed(),
-                    &messages,
-                )
-                .await;
+                toast.error(&messages.toast_recipes_parsing_failed()).await;
                 return;
             }
         };

@@ -596,3 +596,4 @@ update-div-release-notes = නිකුතු සටහන්
 supported = සහාය දක්වනු ලබයි
 wakelock-activated = තිර අගුළුව සක්‍රිය කර ඇත.
 wakelock-deactivated = තිර අගුළුව අක්‍රිය කර ඇත.
+recipe-page-added-to-collection = වට්ටෝරුව ඔබේ රැස්කරණයට එක් කර ඇත.

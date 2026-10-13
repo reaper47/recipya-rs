@@ -1,3 +1,41 @@
+/// Defines a two-state `Off`/`On` enum with conversions to and from `bool`.
+#[macro_export]
+macro_rules! on_off_state {
+    ($enum_name:ident) => {
+        #[derive(Default, Eq, PartialEq, Debug, Copy, Clone)]
+        pub enum $enum_name {
+            #[default]
+            Off,
+            On,
+        }
+
+        impl From<$enum_name> for bool {
+            fn from(value: $enum_name) -> Self {
+                match value {
+                    $enum_name::Off => false,
+                    $enum_name::On => true,
+                }
+            }
+        }
+
+        impl From<&$enum_name> for bool {
+            fn from(value: &$enum_name) -> Self {
+                match value {
+                    $enum_name::Off => false,
+                    $enum_name::On => true,
+                }
+            }
+        }
+
+        impl From<bool> for $enum_name {
+            fn from(value: bool) -> Self {
+                if value { Self::On } else { Self::Off }
+            }
+        }
+    };
+}
+
+/// Implements [`core::fmt::Display`] for a type by delegating to its [`core::fmt::Debug`] output.
 #[macro_export]
 macro_rules! impl_display_as_debug {
     ($type:ty) => {

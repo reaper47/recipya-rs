@@ -7,13 +7,11 @@ use config::States;
 use fluent_static::support::axum::RequestLanguage;
 use tracing::error;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use l10n::Messages;
 use models::Error::EntityNotFound;
 use models::data::Data;
+use support::states::AuthenticatedState;
 
 use crate::{
     Error, Result,
@@ -35,14 +33,9 @@ pub async fn duplicate_recipe_handler(
         match fetch_view_recipe(&state, user.id, recipe_id, &messages).await {
             Ok(res) => res,
             Err(err) => {
+                let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
                 error!(?recipe_id, user = ?user.id, ?err, "Error fetching view recipe");
-                Toast::broadcast_error(
-                    &state,
-                    user.id,
-                    &messages.toast_recipes_not_found(),
-                    &messages,
-                )
-                .await;
+                toast.error(&messages.toast_recipes_not_found()).await;
                 return Err(Error::Model(EntityNotFound {
                     id: recipe_id.to_string(),
                     entity: "recipe",

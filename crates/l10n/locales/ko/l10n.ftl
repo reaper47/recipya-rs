@@ -592,3 +592,4 @@ update-div-release-notes = 릴리스 노트
 supported = 지원됨
 wakelock-activated = 화면 잠금이 활성화되었습니다.
 wakelock-deactivated = 화면 잠금이 비활성화되었습니다.
+recipe-page-added-to-collection = 레시피가 컬렉션에 추가되었습니다.

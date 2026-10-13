@@ -596,3 +596,4 @@ update-div-release-notes = zapisi o izdajah
 supported = podprto
 wakelock-activated = Zaslon je zaklenjen.
 wakelock-deactivated = Zaslon je bil odklenjen.
+recipe-page-added-to-collection = Recept je bil dodan v vašo zbirko.

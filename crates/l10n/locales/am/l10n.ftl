@@ -595,4 +595,5 @@ update-div-read-release-notes = { $link }ን ያንብቡ
 update-div-release-notes = የለቀቃ ማስታወሻዎች
 supported = ይደገፋል
 wakelock-activated = የስክሪን መቆለፊያ ተንቀሳቃሽ ሆኗል።
-wakelock-deactivated = Screen lock deactivated.
+wakelock-deactivated = የስክሪን መቆለፊያ ተሰርዟል።
+recipe-page-added-to-collection = ሪሴፕቱ ወደ ስብስብዎ ተጨምሯል።

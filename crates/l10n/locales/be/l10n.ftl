@@ -596,3 +596,4 @@ update-div-release-notes = нататкі аб выпуску
 supported = падтрымліваецца
 wakelock-activated = Экран зафіксаваны.
 wakelock-deactivated = Экранны блакіроўка дэактывавана.
+recipe-page-added-to-collection = Рэцэпт дададзены ў вашу калекцыю.

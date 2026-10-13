@@ -592,3 +592,4 @@ update-div-release-notes = リリースノート
 supported = サポート済み
 wakelock-activated = 画面ロックが有効になりました。
 wakelock-deactivated = 画面ロックが解除されました。
+recipe-page-added-to-collection = レシピがコレクションに追加されました。

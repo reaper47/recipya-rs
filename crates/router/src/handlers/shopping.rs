@@ -20,7 +20,7 @@ use tower_cookies::{Cookie, Cookies};
 use tracing::error;
 use uuid::Uuid;
 
-use app::message::{Broadcaster, Toast};
+use app::message::ToastCtx;
 use app::state::AppState;
 use config::{ProductionState, States};
 use l10n::Messages;
@@ -36,6 +36,7 @@ use models::shopping::{
     ShoppingListItemForUpdate,
 };
 use models::view::ViewMode;
+use support::states::AuthenticatedState;
 use templates::shopping::AddShoppingIngredient;
 
 use crate::handlers::get_settings;
@@ -56,19 +57,16 @@ pub async fn shopping_lists_handler(
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> Result<impl IntoResponse> {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let settings = get_settings(&state, user.id, &messages).await?;
 
     let shopping_lists = match ShoppingList::get_all(&state.mm, user.id).await {
         Ok(lists) => lists,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to get shopping lists");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_fetch_lists_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_fetch_lists_failed())
+                .await;
             return Err(Error::Database);
         }
     };
@@ -78,13 +76,9 @@ pub async fn shopping_lists_handler(
             Ok(details) => Some(details),
             Err(err) => {
                 error!(user = ?user.id, list = ?list.id, ?err, "Failed to get shopping list details of list");
-                Toast::broadcast_error(
-                    &state,
-                    user.id,
-                    &messages.toast_shopping_fetch_list_failed(),
-                    &messages,
-                )
-                .await;
+                toast
+                    .error(&messages.toast_shopping_fetch_list_failed())
+                    .await;
                 None
             }
         }
@@ -161,14 +155,11 @@ pub async fn shopping_list_delete_handler(
     Path(list_id): Path<Uuid>,
 ) -> impl IntoResponse {
     if let Err(err) = ShoppingList::delete(&state.mm, list_id, user.id).await {
+        let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
         error!(?err, "Failed to delete shopping list");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_shopping_delete_list_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_shopping_delete_list_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -183,14 +174,10 @@ pub async fn shopping_list_put_handler(
     Path(list_id): Path<Uuid>,
     Form(payload): Form<ListPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if payload.name.is_empty() {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_shopping_title_empty(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_shopping_title_empty()).await;
         return Error::InvalidPayload.into_response();
     }
 
@@ -204,24 +191,14 @@ pub async fn shopping_list_put_handler(
                 .into_response()
         }
         Err(models::Error::NameExists) => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_shopping_title_exists(),
-                &messages,
-            )
-            .await;
+            toast.warning(&messages.toast_shopping_title_exists()).await;
             Error::InvalidPayload.into_response()
         }
         Err(err) => {
             error!(?err, "Failed to update shopping list title");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_title_update_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_title_update_failed())
+                .await;
             Error::Database.into_response()
         }
     }
@@ -235,6 +212,7 @@ pub async fn shopping_list_copy_handler(
     Path(list_id): Path<Uuid>,
     Query(params): Query<ShoppingListExportParams>,
 ) -> Result<impl IntoResponse> {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let list = ShoppingListDetails::get(&state.mm, list_id, user.id).await?;
 
     let mut writer = Vec::new();
@@ -250,24 +228,14 @@ pub async fn shopping_list_copy_handler(
     let body = match res {
         Ok(()) => Body::from(String::from_utf8(writer).unwrap_or_default()),
         Err(models::Error::EmptyInput) => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_shopping_list_empty(),
-                &messages,
-            )
-            .await;
+            toast.warning(&messages.toast_shopping_list_empty()).await;
             return Err(Error::Write);
         }
         Err(err) => {
             error!(format = ?params.format, ?err, "Failed to write shopping list");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_write_list_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_write_list_failed())
+                .await;
             return Err(Error::Write);
         }
     };
@@ -286,6 +254,7 @@ pub async fn shopping_list_export_handler(
     Path(list_id): Path<Uuid>,
     Query(params): Query<ShoppingListExportParams>,
 ) -> Result<impl IntoResponse> {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let list = ShoppingListDetails::get(&state.mm, list_id, user.id).await?;
 
     let options = if params.format == ExportType::Pdf {
@@ -297,24 +266,12 @@ pub async fn shopping_list_export_handler(
     let path = match list.export(&params.format, options) {
         Ok(f) => f,
         Err(models::Error::EmptyInput) => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_shopping_list_empty(),
-                &messages,
-            )
-            .await;
+            toast.warning(&messages.toast_shopping_list_empty()).await;
             return Err(Error::Write);
         }
         Err(err) => {
             error!(?err, "Failed to export shopping list");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_export_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_shopping_export_failed()).await;
             return Err(Error::Database);
         }
     };
@@ -324,13 +281,7 @@ pub async fn shopping_list_export_handler(
 
     if let Err(err) = Download::create(&state.mm, dl_c).await {
         error!(user = ?user.id, ?err, "Failed to create download");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_export_data_failed(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_export_data_failed()).await;
         return Err(Error::Database);
     }
 
@@ -349,13 +300,7 @@ pub async fn shopping_list_export_handler(
         Ok(res) => Ok(res),
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to create response");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_export_data_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_export_data_failed()).await;
             Err(Error::Fs)
         }
     }
@@ -375,13 +320,10 @@ async fn pdf_export_options(
             let messages = messages.clone();
 
             tokio::spawn(async move {
-                Toast::broadcast_error(
-                    &state,
-                    user_id,
-                    &messages.toast_users_fetch_settings_failed(),
-                    &messages,
-                )
-                .await;
+                let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
+                toast
+                    .error(&messages.toast_users_fetch_settings_failed())
+                    .await;
             });
             Error::Database
         })?;
@@ -394,13 +336,8 @@ async fn pdf_export_options(
             let messages = messages.clone();
 
             tokio::spawn(async move {
-                Toast::broadcast_error(
-                    &state,
-                    user_id,
-                    &messages.toast_paper_sizes_failed(),
-                    &messages,
-                )
-                .await;
+                let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
+                toast.error(&messages.toast_paper_sizes_failed()).await;
             });
             Error::Database
         })?;
@@ -446,14 +383,11 @@ pub async fn shopping_list_view_handler(
     let list = match ShoppingListDetails::get(&state.mm, list_id, user.id).await {
         Ok(list) => list,
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?list_id, user = ?user.id, ?err, "Failed to get shopping list");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_fetch_list_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_fetch_list_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -530,14 +464,11 @@ pub async fn shopping_list_share_post_handler(
             templates::general::share_link(&url, &messages).into_response()
         }
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?list_id, user = ?user.id, ?err, "Error generating shared recipe link for recipe");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_share_list_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_share_list_failed())
+                .await;
             Error::BadTimeFormat.into_response()
         }
     }
@@ -551,26 +482,16 @@ pub async fn shopping_list_labels_post_handler(
     Path(list_id): Path<Uuid>,
     Form(form): Form<ListPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if form.name.is_empty() {
-        Toast::broadcast_warning(
-            &state,
-            user.id,
-            &messages.toast_shopping_label_empty(),
-            &messages,
-        )
-        .await;
+        toast.warning(&messages.toast_shopping_label_empty()).await;
         return Error::InvalidPayload.into_response();
     }
 
     match ShoppingList::new_label(&state.mm, &form.name, list_id, user.id).await {
         Err(models::Error::DuplicateEntity) => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_shopping_label_exists(),
-                &messages,
-            )
-            .await;
+            toast.warning(&messages.toast_shopping_label_exists()).await;
             return Error::EntityExists {
                 entity: "shopping_list_label",
             }
@@ -578,13 +499,9 @@ pub async fn shopping_list_labels_post_handler(
         }
         Err(err) => {
             error!(?err, "Failed to create shopping list label");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_create_label_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_create_label_failed())
+                .await;
             return Error::Database.into_response();
         }
         _ => {}
@@ -610,18 +527,16 @@ pub async fn shopping_list_label_put_handler(
     Path((list_id, label_id)): Path<(Uuid, i64)>,
     Form(payload): Form<ListPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let new_label_id =
         match ShoppingList::get_or_insert_label(&state.mm, &payload.name, user.id).await {
             Ok(id) => id,
             Err(err) => {
                 error!(?err, "Failed to update shopping list label");
-                Toast::broadcast_error(
-                    &state,
-                    user.id,
-                    &messages.toast_shopping_label_update_failed(),
-                    &messages,
-                )
-                .await;
+                toast
+                    .error(&messages.toast_shopping_label_update_failed())
+                    .await;
                 return Error::Database.into_response();
             }
         };
@@ -630,13 +545,9 @@ pub async fn shopping_list_label_put_handler(
         ShoppingList::update_item_labels(&state.mm, list_id, label_id, new_label_id, user.id).await
     {
         error!(?err, "Failed to update shopping list label");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_shopping_label_update_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_shopping_label_update_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -651,17 +562,13 @@ pub async fn shopping_lists_post_handler(
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let Some(title) = hx_prompt
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
     else {
-        Toast::broadcast_warning(
-            &state,
-            user.id,
-            &messages.toast_shopping_title_empty(),
-            &messages,
-        )
-        .await;
+        toast.warning(&messages.toast_shopping_title_empty()).await;
         return Error::InvalidPayload.into_response();
     };
 
@@ -669,13 +576,7 @@ pub async fn shopping_lists_post_handler(
         Ok(id) => id,
         Err(err) => {
             error!(?err, "Failed to create shopping list");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_create_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_shopping_create_failed()).await;
             return Error::Database.into_response();
         }
     };
@@ -704,15 +605,13 @@ pub async fn shopping_list_item_post_handler(
     State(state): State<AppState>,
     Form(payload): Form<ListItemPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let item = payload.item.trim();
+
     if item.is_empty() {
-        Toast::broadcast_warning(
-            &state,
-            user.id,
-            &messages.toast_shopping_item_name_empty(),
-            &messages,
-        )
-        .await;
+        toast
+            .warning(&messages.toast_shopping_item_name_empty())
+            .await;
         return Error::InvalidPayload.into_response();
     }
 
@@ -732,13 +631,7 @@ pub async fn shopping_list_item_post_handler(
     {
         Ok(id) => id,
         Err(err) if err.to_string().contains("duplicate") => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_shopping_item_exists(),
-                &messages,
-            )
-            .await;
+            toast.warning(&messages.toast_shopping_item_exists()).await;
             return Error::EntityExists {
                 entity: "shopping list item",
             }
@@ -746,13 +639,9 @@ pub async fn shopping_list_item_post_handler(
         }
         Err(err) => {
             error!(?err, "Failed to add shopping list item");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_add_item_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_add_item_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -781,14 +670,11 @@ pub async fn shopping_list_items_positions_put_handler(
             .to_string()
             .contains("shopping_list_items_quantity_check")
     {
+        let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
         error!(?err, "Failed to update shopping list item");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_shopping_item_update_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_shopping_item_update_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -803,14 +689,11 @@ pub async fn shopping_list_item_delete_handler(
     Path((list_id, item_id)): Path<(Uuid, i64)>,
 ) -> impl IntoResponse {
     if let Err(err) = ShoppingList::delete_item(&state.mm, list_id, item_id, user.id).await {
+        let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
         error!(?err, "Failed to delete shopping list item");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_shopping_item_delete_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_shopping_item_delete_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -829,6 +712,8 @@ pub async fn shopping_list_item_put_handler(
     Path((list_id, item_id)): Path<(Uuid, i64)>,
     Form(payload): Form<ListItemPayload>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let item_u = ShoppingListItemForUpdate {
         ingredient: Some(payload.item),
         quantity: payload.quantity,
@@ -844,13 +729,9 @@ pub async fn shopping_list_item_put_handler(
             .contains("shopping_list_items_quantity_check")
     {
         error!(?err, "Failed to update shopping list item");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_shopping_item_update_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_shopping_item_update_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -867,13 +748,9 @@ pub async fn shopping_list_item_put_handler(
         }
         Err(err) => {
             error!(?err, "Failed to get shopping list item");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_item_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_item_fetch_failed())
+                .await;
             Error::Database.into_response()
         }
     }
@@ -895,14 +772,11 @@ pub async fn shopping_list_item_edit_handler(
         )
         .into_response(),
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?err, "Failed to get shopping list item");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_item_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_item_fetch_failed())
+                .await;
             Error::EntityNotFound {
                 entity: "shopping_list_item",
             }
@@ -921,13 +795,10 @@ pub async fn shopping_list_item_toggle_handler(
     if let Err(err) = ShoppingList::toggle_item_check(&state.mm, item_id).await {
         error!(?err, "Failed to toggle item check");
         if let Some(user) = user {
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_item_check_failed(),
-                &messages,
-            )
-            .await;
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+            toast
+                .error(&messages.toast_shopping_item_check_failed())
+                .await;
         }
         return Error::Database.into_response();
     }
@@ -942,6 +813,8 @@ pub async fn shopping_recipe_ingredients_handler(
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let ingredients = match Recipe::ingredients(&state.mm, recipe_id).await {
         Ok(v) => v
             .into_iter()
@@ -962,13 +835,9 @@ pub async fn shopping_recipe_ingredients_handler(
             .collect::<Vec<_>>(),
         Err(err) => {
             error!(?recipe_id, ?err, "Failed to fetch ingredients");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_fetch_ingredients_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_recipes_fetch_ingredients_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -977,13 +846,9 @@ pub async fn shopping_recipe_ingredients_handler(
         Ok(lists) => lists,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to fetch shopping lists");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_fetch_lists_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_fetch_lists_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -1007,14 +872,10 @@ pub async fn shopping_recipe_ingredients_post_handler(
     axum_extra::extract::Form(mut payload): axum_extra::extract::Form<RecipeIngredientsPayload>,
 ) -> impl IntoResponse {
     payload.clean();
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if payload.is_empty() {
-        Toast::broadcast_warning(
-            &state,
-            user.id,
-            &messages.toast_payload_invalid(),
-            &messages,
-        )
-        .await;
+        toast.warning(&messages.toast_payload_invalid()).await;
         return Error::InvalidPayload.into_response();
     }
 
@@ -1024,13 +885,7 @@ pub async fn shopping_recipe_ingredients_post_handler(
             Ok(list) => list,
             Err(err) => {
                 error!(?err, "Failed to create new shopping list");
-                Toast::broadcast_error(
-                    &state,
-                    user.id,
-                    &messages.toast_shopping_create_failed(),
-                    &messages,
-                )
-                .await;
+                toast.error(&messages.toast_shopping_create_failed()).await;
                 return Error::Database.into_response();
             }
         },
@@ -1040,13 +895,9 @@ pub async fn shopping_recipe_ingredients_post_handler(
         Ok(list) => list,
         Err(err) => {
             error!(?list_id, ?err, "Failed to fetch shopping list");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_shopping_fetch_list_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_shopping_fetch_list_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -1077,23 +928,15 @@ pub async fn shopping_recipe_ingredients_post_handler(
         .await
     {
         error!(?recipe_id, ?err, "Failed to add items");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_shopping_add_items_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_shopping_add_items_failed())
+            .await;
         return Error::Database.into_response();
     }
 
-    Toast::broadcast_success(
-        &state,
-        user.id,
-        &messages.toast_shopping_add_items_success(),
-        &messages,
-    )
-    .await;
+    toast
+        .success(&messages.toast_shopping_add_items_success())
+        .await;
 
     ().into_response()
 }

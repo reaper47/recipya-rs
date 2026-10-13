@@ -13,13 +13,16 @@ use schema_org::{
         RecipeRecipeYieldFieldEnum, RecipeToolFieldEnum,
     },
 };
-use support::{fs::new_fs_support, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
+use support::{
+    fs::new_fs_support,
+    states::{AuthenticatedState, UnauthenticatedState},
+    time::DEFAULT_HTTP_CONNECTION_TIMEOUT,
+};
 
 use crate::{
     Error, Result,
     api::{
-        AuthType, AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState,
-        assemble_token_header,
+        AuthType, Credentials, MAX_RETRY_ATTEMPTS, assemble_token_header,
         nextcloud::{
             host::Host,
             structs::{Recipe, Recipes},

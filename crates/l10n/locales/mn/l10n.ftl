@@ -596,3 +596,4 @@ update-div-release-notes = шинэчлэлийн тэмдэглэлүүд
 supported = дэмжигдсэн
 wakelock-activated = Дэлгэцийн түгжээ идэвхжүүлэгдлээ.
 wakelock-deactivated = Дэлгэцийн түгжээ унтрагдлаа.
+recipe-page-added-to-collection = Жорыг танай цуглуулгад нэмсэн болно.

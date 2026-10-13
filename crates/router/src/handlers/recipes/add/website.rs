@@ -18,7 +18,7 @@ use tracing::{error, warn};
 use url::Url;
 use uuid::Uuid;
 
-use app::message::{Broadcaster, IMessage, MessageStatus, MessageType, Toast};
+use app::message::{MessageStatus, ToastCtx};
 use app::state::AppState;
 use l10n::Messages;
 use models::{
@@ -30,7 +30,7 @@ use models::{
     },
     settings::UserSettingDetails,
 };
-use support::net::validate_ip;
+use support::{net::validate_ip, states::AuthenticatedState};
 
 use crate::{
     Error, handlers::recipes::common::schema_to_recipe_for_create,
@@ -79,51 +79,58 @@ impl FetchWebsiteContext {
         user_id: Uuid,
         messages: &Messages,
     ) {
+        let toast = ToastCtx::<AuthenticatedState>::new(state, user_id, messages);
+
         let count_success = self.count_success.load(Ordering::SeqCst);
         let count_error = self.count_error.load(Ordering::SeqCst);
         let count_warning = self.count_warning.load(Ordering::SeqCst);
 
-        let toast = if self.total == 1 {
+        let (title, body, status, action) = if self.total == 1 {
             if count_warning == 1 {
                 let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
                 let view_recipe_link = format!("View /recipes/{recipe_id}");
 
-                Toast::builder(MessageType::Toast, "Warning", "The recipe exists.")
-                    .status(MessageStatus::Warning)
-                    .action(Some(&view_recipe_link))
-                    .build()
+                (
+                    messages.toast_title_warning(),
+                    messages.toast_recipes_exist(),
+                    Some(MessageStatus::Warning),
+                    Some(view_recipe_link),
+                )
             } else if count_error == 1 {
-                Toast::builder(MessageType::Toast, "Error", "Fetching the recipe failed.")
-                    .status(MessageStatus::Error)
-                    .action(Some("View /reports?view=latest"))
-                    .build()
+                (
+                    messages.toast_title_error(),
+                    messages.toast_recipes_fetch_failed(),
+                    Some(MessageStatus::Error),
+                    Some("View /reports?view=latest".to_string()),
+                )
             } else if count_success == 1 {
                 let recipe_id = self.recipe_ids.lock().await.pop().unwrap();
                 let view_recipe_link = format!("View /recipes/{recipe_id}");
 
-                Toast::builder(
-                    MessageType::Toast,
-                    "Success",
-                    "Recipe has been added to your collection.",
+                (
+                    messages.toast_title_success(),
+                    messages.recipe_page_added_to_collection(),
+                    None,
+                    Some(view_recipe_link),
                 )
-                .action(Some(&view_recipe_link))
-                .build()
             } else {
-                Toast::error(&messages.fetch_recipes_none_scraped(), messages)
+                (
+                    messages.toast_title_error(),
+                    messages.fetch_recipes_none_scraped(),
+                    Some(MessageStatus::Error),
+                    None,
+                )
             }
         } else {
-            let message = format!(
-                "Fetched: {count_success}. Skipped: {}",
-                count_error + count_warning
-            );
-            Toast::builder(MessageType::Toast, "Success", &message)
-                .action(Some("View /reports?view=latest"))
-                .build()
+            (
+                messages.toast_title_success(),
+                messages.toast_recipes_import_status(count_success, count_error + count_warning),
+                None,
+                Some("View /reports?view=latest".to_string()),
+            )
         };
 
-        if let Ok(json) = serde_json::to_string(&toast) {
-            state.channels.broadcast_to_client(&json, user_id).await;
-        }
+        toast.custom(&title, &body, status, action.as_deref()).await;
     }
 }
 
@@ -134,6 +141,8 @@ pub async fn add_website_post_handler(
     State(state): State<AppState>,
     Form(form): Form<RecipeScrapeForm>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let mut candidates = form
         .urls
         .lines()
@@ -148,13 +157,7 @@ pub async fn add_website_post_handler(
         .collect::<Vec<_>>();
 
     if urls.is_empty() {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.fetch_recipes_no_valid_urls(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.fetch_recipes_no_valid_urls()).await;
         return Error::InvalidPayload.into_response();
     }
 

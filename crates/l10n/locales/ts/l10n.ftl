@@ -596,3 +596,4 @@ update-div-release-notes = mahlebela a phetolelo
 supported = sekeletswa
 wakelock-activated = Seloqo sa skrin se sefumele.
 wakelock-deactivated = Selo sa skrin se yisiwe.
+recipe-page-added-to-collection = Resipi ya hlangiselwe ku qoqo lakho.

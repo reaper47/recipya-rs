@@ -9,10 +9,7 @@ use fluent_static::support::axum::RequestLanguage;
 use reqwest::StatusCode;
 use tracing::error;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use config::States;
 use l10n::Messages;
 use models::{
@@ -21,6 +18,7 @@ use models::{
     recipe::structs::recipe::RecipeForCreate,
     time::FormattedTimes,
 };
+use support::states::AuthenticatedState;
 
 use crate::{Error, Result, middleware::mw_auth::RequireAuth, params::PreviewForm};
 
@@ -73,14 +71,9 @@ pub async fn add_recipe_import_preview_handler(
             ) {
                 Ok(res) => Ok(res.into_response()),
                 Err(err) => {
+                    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
                     error!(user = ?user.id, ?err, "Error rendering view recipe page preview");
-                    Toast::broadcast_error(
-                        &state,
-                        user.id,
-                        &messages.toast_recipes_preview_failed(),
-                        &messages,
-                    )
-                    .await;
+                    toast.error(&messages.toast_recipes_preview_failed()).await;
                     Err(Error::Templates)
                 }
             }

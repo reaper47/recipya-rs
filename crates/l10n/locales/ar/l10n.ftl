@@ -598,3 +598,4 @@ update-div-release-notes = ملاحظات الإصدار
 supported = مدعوم
 wakelock-activated = تم تفعيل قفل الشاشة.
 wakelock-deactivated = تم إيقاف قفل الشاشة.
+recipe-page-added-to-collection = تمت إضافة الوصفة إلى مجموعتك.

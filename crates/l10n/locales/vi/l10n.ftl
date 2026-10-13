@@ -592,3 +592,4 @@ update-div-release-notes = ghi chú phát hành
 supported = được hỗ trợ
 wakelock-activated = Màn hình khóa đã được kích hoạt.
 wakelock-deactivated = Khóa màn hình đã được tắt.
+recipe-page-added-to-collection = Công thức đã được thêm vào bộ sưu tập của bạn.

@@ -592,3 +592,4 @@ update-div-release-notes = บันทึกการเปลี่ยนแ�
 supported = รองรับ
 wakelock-activated = การล็อกหน้าจอถูกเปิดใช้งานแล้ว
 wakelock-deactivated = การล็อกหน้าจอถูกปิดใช้งานแล้ว
+recipe-page-added-to-collection = สูตรอาหารได้ถูกเพิ่มไปยังคอลเลกชันของคุณแล้ว

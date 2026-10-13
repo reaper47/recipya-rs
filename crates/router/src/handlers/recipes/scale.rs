@@ -7,14 +7,12 @@ use itertools::izip;
 use serde::Deserialize;
 use tracing::error;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use l10n::Messages;
 use math::cooking::units::system::MeasurementSystem;
 use models::Error::EntityNotFound;
 use models::Recipe;
+use support::states::AuthenticatedState;
 
 use crate::{Error, middleware::mw_auth::RequireAuth};
 
@@ -32,14 +30,10 @@ pub async fn scale_recipe_handler(
     Query(params): Query<YieldQueryParams>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if params.yield_param == 0 {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_recipes_yield_zero(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_recipes_yield_zero()).await;
         return Error::InvalidQuery.into_response();
     }
 
@@ -63,13 +57,7 @@ pub async fn scale_recipe_handler(
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_not_found(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_not_found()).await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",

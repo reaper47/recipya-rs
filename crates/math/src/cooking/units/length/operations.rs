@@ -260,7 +260,7 @@ mod tests {
 
         for length in lengths {
             let debug_str = format!("{length:?}");
-            assert!(!debug_str.is_empty());
+            assert_ne!(debug_str, "");
 
             match length {
                 Length::Millimetre(_) => assert!(debug_str.contains("Millimetre")),

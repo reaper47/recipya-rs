@@ -596,3 +596,4 @@ update-div-release-notes = sürüm notları
 supported = destekleniyor
 wakelock-activated = Ekran kilidi etkinleştirildi.
 wakelock-deactivated = Ekran kilidi devre dışı bırakıldı.
+recipe-page-added-to-collection = Tarif koleksiyonunuza eklendi.

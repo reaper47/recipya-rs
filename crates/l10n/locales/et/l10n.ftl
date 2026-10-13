@@ -596,3 +596,4 @@ update-div-release-notes = väljalaskemärkmed
 supported = toetatud
 wakelock-activated = Ekraani lukk aktiveeriti.
 wakelock-deactivated = Ekraanilukk on deaktiveeritud.
+recipe-page-added-to-collection = Retsept on lisatud teie kollektsiooni.

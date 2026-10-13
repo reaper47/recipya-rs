@@ -596,3 +596,4 @@ update-div-release-notes = lintlha tsa phetolelo
 supported = e tšehelitsoeng
 wakelock-activated = Senotso sa skrine se sebetse.
 wakelock-deactivated = Leqheka la skrine le ile la timetsoa.
+recipe-page-added-to-collection = Resepi e kentse pokellong ya hao.

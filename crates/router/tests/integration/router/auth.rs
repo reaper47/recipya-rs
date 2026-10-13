@@ -394,7 +394,7 @@ mod tests_forgot_password {
         res.assert_status_bad_request();
         res.assert_header(
             axum_htmx::HX_TRIGGER,
-            r#"{"notification":{"type":"toast","message":"Password is invalid.","status":"alert-info","title":"Success"}}"#,
+            r#"{"notification":{"type":"toast","message":"Password is invalid.","status":"alert-error","title":"Operation failed"}}"#,
         );
         Ok(())
     }

@@ -596,3 +596,4 @@ update-div-release-notes = izlaišanas piezīmes
 supported = atbalstīts
 wakelock-activated = Ekrāna bloķēšana aktivizēta.
 wakelock-deactivated = Ekrāna bloķēšana ir deaktivizēta.
+recipe-page-added-to-collection = Recepte ir pievienota jūsu kolekcijai.

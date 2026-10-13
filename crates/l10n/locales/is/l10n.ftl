@@ -596,3 +596,4 @@ update-div-release-notes = útgáfuskýringar
 supported = stytt
 wakelock-activated = Skjálokkun virkjuð.
 wakelock-deactivated = Skjálokkunin var slökkt.
+recipe-page-added-to-collection = Uppskriftin hefur verið bætt við safninu þínu.

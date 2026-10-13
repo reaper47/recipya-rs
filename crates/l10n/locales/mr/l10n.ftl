@@ -596,3 +596,4 @@ update-div-release-notes = प्रकाशन टिप्पण्या
 supported = समर्थित
 wakelock-activated = स्क्रीन लॉक सक्रिय झाले आहे.
 wakelock-deactivated = स्क्रीन लॉक निष्क्रिय करण्यात आले.
+recipe-page-added-to-collection = रेसिपी तुमच्या संग्रहात जोडली गेली आहे.

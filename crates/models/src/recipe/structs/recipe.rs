@@ -990,7 +990,7 @@ mod tests {
             let (first, rest) = recipe_c.first_and_rest_images();
 
             pretty_assertions::assert_eq!(first, Some(uuid1));
-            assert!(rest.is_empty());
+            assert_eq!(rest, [] as [uuid::Uuid; 0]);
         }
 
         #[test]
@@ -1003,7 +1003,7 @@ mod tests {
             let (first, rest) = recipe_c.first_and_rest_images();
 
             pretty_assertions::assert_eq!(first, None);
-            assert!(rest.is_empty());
+            assert_eq!(rest, [] as [uuid::Uuid; 0]);
         }
 
         #[test]
@@ -1016,7 +1016,7 @@ mod tests {
             let (first, rest) = recipe_c.first_and_rest_images();
 
             pretty_assertions::assert_eq!(first, None);
-            assert!(rest.is_empty());
+            assert_eq!(rest, [] as [uuid::Uuid; 0]);
         }
 
         #[test]

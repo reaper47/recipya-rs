@@ -22,9 +22,6 @@ impl Credentials {
     }
 }
 
-pub struct AuthenticatedState;
-pub struct UnauthenticatedState;
-
 /// Assembles a token header for authentication.
 pub fn assemble_token_header(auth_type: &AuthType, token: &str) -> Result<HeaderMap> {
     let mut headers = HeaderMap::new();

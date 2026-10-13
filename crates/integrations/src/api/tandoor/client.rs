@@ -12,13 +12,16 @@ use schema_org::{
         RecipeRecipeInstructionsFieldEnum, RecipeYieldFieldEnum,
     },
 };
-use support::{fs::new_fs_support, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
+use support::{
+    fs::new_fs_support,
+    states::{AuthenticatedState, UnauthenticatedState},
+    time::DEFAULT_HTTP_CONNECTION_TIMEOUT,
+};
 
 use crate::{
     Error, Result,
     api::{
-        AuthType, AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState,
-        assemble_token_header,
+        AuthType, Credentials, MAX_RETRY_ATTEMPTS, assemble_token_header,
         tandoor::{
             host::Host,
             structs::{AuthPayload, RecipeList, RecipeRetrieve, TokenResponse},
