@@ -31,7 +31,7 @@ impl Recipe {
             .do_update()
             .set(schema::categories::name.eq(category.to_string()))
             .returning(schema::categories::id)
-            .get_result(&mut conn)
+            .get_result(&mut *conn)
             .await?;
 
         diesel::insert_into(schema::users_categories::table)
@@ -39,7 +39,7 @@ impl Recipe {
                 user_id,
                 category_id,
             })
-            .execute(&mut conn)
+            .execute(&mut *conn)
             .await?;
 
         Ok(())
@@ -62,7 +62,7 @@ impl Recipe {
         let mut conn = mm.pool.get().await?;
 
         let recipe_id = conn
-            .transaction::<i64, Error, _>(async move |mut conn| {
+            .transaction::<i64, Error, _>(async move |conn| {
                 // Images
                 let (main_image, additional_images) = recipe_c.first_and_rest_images();
 
@@ -87,7 +87,7 @@ impl Recipe {
                     ))
                     .do_nothing()
                     .returning(schema::recipes::id)
-                    .get_result::<i64>(&mut conn)
+                    .get_result::<i64>(&mut *conn)
                     .await
                     .optional()?;
 
@@ -95,13 +95,13 @@ impl Recipe {
                     let recipe_id = schema::recipes::table
                         .filter(schema::recipes::name.eq(&recipe_c.name))
                         .select(schema::recipes::id)
-                        .get_result::<i64>(&mut conn)
+                        .get_result::<i64>(&mut *conn)
                         .await?;
                     return Err(Error::DuplicateEntityWithID(recipe_id));
                 };
 
                 // Additional Images
-                insert_additional_images(&mut conn, recipe_id, additional_images).await?;
+                insert_additional_images(&mut *conn, recipe_id, additional_images).await?;
 
                 // Category
                 let category_id = get_category_id(conn, recipe_c.category.as_ref()).await?;
@@ -111,7 +111,7 @@ impl Recipe {
                         category_id,
                         recipe_id,
                     })
-                    .execute(&mut conn)
+                    .execute(&mut *conn)
                     .await?;
 
                 diesel::insert_into(schema::users_categories::table)
@@ -120,7 +120,7 @@ impl Recipe {
                         category_id,
                     })
                     .on_conflict_do_nothing()
-                    .execute(&mut conn)
+                    .execute(&mut *conn)
                     .await?;
 
                 // Cuisine
@@ -132,7 +132,7 @@ impl Recipe {
                             cuisine_id,
                             recipe_id,
                         })
-                        .execute(&mut conn)
+                        .execute(&mut *conn)
                         .await?;
                 }
 
@@ -155,7 +155,7 @@ impl Recipe {
                 .await?;
 
                 // Keywords
-                insert_keywords(&mut conn, &recipe_c.keywords, user_id, recipe_id).await?;
+                insert_keywords(&mut *conn, &recipe_c.keywords, user_id, recipe_id).await?;
 
                 // Nutrition
                 insert_nutrition(
@@ -177,7 +177,7 @@ impl Recipe {
                         prep_seconds: times.prep_seconds,
                         cook_seconds: times.cook_seconds,
                     })
-                    .execute(&mut conn)
+                    .execute(&mut *conn)
                     .await?;
 
                 // Tools
@@ -191,7 +191,7 @@ impl Recipe {
                         schema::users_recipes::user_id.eq(user_id),
                         schema::users_recipes::recipe_id.eq(recipe_id),
                     ))
-                    .execute(&mut conn)
+                    .execute(&mut *conn)
                     .await?;
 
                 Ok(recipe_id)

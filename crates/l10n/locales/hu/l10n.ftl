@@ -596,3 +596,4 @@ update-div-release-notes = kiadási jegyzetek
 supported = támogatott
 wakelock-activated = Képernyőzárolás aktiválva.
 wakelock-deactivated = A képernyőzár deaktiválva.
+recipe-page-added-to-collection = A recept hozzáadva került a gyűjteményéhez.

@@ -596,3 +596,4 @@ update-div-release-notes = julkaisumuistiinnot
 supported = tuettu
 wakelock-activated = Näyttölukko aktivoitu.
 wakelock-deactivated = Näytön lukitus poistettu käytöstä.
+recipe-page-added-to-collection = Resepti on lisätty kokoelmaasi.

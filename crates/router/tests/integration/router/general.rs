@@ -387,7 +387,7 @@ mod tests_search_suggestions {
         let res = server.get(&url("source:")).await;
 
         res.assert_status_ok();
-        assert!(res.text().is_empty());
+        assert_eq!(res.text(), "");
         Ok(())
     }
 

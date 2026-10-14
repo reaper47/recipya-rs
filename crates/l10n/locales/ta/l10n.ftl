@@ -596,3 +596,4 @@ update-div-release-notes = வெளியீட்டுக் குறிப�
 supported = ஆதரிக்கப்பட்டது
 wakelock-activated = திரை பூட்டம் செயல்படுத்தப்பட்டது.
 wakelock-deactivated = திரைப் பூட்டம் நீக்கப்பட்டது.
+recipe-page-added-to-collection = சமையல் குறிப்பு உங்கள் தொகுப்பில் சேர்க்கப்பட்டுள்ளது.

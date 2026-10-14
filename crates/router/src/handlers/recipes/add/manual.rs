@@ -5,13 +5,11 @@ use axum_htmx::{HX_REDIRECT, HxRequest};
 use fluent_static::support::axum::RequestLanguage;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
+use support::states::AuthenticatedState;
 use tracing::error;
 use uuid::Uuid;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use config::States;
 use l10n::Messages;
 use math::cooking::units::system;
@@ -147,14 +145,11 @@ pub async fn add_manual_recipe_post_handler(
     {
         Ok(id) => id,
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(user = ?user.id, ?err, "Failed to add recipe to collection");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_add_collection_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_recipes_add_collection_failed())
+                .await;
             return Error::Database.into_response();
         }
     };

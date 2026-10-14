@@ -596,3 +596,4 @@ update-div-release-notes = nodiadau rhyddhau
 supported = Cefnogedig
 wakelock-activated = Mae'r clo sgrin wedi'i actifadu.
 wakelock-deactivated = Mae clo'r sgrin wedi'i an actifadu.
+recipe-page-added-to-collection = Mae'r rysáit wedi'i ychwanegu at eich casgliad.

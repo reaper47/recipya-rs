@@ -596,3 +596,4 @@ update-div-release-notes = Notas de la versión
 supported = compatible
 wakelock-activated = Bloqueo de pantalla activado.
 wakelock-deactivated = Bloqueo de pantalla desactivado.
+recipe-page-added-to-collection = La receta se ha añadido a tu colección.

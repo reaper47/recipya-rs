@@ -596,3 +596,4 @@ update-div-release-notes = Σημειώσεις έκδοσης
 supported = υποστηρίζεται
 wakelock-activated = Ο αποκλεισμός της οθόνης ενεργοποιήθηκε.
 wakelock-deactivated = Ο αποκλεισμός της οθόνης απενεργοποιήθηκε.
+recipe-page-added-to-collection = Η συνταγή προστέθηκε στη συλλογή σας.

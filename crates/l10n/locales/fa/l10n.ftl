@@ -596,3 +596,4 @@ update-div-release-notes = یادداشت‌های انتشار
 supported = پشتیبانی‌شده
 wakelock-activated = قفل صفحه فعال شد.
 wakelock-deactivated = قفل صفحه غیرفعال شد.
+recipe-page-added-to-collection = دستور پخت به مجموعه شما اضافه شد.

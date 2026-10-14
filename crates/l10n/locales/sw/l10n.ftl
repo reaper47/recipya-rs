@@ -596,3 +596,4 @@ update-div-release-notes = maelezo ya toleo
 supported = inayoungwa mkono
 wakelock-activated = Sakafu imeamilishwa.
 wakelock-deactivated = Sakafu imezimwa.
+recipe-page-added-to-collection = Mpishi umeongezwa kwenye mkusanyiko wako.

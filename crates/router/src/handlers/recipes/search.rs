@@ -7,10 +7,7 @@ use fluent_static::support::axum::RequestLanguage;
 use iso8601::DateTime;
 use tracing::error;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use config::States;
 use l10n::Messages;
 use models::{
@@ -19,6 +16,7 @@ use models::{
     params::SearchParams,
     time::FormattedTimes,
 };
+use support::states::AuthenticatedState;
 
 use crate::{Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth};
 
@@ -31,6 +29,8 @@ pub async fn search_recipes_handler(
     RequireAuth(user): RequireAuth,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let recipes = match Recipe::get_page(&state.mm, user.id, &search_params).await {
         Ok(recipes) => {
             let mapped_recipes: std::result::Result<Vec<ViewRecipe>, _> = recipes
@@ -51,25 +51,15 @@ pub async fn search_recipes_handler(
             if let Ok(mapped) = mapped_recipes {
                 mapped
             } else {
-                Toast::broadcast_error(
-                    &state,
-                    user.id,
-                    &messages.toast_recipes_times_format_failed(),
-                    &messages,
-                )
-                .await;
+                toast
+                    .error(&messages.toast_recipes_times_format_failed())
+                    .await;
                 return Err(Error::Database);
             }
         }
         Err(err) => {
             error!(user = ?user.id, ?search_params, ?err, "(search_recipes_handler) Error fetching recipes with search params");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_fetch_failed()).await;
             return Err(Error::Database);
         }
     };

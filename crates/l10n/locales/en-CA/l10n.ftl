@@ -283,6 +283,7 @@ recipe-page-tab-title-add = { recipe-page-title-add } | { -brand }
 recipe-page-tab-title-view = { $recipe } | { -brand }
 
 recipe-page-add-to-collection = Add recipe to collection
+recipe-page-added-to-collection = Recipe has been added to your collection.
 recipe-page-add-to-favourites = Add to favourites
 recipe-page-edit-recipe = Edit recipe
 recipe-page-empty-collection = Your recipe collection looks a bit empty at the moment.

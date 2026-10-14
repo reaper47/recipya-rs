@@ -596,3 +596,4 @@ update-div-release-notes = shënimet e versionit
 supported = i mbështetur
 wakelock-activated = Kyçja e ekranit është aktivizuar.
 wakelock-deactivated = Bllokimi i ekranit është çaktivizuar.
+recipe-page-added-to-collection = Receta është shtuar në koleksionin tuaj.

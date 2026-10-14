@@ -10,7 +10,7 @@ use tracing::{debug, error, warn};
 use uuid::Uuid;
 use validator::Validate;
 
-use app::message::{Broadcaster, IMessage, Toast, add_hx_message};
+use app::message::ToastCtx;
 use app::state::AppState;
 use auth::pwd::{ContentToHash, scheme::SchemeStatus, validate_pwd};
 use auth::token::{
@@ -25,12 +25,14 @@ use models::tokens::{
     PasswordResetTokenForCreate, RefreshToken, RefreshTokenForCreate,
 };
 use models::user::User;
+use repository::ModelManager;
+use support::states::{AuthenticatedState, UnauthenticatedState};
 
+use crate::Error;
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::schemas::auth::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
 };
-use crate::{Error, Result};
 
 /// Handles a user's update password request.
 pub async fn change_password_post_handler(
@@ -43,46 +45,29 @@ pub async fn change_password_post_handler(
         return Error::ConfirmForbidden.into_response();
     }
 
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if form.password == form.new_password {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_auth_new_password_same_as_old(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_auth_new_password_same_as_old())
+            .await;
         return Error::Form.into_response();
     }
 
     if form.validate().is_err() {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_auth_password_no_match(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_auth_password_no_match()).await;
         return Error::Form.into_response();
     }
 
     match User::update_password_by_user_id(&state.mm, user.id, &form.new_password).await {
         Ok(()) => {
-            let toast = Toast::success(&messages.toast_auth_password_updated(), &messages);
-
-            if let Ok(json) = serde_json::to_string(&toast) {
-                state.channels.broadcast_to_client(&json, user.id).await;
-            }
-
+            toast.success(&messages.toast_auth_password_updated()).await;
             (StatusCode::NO_CONTENT, "").into_response()
         }
         Err(err) => {
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_auth_password_update_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_auth_password_update_failed())
+                .await;
             Error::Model(err).into_response()
         }
     }
@@ -93,51 +78,46 @@ pub async fn verify_email_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     Query(mut query): Query<HashMap<String, String>>,
-) -> impl IntoResponse {
-    let token = match get_token_from_query(&mut query) {
-        Ok(token) => token,
-        Err(err) => return err.into_response(),
-    };
+) -> Result<impl IntoResponse, Error> {
+    let token = get_token_from_query(&mut query)?;
 
-    let Ok(Some(verification_token)) =
-        EmailVerificationToken::find_by_token(&state.mm, &token).await
-    else {
-        return Error::Model(models::Error::EntityNotFound {
-            entity: "email token",
-            id: token,
-        })
-        .into_response();
-    };
+    let verification_token = EmailVerificationToken::find_by_token(&state.mm, &token)
+        .await
+        .ok()
+        .flatten()
+        .ok_or_else(|| {
+            Error::Model(models::Error::EntityNotFound {
+                entity: "email token",
+                id: token.clone(),
+            })
+        })?;
 
     if verification_token.is_expired() {
-        if let Err(err) = EmailVerificationToken::delete(&state.mm, &token).await {
-            error!(?token, ?err, "Failed to delete email verification token");
-            return Error::Database.into_response();
-        }
-        return Error::Gone.into_response();
+        delete_token(&state.mm, &token).await?;
+        return Err(Error::Gone);
     }
 
-    if let Err(err) =
-        EmailVerificationToken::verify_user_email(&state.mm, verification_token.user_id).await
-    {
-        return Error::Model(err).into_response();
-    }
+    EmailVerificationToken::verify_user_email(&state.mm, verification_token.user_id).await?;
+    delete_token(&state.mm, &token).await?;
 
-    if let Err(err) = EmailVerificationToken::delete(&state.mm, &token).await {
-        error!(?token, ?err, "Failed to delete email verification token");
-        return Error::Database.into_response();
-    }
-
-    templates::general::simple(
+    Ok(templates::general::simple(
         &messages.toast_title_success(),
         &messages.auth_account_verified(),
         &messages,
-    )
-    .into_response()
+    ))
 }
 
-fn get_token_from_query(query: &mut HashMap<String, String>) -> Result<String> {
+fn get_token_from_query(query: &mut HashMap<String, String>) -> crate::Result<String> {
     query.remove("token").ok_or(Error::NoToken)
+}
+
+async fn delete_token(mm: &ModelManager, token: &str) -> Result<(), Error> {
+    EmailVerificationToken::delete(mm, token)
+        .await
+        .map_err(|err| {
+            error!(?token, ?err, "Failed to delete email verification token");
+            Error::Database
+        })
 }
 
 /// Renders the forgot password request page.
@@ -249,13 +229,13 @@ pub async fn forgot_password_reset_post_handler(
     State(state): State<AppState>,
     Form(form): Form<ForgotPasswordResetForm>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<UnauthenticatedState>::new(&state, &messages);
+
     if form.validate().is_err() {
-        let mut res = Error::Form.into_response();
-        add_hx_message(
-            &mut res,
-            &Toast::success(&messages.toast_auth_password_invalid(), &messages),
+        return toast.error(
+            Error::Form.into_response(),
+            &messages.toast_auth_password_invalid(),
         );
-        return res;
     }
 
     let entry = match PasswordResetToken::find_by_token(&state.mm, &form.token).await {
@@ -289,13 +269,11 @@ pub async fn forgot_password_reset_post_handler(
     let user_id = entry.user_id;
 
     if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
-        error!(?user_id, ?err, "Failed to update password for user",);
-        let mut res = Error::Form.into_response();
-        add_hx_message(
-            &mut res,
-            &Toast::error(&messages.toast_auth_password_update_failed(), &messages),
+        error!(?user_id, ?err, "Failed to update password for user");
+        return toast.error(
+            Error::Form.into_response(),
+            &messages.toast_auth_password_update_failed(),
         );
-        return res;
     }
 
     if let Err(err) = PasswordResetToken::delete_all_for_user(&state.mm, user_id).await {
@@ -304,15 +282,10 @@ pub async fn forgot_password_reset_post_handler(
     }
 
     let mut res = (StatusCode::SEE_OTHER, "").into_response();
-    add_hx_message(
-        &mut res,
-        &Toast::success(&messages.toast_auth_password_updated(), &messages),
-    );
-
+    res = toast.success(res, &messages.toast_auth_password_updated());
     if let Ok(value) = HeaderValue::from_str("/auth/login") {
         res.headers_mut().insert(axum_htmx::HX_REDIRECT, value);
     }
-
     res
 }
 
@@ -333,31 +306,28 @@ pub async fn login_handler(
 }
 
 /// Handles user login requests.
-#[allow(clippy::too_many_lines)]
 pub async fn login_post_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     cookies: Cookies,
     Form(form): Form<LoginForm>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<UnauthenticatedState>::new(&state, &messages);
+
     if form.validate().is_err() {
-        let mut res = Error::Form.into_response();
-        add_hx_message(
-            &mut res,
-            &Toast::error(&messages.toast_auth_credentials_invalid(), &messages),
+        return toast.error(
+            Error::Form.into_response(),
+            &messages.toast_auth_credentials_invalid(),
         );
-        return res;
     }
 
     let user = match User::get_user_by_email(&state.mm, &form.email).await {
         Ok(user) => match user {
             None => {
-                let mut res = Error::LoginFailUsernameNotFound.into_response();
-                add_hx_message(
-                    &mut res,
-                    &Toast::error(&messages.toast_auth_credentials_invalid(), &messages),
+                return toast.error(
+                    Error::LoginFailUsernameNotFound.into_response(),
+                    &messages.toast_auth_credentials_invalid(),
                 );
-                return res;
             }
             Some(user) => user,
         },
@@ -381,12 +351,10 @@ pub async fn login_post_handler(
                 ?err,
                 "Password validation failed"
             );
-            let mut res = Error::PwdNotMatching { user_id: user.id }.into_response();
-            add_hx_message(
-                &mut res,
-                &Toast::error(&messages.toast_auth_credentials_invalid(), &messages),
+            return toast.error(
+                Error::PwdNotMatching { user_id: user.id }.into_response(),
+                &messages.toast_auth_credentials_invalid(),
             );
-            return res;
         }
     };
 
@@ -398,28 +366,21 @@ pub async fn login_post_handler(
             .await
             .is_err()
         {
-            let mut res = Error::UpdatePassword.into_response();
-            add_hx_message(
-                &mut res,
-                &Toast::error(
-                    &messages.toast_auth_password_schema_update_failed(),
-                    &messages,
-                ),
+            return toast.error(
+                Error::UpdatePassword.into_response(),
+                &messages.toast_auth_password_schema_update_failed(),
             );
-            return res;
         }
     }
 
     let access_token = match generate_access_token(&user.id) {
         Ok(token) => token,
         Err(err) => {
-            let mut res = Error::GenerateToken.into_response();
-            add_hx_message(
-                &mut res,
-                &Toast::error(&messages.toast_auth_access_token_failed(), &messages),
-            );
             error!(user = ?user.id, ?err, "Failed to generate access token");
-            return res;
+            return toast.error(
+                Error::GenerateToken.into_response(),
+                &messages.toast_auth_access_token_failed(),
+            );
         }
     };
 
@@ -431,13 +392,11 @@ pub async fn login_post_handler(
     {
         Ok(entry) => entry,
         Err(err) => {
-            let mut res = Error::GenerateToken.into_response();
-            add_hx_message(
-                &mut res,
-                &Toast::error(&messages.toast_auth_refresh_token_failed(), &messages),
-            );
             error!(user = ?user.id, ?err, "Failed to generate refresh token");
-            return res;
+            return toast.error(
+                Error::GenerateToken.into_response(),
+                &messages.toast_auth_refresh_token_failed(),
+            );
         }
     };
 
@@ -499,6 +458,7 @@ pub async fn register_post_handler(
     if user.is_some() {
         Redirect::to("/recipes").into_response()
     } else {
+        let toast = ToastCtx::<UnauthenticatedState>::new(&state, &messages);
         let config = state.config.read().await;
 
         if config.states.signups == SignupsState::Off {
@@ -515,9 +475,7 @@ pub async fn register_post_handler(
                 .next()
                 .unwrap_or_else(|| "Validation error".to_string());
 
-            let mut res = StatusCode::UNPROCESSABLE_ENTITY.into_response();
-            add_hx_message(&mut res, &Toast::error(&message, &messages));
-            return res;
+            return toast.error(StatusCode::UNPROCESSABLE_ENTITY.into_response(), &message);
         }
 
         match User::get_user_by_email(&state.mm, &form.email).await {
@@ -529,16 +487,14 @@ pub async fn register_post_handler(
                     Ok(id) => id,
                     Err(err) => {
                         error!(?err, "Error creating user");
-                        let mut res = Error::Model(err).into_response();
-                        add_hx_message(
-                            &mut res,
-                            &Toast::error(&messages.toast_auth_registration_error(), &messages),
+                        return toast.error(
+                            Error::Model(err).into_response(),
+                            &messages.toast_auth_registration_error(),
                         );
-                        return res;
                     }
                 };
 
-                if let Some(service) = state.email_service {
+                if let Some(service) = state.email_service.clone() {
                     let token_entry = match EmailVerificationToken::new(
                         &state.mm,
                         EmailVerificationTokenForCreate::new(user.id, 24),
@@ -548,12 +504,10 @@ pub async fn register_post_handler(
                         Ok(entry) => entry,
                         Err(err) => {
                             error!(?err, "Error creating email verification token");
-                            let mut res = Error::Model(err).into_response();
-                            add_hx_message(
-                                &mut res,
-                                &Toast::error(&messages.toast_auth_registration_error(), &messages),
+                            return toast.error(
+                                Error::Model(err).into_response(),
+                                &messages.toast_auth_registration_error(),
                             );
-                            return res;
                         }
                     };
 
@@ -579,13 +533,10 @@ pub async fn register_post_handler(
             }
             Err(err) => {
                 error!(?err, "Failed to fetch user from database");
-
-                let mut res = Error::FailFetch.into_response();
-                add_hx_message(
-                    &mut res,
-                    &Toast::error(&messages.toast_users_fetch_users_failed(), &messages),
-                );
-                res
+                toast.error(
+                    Error::FailFetch.into_response(),
+                    &messages.toast_users_fetch_users_failed(),
+                )
             }
         }
     }
@@ -598,27 +549,18 @@ pub async fn user_delete_handler(
     State(state): State<AppState>,
     cookies: Cookies,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let config = state.config.read().await;
 
     if config.states.autologin == AutologinState::On {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_auth_account_no_delete(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_auth_account_no_delete()).await;
         return Error::DeleteForbidden.into_response();
     }
 
     if config.states.demo == DemoState::On && is_demo_user(&state, user.id).await {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            "Trump is Putin's lap dog. Remove him from office!",
-            &messages,
-        )
-        .await;
+        toast
+            .error("Trump is Putin's lap dog. Remove him from office!")
+            .await;
         return Error::DeleteForbidden.into_response();
     }
 

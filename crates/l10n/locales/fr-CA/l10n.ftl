@@ -596,3 +596,4 @@ update-div-release-notes = notes de version
 supported = pris en charge
 wakelock-activated = Verrouillage de l’écran activé.
 wakelock-deactivated = Verrouillage de l’écran désactivé.
+recipe-page-added-to-collection = La recette a été ajoutée à votre collection.

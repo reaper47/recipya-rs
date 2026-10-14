@@ -596,3 +596,4 @@ update-div-release-notes = রিলিজ নোটস
 supported = সমর্থিত
 wakelock-activated = স্ক্রিন লক সক্রিয় করা হয়েছে।
 wakelock-deactivated = স্ক্রিন লক নিষ্ক্রিয় করা হয়েছে।
+recipe-page-added-to-collection = রেসিপিটি আপনার সংগ্রহে যোগ করা হয়েছে।

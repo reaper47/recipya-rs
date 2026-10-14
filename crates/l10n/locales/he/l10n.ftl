@@ -596,3 +596,4 @@ update-div-release-notes = רשימת שינויים
 supported = נתמך
 wakelock-activated = נעילת המסך הופעלה.
 wakelock-deactivated = נעילת המסך הושבתה.
+recipe-page-added-to-collection = המתכון נוסף לאוסף שלך.

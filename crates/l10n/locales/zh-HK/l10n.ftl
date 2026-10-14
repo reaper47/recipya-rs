@@ -592,3 +592,4 @@ update-div-release-notes = 版本說明
 supported = 支援
 wakelock-activated = 螢幕鎖定已啟動。
 wakelock-deactivated = 螢幕鎖定已停用。
+recipe-page-added-to-collection = 食譜已加入您的收藏。

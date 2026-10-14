@@ -596,3 +596,4 @@ update-div-release-notes = note de lansare
 supported = acceptat
 wakelock-activated = Blocarea ecranului a fost activată.
 wakelock-deactivated = Blocarea ecranului a fost dezactivată.
+recipe-page-added-to-collection = Rețeta a fost adăugată la colecția dumneavoastră.

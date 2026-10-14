@@ -596,3 +596,4 @@ update-div-release-notes = argitalpen-oharrak
 supported = onartuta
 wakelock-activated = Pantaila-blokeoa aktibatuta dago.
 wakelock-deactivated = Pantaila-blokeoa desaktibatuta dago.
+recipe-page-added-to-collection = Errezeta zure bildumara gehitu da.

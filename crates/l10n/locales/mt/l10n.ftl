@@ -596,3 +596,4 @@ update-div-release-notes = noti tar-rilaxx
 supported = appoġġjat
 wakelock-activated = Is-skrin huwa mblukkat.
 wakelock-deactivated = Is-skrin mhuwiex aktar imblukkat.
+recipe-page-added-to-collection = Ir-riċetta ġiet miżjuda fil-kollezzjoni tiegħek.

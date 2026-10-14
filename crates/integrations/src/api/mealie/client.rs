@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 use reqwest::Client;
+use support::states::{AuthenticatedState, UnauthenticatedState};
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -23,10 +24,7 @@ use super::host::Host;
 use crate::api::mealie::structs::{
     AuthPayload, MealieRecipe, MealieRecipes, MealieUser, TokenResponse,
 };
-use crate::api::{
-    AuthType, AuthenticatedState, Credentials, MAX_RETRY_ATTEMPTS, UnauthenticatedState,
-    assemble_token_header,
-};
+use crate::api::{AuthType, Credentials, MAX_RETRY_ATTEMPTS, assemble_token_header};
 use crate::{Error, Result};
 
 #[async_trait]

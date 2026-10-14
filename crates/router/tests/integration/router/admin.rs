@@ -231,7 +231,7 @@ mod tests_users {
                 .await;
 
             res.assert_status_internal_server_error();
-            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Failed to update password.","status":"alert-error","title":"Operation failed"}}"# ).await;
+            assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"User not found.","status":"alert-error","title":"Operation failed"}}"# ).await;
             Ok(())
         }
 
@@ -316,6 +316,8 @@ mod tests_users {
 }
 
 mod tests_user_row {
+    use tracing_test::traced_test;
+
     use super::*;
 
     fn base_uri(id: Uuid, row_id: usize) -> String {
@@ -339,6 +341,7 @@ mod tests_user_row {
         Ok(())
     }
 
+    #[traced_test]
     #[tokio::test]
     async fn test_user_not_exist_ok() -> Result<()> {
         let (server, mut ws_server, _) = build_server_sse(default_config()).await?;

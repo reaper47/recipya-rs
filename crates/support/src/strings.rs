@@ -275,7 +275,7 @@ mod tests {
 
             let result = auto_convert_to_utf8(&encoded_bytes);
 
-            assert!(!result.is_empty());
+            assert_ne!(result, "");
             assert_eq!(result, text);
         }
 
@@ -351,7 +351,7 @@ mod tests {
 
             let result = auto_convert_to_utf8(&high_ascii);
 
-            assert!(!result.is_empty());
+            assert_ne!(result, "");
         }
     }
 

@@ -592,3 +592,4 @@ update-div-release-notes = ເອກະສານບັນທຶກການປ�
 supported = ສະໜັບສະໜູນ
 wakelock-activated = ໄດ້ເປີດໃຊ້ການລັອກໜ້າຈໍ.
 wakelock-deactivated = ໄດ້ປິດການລັອກໜ້າຈໍແລ້ວ.
+recipe-page-added-to-collection = ສູດອາຫານໄດ້ຖືກເພີ່ມເຂົ້າໄປໃນຊຸດສູດອາຫານຂອງທ່ານແລ້ວ.

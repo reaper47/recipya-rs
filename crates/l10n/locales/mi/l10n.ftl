@@ -592,3 +592,4 @@ update-div-release-notes = Ngā kōrero whakaputanga
 supported = e tautokona ana
 wakelock-activated = Kua whakahohea te aukati mata.
 wakelock-deactivated = Kua whakawetohia te kati mata.
+recipe-page-added-to-collection = Kua tāpirihia te pānui kai ki tō kohinga.

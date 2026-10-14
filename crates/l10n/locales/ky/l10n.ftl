@@ -596,3 +596,4 @@ update-div-release-notes = чыгарылыштын белгилемелери
 supported = колдоого алынган
 wakelock-activated = Экрандын кулпусу иштетилди.
 wakelock-deactivated = Экрандын кулпусу өчүрүлдү.
+recipe-page-added-to-collection = Рецепт сиздин коллекцияңызга кошулду.

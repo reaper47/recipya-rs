@@ -596,3 +596,4 @@ update-div-release-notes = Versionshinweise
 supported = unterstützt
 wakelock-activated = Bildschirmsperre aktiviert.
 wakelock-deactivated = Bildschirmsperre deaktiviert.
+recipe-page-added-to-collection = Das Rezept wurde Ihrer Sammlung hinzugefügt.

@@ -1,9 +1,10 @@
 use axum::{Form, extract::State, response::IntoResponse};
 use fluent_static::support::axum::RequestLanguage;
 use reqwest::StatusCode;
+use support::states::AuthenticatedState;
 use tracing::error;
 
-use app::message::{Broadcaster, Toast};
+use app::message::ToastCtx;
 use app::state::AppState;
 use l10n::Messages;
 use models::Recipe;
@@ -23,14 +24,11 @@ pub async fn post_recipe_categories_handler(
     }
 
     if let Err(err) = Recipe::add_category(&state.mm, &category, user.id).await {
+        let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
         error!(?err, "Error adding recipe category");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_recipes_add_category_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_recipes_add_category_failed())
+            .await;
         return Error::Database.into_response();
     }
 
@@ -44,27 +42,19 @@ pub async fn delete_recipe_categories_handler(
     State(state): State<AppState>,
     Form(form): Form<RecipeCategoryForm>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let category = form.category;
     if category.is_empty() || category == "uncategorized" {
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_recipes_category_empty(),
-            &messages,
-        )
-        .await;
+        toast.error(&messages.toast_recipes_category_empty()).await;
         return Error::InvalidPayload.into_response();
     }
 
     if let Err(err) = Recipe::delete_recipe_category(&state.mm, &category, user.id).await {
         error!(?err, "Error deleting recipe category");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_recipes_category_delete_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_recipes_category_delete_failed())
+            .await;
         return Error::Database.into_response();
     }
 

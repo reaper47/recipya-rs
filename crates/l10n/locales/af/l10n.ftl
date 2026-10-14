@@ -596,3 +596,4 @@ update-div-release-notes = vrystellingsaantekeninge
 supported = ondersteun
 wakelock-activated = Skermvergrendeling geaktiveer.
 wakelock-deactivated = Skermvergrendeling is gedeaktiveer.
+recipe-page-added-to-collection = Resep is by u versameling gevoeg.

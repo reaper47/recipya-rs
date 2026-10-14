@@ -596,3 +596,4 @@ update-div-release-notes = പുറത്തിറക്കൽ കുറിപ�
 supported = പിന്തുണയ്ക്കപ്പെടുന്നു
 wakelock-activated = സ്ക്രീൻ ലോക്ക് സജീവമാക്കി.
 wakelock-deactivated = സ്ക്രീൻ ലോക്ക് നിഷ്ക്രിയമാക്കി.
+recipe-page-added-to-collection = പാചകക്കുറിപ്പ് നിങ്ങളുടെ ശേഖരത്തിൽ ചേർത്തു.

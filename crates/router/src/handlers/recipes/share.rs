@@ -7,12 +7,10 @@ use fluent_static::support::axum::RequestLanguage;
 use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use l10n::Messages;
 use models::share::ShareRecipe;
+use support::states::AuthenticatedState;
 
 use crate::{Error, middleware::mw_auth::RequireAuth, params::ShareRecipeForm};
 
@@ -59,14 +57,11 @@ pub async fn share_recipe_post_handler(
             templates::general::share_link(&url, &messages).into_response()
         }
         Err(err) => {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
             error!(?recipe_id, user = ?user.id, ?err, "Error generating shared recipe link");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_share_link_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_recipes_share_link_failed())
+                .await;
             Error::BadTimeFormat.into_response()
         }
     }

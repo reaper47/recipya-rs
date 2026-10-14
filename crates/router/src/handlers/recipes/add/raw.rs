@@ -5,10 +5,7 @@ use reqwest::StatusCode;
 use tokio::time::Instant;
 use tracing::{error, warn};
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use l10n::Messages;
 use models::{
     Recipe,
@@ -20,6 +17,7 @@ use models::{
     },
     settings::UserSettingDetails,
 };
+use support::states::AuthenticatedState;
 
 use crate::{Error, middleware::mw_auth::RequireAuth, params::PreviewForm};
 
@@ -31,8 +29,9 @@ pub async fn add_recipe_import_raw_handler(
     State(state): State<AppState>,
     Form(form): Form<PreviewForm>,
 ) -> impl IntoResponse {
-    let start_time = Instant::now();
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let mut items = Items::default();
+    let start_time = Instant::now();
 
     let (res, report_log) = match serde_json::from_str::<schema_org::Recipe>(&form.json_input) {
         Ok(schema) => {
@@ -64,13 +63,7 @@ pub async fn add_recipe_import_raw_handler(
                 Err(models::Error::DuplicateEntityWithID(id)) => {
                     items.skipped += 1;
                     warn!("Recipe exists: {}", recipe_c.name);
-                    Toast::broadcast_error(
-                        &state,
-                        user.id,
-                        &messages.toast_recipes_exist(),
-                        &messages,
-                    )
-                    .await;
+                    toast.error(&messages.toast_recipes_exist()).await;
                     (
                         Error::EntityExists { entity: "recipe" }.into_response(),
                         ReportLogForCreate::warning(
@@ -85,13 +78,7 @@ pub async fn add_recipe_import_raw_handler(
                 Err(err) => {
                     items.failed += 1;
                     error!(name = recipe_c.name, ?err, "Error saving recipe");
-                    Toast::broadcast_error(
-                        &state,
-                        user.id,
-                        &messages.toast_recipes_insert_failed(),
-                        &messages,
-                    )
-                    .await;
+                    toast.error(&messages.toast_recipes_insert_failed()).await;
                     (
                         Error::Database.into_response(),
                         ReportLogForCreate::error(
@@ -109,13 +96,9 @@ pub async fn add_recipe_import_raw_handler(
         Err(err) => {
             items.failed += 1;
             error!(?err, "Error parsing recipe schema JSON");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_parse_json_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_recipes_parse_json_failed())
+                .await;
             (
                 Error::InvalidPayload.into_response(),
                 ReportLogForCreate::error(

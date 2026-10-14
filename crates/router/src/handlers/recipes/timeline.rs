@@ -10,13 +10,13 @@ use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 use uuid::Uuid;
 
-use app::message::{Broadcaster, Toast};
+use app::message::ToastCtx;
 use app::state::AppState;
 use config::DataDir;
 use l10n::Messages;
 use models::recipe::timeline::RecipeTimeline;
 use models::{Error::EntityNotFound, Recipe, recipe::timeline::RecipeTimelineForCreate};
-use support::fs::FsSupport;
+use support::{fs::FsSupport, states::AuthenticatedState};
 use templates::recipes::timeline::Event;
 
 use crate::{
@@ -33,27 +33,21 @@ pub async fn timeline_event_get_edit_handler(
     State(state): State<AppState>,
     Query(q): Query<OrderParams>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await {
         Ok(t) => t,
         Err(EntityNotFound { entity, .. }) => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_timeline_event_not_exist(),
-                &messages,
-            )
-            .await;
+            toast
+                .warning(&messages.toast_timeline_event_not_exist())
+                .await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(?timeline_id, ?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_timeline_event_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_timeline_event_fetch_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -70,28 +64,22 @@ pub async fn timeline_put_handler(
     State(state): State<AppState>,
     form: TimelineEventForm,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let original_event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await
     {
         Ok(t) => t,
         Err(EntityNotFound { entity, .. }) => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_timeline_event_not_exist(),
-                &messages,
-            )
-            .await;
+            toast
+                .warning(&messages.toast_timeline_event_not_exist())
+                .await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(?timeline_id, ?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_timeline_event_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_timeline_event_fetch_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -121,13 +109,9 @@ pub async fn timeline_put_handler(
         Ok(t) => t,
         Err(err) => {
             error!(?new_event_params, ?err, "Failed to edit timeline event");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_timeline_event_edit_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_timeline_event_edit_failed())
+                .await;
             return Error::Database.into_response();
         }
     };
@@ -149,17 +133,13 @@ pub async fn timeline_get_handler(
     Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let recipe = match Recipe::get_recipe_only(&state.mm, user.id, recipe_id).await {
         Ok(recipe) => recipe,
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching recipe");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_not_found(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_not_found()).await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "recipe",
@@ -172,13 +152,9 @@ pub async fn timeline_get_handler(
         Ok(components) => components.into_iter().map(Event::from).collect::<Vec<_>>(),
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching timeline components");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_timeline_components_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_timeline_components_fetch_failed())
+                .await;
             return Error::Model(EntityNotFound {
                 id: recipe_id.to_string(),
                 entity: "timeline",
@@ -211,6 +187,8 @@ pub async fn timeline_post_handler(
     State(state): State<AppState>,
     form: TimelineEventForm,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     if let Err(err) = RecipeTimeline::create(
         &state.mm,
         recipe_id,
@@ -226,23 +204,15 @@ pub async fn timeline_post_handler(
     .await
     {
         error!(?recipe_id, user = ?user.id, ?err, "Error creating timeline event");
-        Toast::broadcast_error(
-            &state,
-            user.id,
-            &messages.toast_timeline_event_create_failed(),
-            &messages,
-        )
-        .await;
+        toast
+            .error(&messages.toast_timeline_event_create_failed())
+            .await;
         return Error::Database.into_response();
     }
 
-    Toast::broadcast_success(
-        &state,
-        user.id,
-        &messages.toast_timeline_event_created(),
-        &messages,
-    )
-    .await;
+    toast
+        .success(&messages.toast_timeline_event_created())
+        .await;
     (StatusCode::CREATED, "").into_response()
 }
 
@@ -254,27 +224,21 @@ pub async fn timeline_event_get_handler(
     State(state): State<AppState>,
     Query(q): Query<OrderParams>,
 ) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
     let event = match RecipeTimeline::get(&state.mm, timeline_id, recipe_id, user.id).await {
         Ok(t) => Event::from(t),
         Err(EntityNotFound { entity, .. }) => {
-            Toast::broadcast_warning(
-                &state,
-                user.id,
-                &messages.toast_timeline_event_not_exist(),
-                &messages,
-            )
-            .await;
+            toast
+                .warning(&messages.toast_timeline_event_not_exist())
+                .await;
             return Error::EntityNotFound { entity }.into_response();
         }
         Err(err) => {
             error!(?recipe_id, user = ?user.id, ?err, "Error fetching timeline event");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_timeline_event_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast
+                .error(&messages.toast_timeline_event_fetch_failed())
+                .await;
             return Error::Database.into_response();
         }
     };

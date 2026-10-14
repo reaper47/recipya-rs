@@ -10,10 +10,7 @@ use iso8601::DateTime;
 use tower_cookies::Cookies;
 use tracing::error;
 
-use app::{
-    message::{Broadcaster, Toast},
-    state::AppState,
-};
+use app::{message::ToastCtx, state::AppState};
 use config::{ProductionState, States};
 use l10n::Messages;
 use models::{
@@ -23,6 +20,7 @@ use models::{
     settings::UserSettingDetails,
     time::FormattedTimes,
 };
+use support::states::AuthenticatedState;
 
 use crate::{
     Error, Result, handlers::get_settings, middleware::mw_auth::RequireAuth,
@@ -39,19 +37,14 @@ pub async fn recipes_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse> {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let settings = get_settings(&state, user.id, &messages).await?;
 
     let num_recipes = match Recipe::count(&state.mm, user.id).await {
         Ok(count) => count,
         Err(err) => {
             error!(user = ?user.id,?err, "Error counting recipes");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_count_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_count_failed()).await;
             return Ok(Error::Database.into_response());
         }
     };
@@ -76,25 +69,15 @@ pub async fn recipes_handler(
             if let Ok(mapped) = mapped_recipes {
                 mapped
             } else {
-                Toast::broadcast_error(
-                    &state,
-                    user.id,
-                    &messages.toast_recipes_times_format_failed(),
-                    &messages,
-                )
-                .await;
+                toast
+                    .error(&messages.toast_recipes_times_format_failed())
+                    .await;
                 return Err(Error::Database);
             }
         }
         Err(err) => {
             error!(user = ?user.id, ?search_params, ?err, "(recipes_handler) Error fetching recipes for user with search params");
-            Toast::broadcast_error(
-                &state,
-                user.id,
-                &messages.toast_recipes_fetch_failed(),
-                &messages,
-            )
-            .await;
+            toast.error(&messages.toast_recipes_fetch_failed()).await;
             return Err(Error::Database);
         }
     };

@@ -596,3 +596,4 @@ update-div-release-notes = ރިލީޒް ނޯޓްސް
 supported = ތެދުވެރި
 wakelock-activated = ސްކްރީން ލޮކް އެކްޓިވޭޓް ކުރެވިއްޖެ.
 wakelock-deactivated = ސްކްރީން ލޮކް ނިއްވާލެވިއްޖެ.
+recipe-page-added-to-collection = ރެސިޕީ ތިޔަ ޖަމާކުރާ ލިސްޓަށް އިތުރުކޮށްފި.

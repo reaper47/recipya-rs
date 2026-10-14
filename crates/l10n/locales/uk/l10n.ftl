@@ -596,3 +596,4 @@ update-div-release-notes = примітки до випуску
 supported = підтримується
 wakelock-activated = Екран увімкнено.
 wakelock-deactivated = Екран заблоковано скасовано.
+recipe-page-added-to-collection = Рецепт додано до вашої колекції.

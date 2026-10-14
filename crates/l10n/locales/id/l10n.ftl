@@ -592,3 +592,4 @@ update-div-release-notes = catatan rilis
 supported = didukung
 wakelock-activated = Kunci layar diaktifkan.
 wakelock-deactivated = Kunci layar dinonaktifkan.
+recipe-page-added-to-collection = Resep telah ditambahkan ke koleksi Anda.

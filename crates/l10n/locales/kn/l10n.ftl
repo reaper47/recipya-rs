@@ -596,3 +596,4 @@ update-div-release-notes = ಬಿಡುಗಡೆ ನೋಟ್‌ಗಳು
 supported = ಬೆಂಬಲಿತ
 wakelock-activated = ಪರದೆ ಲಾಕ್ ಸಕ್ರಿಯಗೊಂಡಿದೆ.
 wakelock-deactivated = ಪರದೆ ಲಾಕ್ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ.
+recipe-page-added-to-collection = ಪಾಕವಿಧಾನವನ್ನು ನಿಮ್ಮ ಸಂಗ್ರಹಕ್ಕೆ ಸೇರಿಸಲಾಗಿದೆ.

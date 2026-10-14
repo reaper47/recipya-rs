@@ -1,17 +1,118 @@
 use std::future::Future;
+use std::marker::PhantomData;
 
 use axum::body::Body;
 use axum::http::HeaderValue;
 use axum::response::Response;
 use serde::Serialize;
+use support::states::{AuthenticatedState, UnauthenticatedState};
 use uuid::Uuid;
 
 use l10n::Messages;
 
 use crate::state::AppState;
 
+/// Bundles the context needed to send a toast to a user.
+///
+/// # Example
+///
+/// ```ignore
+/// let toast = ToastCtx::new(&state, user_id, &messages);
+///
+/// toast.error(&messages.toast_auth_email_or_password_invalid()).await;
+/// ```
+#[derive(Copy, Clone)]
+pub struct ToastCtx<'a, State> {
+    state: &'a AppState,
+    user_id: Uuid,
+    messages: &'a Messages,
+    _state: PhantomData<State>,
+}
+
+impl<'a> ToastCtx<'a, AuthenticatedState> {
+    /// Creates a toast context for sending toast to a user.
+    pub const fn new(state: &'a AppState, user_id: Uuid, messages: &'a Messages) -> Self {
+        Self {
+            state,
+            user_id,
+            messages,
+            _state: PhantomData,
+        }
+    }
+
+    /// Sends a toast with a customised title, body and action to the context's user.
+    pub async fn custom(
+        &self,
+        title: &str,
+        body: &str,
+        status: Option<MessageStatus>,
+        action: Option<&str>,
+    ) {
+        let mut toast = Toast::builder(MessageType::Toast, title, body).action(action);
+
+        if let Some(status) = status {
+            toast = toast.status(status);
+        }
+
+        if let Ok(json) = serde_json::to_string(&toast.build()) {
+            self.state
+                .channels
+                .broadcast_to_client(&json, self.user_id)
+                .await;
+        }
+    }
+
+    /// Broadcasts an error toast with `message` to the context's user.
+    pub async fn error(&self, message: &str) {
+        Toast::broadcast_error(self.state, self.user_id, message, self.messages).await;
+    }
+
+    /// Broadcasts a success toast with `message` to the context's user.
+    pub async fn success(&self, message: &str) {
+        Toast::broadcast_success(self.state, self.user_id, message, self.messages).await;
+    }
+
+    /// Broadcasts a warning toast with `message` to the context's user.
+    pub async fn warning(&self, message: &str) {
+        Toast::broadcast_warning(self.state, self.user_id, message, self.messages).await;
+    }
+}
+
+impl<'a> ToastCtx<'a, UnauthenticatedState> {
+    /// Creates a toast context for
+    pub const fn new(state: &'a AppState, messages: &'a Messages) -> Self {
+        Self {
+            state,
+            user_id: Uuid::nil(),
+            messages,
+            _state: PhantomData,
+        }
+    }
+
+    /// Adds an HTMX success message to an [`axum::Response`].
+    pub fn success(&self, mut res: Response, message: &str) -> Response {
+        add_hx_message(&mut res, &Toast::success(message, self.messages));
+        res
+    }
+
+    /// Adds an HTMX error message to an [`axum::Response`].
+    pub fn error(&self, mut res: Response, message: &str) -> Response {
+        add_hx_message(&mut res, &Toast::error(message, self.messages));
+        res
+    }
+}
+
+/// Adds an HTMX message to a response's headers.
+fn add_hx_message(res: &mut Response<Body>, message: &Toast) {
+    if let Ok(toast) = serde_json::to_string(&message)
+        && let Ok(value) = HeaderValue::from_str(&toast)
+    {
+        res.headers_mut().insert(axum_htmx::HX_TRIGGER, value);
+    }
+}
+
 /// A trait defining message toasts broadcasting methods for structured responses.
-pub trait Broadcaster {
+pub(crate) trait Broadcaster {
     /// Broadcasts a success toast to all active SSE connections of a given user.
     fn broadcast_success(
         state: &AppState,
@@ -293,14 +394,5 @@ impl Broadcaster for Snack {
         if let Ok(json) = serde_json::to_string(&snack) {
             state.channels.broadcast_to_client(&json, user_id).await;
         }
-    }
-}
-
-/// Adds an HTMX message to a response's headers.
-pub fn add_hx_message(res: &mut Response<Body>, message: &Toast) {
-    if let Ok(toast) = serde_json::to_string(&message)
-        && let Ok(value) = HeaderValue::from_str(&toast)
-    {
-        res.headers_mut().insert(axum_htmx::HX_TRIGGER, value);
     }
 }

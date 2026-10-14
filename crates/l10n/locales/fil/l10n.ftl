@@ -596,3 +596,4 @@ update-div-release-notes = mga tala ng paglabas
 supported = sinusuportahan
 wakelock-activated = Na-activate ang screen lock.
 wakelock-deactivated = Na-deactivate na ang screen lock.
+recipe-page-added-to-collection = Naidagdag na ang resipe sa iyong koleksyon.

@@ -592,3 +592,4 @@ update-div-release-notes = 发布说明
 supported = 已支持
 wakelock-activated = 屏幕锁定已激活。
 wakelock-deactivated = 屏幕锁定已停用。
+recipe-page-added-to-collection = 该食谱已添加到您的收藏夹。

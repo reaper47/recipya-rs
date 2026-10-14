@@ -737,3 +737,4 @@ update-div-last-checked-at = Last checked: { $date }
 update-div-last-updated-at = Last updated: { $date }
 update-div-read-release-notes = Read the { $link }
 update-div-release-notes = release notes
+recipe-page-added-to-collection = Recipe has been added to your collection.

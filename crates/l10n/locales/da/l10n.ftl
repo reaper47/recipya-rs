@@ -596,3 +596,4 @@ update-div-release-notes = Versionsnoter
 supported = understøttet
 wakelock-activated = Skærmoplåsning aktiveret.
 wakelock-deactivated = Skærmoplåsning deaktiveret.
+recipe-page-added-to-collection = Opskriften er blevet føjet til din samling.
