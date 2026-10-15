@@ -47,7 +47,7 @@ mod tests_search {
                 } else {
                     Some(recipe_c.images[0]).filter(|u| !u.is_nil())
                 },
-                r#yield: recipe_c.r#yield.unwrap_or_default(),
+                r#yield: recipe_c.r#yield,
                 language: "eng".to_string(),
                 measurement_system_id: 2,
                 notes: recipe_c.notes,

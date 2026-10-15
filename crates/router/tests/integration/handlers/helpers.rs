@@ -53,9 +53,7 @@ pub fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         form = form.add_part("keyword", Part::text(keyword));
     }
 
-    if let Some(n) = &recipe.r#yield {
-        form = form.add_part("yield", Part::text(n.to_string()));
-    }
+    form = form.add_part("yield", Part::text(recipe.r#yield.to_string()));
 
     if let Some(n) = &recipe.rating {
         form = form.add_part("rating", Part::text(n.to_string()));

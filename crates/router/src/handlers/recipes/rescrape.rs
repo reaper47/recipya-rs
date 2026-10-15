@@ -18,17 +18,19 @@ use config::States;
 use l10n::Messages;
 use models::{
     Error::EntityNotFound,
+    Recipe,
     data::Data,
     recipe::structs::{
         media::VideoForCreate,
         nutrition::{
             NutritionDetailsForCreate, NutritionForCreate, NutritionPerServingDetailsForCreate,
         },
+        recipe::RecipeForCreate,
         section::{Item, SectionComponents, SectionItem},
         tool::ToolForCreate,
     },
+    types::RecipeYield,
 };
-use models::{Recipe, recipe::structs::recipe::RecipeForCreate};
 use support::{states::AuthenticatedState, strings::calc_seconds_from_parts};
 use templates::recipes::RecipeDiff;
 
@@ -288,7 +290,7 @@ pub async fn recrape_recipe_put_handler(
                     .or_insert_with(|| vec![value]);
             }
             "yield-new" => {
-                recipe.r#yield = value.parse().ok();
+                recipe.r#yield = RecipeYield::from(value.parse().ok());
             }
             _ => {}
         }

@@ -1,15 +1,18 @@
 use time::Duration;
 
-use models::recipe::structs::{
-    media::VideoForCreate,
-    nutrition::{
-        NutritionDetailsForCreate, NutritionForCreate, NutritionPerServingDetailsForCreate,
+use models::{
+    recipe::structs::{
+        media::VideoForCreate,
+        nutrition::{
+            NutritionDetailsForCreate, NutritionForCreate, NutritionPerServingDetailsForCreate,
+        },
+        recipe::RecipeForCreate,
+        section::{Item, SectionComponents, SectionItem},
+        time::TimesForCreate,
+        tool::ToolForCreate,
+        types::Source,
     },
-    recipe::RecipeForCreate,
-    section::{Item, SectionComponents, SectionItem},
-    time::TimesForCreate,
-    tool::ToolForCreate,
-    types::Source,
+    types::RecipeYield,
 };
 use test_fixtures::RecipeImages;
 
@@ -25,7 +28,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
             description: Some("This is the most delicious recipe!".into()),
             images: vec![images.main, images.additional],
             measurement_system_id: 2,
-            r#yield: Some(4),
+            r#yield: RecipeYield::default(),
             source: Source::new(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
             ),

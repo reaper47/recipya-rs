@@ -31,6 +31,7 @@ use crate::recipe::structs::recipe::{
 };
 use crate::recipe::structs::section::{SectionComponents, SectionForInsert};
 use crate::recipe::structs::tool::{ToolForCreate, ToolForInsert, ToolRecipeForInsert};
+use crate::types::RecipeYield;
 use crate::user::UserKeyword;
 
 pub async fn get_category_id<C>(conn: &mut C, category: Option<&String>) -> Result<i64>
@@ -386,7 +387,7 @@ pub async fn insert_nutrition(
     nutrition: &NutritionDetailsForCreate,
     ingredients: &[&str],
     nutrition_source: &NutritionDataSource,
-    num_servings: i16,
+    num_servings: RecipeYield,
 ) -> Result<()> {
     let per_100g = &nutrition.per_100g;
     let per_serving = &nutrition.per_serving;
@@ -395,7 +396,7 @@ pub async fn insert_nutrition(
         None
     } else {
         nutrition_source
-            .calculate_nutrition(conn, ingredients, num_servings)
+            .calculate_nutrition(conn, ingredients, num_servings.into_inner() as i16)
             .await
             .ok()
     };

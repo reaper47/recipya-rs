@@ -461,6 +461,8 @@ mod tests_paper_size {
 }
 
 mod tests_timezone {
+    use models::types::Timezone;
+
     use super::*;
 
     const BASE_URI: &str = "/settings/tz";
@@ -471,23 +473,6 @@ mod tests_timezone {
     }
 
     #[tokio::test]
-    async fn test_set_invalid_tz_ok() -> Result<()> {
-        let (server, mut ws_server, state) = build_server_sse(default_config()).await?;
-        let user_id = User::all(&state.mm).await?[0].id;
-
-        let res = server
-            .post(BASE_URI)
-            .form(&TzPayload { tz: "n00b".into() })
-            .await;
-
-        res.assert_status_bad_request();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Invalid timezone.","status":"alert-error","title":"Operation failed"}}"# ).await;
-        let user = UserSettingDetails::get(&state.mm, user_id).await?;
-        assert_eq!(user.tz_name(), "UTC");
-        Ok(())
-    }
-
-    #[tokio::test]
     async fn test_set_valid_tz_ok() -> Result<()> {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
@@ -495,7 +480,7 @@ mod tests_timezone {
         let res = server
             .post(BASE_URI)
             .form(&TzPayload {
-                tz: "America/Montreal".into(),
+                tz: Timezone::try_from("America/Montreal").unwrap(),
             })
             .await;
 

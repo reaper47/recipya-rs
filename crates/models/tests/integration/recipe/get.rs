@@ -11,6 +11,7 @@ use models::{
         types::Source,
     },
     settings::UserSettingDetails,
+    types::RecipeYield,
     user::User,
 };
 use test_db::default_config;
@@ -160,7 +161,7 @@ async fn test_get_many_ok() -> Result<()> {
             id: id1,
             name: "Best Chinese Kale".into(),
             description: Some("This is the most delicious recipe!".into()),
-            r#yield: 4,
+            r#yield: RecipeYield::default(),
             language: "eng".into(),
             measurement_system_id: 2,
             notes: Some("# My Recipe Notes\n\nThis dish should be served medium-cold".into()),

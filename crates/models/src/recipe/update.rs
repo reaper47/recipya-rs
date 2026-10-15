@@ -44,10 +44,8 @@ impl Recipe {
         if recipe.notes != new_recipe.notes {
             recipe.notes.clone_from(&new_recipe.notes);
         }
-        if let Some(n) = new_recipe.r#yield
-            && recipe.r#yield != n
-        {
-            recipe.r#yield = n;
+        if new_recipe.r#yield != recipe.r#yield {
+            recipe.r#yield = new_recipe.r#yield;
         }
         if recipe.source != new_recipe.source {
             recipe.source.clone_from(&new_recipe.source);
@@ -195,7 +193,7 @@ impl Recipe {
                         &new_recipe.nutrition,
                         new_ingredients_slice,
                         &user_settings.nutrition_source,
-                        new_recipe.r#yield.unwrap_or(1),
+                        new_recipe.r#yield,
                     )
                     .await?;
                 } else if old_recipe.nutrition.is_precalculated() {
@@ -208,7 +206,7 @@ impl Recipe {
                             &new_recipe.nutrition,
                             all_new_ingredients.as_slice(),
                             &user_settings.nutrition_source,
-                            new_recipe.r#yield.unwrap_or(1),
+                            new_recipe.r#yield,
                         )
                         .await?;
                     }

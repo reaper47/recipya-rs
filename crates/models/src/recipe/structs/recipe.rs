@@ -12,7 +12,7 @@ use schema_org::{
     AggregateRating, AtType, Duration, DurationOrText, Energy, HowToTool, Mass,
     NutritionInformation, ToIso8601, VideoObject, at_context,
     field::{
-        FieldEnum20, HowToToolPositionFieldEnum, HowToToolRequiredQuantityFieldEnum,
+        HowToToolPositionFieldEnum, HowToToolRequiredQuantityFieldEnum,
         RecipeContentRatingFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
         RecipeInLanguageFieldEnum, RecipeKeywordsFieldEnum, RecipeRecipeYieldFieldEnum,
         RecipeToolFieldEnum, RecipeVideoFieldEnum, VideoObjectDurationFieldEnum,
@@ -22,7 +22,6 @@ use support::name_entity_with_relations;
 use support::regexp::time::TimeParser;
 use support::strings::extract_number;
 
-use crate::recipe::RecipeForm;
 use crate::recipe::structs::media::{Video, VideoForCreate};
 use crate::recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCreate};
 use crate::recipe::structs::section::{Section, SectionComponents};
@@ -30,6 +29,7 @@ use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
 use crate::recipe::structs::types::Source;
 use crate::user::User;
+use crate::{recipe::RecipeForm, types::RecipeYield};
 
 bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -72,7 +72,7 @@ pub struct Recipe {
     pub image: Option<Uuid>,
     /// The quantity of servings or portions the recipe produces.
     #[diesel(column_name = yield_)]
-    pub r#yield: i16,
+    pub r#yield: RecipeYield,
     /// The language in which the recipe is written.
     pub language: String,
     /// The original measurement system the recipe is in.
@@ -100,7 +100,7 @@ impl Default for Recipe {
             name: String::new(),
             description: None,
             image: None,
-            r#yield: 0,
+            r#yield: RecipeYield::default(),
             language: String::new(),
             measurement_system_id: 0,
             notes: None,
@@ -123,7 +123,7 @@ pub(crate) struct RecipeForInsert {
     pub description: Option<String>,
     pub image: Option<Uuid>,
     #[diesel(column_name = yield_)]
-    pub r#yield: Option<i16>,
+    pub r#yield: RecipeYield,
     pub language: String,
     pub notes: Option<String>,
     pub source: Source,
@@ -262,7 +262,7 @@ impl From<&RecipeDetails> for schema_org::Recipe {
                 })
                 .unwrap_or_default(),
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(
-                f64::from(value.recipe.r#yield),
+                f64::from(value.recipe.r#yield.into_inner()),
             )],
             recipe_cuisine: value
                 .cuisine
@@ -391,7 +391,7 @@ impl From<RecipeForCreate> for RecipeDetails {
             recipe: Recipe {
                 name: recipe_c.name,
                 description: recipe_c.description,
-                r#yield: recipe_c.r#yield.unwrap_or(4),
+                r#yield: recipe_c.r#yield,
                 language,
                 measurement_system_id: 1,
                 source: recipe_c.source,
@@ -434,7 +434,7 @@ pub struct RecipeForCreate {
     pub source: Source,
     pub rating: Option<i16>,
     pub videos: Vec<VideoForCreate>,
-    pub r#yield: Option<i16>,
+    pub r#yield: RecipeYield,
 
     // For association tables
     pub category: Option<String>,
@@ -580,7 +580,7 @@ impl From<RecipeDetails> for RecipeForCreate {
             source: recipe.source,
             rating: recipe.rating,
             videos: r.videos.into_iter().map(VideoForCreate::from).collect(),
-            r#yield: Some(recipe.r#yield),
+            r#yield: recipe.r#yield,
             category: Some(r.category),
             cuisine: r.cuisine,
             ingredients: r.ingredients,
@@ -620,13 +620,15 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             images: vec![],
             r#yield: schema.recipe_yield.first().map_or_else(
                 || {
-                    nutrition
-                        .per_serving
-                        .as_ref()
-                        .map(|v| extract_number(v.serving_size.as_ref()).ok())
-                        .unwrap_or_default()
+                    RecipeYield::from(
+                        nutrition
+                            .per_serving
+                            .as_ref()
+                            .map(|v| extract_number::<i16>(v.serving_size.as_ref()).ok())
+                            .unwrap_or_default(),
+                    )
                 },
-                FieldEnum20::to_i16,
+                |v| RecipeYield::from(v.to_i16()),
             ),
             source: Source::from(schema.url.first().cloned()),
             is_favourite: false,
@@ -1051,7 +1053,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert!(recipe.r#yield.is_none());
+                assert_eq!(recipe.r#yield.into_inner(), 4);
             }
 
             #[test]
@@ -1065,7 +1067,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(4));
+                assert_eq!(recipe.r#yield.into_inner(), 4);
             }
 
             #[test]
@@ -1076,7 +1078,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(8));
+                assert_eq!(recipe.r#yield.into_inner(), 8);
             }
 
             #[test]
@@ -1090,7 +1092,7 @@ mod tests {
 
                 let recipe = RecipeForCreate::from(&schema);
 
-                assert_eq!(recipe.r#yield, Some(12));
+                assert_eq!(recipe.r#yield.into_inner(), 12);
             }
         }
 

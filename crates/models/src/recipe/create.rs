@@ -164,7 +164,7 @@ impl Recipe {
                     &recipe_c.nutrition,
                     recipe_c.ingredients.items_as_text().as_slice(),
                     &user_settings.nutrition_source,
-                    recipe_c.r#yield.unwrap_or(1),
+                    recipe_c.r#yield,
                 )
                 .await?;
 

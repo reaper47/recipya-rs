@@ -86,6 +86,8 @@ mod tests_get {
 }
 
 mod tests_put {
+    use models::types::RecipeYield;
+
     use super::*;
 
     #[tokio::test]
@@ -274,7 +276,7 @@ mod tests_put {
             description: Some("Trust me. They're delicious.".into()),
             images: vec![Uuid::new_v4(), Uuid::new_v4()],
             measurement_system_id: 2,
-            r#yield: Some(12),
+            r#yield: RecipeYield::from(12),
             source: Source::new("My father's maple syrup recipes cookbook"),
             is_favourite: false,
             rating: Some(4),
@@ -563,7 +565,7 @@ fn recipe_for_create_to_details(
             name: recipe_c.name,
             description: recipe_c.description,
             image: reference.recipe.image,
-            r#yield: recipe_c.r#yield.unwrap_or(4),
+            r#yield: recipe_c.r#yield,
             language: "eng".into(),
             measurement_system_id: 2,
             notes: recipe_c.notes,

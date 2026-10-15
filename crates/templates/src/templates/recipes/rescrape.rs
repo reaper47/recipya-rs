@@ -112,8 +112,8 @@ fn render_rescrape(
                                             }
                                             div class="col-span-1" {
                                                 (render_yield(
-                                                    &old_recipe_c.r#yield.unwrap_or_default().to_string(),
-                                                    &new_recipe_c.r#yield.unwrap_or_default().to_string(),
+                                                    &old_recipe_c.r#yield.to_string(),
+                                                    &new_recipe_c.r#yield.to_string(),
                                                     changes, messages)
                                                 )
                                             }

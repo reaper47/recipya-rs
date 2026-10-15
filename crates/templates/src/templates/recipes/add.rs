@@ -435,13 +435,7 @@ fn render_yield(view: Option<&ViewRecipe>, messages: &Messages) -> Markup {
             }
             input #servings type="number" min="1" name="yield"
                 value=(
-                    view.map_or_else(|| "1".into(), |v| {
-                        if v.recipe_details.recipe.r#yield == 0 {
-                            "1".into()
-                        } else {
-                            v.recipe_details.recipe.r#yield.to_string()
-                        }
-                    })
+                    view.map_or_else(|| "1".into(), |v| v.recipe_details.recipe.r#yield.to_string())
                 )
                 class="input input-sm w-11/12";
         }

@@ -18,6 +18,7 @@ use crate::recipe::structs::nutrition::{
 use crate::recipe::structs::section::SectionComponents;
 use crate::recipe::structs::time::TimesForCreate;
 use crate::recipe::structs::tool::ToolForCreate;
+use crate::types::RecipeYield;
 
 /// Represents a form used to create or update a recipe.
 pub struct RecipeForm {
@@ -36,7 +37,7 @@ pub struct RecipeForm {
     pub title: String,
     pub tools: Vec<ToolForCreate>,
     pub videos: HashMap<String, PathBuf>,
-    pub r#yield: Option<i16>,
+    pub r#yield: RecipeYield,
 }
 
 impl<S> FromRequest<S> for RecipeForm
@@ -68,7 +69,7 @@ where
         let mut title: Option<String> = None;
         let mut tools: Vec<ToolForCreate> = Vec::new();
         let mut videos: HashMap<String, PathBuf> = HashMap::new();
-        let mut r#yield: Option<i16> = None;
+        let mut r#yield: Option<RecipeYield> = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
             error!(?err, "Failed to read multipart field in recipe");
@@ -163,7 +164,7 @@ where
                         tools.push(ToolForCreate { name, quantity });
                     }
                 }),
-                "yield" => r#yield = parse_i16(field).await,
+                "yield" => r#yield = Some(RecipeYield::from(parse_i16::<i16>(field).await)),
 
                 "calories-per-100g" => nutrition_per_100g.calories_kcal = parse_i16(field).await,
                 "cholesterol-per-100g" => {
@@ -248,7 +249,7 @@ where
             times: (times.prep_seconds > 0 && times.cook_seconds > 0).then_some(times),
             tools,
             videos,
-            r#yield,
+            r#yield: r#yield.unwrap_or_default(),
         })
     }
 }

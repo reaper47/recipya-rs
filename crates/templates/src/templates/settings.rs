@@ -2,14 +2,13 @@ use fluent_static::Message;
 use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
 use time::macros::format_description;
-use time_tz::TimeZone;
 
 use config::{DemoState, States};
 use l10n::Messages;
 use math::cooking::units::system::MeasurementSystem;
 use models::{
     Recipe, data::Data, language::Language, recipe::structs::recipe::Category,
-    settings::UserSettingDetails, theme::Theme, user::User,
+    settings::UserSettingDetails, theme::Theme, types::Timezone, user::User,
 };
 use nutrition::NutritionDataSource;
 
@@ -407,14 +406,6 @@ fn settings_general(
     languages: &[Language],
     messages: &Messages,
 ) -> Markup {
-    let mut all_tz = time_tz::timezones::iter()
-        .filter_map(|tz| {
-            let name = tz.name();
-            (!name.to_lowercase().starts_with("etc/")).then_some(name)
-        })
-        .collect::<Vec<_>>();
-    all_tz.sort_unstable();
-
     html! {
         div #settings-general class="p-3 max-h-96 hidden" {
             div class="flex justify-between items-center text-sm" {
@@ -484,7 +475,7 @@ fn settings_general(
                     }
                 }
                 select #settings-general-tz name="tz" class="block w-fit select select-bordered select-sm" hx-post="/settings/tz" hx-swap="none" {
-                        @for tz in all_tz {
+                        @for tz in Timezone::all() {
                             option value=(tz) selected[tz == selected_tz] { (tz) }
                         }
                 }

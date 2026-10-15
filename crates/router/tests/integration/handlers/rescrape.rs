@@ -35,6 +35,7 @@ mod tests_get {
         },
         reports::ViewReport,
         settings::UserSettingDetails,
+        types::RecipeYield,
     };
     use test_harness::assert_sse_messages_any_order;
     use test_models::a_complete_recipe_for_create;
@@ -249,7 +250,7 @@ mod tests_get {
             cook_seconds: 600,
             total_seconds: 900,
         };
-        recipe.recipe.r#yield = 12;
+        recipe.recipe.r#yield = RecipeYield::from(12);
         Recipe::update(
             &state.mm,
             user_id,
@@ -557,7 +558,7 @@ mod tests_put {
         res.assert_status_see_other();
         res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
         let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
-        assert_eq!(got.recipe.r#yield, 20);
+        assert_eq!(got.recipe.r#yield.into_inner(), 20);
         Ok(())
     }
 

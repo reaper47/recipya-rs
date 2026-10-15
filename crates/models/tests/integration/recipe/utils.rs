@@ -17,6 +17,7 @@ use models::{
         tool::{ToolForCreate, ToolRecipe},
         types::Source,
     },
+    types::RecipeYield,
 };
 
 /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.
@@ -47,7 +48,7 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
                 name: recipe_c.name,
                 description: recipe_c.description,
                 image: images.first().copied().or(None),
-                r#yield: recipe_c.r#yield.ok_or(4).expect("yield found"),
+                r#yield: recipe_c.r#yield,
                 language: "en".into(),
                 measurement_system_id: 2,
                 notes: Some("# Notes\n\nHere are some notes".into()),
@@ -123,7 +124,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
             description: Some("This is the most delicious recipe!".into()),
             images: vec![images.main, images.additional],
             measurement_system_id: 2,
-            r#yield: Some(4),
+            r#yield: RecipeYield::default(),
             source: Source::new(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
             ),

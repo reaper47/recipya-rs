@@ -17,6 +17,7 @@ pub enum Error {
     },
     File(String),
     InvalidCssSelector,
+    InvalidTimezone,
     InvalidZipArchive,
     NameExists,
     NoFileInZip,
