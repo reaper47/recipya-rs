@@ -2,9 +2,10 @@ use axum::http::Method;
 use reqwest::StatusCode;
 use uuid::Uuid;
 
+use auth::types::{Email, Password};
 use models::user::User;
 use test_db::default_config;
-use test_fixtures::{TEST_USER_EMAIL, insert_other_user};
+use test_fixtures::{insert_other_user, test_user_email};
 use test_harness::{
     assert_html, assert_must_be_logged_in, assert_sse_message, build_server_logged_in,
     build_server_sse, build_server_sse_other_user,
@@ -26,7 +27,7 @@ mod tests_user {
 
     #[tokio::test]
     async fn test_must_be_admin_ok() -> Result<()> {
-        let (server, _, _) = build_server_sse_other_user(default_config(), "demo@demo.com").await?;
+        let (server, _, _) = build_server_sse_other_user(default_config(), &Email::demo()).await?;
 
         let res = server.post(BASE_URI).await;
 
@@ -41,9 +42,9 @@ mod tests_user {
         let res = server
             .post(BASE_URI)
             .form(&RegisterForm {
-                email: TEST_USER_EMAIL.into(),
-                password: "atremendousloser".into(),
-                password_confirm: "abigbigloser".into(),
+                email: test_user_email(),
+                password: Password::try_from("atremendousloser").unwrap(),
+                password_confirm: Password::try_from("abigbigloser").unwrap(),
             })
             .await;
 
@@ -59,9 +60,9 @@ mod tests_user {
         let res = server
             .post(BASE_URI)
             .form(&RegisterForm {
-                email: TEST_USER_EMAIL.into(),
-                password: "atremendousloser".into(),
-                password_confirm: "atremendousloser".into(),
+                email: test_user_email(),
+                password: Password::try_from("atremendousloser").unwrap(),
+                password_confirm: Password::try_from("atremendousloser").unwrap(),
             })
             .await;
 
@@ -77,15 +78,16 @@ mod tests_user {
         let res = server
             .post(BASE_URI)
             .form(&RegisterForm {
-                email: "trumpisa@loser.com".into(),
-                password: "atremendousloser".into(),
-                password_confirm: "atremendousloser".into(),
+                email: Email::try_from("trumpisa@loser.com").unwrap(),
+                password: Password::try_from("atremendousloser").unwrap(),
+                password_confirm: Password::try_from("atremendousloser").unwrap(),
             })
             .await;
 
-        let user = User::get_user_by_email(&state.mm, "trumpisa@loser.com")
-            .await?
-            .unwrap();
+        let user =
+            User::get_user_by_email(&state.mm, &Email::try_from("trumpisa@loser.com").unwrap())
+                .await?
+                .unwrap();
         res.assert_status_ok();
         assert_html(
             &res,
@@ -130,7 +132,7 @@ mod tests_users {
 
         #[tokio::test]
         async fn test_must_be_admin_ok() -> Result<()> {
-            let server = build_server_sse_other_user(default_config(), "demo@demo.com")
+            let server = build_server_sse_other_user(default_config(), &Email::demo())
                 .await?
                 .0;
 
@@ -188,7 +190,7 @@ mod tests_users {
 
         #[tokio::test]
         async fn test_must_be_admin_ok() -> Result<()> {
-            let server = build_server_sse_other_user(default_config(), "demo@demo.com")
+            let server = build_server_sse_other_user(default_config(), &Email::demo())
                 .await?
                 .0;
 
@@ -199,14 +201,14 @@ mod tests_users {
         }
 
         #[tokio::test]
-        async fn test_invalid_payload_ok() -> Result<()> {
+        async fn test_patch_user_invalid_payload_ok() -> Result<()> {
             let (server, mut ws_server, _) = build_server_sse(default_config()).await?;
 
             let res = server
                 .patch(&base_uri(user_id1()))
                 .form(&UpdatePasswordForm {
-                    new_password: String::new(),
-                    new_password_confirm: "test".into(),
+                    new_password: Password::try_from("testtesl").unwrap(),
+                    new_password_confirm: Password::try_from("testtest").unwrap(),
                     row_index: 0,
                 })
                 .await;
@@ -219,13 +221,13 @@ mod tests_users {
         #[tokio::test]
         async fn test_patch_user_does_not_exist_ok() -> Result<()> {
             let (server, mut ws_server, _) = build_server_sse(default_config()).await?;
-            let password = "a big beautiful bill";
+            let password = Password::try_from("a big beautiful bill").unwrap();
 
             let res = server
                 .patch(&base_uri(Uuid::new_v4()))
                 .form(&UpdatePasswordForm {
-                    new_password: password.into(),
-                    new_password_confirm: password.into(),
+                    new_password: password.clone(),
+                    new_password_confirm: password,
                     row_index: 0,
                 })
                 .await;
@@ -237,15 +239,15 @@ mod tests_users {
 
         #[tokio::test]
         async fn test_update_success_ok() -> Result<()> {
-            const PASSWORD: &str = "a big beautiful bill";
+            let password = Password::try_from("a big beautiful bill").unwrap();
             let (server, mut ws_server, state) = build_server_sse(default_config()).await?;
             let user2_id = insert_other_user(&state.mm, "slava@ukraini.ua").await?.id;
 
             let res = server
                 .patch(&base_uri(user2_id))
                 .form(&UpdatePasswordForm {
-                    new_password: PASSWORD.into(),
-                    new_password_confirm: PASSWORD.into(),
+                    new_password: password.clone(),
+                    new_password_confirm: password,
                     row_index: 3,
                 })
                 .await;
@@ -271,7 +273,7 @@ mod tests_users {
 
         #[tokio::test]
         async fn test_must_be_admin_ok() -> Result<()> {
-            let server = build_server_sse_other_user(default_config(), "demo@demo.com")
+            let server = build_server_sse_other_user(default_config(), &Email::demo())
                 .await?
                 .0;
 
@@ -332,7 +334,7 @@ mod tests_user_row {
     #[tokio::test]
     async fn test_must_be_admin_ok() -> Result<()> {
         let (server, _, state) =
-            build_server_sse_other_user(default_config(), "demo@demo.com").await?;
+            build_server_sse_other_user(default_config(), &Email::demo()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
 
         let res = server.get(&base_uri(user_id, 1)).await;

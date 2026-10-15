@@ -6,15 +6,16 @@ use axum_test::{TestResponse, TestServer, TestServerConfig, Transport};
 use eventsource_stream::{Event as SseEvent, EventStreamError, Eventsource};
 use futures_util::{Stream, StreamExt};
 use test_db::default_config;
-use test_fixtures::{
-    TEST_DEMO_EMAIL, TEST_PASSWORD_HASH, TEST_USER_EMAIL, TEST_USER_PASSWORD, get_password_salt,
-};
+use test_fixtures::{TEST_PASSWORD_HASH, get_password_salt, test_user_email, test_user_password};
 use tokio::time::timeout;
 use tower_cookies::{Cookie, CookieManagerLayer};
 use tracing::error;
 
 use app::state::AppState;
-use auth::token::{generate_access_token, http::AUTH_TOKEN};
+use auth::{
+    token::{generate_access_token, http::AUTH_TOKEN},
+    types::Email,
+};
 use config::Config;
 use models::user::{User, UserForCreate};
 use recipya_scraper::tests::MockHttpClient;
@@ -136,7 +137,7 @@ pub async fn build_server_logged_in(app_config: Config) -> Result<(TestServer, A
         ..TestServerConfig::default()
     };
 
-    let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
+    let user = User::get_user_by_email(&state.mm, &test_user_email())
         .await?
         .expect("user should be in database");
 
@@ -153,21 +154,21 @@ pub async fn build_server_logged_in(app_config: Config) -> Result<(TestServer, A
 
 /// Builds and initializes a test server with SSE support.
 pub async fn build_server_sse(app_config: Config) -> Result<(TestServer, TestSse, AppState)> {
-    build_server_sse_helper(app_config, TEST_USER_EMAIL).await
+    build_server_sse_helper(app_config, &test_user_email()).await
 }
 
 /// Builds and initializes a test server with SSE support for a user other
 /// than the test one.
 pub async fn build_server_sse_other_user(
     app_config: Config,
-    auth_email: &str,
+    auth_email: &Email,
 ) -> Result<(TestServer, TestSse, AppState)> {
     build_server_sse_helper(app_config, auth_email).await
 }
 
 async fn build_server_sse_helper(
     app_config: Config,
-    auth_email: &str,
+    auth_email: &Email,
 ) -> Result<(TestServer, TestSse, AppState)> {
     let (routes, state) = prepare_router(app_config).await?;
     let config = TestServerConfig {
@@ -204,8 +205,8 @@ async fn prepare_router(config: Config) -> Result<(Router<()>, AppState)> {
     User::new_with_hash(
         &state.mm,
         UserForCreate {
-            email: TEST_USER_EMAIL.into(),
-            password_clear: TEST_USER_PASSWORD.into(),
+            email: test_user_email(),
+            password_clear: test_user_password(),
         },
         get_password_salt(),
         TEST_PASSWORD_HASH.to_string(),
@@ -215,8 +216,8 @@ async fn prepare_router(config: Config) -> Result<(Router<()>, AppState)> {
     User::new_with_hash(
         &state.mm,
         UserForCreate {
-            email: TEST_DEMO_EMAIL.into(),
-            password_clear: TEST_USER_PASSWORD.into(),
+            email: Email::demo(),
+            password_clear: test_user_password(),
         },
         get_password_salt(),
         TEST_PASSWORD_HASH.to_string(),

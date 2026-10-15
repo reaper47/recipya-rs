@@ -25,6 +25,7 @@ pub enum Error {
     Expired,
 
     ConfigFileWriteFailed,
+    InvalidData,
 
     // Modules
     #[from]

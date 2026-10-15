@@ -1,14 +1,15 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use models::Recipe;
-use models::settings::UserSettingDetails;
 use uuid::Uuid;
 
+use auth::types::Password;
+use models::Recipe;
 use models::recipe::structs::recipe::Keyword;
+use models::settings::UserSettingDetails;
 use models::{recipe::structs::recipe::Category, user::User};
 use repository::schema;
 use test_db::default_config;
-use test_fixtures::{TEST_USER_EMAIL, insert_other_user, insert_user};
+use test_fixtures::{insert_other_user, insert_user, test_user_email};
 use test_harness::{build_server_logged_in, create_app_state};
 
 use crate::{Result, recipe::utils::a_complete_recipe_for_create};
@@ -217,10 +218,10 @@ async fn test_user_new_ok() -> Result<()> {
 
     insert_user(&state.mm).await?;
 
-    let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
+    let user = User::get_user_by_email(&state.mm, &test_user_email())
         .await?
         .expect("test user should have been present");
-    pretty_assertions::assert_eq!(user.email, TEST_USER_EMAIL);
+    pretty_assertions::assert_eq!(user.email, test_user_email().into_inner());
     Ok(())
 }
 
@@ -253,7 +254,7 @@ async fn test_delete_user_exists_ok() -> Result<()> {
 
     User::delete(&state.mm, user.id).await?;
 
-    match User::get_user_by_email(&state.mm, TEST_USER_EMAIL).await {
+    match User::get_user_by_email(&state.mm, &test_user_email()).await {
         Ok(_) => Ok(()),
         Err(err) => Err(err.into()),
     }
@@ -306,7 +307,7 @@ async fn test_get_user_auth_by_email_ok() -> Result<()> {
     let state = create_app_state(default_config()).await;
     let user = insert_user(&state.mm).await?;
 
-    let got_user = User::get_user_auth_by_email(&state.mm, TEST_USER_EMAIL)
+    let got_user = User::get_user_auth_by_email(&state.mm, &test_user_email())
         .await?
         .expect("user should have been present");
 
@@ -332,7 +333,8 @@ async fn test_update_password_ok() -> Result<()> {
     let user = insert_user(&state.mm).await?;
     let password_before = String::from(&user.password_hash);
 
-    user.update_password(&state.mm, "new password").await?;
+    user.update_password(&state.mm, Password::try_from("new password").unwrap())
+        .await?;
 
     let password_after = User::get_user_by_id(&state.mm, user.id)
         .await?
@@ -348,7 +350,12 @@ async fn test_update_password_by_user_id_ok() -> Result<()> {
     let user = insert_user(&state.mm).await?;
     let password_before = user.password_hash;
 
-    User::update_password_by_user_id(&state.mm, user.id, "new password").await?;
+    User::update_password_by_user_id(
+        &state.mm,
+        user.id,
+        Password::try_from("new password").unwrap(),
+    )
+    .await?;
 
     let user = User::get_user_by_id(&state.mm, user.id)
         .await?

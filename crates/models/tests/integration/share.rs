@@ -3,6 +3,7 @@ use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 use uuid::Uuid;
 
 use app::state::AppState;
+use auth::types::{Email, Password};
 use models::Recipe;
 use models::settings::UserSettingDetails;
 use models::share::ShareRecipe;
@@ -22,8 +23,8 @@ mod test_new {
         Ok(User::new_with_hash(
             mm,
             UserForCreate {
-                email: "another@gmail.com".into(),
-                password_clear: "12345677".into(),
+                email: Email::try_from("another@gmail.com").unwrap(),
+                password_clear: Password::try_from("12345677").unwrap(),
             },
             get_password_salt(),
             TEST_PASSWORD_HASH.into(),
@@ -121,8 +122,8 @@ mod tests_fetch_by_link {
         Ok(User::new(
             mm,
             UserForCreate {
-                email: "thisisit@gmail.com".into(),
-                password_clear: "12345677".into(),
+                email: Email::try_from("thisisit@gmail.com").unwrap(),
+                password_clear: Password::try_from("12345677").unwrap(),
             },
         )
         .await?)

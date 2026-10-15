@@ -21,10 +21,6 @@ document.body.addEventListener("htmx:historyRestore", () => {
   syncLayout();
 });
 
-document.body.addEventListener("showToast", (event) => {
-  receiveToastMessage(event);
-});
-
 function initNotes(elementId, initialValue) {
   const textarea = document.getElementById(elementId);
   if (!textarea) {
