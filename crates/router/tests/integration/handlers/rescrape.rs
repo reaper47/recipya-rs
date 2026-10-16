@@ -5,7 +5,14 @@ use reqwest::StatusCode;
 
 use models::{
     Recipe,
-    recipe::structs::{recipe::RecipeForCreate, types::Source},
+    recipe::structs::{
+        nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
+        recipe::RecipeForCreate,
+        section::{Item, SectionComponents, SectionItem},
+        time::Times,
+        tool::ToolRecipe,
+    },
+    types::Source,
     user::User,
 };
 use recipya_scraper::tests::support::scraper::scrape_test_websites;
@@ -13,6 +20,7 @@ use router::params::RecipeScrapeForm;
 use test_db::default_config;
 use test_harness::{TestSse, assert_must_be_logged_in, build_server_sse};
 use test_harness::{assert_html, assert_sse_message};
+use uuid::Uuid;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -389,14 +397,6 @@ mod tests_get {
 }
 
 mod tests_put {
-    use models::recipe::structs::{
-        nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
-        section::{Item, SectionComponents, SectionItem},
-        time::Times,
-        tool::ToolRecipe,
-    };
-    use uuid::Uuid;
-
     use super::*;
 
     #[tokio::test]

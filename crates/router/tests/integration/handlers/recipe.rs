@@ -6,7 +6,6 @@ use uuid::Uuid;
 use models::Recipe;
 use models::recipe::structs::media::VideoForCreate;
 use models::recipe::structs::recipe::RecipeForCreate;
-use models::recipe::structs::types::Source;
 use models::settings::UserSettingDetails;
 use models::user::User;
 use test_db::default_config;
@@ -26,7 +25,10 @@ fn base_uri(recipe_id: i64) -> String {
 }
 
 mod tests_get {
-    use models::recipe::structs::section::{Item, SectionComponents};
+    use models::{
+        recipe::structs::section::{Item, SectionComponents},
+        types::Source,
+    };
 
     use super::*;
 

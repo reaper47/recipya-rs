@@ -14,10 +14,10 @@ use models::{
         section::SectionComponents,
         time::{Times, TimesForCreate},
         tool::ToolForCreate,
-        types::Source,
     },
     settings::UserSettingDetails,
     time::FormattedTimes,
+    types::Source,
 };
 use support::fs::FsSupport;
 

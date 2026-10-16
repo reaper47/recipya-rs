@@ -16,7 +16,6 @@ use models::{
         section::{Item, SectionComponents, SectionItem},
         time::{Times, TimesForCreate},
         tool::{ToolForCreate, ToolRecipe},
-        types::Source,
     },
     settings::UserSettingDetails,
     user::User,
@@ -86,7 +85,7 @@ mod tests_get {
 }
 
 mod tests_put {
-    use models::types::RecipeYield;
+    use models::types::{RecipeYield, Source};
 
     use super::*;
 

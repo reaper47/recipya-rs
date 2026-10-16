@@ -22,14 +22,18 @@ use support::name_entity_with_relations;
 use support::regexp::time::TimeParser;
 use support::strings::extract_number;
 
-use crate::recipe::structs::media::{Video, VideoForCreate};
 use crate::recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCreate};
 use crate::recipe::structs::section::{Section, SectionComponents};
 use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
-use crate::recipe::structs::types::Source;
 use crate::user::User;
-use crate::{recipe::RecipeForm, types::RecipeYield};
+use crate::{
+    recipe::{
+        RecipeForm,
+        structs::media::{Video, VideoForCreate},
+    },
+    types::{RecipeYield, Source},
+};
 
 bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

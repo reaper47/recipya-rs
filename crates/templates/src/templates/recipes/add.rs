@@ -4,8 +4,8 @@ use maud::{Markup, PreEscaped, html};
 use models::data::{Data, ViewRecipe};
 use models::recipe::structs::recipe::{Category, Keyword};
 use models::recipe::structs::section::SectionComponents;
-use models::recipe::structs::types::Source;
 use models::settings::UserSettingDetails;
+use models::types::Source;
 
 use crate::recipes::common::{
     add_ingredient, add_ingredient_without_section, add_instruction,

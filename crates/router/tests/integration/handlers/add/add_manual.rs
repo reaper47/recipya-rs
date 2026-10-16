@@ -13,7 +13,6 @@ use models::recipe::structs::{
     section::{Item, SectionComponents, SectionItem},
     time::{Times, TimesForCreate},
     tool::{ToolForCreate, ToolRecipe},
-    types::Source,
 };
 use models::types::RecipeYield;
 use models::user::User;
@@ -61,6 +60,7 @@ mod tests_get {
 }
 
 mod tests_post {
+    use models::types::Source;
     use reqwest::StatusCode;
     use time::Duration;
 

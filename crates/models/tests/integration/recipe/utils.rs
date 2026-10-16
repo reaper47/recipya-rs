@@ -15,9 +15,8 @@ use models::{
         section::{Item, SectionComponents, SectionItem},
         time::{Times, TimesForCreate},
         tool::{ToolForCreate, ToolRecipe},
-        types::Source,
     },
-    types::RecipeYield,
+    types::{RecipeYield, Source},
 };
 
 /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.

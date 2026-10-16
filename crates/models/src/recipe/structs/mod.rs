@@ -5,4 +5,3 @@ pub mod recipe;
 pub mod section;
 pub mod time;
 pub mod tool;
-pub mod types;

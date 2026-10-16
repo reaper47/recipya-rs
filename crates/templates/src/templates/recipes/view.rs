@@ -5,18 +5,16 @@ use fluent_static::Message;
 use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
 use models::recipe::structs::nutrition::{Nutrition, NutritionPerServingDetails};
+use models::types::Source;
 use serde_json::json;
+use support::fs::FsSupport;
 use url::Url;
 
 use config::DataDir;
 use models::data::{Data, PaginationData};
-use models::recipe::structs::{
-    section::{Item, SectionComponents},
-    types::Source,
-};
+use models::recipe::structs::section::{Item, SectionComponents};
 use models::settings::UserSettingDetails;
 use models::{Recipe, RecipeDetails};
-use support::fs::FsSupport;
 
 use crate::recipes::common::{format_nutrition, render_rating};
 use crate::recipes::timeline::render_dialog;

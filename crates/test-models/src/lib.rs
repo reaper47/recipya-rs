@@ -10,9 +10,8 @@ use models::{
         section::{Item, SectionComponents, SectionItem},
         time::TimesForCreate,
         tool::ToolForCreate,
-        types::Source,
     },
-    types::RecipeYield,
+    types::{RecipeYield, Source},
 };
 use test_fixtures::RecipeImages;
 
