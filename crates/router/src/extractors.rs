@@ -79,7 +79,7 @@ where
     async fn from_request(req: axum::extract::Request, state: &S) -> Result<Self, Self::Rejection> {
         let Form(value) = Form::<T>::from_request(req, state).await?;
         value.validate()?;
-        Ok(ValidatedForm(value))
+        Ok(Self(value))
     }
 }
 
@@ -101,11 +101,11 @@ pub enum ServerError {
 impl IntoResponse for ServerError {
     fn into_response(self) -> Response {
         match self {
-            ServerError::ValidationError(_) => {
+            Self::ValidationError(_) => {
                 let message = format!("Input validation error: [{self}]").replace('\n', ", ");
                 (StatusCode::BAD_REQUEST, message)
             }
-            ServerError::AxumFormRejection(_) => (StatusCode::BAD_REQUEST, self.to_string()),
+            Self::AxumFormRejection(_) => (StatusCode::BAD_REQUEST, self.to_string()),
         }
         .into_response()
     }

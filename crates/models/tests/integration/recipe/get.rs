@@ -10,7 +10,7 @@ use models::{
         tool::ToolRecipe,
     },
     settings::UserSettingDetails,
-    types::{RecipeYield, Source},
+    types::{Rating, RecipeYield, Source},
     user::User,
 };
 use test_db::default_config;
@@ -167,7 +167,7 @@ async fn test_get_many_ok() -> Result<()> {
             source: Source::Url(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
             ),
-            rating: Some(4),
+            rating: Rating::from(4),
             created_at: got[0].recipe.created_at,
             updated_at: got[0].recipe.updated_at,
             user_id,

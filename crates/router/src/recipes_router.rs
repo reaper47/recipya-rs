@@ -3,17 +3,17 @@ use std::io::Cursor;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use axum::extract::DefaultBodyLimit;
 use axum::extract::multipart::{InvalidBoundary, MultipartRejection};
 use axum::extract::{FromRequest, Multipart, Request};
+use axum::routing::{get, post};
+use axum::{Router, middleware};
 use serde::{Deserialize, Serialize};
 use time::macros::format_description;
 use time::{Date, PrimitiveDateTime};
 use tracing::{error, info};
 use uuid::Uuid;
 
-use axum::extract::DefaultBodyLimit;
-use axum::routing::{get, post};
-use axum::{Router, middleware};
 use integrations::api::Api;
 use integrations::{App, FileFormat, parse_recipe};
 use models::recipe::{save_media_field, text_trim};
@@ -26,6 +26,8 @@ use crate::middleware::mw_auth::mw_refresh_token;
 const FIFTY_MB: usize = 50 * 1024 * 1024;
 
 pub mod params {
+    use models::types::Rating;
+
     use super::{
         Api, App, Cursor, Date, Deserialize, FileFormat, FromRequest, FromStr, HashMap,
         InvalidBoundary, Multipart, MultipartRejection, PathBuf, PrimitiveDateTime, Recipe,
@@ -179,7 +181,7 @@ pub mod params {
         pub image: HashMap<String, PathBuf>,
         pub original_image_filename: Option<Uuid>,
         pub comment: Option<String>,
-        pub rating: Option<i16>,
+        pub rating: Rating,
 
         pub index: Option<usize>,
         pub max_index: Option<usize>,
@@ -232,7 +234,8 @@ pub mod params {
                     }
                     "comment" => form.comment = text_trim(field).await,
                     "rating-event" => {
-                        form.rating = text_trim(field).await.and_then(|s| s.parse().ok());
+                        form.rating =
+                            Rating::from(text_trim(field).await.and_then(|s| s.parse().ok()));
                     }
                     "index" => form.index = text_trim(field).await.and_then(|s| s.parse().ok()),
                     "max-index" => {

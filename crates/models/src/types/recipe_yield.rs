@@ -8,13 +8,12 @@ use diesel::{
     serialize::{self, Output, ToSql},
     sql_types::SmallInt,
 };
-use serde::Deserialize;
 
 const DEFAULT_YIELD: u16 = 4;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, AsExpression, FromSqlRow)]
+/// The number of servings a recipe makes.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, AsExpression, FromSqlRow)]
 #[diesel(sql_type = SmallInt)]
-#[serde(from = "i16")]
 pub struct RecipeYield(u16);
 
 impl Default for RecipeYield {
@@ -28,7 +27,7 @@ impl From<i16> for RecipeYield {
         if value <= 1 {
             Self::default()
         } else {
-            Self(value as u16)
+            Self(value.cast_unsigned())
         }
     }
 }
@@ -52,10 +51,9 @@ impl FromSql<SmallInt, Pg> for RecipeYield {
         bytes: <Pg as diesel::backend::Backend>::RawValue<'_>,
     ) -> diesel::deserialize::Result<Self> {
         let value = i16::from_sql(bytes)
-            .map(|v| u16::try_from(v).unwrap_or(1))
-            .unwrap_or(1);
+            .map_or(DEFAULT_YIELD, |v| u16::try_from(v).unwrap_or(DEFAULT_YIELD));
 
-        Ok(RecipeYield(value))
+        Ok(Self(value))
     }
 }
 
@@ -63,7 +61,7 @@ impl FromSql<SmallInt, Pg> for RecipeYield {
 // Claude Sonnet 5.5 assisted in writing this because I couldn't find any documentation about this.
 impl ToSql<SmallInt, Pg> for RecipeYield {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
-        let val = self.0 as i16;
+        let val = self.0.cast_signed();
         out.write_all(&val.to_be_bytes())?;
         Ok(serialize::IsNull::No)
     }
@@ -71,7 +69,7 @@ impl ToSql<SmallInt, Pg> for RecipeYield {
 
 impl RecipeYield {
     /// Consumes the `RecipeYield` and returns the underlying number.
-    pub fn into_inner(self) -> u16 {
+    pub const fn into_inner(self) -> u16 {
         self.0
     }
 }

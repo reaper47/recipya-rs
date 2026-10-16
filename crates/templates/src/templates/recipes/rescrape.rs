@@ -17,7 +17,7 @@ use models::{
     },
     settings::UserSettingDetails,
     time::FormattedTimes,
-    types::Source,
+    types::{Rating, Source},
 };
 use support::fs::FsSupport;
 
@@ -1162,8 +1162,8 @@ fn render_source(source: &Source, messages: &Messages) -> Markup {
 }
 
 fn render_rating_diff(
-    old_rating: Option<i16>,
-    new_rating: Option<i16>,
+    old_rating: Rating,
+    new_rating: Rating,
     changes: RecipeField,
     messages: &Messages,
 ) -> Markup {
@@ -1176,18 +1176,18 @@ fn render_rating_diff(
             label class="w-full py-2 diff-minus" {
                 input type="radio" name=(RATING_SOURCE) value=(OLD) class="radio radio-sm radio-error mx-2";
                 (render_rating("rating", old_rating, None, true, None, messages));
-                input type="hidden" name=(RATING_OLD) value=(old_rating.unwrap_or_default());
+                input type="hidden" name=(RATING_OLD) value=(old_rating.into_inner());
             }
             label class="w-full py-2 diff-plus" {
                 input type="radio" name=(RATING_SOURCE) value=(NEW) class="radio radio-sm radio-success mx-2" checked;
                 (render_rating("rating", new_rating, None, true, None, messages));
-                input type="hidden" name=(RATING_NEW) value=(new_rating.unwrap_or_default());
+                input type="hidden" name=(RATING_NEW) value=(new_rating.into_inner());
             }
         }
     } else {
         html! {
             (render_rating("rating", old_rating, None, true, None, messages))
-            input type="hidden" name=(RATING_OLD) value=(old_rating.unwrap_or(0));
+            input type="hidden" name=(RATING_OLD) value=(old_rating.into_inner());
             input type="hidden" name=(RATING_SOURCE) value=(OLD);
         }
     }

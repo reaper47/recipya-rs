@@ -29,7 +29,7 @@ use models::{
         section::{Item, SectionComponents, SectionItem},
         tool::ToolForCreate,
     },
-    types::RecipeYield,
+    types::{Rating, RecipeYield},
 };
 use support::{states::AuthenticatedState, strings::calc_seconds_from_parts};
 use templates::recipes::RecipeDiff;
@@ -388,11 +388,12 @@ pub async fn recrape_recipe_put_handler(
         .map(String::as_str)
         == Some("new")
     {
-        recipe.rating = map
-            .get("rating")
-            .and_then(|v| v.first())
-            .and_then(|s| s.parse::<i16>().ok())
-            .filter(|&r| (1..=5).contains(&r));
+        recipe.rating = Rating::from(
+            map.get("rating")
+                .and_then(|v| v.first())
+                .and_then(|s| s.parse::<i16>().ok())
+                .filter(|&r| (1..=5).contains(&r)),
+        );
     }
 
     if map

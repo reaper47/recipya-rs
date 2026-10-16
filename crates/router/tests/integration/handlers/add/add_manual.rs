@@ -1,6 +1,8 @@
 use axum::http::HeaderValue;
 use axum::http::Method;
 use axum_test::TestResponse;
+use reqwest::StatusCode;
+use time::Duration;
 use uuid::Uuid;
 
 use models::recipe::structs::{
@@ -15,6 +17,7 @@ use models::recipe::structs::{
     tool::{ToolForCreate, ToolRecipe},
 };
 use models::types::RecipeYield;
+use models::types::{Rating, Source};
 use models::user::User;
 use models::{Recipe, RecipeDetails};
 use test_db::default_config;
@@ -60,10 +63,6 @@ mod tests_get {
 }
 
 mod tests_post {
-    use models::types::Source;
-    use reqwest::StatusCode;
-    use time::Duration;
-
     use super::*;
 
     #[tokio::test]
@@ -254,7 +253,7 @@ mod tests_post {
 
     #[tokio::test]
     #[allow(clippy::too_many_lines)]
-    async fn test_submit_recipe_ok() -> Result<()> {
+    async fn test_manual_submit_recipe_ok() -> Result<()> {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let recipe = RecipeForCreate {
             name: "Best Chinese Kale".into(),
@@ -264,7 +263,7 @@ mod tests_post {
             r#yield: RecipeYield::from(6),
             source: Source::new("My mother's maple syrup recipes cookbook"),
             is_favourite: false,
-            rating: Some(4),
+            rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: Uuid::new_v4(),
                 duration: Some(Duration::hours(1)),
@@ -362,7 +361,7 @@ mod tests_post {
                     notes: Some("# Test\n\nSome notes".into()),
                     source: recipe.source,
                     is_favourite: false,
-                    rating: Some(4),
+                    rating: Rating::from(4),
                     created_at: got.recipe.created_at,
                     updated_at: got.recipe.updated_at,
                     user_id,

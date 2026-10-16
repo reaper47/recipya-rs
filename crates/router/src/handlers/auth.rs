@@ -143,11 +143,8 @@ pub async fn forgot_password_post_handler(
     if user.is_some() {
         Redirect::to("/recipes").into_response()
     } else {
-        let ValidatedForm(form) = match form {
-            Ok(form) => form,
-            Err(_) => {
-                return Error::Form.into_response();
-            }
+        let Ok(ValidatedForm(form)) = form else {
+            return Error::Form.into_response();
         };
 
         let user_email = form.email;
@@ -236,14 +233,11 @@ pub async fn forgot_password_reset_post_handler(
 ) -> impl IntoResponse {
     let toast = ToastCtx::<UnauthenticatedState>::new(&state, &messages);
 
-    let ValidatedForm(form) = match form {
-        Ok(form) => form,
-        Err(_) => {
-            return toast.error(
-                Error::Form.into_response(),
-                &messages.toast_auth_password_invalid(),
-            );
-        }
+    let Ok(ValidatedForm(form)) = form else {
+        return toast.error(
+            Error::Form.into_response(),
+            &messages.toast_auth_password_invalid(),
+        );
     };
 
     let entry = match PasswordResetToken::find_by_token(&state.mm, &form.token).await {
@@ -323,14 +317,11 @@ pub async fn login_post_handler(
 ) -> impl IntoResponse {
     let toast = ToastCtx::<UnauthenticatedState>::new(&state, &messages);
 
-    let ValidatedForm(form) = match form {
-        Ok(form) => form,
-        Err(_) => {
-            return toast.error(
-                Error::Form.into_response(),
-                &messages.toast_auth_credentials_invalid(),
-            );
-        }
+    let Ok(ValidatedForm(form)) = form else {
+        return toast.error(
+            Error::Form.into_response(),
+            &messages.toast_auth_credentials_invalid(),
+        );
     };
 
     let user = match User::get_user_by_email(&state.mm, &form.email).await {

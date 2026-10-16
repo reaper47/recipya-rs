@@ -22,11 +22,14 @@ use support::name_entity_with_relations;
 use support::regexp::time::TimeParser;
 use support::strings::extract_number;
 
-use crate::recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCreate};
 use crate::recipe::structs::section::{Section, SectionComponents};
 use crate::recipe::structs::time::{Times, TimesForCreate};
 use crate::recipe::structs::tool::{ToolForCreate, ToolRecipe};
 use crate::user::User;
+use crate::{
+    recipe::structs::nutrition::{NutritionDetails, NutritionDetailsForCreate},
+    types::Rating,
+};
 use crate::{
     recipe::{
         RecipeForm,
@@ -87,8 +90,9 @@ pub struct Recipe {
     pub source: Source,
     /// Specifies whether the recipe has been marked as favourite.
     pub is_favourite: bool,
-    /// Optional 1-5 rating. None is used for no rating.
-    pub rating: Option<i16>,
+    /// Optional 1-10 rating. 0 is used for no rating. Display should be over 5 for half-stars.
+    #[diesel(deserialize_as = Option<i16>)]
+    pub rating: Rating,
     /// The timestamp when the nutrition entry was created.
     pub created_at: PrimitiveDateTime,
     /// The timestamp when the nutrition entry was last updated.
@@ -110,7 +114,7 @@ impl Default for Recipe {
             notes: None,
             source: Source::default(),
             is_favourite: false,
-            rating: None,
+            rating: Rating::default(),
             created_at: PrimitiveDateTime::MIN,
             updated_at: PrimitiveDateTime::MIN,
             user_id: Uuid::nil(),
@@ -315,12 +319,13 @@ impl From<&RecipeDetails> for schema_org::Recipe {
                 .cloned()
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
-            content_rating: value
-                .recipe
-                .rating
-                .filter(|rating| rating > &0)
-                .map(|rating| vec![RecipeContentRatingFieldEnum::new_rating(f32::from(rating))])
-                .unwrap_or_default(),
+            content_rating: if value.recipe.rating.is_none() {
+                vec![]
+            } else {
+                vec![RecipeContentRatingFieldEnum::new_rating(f32::from(
+                    value.recipe.rating.into_inner(),
+                ))]
+            },
             text: vec![
                 json!({
                     "recipeId": value.recipe.id,
@@ -330,12 +335,14 @@ impl From<&RecipeDetails> for schema_org::Recipe {
                 })
                 .to_string(),
             ],
-            aggregate_rating: value
-                .recipe
-                .rating
-                .filter(|rating| rating > &0)
-                .map(|rating| vec![AggregateRating::new(f32::from(rating), 1)])
-                .unwrap_or_default(),
+            aggregate_rating: if value.recipe.rating.is_none() {
+                vec![]
+            } else {
+                vec![AggregateRating::new(
+                    f32::from(value.recipe.rating.into_inner()),
+                    1,
+                )]
+            },
             in_language: vec![RecipeInLanguageFieldEnum::Text(
                 value.recipe.language.clone(),
             )],
@@ -436,7 +443,7 @@ pub struct RecipeForCreate {
     pub measurement_system_id: i16,
     pub notes: Option<String>,
     pub source: Source,
-    pub rating: Option<i16>,
+    pub rating: Rating,
     pub videos: Vec<VideoForCreate>,
     pub r#yield: RecipeYield,
 
@@ -636,7 +643,13 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             ),
             source: Source::from(schema.url.first().cloned()),
             is_favourite: false,
-            rating: None, // TODO: Look into it because the Recipe schema doesn't have such dedicated field
+            rating: Rating::from(
+                schema
+                    .aggregate_rating
+                    .first()
+                    .map(AggregateRating::normalize_over_ten)
+                    .unwrap_or_default(),
+            ),
             videos: vec![],
             category: schema.recipe_category.first().map_or_else(
                 || Some("uncategorized".into()),

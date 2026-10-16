@@ -11,7 +11,7 @@ use models::{
         time::TimesForCreate,
         tool::ToolForCreate,
     },
-    types::{RecipeYield, Source},
+    types::{Rating, RecipeYield, Source},
 };
 use test_fixtures::RecipeImages;
 
@@ -32,7 +32,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
             ),
             is_favourite: false,
-            rating: Some(4),
+            rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: images.video,
                 duration: Some(Duration::minutes(7)),

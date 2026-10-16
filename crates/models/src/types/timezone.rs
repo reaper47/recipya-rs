@@ -3,6 +3,7 @@ use time_tz::{TimeZone, Tz, timezones};
 
 use crate::Error;
 
+/// A validated IANA time zone.
 #[derive(Debug, Deserialize)]
 #[serde(try_from = "String")]
 pub struct Timezone(&'static Tz);
@@ -12,10 +13,8 @@ impl TryFrom<String> for Timezone {
     type Error = Error;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        match timezones::get_by_name(&value) {
-            Some(tz) => Ok(Self(tz)),
-            None => Err(Error::InvalidTimezone),
-        }
+        timezones::get_by_name(&value)
+            .map_or_else(|| Err(Error::InvalidTimezone), |tz| Ok(Self(tz)))
     }
 }
 
@@ -24,10 +23,7 @@ impl TryFrom<&str> for Timezone {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match timezones::get_by_name(&value) {
-            Some(tz) => Ok(Self(tz)),
-            None => Err(Error::InvalidTimezone),
-        }
+        timezones::get_by_name(value).map_or_else(|| Err(Error::InvalidTimezone), |tz| Ok(Self(tz)))
     }
 }
 
@@ -43,7 +39,7 @@ impl Serialize for Timezone {
 /// Borrows the address as a `&str`.
 impl AsRef<str> for Timezone {
     fn as_ref(&self) -> &str {
-        &self.0.name()
+        self.0.name()
     }
 }
 

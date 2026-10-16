@@ -956,9 +956,7 @@ pub fn render_export_data_dialog_recipes(
                                         }
                                     }
                                     td .py-1.text-center {
-                                        @if let Some(rating) = recipe.rating {
-                                            (rating) "/5"
-                                        }
+                                        (recipe.rating)
                                     }
                                     td .py-1.text-center {
                                         a class="link" href={ (current_url) "/recipes/" (recipe.id) } target="_blank" {

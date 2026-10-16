@@ -12,14 +12,19 @@ use models::{
         time::Times,
         tool::ToolRecipe,
     },
+    reports::ViewReport,
+    settings::UserSettingDetails,
     types::Source,
+    types::{Rating, RecipeYield},
     user::User,
 };
 use recipya_scraper::tests::support::scraper::scrape_test_websites;
 use router::params::RecipeScrapeForm;
 use test_db::default_config;
+use test_harness::assert_sse_messages_any_order;
 use test_harness::{TestSse, assert_must_be_logged_in, build_server_sse};
 use test_harness::{assert_html, assert_sse_message};
+use test_models::a_complete_recipe_for_create;
 use uuid::Uuid;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -35,19 +40,6 @@ async fn test_must_be_logged_in() -> Result<()> {
 }
 
 mod tests_get {
-    use models::{
-        recipe::structs::{
-            nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
-            section::SectionComponents,
-            time::Times,
-        },
-        reports::ViewReport,
-        settings::UserSettingDetails,
-        types::RecipeYield,
-    };
-    use test_harness::assert_sse_messages_any_order;
-    use test_models::a_complete_recipe_for_create;
-
     use super::*;
 
     #[tokio::test]
@@ -250,7 +242,7 @@ mod tests_get {
                 serving_size: "4 cups".into(),
             }),
         };
-        recipe.recipe.rating = Some(4);
+        recipe.recipe.rating = Rating::from(4u8);
         recipe.times = Times {
             id: 1,
             recipe_id,
@@ -538,7 +530,7 @@ mod tests_put {
         res.assert_status_see_other();
         res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
         let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
-        assert_eq!(got.recipe.rating, Some(3));
+        assert_eq!(got.recipe.rating, Rating::from(3u8));
         Ok(())
     }
 

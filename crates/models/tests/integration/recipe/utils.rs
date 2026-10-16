@@ -16,7 +16,7 @@ use models::{
         time::{Times, TimesForCreate},
         tool::{ToolForCreate, ToolRecipe},
     },
-    types::{RecipeYield, Source},
+    types::{Rating, RecipeYield, Source},
 };
 
 /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.
@@ -53,7 +53,7 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
                 notes: Some("# Notes\n\nHere are some notes".into()),
                 source: recipe_c.source,
                 is_favourite: false,
-                rating: None,
+                rating: Rating::default(),
                 created_at: PrimitiveDateTime::new(created_date, Time::MIDNIGHT),
                 updated_at: PrimitiveDateTime::new(updated_date, Time::MIDNIGHT),
                 user_id: Uuid::new_v4(),
@@ -128,7 +128,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
             ),
             is_favourite: false,
-            rating: Some(4),
+            rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: images.video,
                 duration: Some(Duration::minutes(7)),

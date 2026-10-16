@@ -396,7 +396,7 @@ pub async fn insert_nutrition(
         None
     } else {
         nutrition_source
-            .calculate_nutrition(conn, ingredients, num_servings.into_inner() as i16)
+            .calculate_nutrition(conn, ingredients, num_servings.into_inner().cast_signed())
             .await
             .ok()
     };

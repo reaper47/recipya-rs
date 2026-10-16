@@ -18,7 +18,7 @@ use crate::recipe::structs::nutrition::{
 use crate::recipe::structs::section::SectionComponents;
 use crate::recipe::structs::time::TimesForCreate;
 use crate::recipe::structs::tool::ToolForCreate;
-use crate::types::RecipeYield;
+use crate::types::{Rating, RecipeYield};
 
 /// Represents a form used to create or update a recipe.
 pub struct RecipeForm {
@@ -31,7 +31,7 @@ pub struct RecipeForm {
     pub keywords: Vec<String>,
     pub notes: Option<String>,
     pub nutrition: NutritionDetailsForCreate,
-    pub rating: Option<i16>,
+    pub rating: Rating,
     pub source: Option<String>,
     pub times: Option<TimesForCreate>,
     pub title: String,
@@ -60,7 +60,7 @@ where
         let mut notes: Option<String> = None;
         let mut nutrition_per_100g = NutritionForCreate::default();
         let mut nutrition_per_serving = NutritionPerServingDetailsForCreate::default();
-        let mut rating: Option<i16> = None;
+        let mut rating: Rating = Rating::default();
         let mut source: Option<String> = None;
         let mut times: TimesForCreate = TimesForCreate {
             prep_seconds: 60 * 15,
@@ -132,7 +132,7 @@ where
                     videos.insert(uuid.into(), path);
                 }
                 "notes" => notes = text_trim(field).await,
-                "rating" => rating = parse_i16(field).await,
+                "rating" => rating = Rating::from(parse_i16(field).await),
                 "source" => source = text_trim(field).await,
                 "time-prep" => {
                     times.prep_seconds = field
