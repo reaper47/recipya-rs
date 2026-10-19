@@ -79,8 +79,14 @@ pub fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
     }
 
     if let Some(times) = &recipe.times {
-        form = form.add_part("time-prep", Part::text(seconds_to_hms(times.prep_seconds)));
-        form = form.add_part("time-cook", Part::text(seconds_to_hms(times.cook_seconds)));
+        form = form.add_part(
+            "time-prep",
+            Part::text(seconds_to_hms(times.prep_seconds.into())),
+        );
+        form = form.add_part(
+            "time-cook",
+            Part::text(seconds_to_hms(times.cook_seconds.into())),
+        );
     }
 
     if let Some(v) = &recipe.category {

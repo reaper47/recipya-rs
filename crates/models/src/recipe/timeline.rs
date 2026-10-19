@@ -48,7 +48,7 @@ impl Default for RecipeTimeline {
 struct RecipeTimelinePatch<'a> {
     title: Option<&'a str>,
     comment: Option<&'a str>,
-    rating: Option<i16>,
+    rating: Rating,
     image: Option<Uuid>,
     created_at: Option<PrimitiveDateTime>,
 }
@@ -119,7 +119,7 @@ impl RecipeTimeline {
         let patch = RecipeTimelinePatch {
             title: Some(&new_timeline.title),
             comment: new_timeline.comment.as_deref(),
-            rating: new_timeline.rating.as_option(),
+            rating: new_timeline.rating,
             image: new_timeline.image,
             created_at: (new_timeline.created_at != PrimitiveDateTime::MIN)
                 .then_some(new_timeline.created_at),

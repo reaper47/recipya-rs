@@ -14,8 +14,7 @@ use models::{
     },
     reports::ViewReport,
     settings::UserSettingDetails,
-    types::Source,
-    types::{Rating, RecipeYield},
+    types::{Rating, RecipeYield, Source},
     user::User,
 };
 use recipya_scraper::tests::support::scraper::scrape_test_websites;
@@ -40,6 +39,8 @@ async fn test_must_be_logged_in() -> Result<()> {
 }
 
 mod tests_get {
+    use models::types::FIFTEEN_MINUTES_SEC;
+
     use super::*;
 
     #[tokio::test]
@@ -246,9 +247,9 @@ mod tests_get {
         recipe.times = Times {
             id: 1,
             recipe_id,
-            prep_seconds: 300,
-            cook_seconds: 600,
-            total_seconds: 900,
+            prep_seconds: 300.into(),
+            cook_seconds: 600.into(),
+            total_seconds: FIFTEEN_MINUTES_SEC.into(),
         };
         recipe.recipe.r#yield = RecipeYield::from(12);
         Recipe::update(
@@ -912,9 +913,9 @@ mod tests_put {
             Times {
                 id: got.times.id,
                 recipe_id,
-                prep_seconds: 1380,
-                cook_seconds: 3300,
-                total_seconds: 4680,
+                prep_seconds: 1380.into(),
+                cook_seconds: 3300.into(),
+                total_seconds: 4680.into(),
             }
         );
         Ok(())

@@ -2,7 +2,10 @@ use diesel::prelude::*;
 
 use repository::schema;
 
-use crate::Recipe;
+use crate::{
+    Recipe,
+    types::{DurationSeconds, FIFTEEN_MINUTES_SEC, THIRTY_MINUTES_SEC},
+};
 
 /// Represents a time components of a recipe.
 #[derive(
@@ -14,23 +17,23 @@ use crate::Recipe;
 pub struct Times {
     pub id: i64,
     pub recipe_id: i64,
-    pub prep_seconds: i32,
-    pub cook_seconds: i32,
-    pub total_seconds: i32,
+    pub prep_seconds: DurationSeconds,
+    pub cook_seconds: DurationSeconds,
+    pub total_seconds: DurationSeconds,
 }
 
 /// Represents the preparation and cooking times for a recipe during creation.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TimesForCreate {
-    pub prep_seconds: i32,
-    pub cook_seconds: i32,
+    pub prep_seconds: DurationSeconds,
+    pub cook_seconds: DurationSeconds,
 }
 
 impl Default for TimesForCreate {
     fn default() -> Self {
         Self {
-            prep_seconds: 15 * 60,
-            cook_seconds: 30 * 60,
+            prep_seconds: FIFTEEN_MINUTES_SEC.into(),
+            cook_seconds: THIRTY_MINUTES_SEC.into(),
         }
     }
 }
@@ -42,32 +45,29 @@ impl TimesForCreate {
         cook: Option<iso8601::Duration>,
         total: Option<iso8601::Duration>,
     ) -> Self {
-        let prep_seconds = i32::try_from(prep.map_or_else(
-            || 15 * 60,
+        let prep_seconds = prep.map_or_else(
+            || FIFTEEN_MINUTES_SEC.into(),
             |d| {
                 let duration: std::time::Duration = d.into();
-                duration.as_secs()
+                DurationSeconds::from(duration.as_secs())
             },
-        ))
-        .unwrap_or_default();
+        );
 
-        let cook_seconds = i32::try_from(cook.map_or_else(
-            || 30 * 60,
+        let cook_seconds = cook.map_or_else(
+            || THIRTY_MINUTES_SEC.into(),
             |d| {
                 let duration: std::time::Duration = d.into();
-                duration.as_secs()
+                DurationSeconds::from(duration.as_secs())
             },
-        ))
-        .unwrap_or_default();
+        );
 
-        let total_seconds = i32::try_from(total.map_or_else(
-            || 15 * 60 + 30 * 60,
+        let total_seconds = total.map_or_else(
+            || (FIFTEEN_MINUTES_SEC + THIRTY_MINUTES_SEC).into(),
             |d| {
                 let duration: std::time::Duration = d.into();
-                duration.as_secs()
+                DurationSeconds::from(duration.as_secs())
             },
-        ))
-        .unwrap_or_default();
+        );
 
         let (prep_seconds, cook_seconds) = match total {
             Some(_) => {
@@ -115,6 +115,6 @@ impl From<Times> for TimesForCreate {
 #[diesel(belongs_to(Recipe))]
 pub struct TimesForInsert {
     pub recipe_id: i64,
-    pub prep_seconds: i32,
-    pub cook_seconds: i32,
+    pub prep_seconds: DurationSeconds,
+    pub cook_seconds: DurationSeconds,
 }

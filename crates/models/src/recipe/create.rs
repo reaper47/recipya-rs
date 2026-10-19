@@ -76,7 +76,7 @@ impl Recipe {
                         notes: recipe_c.notes.clone(),
                         source: recipe_c.source.clone(),
                         is_favourite: recipe_c.is_favourite,
-                        rating: recipe_c.rating.as_option(),
+                        rating: recipe_c.rating,
                         user_id,
                     })
                     .on_conflict((

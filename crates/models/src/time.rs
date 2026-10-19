@@ -22,9 +22,9 @@ pub struct FormattedTimes {
 impl FormattedTimes {
     /// Creates a new `FormattedTimes` from the recipe's Times.
     pub fn from_times(times: &Times) -> Result<Self> {
-        let cook = humantime::parse_duration(&format!("{}s", times.cook_seconds))?;
-        let prep = humantime::parse_duration(&format!("{}s", times.prep_seconds))?;
-        let total = humantime::parse_duration(&format!("{}s", times.total_seconds))?;
+        let cook = humantime::parse_duration(&times.cook_seconds.to_string())?;
+        let prep = humantime::parse_duration(&times.prep_seconds.to_string())?;
+        let total = humantime::parse_duration(&times.total_seconds.to_string())?;
         let prep_edit = secs_to_time_str(prep);
         let cook_edit = secs_to_time_str(cook);
 

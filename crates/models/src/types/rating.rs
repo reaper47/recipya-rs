@@ -8,8 +8,10 @@ use diesel::{
     sql_types::SmallInt,
 };
 
+// Sentinel when there is no rating.
 const NO_RATING: u8 = 0;
 
+/// A rating on a scale of 1 to 10. 0 is reserved to mean "no rating".
 #[derive(Copy, Clone, Debug, Eq, PartialEq, AsExpression, FromSqlRow)]
 #[diesel(sql_type = SmallInt)]
 pub struct Rating(u8);
@@ -75,11 +77,6 @@ impl Rating {
     /// Consumes the `Rating` and returns the underlying number.
     pub const fn into_inner(self) -> u8 {
         self.0
-    }
-
-    /// Converts the rating to an option.
-    pub fn as_option(&self) -> Option<i16> {
-        (!self.is_none()).then_some(i16::from(self.0))
     }
 }
 

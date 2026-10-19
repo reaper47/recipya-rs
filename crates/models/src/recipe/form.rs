@@ -18,7 +18,7 @@ use crate::recipe::structs::nutrition::{
 use crate::recipe::structs::section::SectionComponents;
 use crate::recipe::structs::time::TimesForCreate;
 use crate::recipe::structs::tool::ToolForCreate;
-use crate::types::{Rating, RecipeYield};
+use crate::types::{FIFTEEN_MINUTES_SEC, Rating, RecipeYield, THIRTY_MINUTES_SEC};
 
 /// Represents a form used to create or update a recipe.
 pub struct RecipeForm {
@@ -63,8 +63,8 @@ where
         let mut rating: Rating = Rating::default();
         let mut source: Option<String> = None;
         let mut times: TimesForCreate = TimesForCreate {
-            prep_seconds: 60 * 15,
-            cook_seconds: 60 * 30,
+            prep_seconds: FIFTEEN_MINUTES_SEC.into(),
+            cook_seconds: THIRTY_MINUTES_SEC.into(),
         };
         let mut title: Option<String> = None;
         let mut tools: Vec<ToolForCreate> = Vec::new();
@@ -138,13 +138,15 @@ where
                     times.prep_seconds = field
                         .text()
                         .await
-                        .map_or(0, |s| calc_seconds_from_parts(&s));
+                        .map_or(0, |s| calc_seconds_from_parts(&s))
+                        .into()
                 }
                 "time-cook" => {
                     times.cook_seconds = field
                         .text()
                         .await
-                        .map_or(0, |s| calc_seconds_from_parts(&s));
+                        .map_or(0, |s| calc_seconds_from_parts(&s))
+                        .into()
                 }
                 "title" => {
                     title = text_trim(field)

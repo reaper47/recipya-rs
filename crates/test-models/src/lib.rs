@@ -102,8 +102,8 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
                 }),
             },
             times: Some(TimesForCreate {
-                prep_seconds: 120,
-                cook_seconds: 3600,
+                prep_seconds: 120.into(),
+                cook_seconds: 3600.into(),
             }),
             tools: vec![
                 ToolForCreate {

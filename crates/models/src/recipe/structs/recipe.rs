@@ -136,7 +136,7 @@ pub(crate) struct RecipeForInsert {
     pub notes: Option<String>,
     pub source: Source,
     pub is_favourite: bool,
-    pub rating: Option<i16>,
+    pub rating: Rating,
     pub user_id: Uuid,
 }
 

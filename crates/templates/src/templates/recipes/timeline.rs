@@ -164,7 +164,7 @@ pub fn render_event(
                                 (s)
                             }
                         }
-                        @if event.rating.is_none() {
+                        @if !event.rating.is_none() {
                             div class="flex justify-between items-baseline" {
                                 (render_rating(&format!("rating-timeline-{index}"), event.rating, Some(RatingSize::Small), true, None, messages))
                                 (edit_button(&timeline_edit_url, &timeline_event_id))

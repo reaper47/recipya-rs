@@ -3,6 +3,7 @@ use models::{
     params::SearchParams,
     recipe::structs::time::Times,
     time::FormattedTimes,
+    types::FIFTEEN_MINUTES_SEC,
 };
 
 use crate::Result;
@@ -13,9 +14,9 @@ mod tests_formatted_times {
     #[test]
     fn test_with_hours_and_minutes_ok() -> Result<()> {
         let times = Times {
-            cook_seconds: 10800,
-            prep_seconds: 900,
-            total_seconds: 10800 + 900,
+            cook_seconds: 10800.into(),
+            prep_seconds: FIFTEEN_MINUTES_SEC.into(),
+            total_seconds: (10800 + 900).into(),
             id: 0,
             recipe_id: 0,
         };
@@ -41,9 +42,9 @@ mod tests_formatted_times {
     #[test]
     fn test_with_minutes_ok() -> Result<()> {
         let times = Times {
-            cook_seconds: 960,
-            prep_seconds: 900,
-            total_seconds: 960 + 900,
+            cook_seconds: 960.into(),
+            prep_seconds: 900.into(),
+            total_seconds: (960 + 900).into(),
             id: 0,
             recipe_id: 0,
         };

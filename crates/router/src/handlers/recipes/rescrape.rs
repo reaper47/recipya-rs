@@ -155,7 +155,7 @@ pub async fn recrape_recipe_put_handler(
             }
             "cook-new" => {
                 if let Some(t) = recipe.times.as_mut() {
-                    t.cook_seconds = calc_seconds_from_parts(&value);
+                    t.cook_seconds = calc_seconds_from_parts(&value).into();
                 }
             }
             "cuisine-new" => {
@@ -265,7 +265,7 @@ pub async fn recrape_recipe_put_handler(
             }
             "prep-new" => {
                 if let Some(t) = recipe.times.as_mut() {
-                    t.prep_seconds = calc_seconds_from_parts(&value);
+                    t.prep_seconds = calc_seconds_from_parts(&value).into();
                 }
             }
             "rating-source" => {

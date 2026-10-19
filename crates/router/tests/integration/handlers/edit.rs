@@ -330,8 +330,8 @@ mod tests_put {
                 }),
             },
             times: Some(TimesForCreate {
-                prep_seconds: 2000,
-                cook_seconds: 800,
+                prep_seconds: 2000.into(),
+                cook_seconds: 800.into(),
             }),
             ingredients: SectionComponents::Flat(vec![
                 Item::new("8 lbs blueberries"),

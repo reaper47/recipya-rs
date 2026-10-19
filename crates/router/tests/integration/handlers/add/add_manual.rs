@@ -63,6 +63,8 @@ mod tests_get {
 }
 
 mod tests_post {
+    use models::types::THIRTY_MINUTES_SEC;
+
     use super::*;
 
     #[tokio::test]
@@ -310,8 +312,8 @@ mod tests_post {
                 }),
             },
             times: Some(TimesForCreate {
-                prep_seconds: 3600,
-                cook_seconds: 72000,
+                prep_seconds: 3600.into(),
+                cook_seconds: 72000.into(),
             }),
             ingredients: SectionComponents::Grouped(vec![
                 SectionItem::new(
@@ -514,9 +516,9 @@ mod tests_post {
                 times: Times {
                     id: got.times.id,
                     recipe_id,
-                    prep_seconds: 900,
-                    cook_seconds: 1800,
-                    total_seconds: 2700,
+                    prep_seconds: 900.into(),
+                    cook_seconds: THIRTY_MINUTES_SEC.into(),
+                    total_seconds: 2700.into(),
                 },
                 ..Default::default()
             }

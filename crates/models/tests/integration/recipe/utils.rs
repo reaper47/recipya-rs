@@ -91,9 +91,9 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
             times: Times {
                 id: 1,
                 recipe_id: 1,
-                prep_seconds: 3600,
-                cook_seconds: 900,
-                total_seconds: 4500,
+                prep_seconds: 3600.into(),
+                cook_seconds: 900.into(),
+                total_seconds: 4500.into(),
             },
             tools: recipe_c
                 .tools
@@ -198,8 +198,8 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
                 }),
             },
             times: Some(TimesForCreate {
-                prep_seconds: 120,
-                cook_seconds: 3600,
+                prep_seconds: 120.into(),
+                cook_seconds: 3600.into(),
             }),
             tools: vec![
                 ToolForCreate {

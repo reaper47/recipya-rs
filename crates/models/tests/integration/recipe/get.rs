@@ -250,9 +250,9 @@ async fn test_get_many_ok() -> Result<()> {
         times: Times {
             id: got[0].times.id,
             recipe_id: id1,
-            prep_seconds: 120,
-            cook_seconds: 3600,
-            total_seconds: 3720,
+            prep_seconds: 120.into(),
+            cook_seconds: 3600.into(),
+            total_seconds: 3720.into(),
         },
         tools: vec![
             ToolRecipe {
@@ -339,9 +339,9 @@ async fn test_get_many_ok() -> Result<()> {
         times: Times {
             id: got[1].times.id,
             recipe_id: id2,
-            prep_seconds: 120,
-            cook_seconds: 3600,
-            total_seconds: 3720,
+            prep_seconds: 120.into(),
+            cook_seconds: 3600.into(),
+            total_seconds: 3720.into(),
         },
         tools: want_recipe1.tools.clone(),
         videos: vec![Video {
