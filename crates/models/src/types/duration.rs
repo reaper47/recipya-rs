@@ -24,7 +24,7 @@ pub struct DurationSeconds(u32);
 
 impl DurationSeconds {
     /// Creates a new `DurationSeconds` from a number of seconds.
-    pub fn new(seconds: u32) -> Self {
+    pub const fn new(seconds: u32) -> Self {
         Self(seconds)
     }
 }
@@ -47,9 +47,9 @@ impl From<u64> for DurationSeconds {
     }
 }
 
-impl Into<i32> for DurationSeconds {
-    fn into(self) -> i32 {
-        i32::try_from(self.0).unwrap_or_default()
+impl From<DurationSeconds> for i32 {
+    fn from(val: DurationSeconds) -> Self {
+        Self::try_from(val.0).unwrap_or_default()
     }
 }
 

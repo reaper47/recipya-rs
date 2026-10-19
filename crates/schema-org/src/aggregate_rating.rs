@@ -155,7 +155,7 @@ mod tests {
 
             let got = rating.normalize_over_ten();
 
-            assert_eq!(got, 9)
+            assert_eq!(got, 9);
         }
 
         #[test]
@@ -164,7 +164,7 @@ mod tests {
 
             let got = rating.normalize_over_ten();
 
-            assert_eq!(got, 7)
+            assert_eq!(got, 7);
         }
 
         #[test]
@@ -173,7 +173,7 @@ mod tests {
 
             let got = rating.normalize_over_ten();
 
-            assert_eq!(got, 2)
+            assert_eq!(got, 2);
         }
     }
 }

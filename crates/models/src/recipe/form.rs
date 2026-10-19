@@ -139,14 +139,14 @@ where
                         .text()
                         .await
                         .map_or(0, |s| calc_seconds_from_parts(&s))
-                        .into()
+                        .into();
                 }
                 "time-cook" => {
                     times.cook_seconds = field
                         .text()
                         .await
                         .map_or(0, |s| calc_seconds_from_parts(&s))
-                        .into()
+                        .into();
                 }
                 "title" => {
                     title = text_trim(field)

@@ -367,9 +367,7 @@ pub(super) fn render_rating(
     messages: &Messages,
 ) -> Markup {
     let value = value.into_inner().clamp(0, RATING_MAX);
-    let size = size
-        .map(|v| v.to_class())
-        .unwrap_or_else(|| RatingSize::Medium.to_class());
+    let size = size.map_or_else(|| RatingSize::Medium.to_class(), |v| v.to_class());
 
     if is_readonly {
         render_readonly_rating(size, value, messages)
@@ -384,7 +382,7 @@ fn render_readonly_rating(size: &str, value: u8, messages: &Messages) -> Markup 
         div class={"rating rating-half " (size)} {
             @for i in RATING_MIN..=RATING_MAX {
                 div class={"mask mask-star-2 mask-half-" (if i%2 == 0 { 2 } else { 1 })}
-                    aria-label=(messages.recipe_rating_aria_label(0.5 * (i as f32)))
+                    aria-label=(messages.recipe_rating_aria_label(0.5 * f32::from(i)))
                     aria-current=[if value == i { Some("true") } else { None }] {}
             }
         }
@@ -405,7 +403,7 @@ fn render_writable_rating(
                 input type="radio" name=(name)
                     class={"mask mask-star-2 mask-half-" (if i%2 == 0 { 2 } else { 1 })}
                     value=(i)
-                    aria-label=(messages.recipe_rating_aria_label(0.5 * (i as f32)))
+                    aria-label=(messages.recipe_rating_aria_label(0.5 * f32::from(i)))
                     checked[value == i]
                     form=[form_id];
             }
