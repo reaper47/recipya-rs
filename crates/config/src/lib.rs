@@ -8,8 +8,6 @@ pub use states::{AutologinState, DemoState, ProductionState, SignupsState, State
 
 use std::env;
 
-use tracing::warn;
-
 /// Configuration struct for the application.
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct Config {
@@ -49,7 +47,7 @@ impl Config {
 fn get_env_on_load(name: &'static str) -> Result<String> {
     env::var(name).map_or_else(
         |_| {
-            warn!("Missing environment variable: {name} (default set)");
+            println!("Missing environment variable: {name} (default set)");
             match name {
                 "RECIPYA_IS_ALLOW_SIGNUPS"
                 | "RECIPYA_IS_AUTOLOGIN"

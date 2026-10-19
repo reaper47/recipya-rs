@@ -6,7 +6,6 @@ use tokio::signal;
 use tokio::{net::TcpListener, sync::watch};
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tower_cookies::CookieManagerLayer;
-use tracing::{error, info, warn};
 
 use app::jobs::clean_media;
 use app::state::AppState;
@@ -29,7 +28,7 @@ use crate::error::{Error, Result};
 
 /// Initializes and starts Recipya's web server.
 pub async fn run_server() -> Result<()> {
-    info!(
+    println!(
         "Recipya v{} starting in {} mode",
         env!("CARGO_PKG_VERSION"),
         if cfg!(debug_assertions) {
@@ -42,7 +41,7 @@ pub async fn run_server() -> Result<()> {
     create_database_if_not_exists("recipya")?;
 
     if software::is_ffmpeg_installed() {
-        info!("FFmpeg is installed");
+        println!("FFmpeg is installed");
     } else {
         let mut message = String::from("FFmpeg is not installed. ");
 
@@ -54,7 +53,7 @@ pub async fn run_server() -> Result<()> {
             message.push_str("Please install from https://www.gyan.dev/ffmpeg/builds");
         }
 
-        warn!("{message}");
+        println!("{message}");
     }
 
     run_server_helper().await
@@ -76,7 +75,7 @@ async fn run_server_helper() -> Result<()> {
     if config.states.autologin == AutologinState::On
         && let Err(err) = init_autologin_user(&state.mm).await
     {
-        error!(?err, "Autologin enabled. Error initializing autologin user");
+        eprintln!("Autologin enabled. Error initializing autologin user: {err}");
     }
 
     let state_clone = state.clone();
@@ -97,7 +96,7 @@ async fn run_server_helper() -> Result<()> {
         .with_state(state);
 
     let listener = TcpListener::bind("0.0.0.0:8078").await?;
-    info!("Serving at http://{}", listener.local_addr()?);
+    println!("Serving at http://{}", listener.local_addr()?);
     axum::serve(listener, router)
         .with_graceful_shutdown(shutdown_signal(state_clone.channels.shutdown_tx()))
         .await?;
@@ -153,7 +152,7 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
 
     match User::get_user_by_email(mm, &admin).await {
         Ok(Some(_)) => {
-            info!("Admin user with email 'admin@autologin.com' exists");
+            println!("Admin user with email 'admin@autologin.com' exists");
             Ok(())
         }
         Ok(None) => {
@@ -177,9 +176,9 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
             .await
             {
                 Ok(user) => {
-                    info!(created_msg);
+                    println!("{created_msg}");
                     if let Err(err) = EmailVerificationToken::verify_user_email(mm, user.id).await {
-                        error!(?err, "Error confirming autologin user");
+                        eprintln!("Error confirming autologin user: {err}");
                         return Err(Error::Server(err.to_string()));
                     }
                     Ok(())
@@ -200,12 +199,12 @@ async fn start_cron_jobs(
 
     let mm_clean = Arc::clone(&mm);
 
-    info!(
+    println!(
         "Scheduled cron job 'CleanMedia' every Sunday at midnight to clean dangling media resources"
     );
     sched
         .add(Job::new_async("0 0 0 * * 7", move |_uuid, _l| {
-            info!("Running CleanMedia job");
+            println!("Running CleanMedia job");
 
             let mm = Arc::clone(&mm_clean);
             let data_dir = Arc::clone(&data_dir);
@@ -213,18 +212,18 @@ async fn start_cron_jobs(
 
             Box::pin(async move {
                 if let Err(err) = clean_media(mm, data_dir, fs_support).await {
-                    error!(?err, "CleanMedia: Failed to run job");
+                    eprintln!("CleanMedia: Failed to run job: {err}");
                 }
             })
         })?)
         .await?;
 
-    info!(
+    println!(
         "Scheduled cron job 'UpdateNutritionDataSources' on the first day of every month to update the nutrition data sources."
     );
     sched
         .add(Job::new_async("0 0 0 1 * *", move |_uuid, _l| {
-            info!("Running UpdateNutritionDataSources job");
+            println!("Running UpdateNutritionDataSources job");
 
             let mm = Arc::clone(&mm);
 
@@ -264,5 +263,5 @@ async fn shutdown_signal(shutdown_tx: watch::Sender<bool>) {
     }
 
     let _ = shutdown_tx.send(true);
-    tracing::info!("Received termination signal shutting down");
+    println!("Received termination signal shutting down");
 }

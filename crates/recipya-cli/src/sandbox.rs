@@ -1,5 +1,3 @@
-use tracing::info;
-
 #[cfg(target_os = "linux")]
 use crate::Result;
 
@@ -21,7 +19,6 @@ fn sandbox_helper() -> Result<()> {
     };
     use procfs::sys::kernel::Version;
     use support::fs::get_base_dir;
-    use tracing::warn;
 
     let version = Version::current().unwrap();
 
@@ -36,7 +33,7 @@ fn sandbox_helper() -> Result<()> {
         (5, 19..) => ABI::V2,
         (5, 13..) => ABI::V1,
         _ => {
-            warn!("Kernel {version:?} does not support the required Landlock ABI");
+            println!("Kernel {version:?} does not support the required Landlock ABI");
             return Ok(());
         }
     };
@@ -57,6 +54,6 @@ fn sandbox_helper() -> Result<()> {
         .add_rule(PathBeneath::new(PathFd::new(get_base_dir()?)?, read_write))?
         .restrict_self()?;
 
-    info!("Sandboxing enabled with Landlock ABI {abi:?}");
+    println!("Sandboxing enabled with Landlock ABI {abi:?}");
     Ok(())
 }
