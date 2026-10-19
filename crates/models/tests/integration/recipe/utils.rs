@@ -15,8 +15,8 @@ use models::{
         section::{Item, SectionComponents, SectionItem},
         time::{Times, TimesForCreate},
         tool::{ToolForCreate, ToolRecipe},
-        types::Source,
     },
+    types::{Rating, RecipeYield, Source},
 };
 
 /// Constructs a `RecipeDetails` based on a complete `RecipeForCreate` instance.
@@ -47,13 +47,13 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
                 name: recipe_c.name,
                 description: recipe_c.description,
                 image: images.first().copied().or(None),
-                r#yield: recipe_c.r#yield.ok_or(4).expect("yield found"),
+                r#yield: recipe_c.r#yield,
                 language: "en".into(),
                 measurement_system_id: 2,
                 notes: Some("# Notes\n\nHere are some notes".into()),
                 source: recipe_c.source,
                 is_favourite: false,
-                rating: None,
+                rating: Rating::default(),
                 created_at: PrimitiveDateTime::new(created_date, Time::MIDNIGHT),
                 updated_at: PrimitiveDateTime::new(updated_date, Time::MIDNIGHT),
                 user_id: Uuid::new_v4(),
@@ -91,9 +91,9 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
             times: Times {
                 id: 1,
                 recipe_id: 1,
-                prep_seconds: 3600,
-                cook_seconds: 900,
-                total_seconds: 4500,
+                prep_seconds: 3600.into(),
+                cook_seconds: 900.into(),
+                total_seconds: 4500.into(),
             },
             tools: recipe_c
                 .tools
@@ -123,12 +123,12 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
             description: Some("This is the most delicious recipe!".into()),
             images: vec![images.main, images.additional],
             measurement_system_id: 2,
-            r#yield: Some(4),
+            r#yield: RecipeYield::default(),
             source: Source::new(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
             ),
             is_favourite: false,
-            rating: Some(4),
+            rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: images.video,
                 duration: Some(Duration::minutes(7)),
@@ -198,8 +198,8 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
                 }),
             },
             times: Some(TimesForCreate {
-                prep_seconds: 120,
-                cook_seconds: 3600,
+                prep_seconds: 120.into(),
+                cook_seconds: 3600.into(),
             }),
             tools: vec![
                 ToolForCreate {

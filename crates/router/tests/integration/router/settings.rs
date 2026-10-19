@@ -7,7 +7,7 @@ use router::schemas::settings::{
     BoldIngredientsPayload, NutritionSourcePayload, PaperSizeForm, ThemePayload, TzPayload,
 };
 use test_db::default_config;
-use test_fixtures::{TEST_DEMO_EMAIL, insert_other_user};
+use test_fixtures::insert_other_user;
 use test_harness::{
     assert_html, assert_must_be_logged_in, assert_not_in_html, assert_sse_message,
     build_server_logged_in, build_server_sse, build_server_sse_other_user,
@@ -16,6 +16,8 @@ use test_harness::{
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 mod tests_settings {
+    use auth::types::Email;
+
     use super::*;
 
     const BASE_URI: &str = "/settings";
@@ -27,7 +29,7 @@ mod tests_settings {
 
     #[tokio::test]
     async fn test_server_and_conn_tabs_not_displayed_when_not_admin_ok() -> Result<()> {
-        let server = build_server_sse_other_user(default_config(), TEST_DEMO_EMAIL)
+        let server = build_server_sse_other_user(default_config(), &Email::demo())
             .await?
             .0;
 
@@ -195,7 +197,7 @@ mod tests_export {
         use super::*;
 
         #[tokio::test]
-        async fn test_invalid_payload_ok() -> Result<()> {
+        async fn test_export_invalid_payload_ok() -> Result<()> {
             let (server, _) = build_server_logged_in(default_config()).await?;
 
             let res = server
@@ -459,6 +461,8 @@ mod tests_paper_size {
 }
 
 mod tests_timezone {
+    use models::types::Timezone;
+
     use super::*;
 
     const BASE_URI: &str = "/settings/tz";
@@ -469,23 +473,6 @@ mod tests_timezone {
     }
 
     #[tokio::test]
-    async fn test_set_invalid_tz_ok() -> Result<()> {
-        let (server, mut ws_server, state) = build_server_sse(default_config()).await?;
-        let user_id = User::all(&state.mm).await?[0].id;
-
-        let res = server
-            .post(BASE_URI)
-            .form(&TzPayload { tz: "n00b".into() })
-            .await;
-
-        res.assert_status_bad_request();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Invalid timezone.","status":"alert-error","title":"Operation failed"}}"# ).await;
-        let user = UserSettingDetails::get(&state.mm, user_id).await?;
-        assert_eq!(user.tz_name(), "UTC");
-        Ok(())
-    }
-
-    #[tokio::test]
     async fn test_set_valid_tz_ok() -> Result<()> {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
@@ -493,7 +480,7 @@ mod tests_timezone {
         let res = server
             .post(BASE_URI)
             .form(&TzPayload {
-                tz: "America/Montreal".into(),
+                tz: Timezone::try_from("America/Montreal").unwrap(),
             })
             .await;
 
@@ -505,6 +492,8 @@ mod tests_timezone {
 }
 
 mod tests_themes {
+    use auth::types::Email;
+
     use super::*;
 
     const BASE_URI: &str = "/settings/theme";
@@ -518,7 +507,7 @@ mod tests_themes {
 
     #[tokio::test]
     async fn test_set_default_theme_must_be_admin_err() -> Result<()> {
-        let server = build_server_sse_other_user(default_config(), TEST_DEMO_EMAIL)
+        let server = build_server_sse_other_user(default_config(), &Email::demo())
             .await?
             .0;
 

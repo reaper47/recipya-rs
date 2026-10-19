@@ -5,6 +5,7 @@ use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
 use models::recipe::structs::recipe::Keyword;
 use models::recipe::structs::tool::ToolRecipe;
+use models::types::Rating;
 use serde_json::json;
 
 use config::DataDir;
@@ -250,9 +251,7 @@ pub fn list_recipes(
                             (details.recipe.name)
                         }
                         div .h-5 {
-                            @if recipe.rating.is_some() {
-                                (render_rating(&format!("rating-{}", recipe.id), recipe.rating, Some(RatingSize::Small), true, None, messages))
-                            }
+                            (render_rating(&format!("rating-{}", recipe.id), recipe.rating, Some(RatingSize::Small), true, None, messages))
                         }
                         div class="max-h-16 overflow-y-auto" {
                             div class="flex flex-col flex-wrap overflow-x-auto max-h-12 pb-2 sm:pb-0 sm:max-h-none sm:flex-auto sm:flex-row" {
@@ -339,31 +338,36 @@ pub(super) fn init_recipe_form_js() -> Markup {
     }
 }
 
-const RATING_MIN: i16 = 1;
-const RATING_MAX: i16 = 5;
+const RATING_MIN: u8 = 1;
+const RATING_MAX: u8 = 10;
 
+#[allow(unused)]
 pub(super) enum RatingSize {
     Small,
+    Medium,
+    Large,
 }
 
 impl RatingSize {
     pub const fn to_class<'a>(&self) -> &'a str {
         match self {
             Self::Small => "rating-sm",
+            Self::Medium => "rating-md",
+            Self::Large => "rating-lg",
         }
     }
 }
 
 pub(super) fn render_rating(
     name: &str,
-    value: Option<i16>,
+    value: Rating,
     size: Option<RatingSize>,
     is_readonly: bool,
     form_id: Option<&str>,
     messages: &Messages,
 ) -> Markup {
-    let value = value.unwrap_or(0).clamp(0, RATING_MAX);
-    let size = size.map(|v| v.to_class()).unwrap_or_default();
+    let value = value.into_inner().clamp(0, RATING_MAX);
+    let size = size.map_or_else(|| RatingSize::Medium.to_class(), |v| v.to_class());
 
     if is_readonly {
         render_readonly_rating(size, value, messages)
@@ -372,12 +376,13 @@ pub(super) fn render_rating(
     }
 }
 
-fn render_readonly_rating(size: &str, value: i16, messages: &Messages) -> Markup {
+fn render_readonly_rating(size: &str, value: u8, messages: &Messages) -> Markup {
     html! {
-        div class={"rating " (size)} {
+        div class="hidden mask-half-1 mask-half-2" {}
+        div class={"rating rating-half " (size)} {
             @for i in RATING_MIN..=RATING_MAX {
-                div class="mask mask-star-2"
-                    aria-label=(messages.recipe_rating_aria_label(i))
+                div class={"mask mask-star-2 mask-half-" (if i%2 == 0 { 2 } else { 1 })}
+                    aria-label=(messages.recipe_rating_aria_label(0.5 * f32::from(i)))
                     aria-current=[if value == i { Some("true") } else { None }] {}
             }
         }
@@ -387,15 +392,20 @@ fn render_readonly_rating(size: &str, value: i16, messages: &Messages) -> Markup
 fn render_writable_rating(
     size: &str,
     name: &str,
-    value: i16,
+    value: u8,
     form_id: Option<&str>,
     messages: &Messages,
 ) -> Markup {
     html! {
-        div class=(format!("rating {size}").trim()) {
+        div class=(format!("rating rating-half {size}").trim()) {
             input type="radio" name=(name) .rating-hidden value="" aria-label=(messages.action_clear()) checked[value == 0] form=[form_id];
             @for i in RATING_MIN..=RATING_MAX {
-                input type="radio" name=(name) class="mask mask-star-2" value=(i) aria-label=(messages.recipe_rating_aria_label(i)) checked[value == i] form=[form_id];
+                input type="radio" name=(name)
+                    class={"mask mask-star-2 mask-half-" (if i%2 == 0 { 2 } else { 1 })}
+                    value=(i)
+                    aria-label=(messages.recipe_rating_aria_label(0.5 * f32::from(i)))
+                    checked[value == i]
+                    form=[form_id];
             }
         }
     }

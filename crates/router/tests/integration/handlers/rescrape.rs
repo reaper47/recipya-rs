@@ -5,14 +5,26 @@ use reqwest::StatusCode;
 
 use models::{
     Recipe,
-    recipe::structs::{recipe::RecipeForCreate, types::Source},
+    recipe::structs::{
+        nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
+        recipe::RecipeForCreate,
+        section::{Item, SectionComponents, SectionItem},
+        time::Times,
+        tool::ToolRecipe,
+    },
+    reports::ViewReport,
+    settings::UserSettingDetails,
+    types::{Rating, RecipeYield, Source},
     user::User,
 };
 use recipya_scraper::tests::support::scraper::scrape_test_websites;
 use router::params::RecipeScrapeForm;
 use test_db::default_config;
+use test_harness::assert_sse_messages_any_order;
 use test_harness::{TestSse, assert_must_be_logged_in, build_server_sse};
 use test_harness::{assert_html, assert_sse_message};
+use test_models::a_complete_recipe_for_create;
+use uuid::Uuid;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -27,17 +39,7 @@ async fn test_must_be_logged_in() -> Result<()> {
 }
 
 mod tests_get {
-    use models::{
-        recipe::structs::{
-            nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
-            section::SectionComponents,
-            time::Times,
-        },
-        reports::ViewReport,
-        settings::UserSettingDetails,
-    };
-    use test_harness::assert_sse_messages_any_order;
-    use test_models::a_complete_recipe_for_create;
+    use models::types::FIFTEEN_MINUTES_SEC;
 
     use super::*;
 
@@ -241,15 +243,15 @@ mod tests_get {
                 serving_size: "4 cups".into(),
             }),
         };
-        recipe.recipe.rating = Some(4);
+        recipe.recipe.rating = Rating::from(4u8);
         recipe.times = Times {
             id: 1,
             recipe_id,
-            prep_seconds: 300,
-            cook_seconds: 600,
-            total_seconds: 900,
+            prep_seconds: 300.into(),
+            cook_seconds: 600.into(),
+            total_seconds: FIFTEEN_MINUTES_SEC.into(),
         };
-        recipe.recipe.r#yield = 12;
+        recipe.recipe.r#yield = RecipeYield::from(12);
         Recipe::update(
             &state.mm,
             user_id,
@@ -388,14 +390,6 @@ mod tests_get {
 }
 
 mod tests_put {
-    use models::recipe::structs::{
-        nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
-        section::{Item, SectionComponents, SectionItem},
-        time::Times,
-        tool::ToolRecipe,
-    };
-    use uuid::Uuid;
-
     use super::*;
 
     #[tokio::test]
@@ -537,7 +531,7 @@ mod tests_put {
         res.assert_status_see_other();
         res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
         let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
-        assert_eq!(got.recipe.rating, Some(3));
+        assert_eq!(got.recipe.rating, Rating::from(3u8));
         Ok(())
     }
 
@@ -557,7 +551,7 @@ mod tests_put {
         res.assert_status_see_other();
         res.assert_header("hx-redirect", &format!("/recipes/{recipe_id}"));
         let got = Recipe::get(&state.mm, user_id, recipe_id).await?;
-        assert_eq!(got.recipe.r#yield, 20);
+        assert_eq!(got.recipe.r#yield.into_inner(), 20);
         Ok(())
     }
 
@@ -919,9 +913,9 @@ mod tests_put {
             Times {
                 id: got.times.id,
                 recipe_id,
-                prep_seconds: 1380,
-                cook_seconds: 3300,
-                total_seconds: 4680,
+                prep_seconds: 1380.into(),
+                cook_seconds: 3300.into(),
+                total_seconds: 4680.into(),
             }
         );
         Ok(())

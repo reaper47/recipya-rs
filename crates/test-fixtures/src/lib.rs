@@ -6,25 +6,46 @@ use std::{
 
 use uuid::Uuid;
 
-use auth::token::generate_access_token;
+use auth::{
+    token::generate_access_token,
+    types::{Email, Password},
+};
 use models::user::{User, UserForCreate};
 use repository::ModelManager;
 
-/// The email address of the default user in the test database.
-pub const TEST_USER_EMAIL: &str = "test@test.com";
-
-/// The password of the default user in the test database.
-pub const TEST_USER_PASSWORD: &str = "12345678";
-
-/// The email address of the demo user in the test database.
-pub const TEST_DEMO_EMAIL: &str = "demo@demo.com";
-
-pub static TEST_PASSWORD_SALT: OnceLock<Uuid> = OnceLock::new();
-
-pub const TEST_PASSWORD_HASH: &str = "#02#$argon2id$v=19$m=19456,t=2,p=1$bpxlx+8RTH2isz8k1XIyXw$aknwhS/gQtL5taRD5jSgHOqUjxfrI4kifQWbvV0WY/U";
-
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
+/// The email address of the default user in the test database.
+const TEST_USER_EMAIL: &str = "test@test.com";
+
+/// The password of the default user in the test database.
+const TEST_USER_PASSWORD: &str = "12345678";
+
+/// Salt paired with [`TEST_PASSWORD_HASH`].
+pub static TEST_PASSWORD_SALT: OnceLock<Uuid> = OnceLock::new();
+
+/// Precomputed hash of the test user's password.
+pub const TEST_PASSWORD_HASH: &str = "#02#$argon2id$v=19$m=19456,t=2,p=1$bpxlx+8RTH2isz8k1XIyXw$aknwhS/gQtL5taRD5jSgHOqUjxfrI4kifQWbvV0WY/U";
+
+/// Returns the test user's email as a validated [`Email`].
+///
+/// # Panics
+///
+/// Panics if the `TEST_USER_EMAIL` is not a valid email address.
+pub fn test_user_email() -> Email {
+    Email::try_from(TEST_USER_EMAIL).unwrap()
+}
+
+/// Returns the test user's password as a validated [`Password`].
+///
+/// # Panics
+///
+/// Panics if the `TEST_USER_PASSWORD` is not a valid password.
+pub fn test_user_password() -> Password {
+    Password::try_from(TEST_USER_PASSWORD).unwrap()
+}
+
+/// Uuids of the media files attached to a recipe.
 pub struct RecipeImages {
     pub main: Uuid,
     pub additional: Uuid,
@@ -59,20 +80,20 @@ pub fn get_password_salt() -> Uuid {
 ///
 /// Panics if the user cannot be found after creation.
 pub async fn get_token(mm: ModelManager) -> Result<String> {
-    let email = "confirm@test.com";
+    let email = Email::try_from("confirm@test.com").unwrap();
 
     User::new_with_hash(
         &mm,
         UserForCreate {
-            email: email.to_string(),
-            password_clear: "12345678".to_string(),
+            email: email.clone(),
+            password_clear: Password::try_from("12345678").unwrap(),
         },
         get_password_salt(),
         TEST_PASSWORD_HASH.to_string(),
     )
     .await?;
 
-    let user = User::get_user_by_email(&mm, email)
+    let user = User::get_user_by_email(&mm, &email)
         .await?
         .expect("user not found");
 
@@ -81,20 +102,24 @@ pub async fn get_token(mm: ModelManager) -> Result<String> {
 
 /// Inserts a test user in the database.
 pub async fn insert_user(mm: &ModelManager) -> Result<User> {
-    insert_user_helper(mm, TEST_USER_EMAIL).await
+    insert_user_helper(mm, test_user_email()).await
 }
 
 /// Inserts another test user in the database.
+///
+/// # Panics
+///
+/// Panics if the `email` is not a valid email address.
 pub async fn insert_other_user(mm: &ModelManager, email: &str) -> Result<User> {
-    insert_user_helper(mm, email).await
+    insert_user_helper(mm, Email::try_from(email).unwrap()).await
 }
 
-async fn insert_user_helper(mm: &ModelManager, email: &str) -> Result<User> {
+async fn insert_user_helper(mm: &ModelManager, email: Email) -> Result<User> {
     Ok(User::new_with_hash(
         mm,
         UserForCreate {
-            email: email.into(),
-            password_clear: TEST_USER_PASSWORD.into(),
+            email,
+            password_clear: test_user_password(),
         },
         get_password_salt(),
         TEST_PASSWORD_HASH.to_string(),

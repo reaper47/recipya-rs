@@ -5,6 +5,7 @@ use models::{
     Recipe,
     recipe::timeline::{RecipeTimeline, RecipeTimelineForCreate},
     settings::UserSettingDetails,
+    types::Rating,
     user::User,
 };
 use test_db::default_config;
@@ -52,7 +53,7 @@ mod tests_all {
             &RecipeTimelineForCreate {
                 title: "A title".into(),
                 comment: Some("A comment".into()),
-                rating: Some(5),
+                rating: Rating::from(5),
                 image: Some(image),
                 created_at: Some(PrimitiveDateTime::parse(
                     "2025-01-22 02:32:28",
@@ -89,7 +90,7 @@ mod tests_edit {
         let timeline_c = RecipeTimelineForCreate {
             title: "A title".into(),
             comment: Some("hello".into()),
-            rating: Some(4),
+            rating: Rating::from(4),
             image: None,
             created_at: Some(PrimitiveDateTime::parse(
                 "2025-01-22 02:32:28",
@@ -144,7 +145,7 @@ mod tests_edit {
         let timeline_c = RecipeTimelineForCreate {
             title: "A title".into(),
             comment: Some("hello".into()),
-            rating: Some(4),
+            rating: Rating::from(4),
             image: None,
             created_at: Some(PrimitiveDateTime::parse(
                 "2025-01-22 02:32:28",
@@ -160,7 +161,7 @@ mod tests_edit {
             user_id: user.id,
             title: "A title 2".into(),
             comment: Some("bye".into()),
-            rating: Some(1),
+            rating: Rating::from(1),
             image: Some(image),
             created_at: PrimitiveDateTime::parse(
                 "2025-01-30 02:32:28",

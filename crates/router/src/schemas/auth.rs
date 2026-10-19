@@ -1,40 +1,35 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+use auth::types::{Email, Password};
 use models::user::UserForCreate;
 
-#[derive(Default, Validate, Deserialize, Serialize)]
+#[derive(Validate, Deserialize, Serialize)]
 pub struct ChangePasswordForm {
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub new_password: String,
+    pub password: Password,
+    pub new_password: Password,
     #[validate(must_match(other = "new_password"))]
-    pub new_password_confirm: String,
+    pub new_password_confirm: Password,
 }
 
 #[derive(Validate, Deserialize, Serialize)]
 pub struct ForgotPasswordForm {
-    #[validate(email(message = "Invalid email address"))]
-    pub email: String,
+    pub email: Email,
 }
 
 #[derive(Validate, Deserialize, Serialize)]
 pub struct ForgotPasswordResetForm {
     pub token: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
+    pub password: Password,
     #[validate(must_match(other = "password"))]
-    pub confirm_password: String,
+    pub confirm_password: Password,
 }
 
 /// A form structure used for logging in a user.
-#[derive(Debug, Default, Validate, Deserialize, Serialize)]
+#[derive(Debug, Validate, Deserialize, Serialize)]
 pub struct LoginForm {
-    #[validate(email(message = "Invalid email address"))]
-    pub email: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
+    pub email: Email,
+    pub password: Password,
     pub remember_me: Option<bool>,
 }
 
@@ -45,15 +40,13 @@ impl LoginForm {
     }
 }
 
-#[derive(Default, Validate, Deserialize, Serialize)]
+#[derive(Validate, Deserialize, Serialize)]
 pub struct RegisterForm {
-    #[validate(email(message = "Invalid email address"))]
-    pub email: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters long"))]
-    pub password: String,
+    pub email: Email,
+    pub password: Password,
     #[serde(rename = "password-confirm")]
     #[validate(must_match(other = "password"))]
-    pub password_confirm: String,
+    pub password_confirm: Password,
 }
 
 impl RegisterForm {

@@ -8,9 +8,9 @@ use models::{
         section::{Item, SectionComponents, SectionItem},
         time::Times,
         tool::ToolRecipe,
-        types::Source,
     },
     settings::UserSettingDetails,
+    types::{Rating, RecipeYield, Source},
     user::User,
 };
 use test_db::default_config;
@@ -160,14 +160,14 @@ async fn test_get_many_ok() -> Result<()> {
             id: id1,
             name: "Best Chinese Kale".into(),
             description: Some("This is the most delicious recipe!".into()),
-            r#yield: 4,
+            r#yield: RecipeYield::default(),
             language: "eng".into(),
             measurement_system_id: 2,
             notes: Some("# My Recipe Notes\n\nThis dish should be served medium-cold".into()),
             source: Source::Url(
                 "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/".into(),
             ),
-            rating: Some(4),
+            rating: Rating::from(4),
             created_at: got[0].recipe.created_at,
             updated_at: got[0].recipe.updated_at,
             user_id,
@@ -250,9 +250,9 @@ async fn test_get_many_ok() -> Result<()> {
         times: Times {
             id: got[0].times.id,
             recipe_id: id1,
-            prep_seconds: 120,
-            cook_seconds: 3600,
-            total_seconds: 3720,
+            prep_seconds: 120.into(),
+            cook_seconds: 3600.into(),
+            total_seconds: 3720.into(),
         },
         tools: vec![
             ToolRecipe {
@@ -339,9 +339,9 @@ async fn test_get_many_ok() -> Result<()> {
         times: Times {
             id: got[1].times.id,
             recipe_id: id2,
-            prep_seconds: 120,
-            cook_seconds: 3600,
-            total_seconds: 3720,
+            prep_seconds: 120.into(),
+            cook_seconds: 3600.into(),
+            total_seconds: 3720.into(),
         },
         tools: want_recipe1.tools.clone(),
         videos: vec![Video {

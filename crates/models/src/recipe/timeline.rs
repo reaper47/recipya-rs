@@ -6,6 +6,7 @@ use uuid::Uuid;
 use repository::{ModelManager, schema};
 
 use crate::Recipe;
+use crate::types::Rating;
 use crate::user::User;
 use crate::{Error, Result};
 
@@ -21,7 +22,8 @@ pub struct RecipeTimeline {
     pub user_id: Uuid,
     pub title: String,
     pub comment: Option<String>,
-    pub rating: Option<i16>,
+    #[diesel(deserialize_as = Option<i16>)]
+    pub rating: Rating,
     pub image: Option<Uuid>,
     pub created_at: PrimitiveDateTime,
 }
@@ -34,7 +36,7 @@ impl Default for RecipeTimeline {
             user_id: Uuid::nil(),
             title: String::new(),
             comment: None,
-            rating: None,
+            rating: Rating::from(0),
             image: None,
             created_at: PrimitiveDateTime::MIN,
         }
@@ -46,7 +48,7 @@ impl Default for RecipeTimeline {
 struct RecipeTimelinePatch<'a> {
     title: Option<&'a str>,
     comment: Option<&'a str>,
-    rating: Option<i16>,
+    rating: Rating,
     image: Option<Uuid>,
     created_at: Option<PrimitiveDateTime>,
 }
@@ -56,7 +58,7 @@ struct RecipeTimelinePatch<'a> {
 pub struct RecipeTimelineForCreate {
     pub title: String,
     pub comment: Option<String>,
-    pub rating: Option<i16>,
+    pub rating: Rating,
     pub image: Option<Uuid>,
     pub created_at: Option<PrimitiveDateTime>,
 }
@@ -68,7 +70,7 @@ struct TimelineForInsert<'a> {
     user_id: Uuid,
     title: &'a str,
     comment: Option<&'a str>,
-    rating: Option<i16>,
+    rating: Rating,
     image: Option<Uuid>,
     created_at: Option<PrimitiveDateTime>,
 }

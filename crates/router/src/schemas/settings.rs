@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use models::export::ExportType;
+use models::{export::ExportType, types::Timezone};
 
 /// Represents the payload for setting paper sizes.
 #[derive(Deserialize, Serialize)]
@@ -18,7 +18,7 @@ pub struct ThemePayload {
 /// Represents the payload for setting a timezone.
 #[derive(Deserialize, Serialize)]
 pub struct TzPayload {
-    pub tz: String,
+    pub tz: Timezone,
 }
 
 /// Represents the payload for exporting data.

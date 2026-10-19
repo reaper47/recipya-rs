@@ -18,9 +18,10 @@ use models::{
     data::Data,
     recipe::{
         RecipeForm,
-        structs::{media::VideoForCreate, recipe::RecipeForCreate, types::Source},
+        structs::{media::VideoForCreate, recipe::RecipeForCreate},
     },
     settings::UserSettingDetails,
+    types::Source,
 };
 
 use crate::{

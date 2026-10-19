@@ -4,10 +4,12 @@ use crate::field::{
     AggregateRatingAuthorFieldEnum, AggregateRatingBestRatingFieldEnum,
     AggregateRatingDescriptionFieldEnum, AggregateRatingImageFieldEnum,
     AggregateRatingRatingValueFieldEnum, AggregateRatingSubjectOfFieldEnum,
-    AggregateRatingWorstRatingFieldEnum,
+    AggregateRatingWorstRatingFieldEnum, FieldEnum8,
 };
 use crate::helpers::{one_or_many, one_or_many_string_or_num};
 use crate::{AtType, Thing, at_context};
+
+const COMMON_SCALES: [f32; 3] = [5.0, 10.0, 100.0];
 
 ///<https://schema.org/AggregateRating>
 #[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
@@ -91,6 +93,40 @@ impl AggregateRating {
             ..Default::default()
         }
     }
+
+    /// Normalizes the rating between 0 and 10.
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
+    pub fn normalize_over_ten(&self) -> u8 {
+        let to_f32 = |v: &[FieldEnum8]| {
+            v.first().map_or(0.0, |field| match field {
+                AggregateRatingRatingValueFieldEnum::Number(n) => *n,
+                AggregateRatingRatingValueFieldEnum::Text(s) => {
+                    s.parse::<f32>().unwrap_or_default()
+                }
+            })
+        };
+
+        let rating = to_f32(&self.rating_value);
+        let best_rating = Some(to_f32(&self.best_rating))
+            .filter(|&b| b > 0.0)
+            .unwrap_or_else(|| {
+                COMMON_SCALES
+                    .into_iter()
+                    .find(|&scale| rating <= scale)
+                    .unwrap_or(rating)
+            });
+
+        let normalized = if best_rating <= 5.0 {
+            rating * 2.0
+        } else if best_rating <= 10.0 {
+            (rating * 2.0).round() / 2.0
+        } else {
+            ((rating / best_rating * 10.) * 10.0).round() / 10.0
+        };
+
+        normalized as u8
+    }
 }
 
 #[cfg(test)]
@@ -108,5 +144,36 @@ mod tests {
             vec![AggregateRatingRatingValueFieldEnum::Number(4.5)]
         );
         assert_eq!(rating.rating_count, vec![10]);
+    }
+
+    mod tests_normalize_over_10 {
+        use super::*;
+
+        #[test]
+        fn test_rating_less_than_5() {
+            let rating = AggregateRating::new(4.5, 10);
+
+            let got = rating.normalize_over_ten();
+
+            assert_eq!(got, 9);
+        }
+
+        #[test]
+        fn test_rating_less_than_10() {
+            let rating = AggregateRating::new(7.74, 201);
+
+            let got = rating.normalize_over_ten();
+
+            assert_eq!(got, 7);
+        }
+
+        #[test]
+        fn test_rating_less_than_100() {
+            let rating = AggregateRating::new(21.0, 10);
+
+            let got = rating.normalize_over_ten();
+
+            assert_eq!(got, 2);
+        }
     }
 }

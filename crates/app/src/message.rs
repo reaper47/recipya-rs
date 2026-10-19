@@ -5,10 +5,10 @@ use axum::body::Body;
 use axum::http::HeaderValue;
 use axum::response::Response;
 use serde::Serialize;
-use support::states::{AuthenticatedState, UnauthenticatedState};
 use uuid::Uuid;
 
 use l10n::Messages;
+use support::states::{AuthenticatedState, UnauthenticatedState};
 
 use crate::state::AppState;
 

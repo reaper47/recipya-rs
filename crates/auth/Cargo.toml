@@ -32,3 +32,5 @@ tokio.workspace = true
 tower-cookies.workspace = true
 tracing.workspace = true
 uuid.workspace = true
+validator.workspace = true
+zeroize = { version = "1.9.1", features = ["zeroize_derive"] }

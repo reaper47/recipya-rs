@@ -8,6 +8,7 @@ use models::recipe::structs::section::Item;
 use models::recipe::structs::section::SectionComponents;
 use models::recipe::structs::section::SectionItem;
 use models::settings::UserSettingDetails;
+use models::types::RecipeYield;
 use models::user::User;
 use test_db::default_config;
 use test_harness::{TestSse, assert_must_be_logged_in, build_server_sse};
@@ -88,7 +89,7 @@ async fn test_valid_double_yield() -> Result<()> {
         user_id,
         &RecipeForCreate {
             name: "Best Chinese Kale".into(),
-            r#yield: Some(4),
+            r#yield: RecipeYield::default(),
             ingredients: SectionComponents::Grouped(vec![
                 SectionItem::new(
                     "Sauce",

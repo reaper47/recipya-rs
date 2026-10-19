@@ -13,6 +13,7 @@ use support::states::AuthenticatedState;
 use validator::Validate;
 
 use crate::Error;
+use crate::extractors::{ServerError, ValidatedForm};
 use crate::middleware::mw_auth::RequireAuth;
 use crate::schemas::admin::{UpdatePasswordForm, UserRowParams};
 use crate::schemas::auth::RegisterForm;
@@ -160,17 +161,20 @@ pub async fn update_user_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     state: State<AppState>,
     Path(user_id): Path<Uuid>,
-    Form(form): Form<UpdatePasswordForm>,
+    form: Result<ValidatedForm<UpdatePasswordForm>, ServerError>,
 ) -> impl IntoResponse {
     let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
 
-    if let Err(err) = form.validate() {
-        error!(?err, "Error validating update user form");
-        toast.error(&messages.toast_payload_empty()).await;
-        return Error::InvalidPayload.into_response();
-    }
+    let ValidatedForm(form) = match form {
+        Ok(form) => form,
+        Err(err) => {
+            error!(?err, "Error validating update user form");
+            toast.error(&messages.toast_payload_empty()).await;
+            return Error::InvalidPayload.into_response();
+        }
+    };
 
-    match user.update_password(&state.mm, &form.new_password).await {
+    match user.update_password(&state.mm, form.new_password).await {
         Ok(()) => {}
         Err(err) => {
             error!(?user_id, ?err, "Error updating user password for user");

@@ -18,17 +18,19 @@ use config::States;
 use l10n::Messages;
 use models::{
     Error::EntityNotFound,
+    Recipe,
     data::Data,
     recipe::structs::{
         media::VideoForCreate,
         nutrition::{
             NutritionDetailsForCreate, NutritionForCreate, NutritionPerServingDetailsForCreate,
         },
+        recipe::RecipeForCreate,
         section::{Item, SectionComponents, SectionItem},
         tool::ToolForCreate,
     },
+    types::{Rating, RecipeYield},
 };
-use models::{Recipe, recipe::structs::recipe::RecipeForCreate};
 use support::{states::AuthenticatedState, strings::calc_seconds_from_parts};
 use templates::recipes::RecipeDiff;
 
@@ -153,7 +155,7 @@ pub async fn recrape_recipe_put_handler(
             }
             "cook-new" => {
                 if let Some(t) = recipe.times.as_mut() {
-                    t.cook_seconds = calc_seconds_from_parts(&value);
+                    t.cook_seconds = calc_seconds_from_parts(&value).into();
                 }
             }
             "cuisine-new" => {
@@ -263,7 +265,7 @@ pub async fn recrape_recipe_put_handler(
             }
             "prep-new" => {
                 if let Some(t) = recipe.times.as_mut() {
-                    t.prep_seconds = calc_seconds_from_parts(&value);
+                    t.prep_seconds = calc_seconds_from_parts(&value).into();
                 }
             }
             "rating-source" => {
@@ -288,7 +290,7 @@ pub async fn recrape_recipe_put_handler(
                     .or_insert_with(|| vec![value]);
             }
             "yield-new" => {
-                recipe.r#yield = value.parse().ok();
+                recipe.r#yield = RecipeYield::from(value.parse().ok());
             }
             _ => {}
         }
@@ -386,11 +388,12 @@ pub async fn recrape_recipe_put_handler(
         .map(String::as_str)
         == Some("new")
     {
-        recipe.rating = map
-            .get("rating")
-            .and_then(|v| v.first())
-            .and_then(|s| s.parse::<i16>().ok())
-            .filter(|&r| (1..=5).contains(&r));
+        recipe.rating = Rating::from(
+            map.get("rating")
+                .and_then(|v| v.first())
+                .and_then(|s| s.parse::<i16>().ok())
+                .filter(|&r| (1..=5).contains(&r)),
+        );
     }
 
     if map

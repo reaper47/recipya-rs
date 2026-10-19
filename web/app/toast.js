@@ -94,4 +94,4 @@ function showToast(title, message, background, action) {
   container.append(toast);
 }
 
-htmx.on("showToast", receiveToastMessage);
+htmx.on("notification", receiveToastMessage);

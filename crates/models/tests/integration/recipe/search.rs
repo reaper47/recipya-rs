@@ -12,6 +12,7 @@ use models::{
     },
     recipe::{RecipeSearch, structs::time::Times},
     settings::UserSettingDetails,
+    types::Rating,
 };
 use repository::ModelManager;
 use test_db::default_config;
@@ -47,7 +48,7 @@ mod tests_search {
                 } else {
                     Some(recipe_c.images[0]).filter(|u| !u.is_nil())
                 },
-                r#yield: recipe_c.r#yield.unwrap_or_default(),
+                r#yield: recipe_c.r#yield,
                 language: "eng".to_string(),
                 measurement_system_id: 2,
                 notes: recipe_c.notes,
@@ -425,10 +426,10 @@ mod tests_search {
         let (recipe1, _) = a_complete_recipe_for_create();
         let (mut recipe2, _) = a_complete_recipe_for_create();
         recipe2.name = "Taco Tuesday".to_string();
-        recipe2.rating = Some(1);
+        recipe2.rating = Rating::from(1);
         let (mut recipe3, _) = a_complete_recipe_for_create();
         recipe3.name = "Chicken Jersey".to_string();
-        recipe3.rating = None;
+        recipe3.rating = Rating::default();
         insert_recipes(
             &state.mm,
             user.id,

@@ -18,6 +18,7 @@ use crate::recipe::structs::nutrition::{
 use crate::recipe::structs::section::SectionComponents;
 use crate::recipe::structs::time::TimesForCreate;
 use crate::recipe::structs::tool::ToolForCreate;
+use crate::types::{FIFTEEN_MINUTES_SEC, Rating, RecipeYield, THIRTY_MINUTES_SEC};
 
 /// Represents a form used to create or update a recipe.
 pub struct RecipeForm {
@@ -30,13 +31,13 @@ pub struct RecipeForm {
     pub keywords: Vec<String>,
     pub notes: Option<String>,
     pub nutrition: NutritionDetailsForCreate,
-    pub rating: Option<i16>,
+    pub rating: Rating,
     pub source: Option<String>,
     pub times: Option<TimesForCreate>,
     pub title: String,
     pub tools: Vec<ToolForCreate>,
     pub videos: HashMap<String, PathBuf>,
-    pub r#yield: Option<i16>,
+    pub r#yield: RecipeYield,
 }
 
 impl<S> FromRequest<S> for RecipeForm
@@ -59,16 +60,16 @@ where
         let mut notes: Option<String> = None;
         let mut nutrition_per_100g = NutritionForCreate::default();
         let mut nutrition_per_serving = NutritionPerServingDetailsForCreate::default();
-        let mut rating: Option<i16> = None;
+        let mut rating: Rating = Rating::default();
         let mut source: Option<String> = None;
         let mut times: TimesForCreate = TimesForCreate {
-            prep_seconds: 60 * 15,
-            cook_seconds: 60 * 30,
+            prep_seconds: FIFTEEN_MINUTES_SEC.into(),
+            cook_seconds: THIRTY_MINUTES_SEC.into(),
         };
         let mut title: Option<String> = None;
         let mut tools: Vec<ToolForCreate> = Vec::new();
         let mut videos: HashMap<String, PathBuf> = HashMap::new();
-        let mut r#yield: Option<i16> = None;
+        let mut r#yield: Option<RecipeYield> = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|err| {
             error!(?err, "Failed to read multipart field in recipe");
@@ -131,19 +132,21 @@ where
                     videos.insert(uuid.into(), path);
                 }
                 "notes" => notes = text_trim(field).await,
-                "rating" => rating = parse_i16(field).await,
+                "rating" => rating = Rating::from(parse_i16(field).await),
                 "source" => source = text_trim(field).await,
                 "time-prep" => {
                     times.prep_seconds = field
                         .text()
                         .await
-                        .map_or(0, |s| calc_seconds_from_parts(&s));
+                        .map_or(0, |s| calc_seconds_from_parts(&s))
+                        .into();
                 }
                 "time-cook" => {
                     times.cook_seconds = field
                         .text()
                         .await
-                        .map_or(0, |s| calc_seconds_from_parts(&s));
+                        .map_or(0, |s| calc_seconds_from_parts(&s))
+                        .into();
                 }
                 "title" => {
                     title = text_trim(field)
@@ -163,7 +166,7 @@ where
                         tools.push(ToolForCreate { name, quantity });
                     }
                 }),
-                "yield" => r#yield = parse_i16(field).await,
+                "yield" => r#yield = Some(RecipeYield::from(parse_i16::<i16>(field).await)),
 
                 "calories-per-100g" => nutrition_per_100g.calories_kcal = parse_i16(field).await,
                 "cholesterol-per-100g" => {
@@ -248,7 +251,7 @@ where
             times: (times.prep_seconds > 0 && times.cook_seconds > 0).then_some(times),
             tools,
             videos,
-            r#yield,
+            r#yield: r#yield.unwrap_or_default(),
         })
     }
 }

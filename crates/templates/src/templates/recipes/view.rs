@@ -5,18 +5,16 @@ use fluent_static::Message;
 use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
 use models::recipe::structs::nutrition::{Nutrition, NutritionPerServingDetails};
+use models::types::Source;
 use serde_json::json;
+use support::fs::FsSupport;
 use url::Url;
 
 use config::DataDir;
 use models::data::{Data, PaginationData};
-use models::recipe::structs::{
-    section::{Item, SectionComponents},
-    types::Source,
-};
+use models::recipe::structs::section::{Item, SectionComponents};
 use models::settings::UserSettingDetails;
 use models::{Recipe, RecipeDetails};
-use support::fs::FsSupport;
 
 use crate::recipes::common::{format_nutrition, render_rating};
 use crate::recipes::timeline::render_dialog;
@@ -139,11 +137,7 @@ pub fn view_recipe_helper(
                                                         (messages.recipe_page_servings())
                                                     }
                                                     input #yield type="number" min="1" name="yield"
-                                                        value=(if recipe.r#yield == 0 {
-                                                            "1".into()
-                                                        } else {
-                                                            recipe.r#yield.to_string()
-                                                        })
+                                                        value=(recipe.r#yield.to_string())
                                                         class="input max-w-18 md:max-w-24"
                                                         hx-get={ "/recipes/" (recipe_id) "/scale" }
                                                         hx-trigger="input"
@@ -152,12 +146,12 @@ pub fn view_recipe_helper(
                                             }
                                         } @else {
                                             p class="text-sm text-center" {
-                                                (messages.recipe_page_servings_text(recipe.r#yield))
+                                                (messages.recipe_page_servings_text(recipe.r#yield.into_inner()))
                                             }
                                         }
                                     }
                                     p class="hidden p-0 pt-2 md:col-span-1 print:grid print:text-center print:place-content-center" {
-                                        (messages.recipe_page_servings_text(recipe.r#yield))
+                                        (messages.recipe_page_servings_text(recipe.r#yield.into_inner()))
                                     }
                                     div class={
                                         "flex items-center justify-center col-span-2 text-sm md:col-span-1 print:hidden"

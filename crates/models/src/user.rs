@@ -2,15 +2,18 @@ use diesel::dsl::count_star;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
-use time_tz::timezones;
 use uuid::Uuid;
 
-use auth::pwd::{ContentToHash, hash_pwd};
+use auth::{
+    pwd::{ContentToHash, hash_pwd},
+    types::{Email, Password},
+};
 use repository::{ModelManager, schema};
 
 use crate::{
     Error, Recipe, Result,
     recipe::structs::recipe::{Category, Keyword},
+    types::Timezone,
 };
 
 /// Represents a user in the system.
@@ -41,15 +44,15 @@ pub struct UserForLogin<'a> {
 /// A struct for creating a new user from client-provided data.
 #[derive(Deserialize)]
 pub struct UserForCreate {
-    pub email: String,
-    pub password_clear: String,
+    pub email: Email,
+    pub password_clear: Password,
 }
 
 /// A struct for inserting a new user into the database.
 #[derive(Insertable)]
 #[diesel(table_name = schema::users)]
-pub(crate) struct UserForInsert {
-    pub email: String,
+pub(crate) struct UserForInsert<'a> {
+    pub email: &'a str,
     pub password_hash: String,
     pub password_salt: Uuid,
     pub is_admin: bool,
@@ -134,11 +137,11 @@ impl User {
     }
 
     /// Finds a user by their email address.
-    pub async fn get_user_by_email(mm: &ModelManager, user_email: &str) -> Result<Option<Self>> {
+    pub async fn get_user_by_email(mm: &ModelManager, user_email: &Email) -> Result<Option<Self>> {
         use schema::users::dsl::{email, users};
 
         let user = users
-            .filter(email.eq(user_email))
+            .filter(email.eq(user_email.as_ref()))
             .select(Self::as_select())
             .first::<Self>(&mut mm.pool.get().await?)
             .await
@@ -164,7 +167,7 @@ impl User {
     /// Finds user authentication data by email.
     pub async fn get_user_auth_by_email(
         mm: &ModelManager,
-        user_email: &str,
+        user_email: &Email,
     ) -> Result<Option<UserForAuth>> {
         match Self::get_user_by_email(mm, user_email).await? {
             Some(user) => Ok(Some(UserForAuth {
@@ -229,7 +232,7 @@ impl User {
     pub async fn new(mm: &ModelManager, user_c: UserForCreate) -> Result<Self> {
         let salt = Uuid::new_v4();
         let hash = hash_pwd(ContentToHash {
-            content: user_c.password_clear.clone(),
+            content: user_c.password_clear.clone().into_inner(),
             salt,
         })
         .await?;
@@ -251,7 +254,7 @@ impl User {
 
         let user = diesel::insert_into(users)
             .values(&UserForInsert {
-                email: user_c.email.clone(),
+                email: user_c.email.as_ref(),
                 password_hash,
                 password_salt,
                 is_admin: Self::all(mm).await?.is_empty(),
@@ -322,11 +325,11 @@ impl User {
     }
 
     /// Updates the user's password.
-    pub async fn update_password(&self, mm: &ModelManager, password_clear: &str) -> Result<()> {
+    pub async fn update_password(&self, mm: &ModelManager, password_clear: Password) -> Result<()> {
         use schema::users::dsl::{id, password_hash, users};
 
         let hashed_password = hash_pwd(ContentToHash {
-            content: password_clear.into(),
+            content: password_clear.into_inner(),
             salt: self.password_salt,
         })
         .await?;
@@ -343,7 +346,7 @@ impl User {
     pub async fn update_password_by_user_id(
         mm: &ModelManager,
         id: Uuid,
-        new_password: &str,
+        new_password: Password,
     ) -> Result<()> {
         match Self::get_user_by_id(mm, id).await? {
             Some(user) => user.update_password(mm, new_password).await,
@@ -370,15 +373,11 @@ impl User {
         Ok(())
     }
 
-    pub async fn update_timezone(&self, mm: &ModelManager, new_tz: &str) -> Result<()> {
+    pub async fn update_timezone(&self, mm: &ModelManager, new_tz: &Timezone) -> Result<()> {
         use schema::user_settings::dsl::{timezone, user_id, user_settings};
 
-        if timezones::get_by_name(new_tz).is_none() {
-            return Err(Error::Time);
-        }
-
         diesel::update(user_settings.filter(user_id.eq(self.id)))
-            .set(timezone.eq(new_tz))
+            .set(timezone.eq(new_tz.as_ref()))
             .execute(&mut mm.pool.get().await?)
             .await?;
 

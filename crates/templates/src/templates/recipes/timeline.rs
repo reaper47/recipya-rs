@@ -1,4 +1,5 @@
 use maud::{Markup, PreEscaped, html};
+use models::types::Rating;
 use time::macros::format_description;
 
 use l10n::Messages;
@@ -15,7 +16,7 @@ pub struct Event {
     pub title: String,
     pub image: Option<String>,
     pub comment: Option<String>,
-    pub rating: Option<i16>,
+    pub rating: Rating,
 }
 
 impl From<RecipeTimeline> for Event {
@@ -110,7 +111,7 @@ pub fn render_dialog(recipe_id: i64, events: &[Event], messages: &Messages) -> M
                                 label .label {
                                     (messages.recipe_timeline_rating())
                                 }
-                                (render_rating("rating-event", Some(3), None, false, None, messages))
+                                (render_rating("rating-event", Rating::from(3), None, false, None, messages))
                             }
                         }
                     }
@@ -163,9 +164,9 @@ pub fn render_event(
                                 (s)
                             }
                         }
-                        @if let Some(rating) = event.rating {
+                        @if !event.rating.is_none() {
                             div class="flex justify-between items-baseline" {
-                                (render_rating(&format!("rating-timeline-{index}"), Some(rating), Some(RatingSize::Small), true, None, messages))
+                                (render_rating(&format!("rating-timeline-{index}"), event.rating, Some(RatingSize::Small), true, None, messages))
                                 (edit_button(&timeline_edit_url, &timeline_event_id))
                             }
                         } @else if index > 0 {

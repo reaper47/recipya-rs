@@ -53,12 +53,10 @@ pub fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
         form = form.add_part("keyword", Part::text(keyword));
     }
 
-    if let Some(n) = &recipe.r#yield {
-        form = form.add_part("yield", Part::text(n.to_string()));
-    }
+    form = form.add_part("yield", Part::text(recipe.r#yield.to_string()));
 
-    if let Some(n) = &recipe.rating {
-        form = form.add_part("rating", Part::text(n.to_string()));
+    if !recipe.rating.is_none() {
+        form = form.add_part("rating", Part::text(recipe.rating.into_inner().to_string()));
     }
 
     if let Some(n) = &recipe.notes {
@@ -81,8 +79,14 @@ pub fn create_form(recipe: &RecipeForCreate) -> MultipartForm {
     }
 
     if let Some(times) = &recipe.times {
-        form = form.add_part("time-prep", Part::text(seconds_to_hms(times.prep_seconds)));
-        form = form.add_part("time-cook", Part::text(seconds_to_hms(times.cook_seconds)));
+        form = form.add_part(
+            "time-prep",
+            Part::text(seconds_to_hms(times.prep_seconds.into())),
+        );
+        form = form.add_part(
+            "time-cook",
+            Part::text(seconds_to_hms(times.cook_seconds.into())),
+        );
     }
 
     if let Some(v) = &recipe.category {

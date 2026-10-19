@@ -17,6 +17,7 @@ use models::{
         tool::{ToolForCreate, ToolRecipe},
     },
     settings::UserSettingDetails,
+    types::{Rating, RecipeYield},
     user::User,
 };
 use repository::schema;
@@ -75,8 +76,8 @@ mod tests_add_category {
 pub fn a_bare_minimum_recipe() -> RecipeForCreate {
     RecipeForCreate {
         name: "Best Chinese Kale".into(),
-        r#yield: Some(4),
-        rating: Some(4),
+        r#yield: RecipeYield::default(),
+        rating: Rating::from(4),
         category: Some("uncategorized".into()),
         ingredients: SectionComponents::Grouped(vec![
             SectionItem::new(
@@ -143,7 +144,7 @@ fn recipe_for_create_to_recipe_with_data(
             name: recipe.name,
             description: recipe.description,
             image: main_image,
-            r#yield: recipe.r#yield.unwrap_or(4),
+            r#yield: recipe.r#yield,
             language: "eng".into(),
             source: recipe.source,
             measurement_system_id: 2,
@@ -152,7 +153,7 @@ fn recipe_for_create_to_recipe_with_data(
             created_at: got.recipe.created_at,
             updated_at: got.recipe.updated_at,
             is_favourite: false,
-            rating: Some(4),
+            rating: Rating::from(4),
         },
         additional_images,
         category: recipe.category.unwrap_or_else(|| "uncategorized".into()),

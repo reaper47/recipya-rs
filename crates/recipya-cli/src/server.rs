@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use auth::types::{Email, Password};
 use rand::{RngExt, distr::Alphanumeric};
 use tokio::signal;
 use tokio::{net::TcpListener, sync::watch};
@@ -148,9 +149,9 @@ fn copy_assets_to_fs() -> Result<()> {
 }
 
 async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
-    let admin_email = "admin@autologin.com".to_string();
+    let admin = Email::autologin();
 
-    match User::get_user_by_email(mm, &admin_email).await {
+    match User::get_user_by_email(mm, &admin).await {
         Ok(Some(_)) => {
             info!("Admin user with email 'admin@autologin.com' exists");
             Ok(())
@@ -163,14 +164,14 @@ async fn init_autologin_user(mm: &ModelManager) -> Result<()> {
                 .collect::<String>();
 
             let created_msg = format!(
-                "Admin user created with username '{admin_email}' and password '{password}'. Please jot the credentials down as they won't be shown again."
+                "Admin user created with username '{admin}' and password '{password}'. Please jot the credentials down as they won't be shown again."
             );
 
             match User::new(
                 mm,
                 UserForCreate {
-                    email: admin_email,
-                    password_clear: password,
+                    email: admin,
+                    password_clear: Password::try_from(password).unwrap(),
                 },
             )
             .await

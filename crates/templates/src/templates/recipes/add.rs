@@ -4,8 +4,8 @@ use maud::{Markup, PreEscaped, html};
 use models::data::{Data, ViewRecipe};
 use models::recipe::structs::recipe::{Category, Keyword};
 use models::recipe::structs::section::SectionComponents;
-use models::recipe::structs::types::Source;
 use models::settings::UserSettingDetails;
+use models::types::{Rating, Source};
 
 use crate::recipes::common::{
     add_ingredient, add_ingredient_without_section, add_instruction,
@@ -80,7 +80,7 @@ fn render_add_recipe_manual(
                                 div class="grid grid-cols-3 col-span-3 text-sm md:grid-flow-row md:grid-rows-4" style="grid-template-rows: auto" {
                                     div class="grid grid-flow-col border-gray-700 col-span-6 py-2 print:border-none" {
                                         div class="flex justify-center items-center" {
-                                            (render_rating("rating", Some(3), None, false, None, messages))
+                                            (render_rating("rating", Rating::from(3), None, false, None, messages))
                                         }
                                     }
                                     div class="grid col-span-6 pb-2 md:grid-cols-3 md:pb-0 md:border-gray-700 md:border-t" {
@@ -435,13 +435,7 @@ fn render_yield(view: Option<&ViewRecipe>, messages: &Messages) -> Markup {
             }
             input #servings type="number" min="1" name="yield"
                 value=(
-                    view.map_or_else(|| "1".into(), |v| {
-                        if v.recipe_details.recipe.r#yield == 0 {
-                            "1".into()
-                        } else {
-                            v.recipe_details.recipe.r#yield.to_string()
-                        }
-                    })
+                    view.map_or_else(|| "1".into(), |v| v.recipe_details.recipe.r#yield.to_string())
                 )
                 class="input input-sm w-11/12";
         }

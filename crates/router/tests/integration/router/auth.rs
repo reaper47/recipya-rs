@@ -8,6 +8,7 @@ use auth::token::{
     http::{AUTH_TOKEN, REFRESH_TOKEN},
     jwt::validate_token,
 };
+use auth::types::{Email, Password};
 use config::{AutologinState, Config, DemoState, SignupsState, States};
 use models::{
     tokens::{EmailVerificationToken, EmailVerificationTokenForCreate},
@@ -18,7 +19,7 @@ use router::schemas::auth::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
 };
 use test_db::default_config;
-use test_fixtures::{TEST_USER_EMAIL, TEST_USER_PASSWORD};
+use test_fixtures::{test_user_email, test_user_password};
 use test_harness::{
     assert_html, assert_must_be_logged_in, assert_not_in_html, assert_sse_message,
     build_server_anonymous, build_server_logged_in, build_server_sse, build_server_sse_other_user,
@@ -33,9 +34,9 @@ mod tests_change_password {
 
     fn a_change_password_form() -> ChangePasswordForm {
         ChangePasswordForm {
-            password: "12345678".to_string(),
-            new_password: "123456789".to_string(),
-            new_password_confirm: "123456789".to_string(),
+            password: test_user_password(),
+            new_password: Password::try_from("123456789").unwrap(),
+            new_password_confirm: Password::try_from("123456789").unwrap(),
         }
     }
 
@@ -51,9 +52,9 @@ mod tests_change_password {
         let res = server
             .post(BASE_URI)
             .form(&ChangePasswordForm {
-                password: "12345678".to_string(),
-                new_password: "123456789".to_string(),
-                new_password_confirm: "12345678".to_string(),
+                password: test_user_password(),
+                new_password: Password::try_from("123456789").unwrap(),
+                new_password_confirm: test_user_password(),
             })
             .await;
 
@@ -69,9 +70,9 @@ mod tests_change_password {
         let res = server
             .post(BASE_URI)
             .form(&ChangePasswordForm {
-                password: "12345678".to_string(),
-                new_password: "12345678".to_string(),
-                new_password_confirm: "12345678".to_string(),
+                password: test_user_password(),
+                new_password: test_user_password(),
+                new_password_confirm: test_user_password(),
             })
             .await;
 
@@ -170,7 +171,6 @@ mod tests_confirm {
 }
 
 mod tests_delete_user {
-
     use super::*;
 
     const BASE_URI: &str = "/auth/user";
@@ -190,7 +190,7 @@ mod tests_delete_user {
                 },
                 ..Config::default()
             },
-            "demo@demo.com",
+            &Email::demo(),
         )
         .await?;
 
@@ -227,7 +227,7 @@ mod tests_delete_user {
 
         res.assert_status_see_other();
         pretty_assertions::assert_eq!(
-            User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
+            User::get_user_by_email(&state.mm, &test_user_email())
                 .await?
                 .is_none(),
             true,
@@ -238,6 +238,8 @@ mod tests_delete_user {
 }
 
 mod tests_forgot_password {
+    use auth::types::Password;
+
     use super::*;
 
     const BASE_URI: &str = "/auth/forgot-password";
@@ -279,7 +281,7 @@ mod tests_forgot_password {
         let res = server
             .post(BASE_URI)
             .form(&ForgotPasswordForm {
-                email: "not@exist.com".to_string(),
+                email: Email::try_from("not@exist.com").unwrap(),
             })
             .await;
 
@@ -295,7 +297,7 @@ mod tests_forgot_password {
         let res = server
             .post(BASE_URI)
             .form(&ForgotPasswordForm {
-                email: "not@exist.com".to_string(),
+                email: Email::try_from("not@exist.com").unwrap(),
             })
             .await;
 
@@ -386,8 +388,8 @@ mod tests_forgot_password {
             .post(URI_RESET)
             .form(&ForgotPasswordResetForm {
                 token: entry.token,
-                password: "12345678".to_string(),
-                confirm_password: "123456789".to_string(),
+                password: test_user_password(),
+                confirm_password: Password::try_from("123456789").unwrap(),
             })
             .await;
 
@@ -411,8 +413,8 @@ mod tests_forgot_password {
             .post(URI_RESET)
             .form(&ForgotPasswordResetForm {
                 token: entry.token.clone(),
-                password: "12345678".to_string(),
-                confirm_password: "12345678".to_string(),
+                password: test_user_password(),
+                confirm_password: test_user_password(),
             })
             .await;
 
@@ -438,8 +440,8 @@ mod tests_login {
 
     fn a_login_form() -> LoginForm {
         LoginForm {
-            email: TEST_USER_EMAIL.to_string(),
-            password: TEST_USER_PASSWORD.to_string(),
+            email: test_user_email(),
+            password: test_user_password(),
             remember_me: None,
         }
     }
@@ -552,8 +554,8 @@ mod tests_login {
         let res = server
             .post(BASE_URI)
             .form(&LoginForm {
-                email: TEST_USER_EMAIL.to_string(),
-                password: TEST_USER_PASSWORD.to_string(),
+                email: test_user_email(),
+                password: test_user_password(),
                 remember_me: Some(true),
             })
             .await;
@@ -582,40 +584,19 @@ mod tests_login {
     }
 
     #[tokio::test]
-    async fn test_post_login_invalid_email_err() -> Result<()> {
-        let (server, _) = build_server_anonymous(default_config()).await?;
-
-        let res = server
-            .post(BASE_URI)
-            .form(&LoginForm {
-                email: "hello".to_string(),
-                password: TEST_USER_PASSWORD.to_string(),
-                remember_me: None,
-            })
-            .await;
-
-        res.assert_status_bad_request();
-        res.assert_header(
-            axum_htmx::HX_TRIGGER,
-            r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation failed"}}"#,
-        );
-        Ok(())
-    }
-
-    #[tokio::test]
     async fn test_post_login_invalid_password_err() -> Result<()> {
         let (server, _) = build_server_anonymous(default_config()).await?;
 
         let res = server
             .post(BASE_URI)
             .form(&LoginForm {
-                email: "hello@example.com".to_string(),
-                password: "123".to_string(),
+                email: Email::try_from("hello@example.com").unwrap(),
+                password: Password::try_from("123456789").unwrap(),
                 remember_me: None,
             })
             .await;
 
-        res.assert_status_bad_request();
+        res.assert_status_forbidden();
         res.assert_header(
             axum_htmx::HX_TRIGGER,
             r#"{"notification":{"type":"toast","message":"Credentials are invalid.","status":"alert-error","title":"Operation failed"}}"#,
@@ -630,8 +611,8 @@ mod tests_login {
         let res = server
             .post(BASE_URI)
             .form(&LoginForm {
-                email: TEST_USER_EMAIL.to_string(),
-                password: TEST_USER_PASSWORD.to_string(),
+                email: test_user_email(),
+                password: test_user_password(),
                 remember_me: Some(true),
             })
             .await;
@@ -666,7 +647,7 @@ mod tests_logout {
             res.maybe_cookie(REFRESH_TOKEN).is_none(),
             "refresh token should be deleted"
         );
-        let user = User::get_user_by_email(&state.mm, TEST_USER_EMAIL)
+        let user = User::get_user_by_email(&state.mm, &test_user_email())
             .await?
             .expect("expected user");
         pretty_assertions::assert_eq!(user.is_remember_me, false);
@@ -714,9 +695,9 @@ mod tests_register {
 
     fn a_register_form() -> RegisterForm {
         RegisterForm {
-            email: "new_user@example.com".into(),
-            password: "12345678".into(),
-            password_confirm: "12345678".into(),
+            email: Email::try_from("new_user@example.com").unwrap(),
+            password: Password::try_from("12345678").unwrap(),
+            password_confirm: Password::try_from("12345678").unwrap(),
         }
     }
 

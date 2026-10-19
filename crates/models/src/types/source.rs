@@ -8,7 +8,7 @@ use diesel::{
     sql_types::Text,
 };
 
-/// Represents the type for a source.
+/// A recipe's source, classified as either a URL or free-form text.
 #[derive(Debug, Clone, Eq, PartialEq, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Text)]
 pub enum Source {

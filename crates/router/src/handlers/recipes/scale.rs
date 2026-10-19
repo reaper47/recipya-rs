@@ -42,7 +42,8 @@ pub async fn scale_recipe_handler(
             let measurement_system =
                 MeasurementSystem::from_id(recipe.recipe.measurement_system_id).unwrap_or_default();
 
-            let factor = f64::from(params.yield_param) / f64::from(recipe.recipe.r#yield);
+            let factor =
+                f64::from(params.yield_param) / f64::from(recipe.recipe.r#yield.into_inner());
             let items = recipe.ingredients.items_as_text();
             let scaled = measurement_system.scale(
                 items.iter().map(ToString::to_string).collect::<Vec<_>>(),

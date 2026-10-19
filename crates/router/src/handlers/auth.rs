@@ -17,6 +17,7 @@ use auth::token::{
     generate_access_token,
     http::{clear_auth_cookies, set_auth_cookies},
 };
+use auth::types::Email as EmailType;
 use config::{AutologinState, DemoState, ProductionState, SignupsState};
 use email::{Data, Email, Template};
 use l10n::Messages;
@@ -29,6 +30,7 @@ use repository::ModelManager;
 use support::states::{AuthenticatedState, UnauthenticatedState};
 
 use crate::Error;
+use crate::extractors::{ServerError, ValidatedForm};
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::schemas::auth::{
     ChangePasswordForm, ForgotPasswordForm, ForgotPasswordResetForm, LoginForm, RegisterForm,
@@ -59,7 +61,7 @@ pub async fn change_password_post_handler(
         return Error::Form.into_response();
     }
 
-    match User::update_password_by_user_id(&state.mm, user.id, &form.new_password).await {
+    match User::update_password_by_user_id(&state.mm, user.id, form.new_password).await {
         Ok(()) => {
             toast.success(&messages.toast_auth_password_updated()).await;
             (StatusCode::NO_CONTENT, "").into_response()
@@ -136,14 +138,14 @@ pub async fn forgot_password_post_handler(
     OptionalAuth(user): OptionalAuth,
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
-    Form(form): Form<ForgotPasswordForm>,
+    form: Result<ValidatedForm<ForgotPasswordForm>, ServerError>,
 ) -> impl IntoResponse {
     if user.is_some() {
         Redirect::to("/recipes").into_response()
     } else {
-        if form.validate().is_err() {
+        let Ok(ValidatedForm(form)) = form else {
             return Error::Form.into_response();
-        }
+        };
 
         let user_email = form.email;
 
@@ -154,13 +156,13 @@ pub async fn forgot_password_post_handler(
                     .await
         {
             let payload = Email {
-                to: user_email.clone(),
+                to: user_email.as_ref().to_string(),
                 subject: messages.reset_password_form_title().to_string(),
                 body: String::new(),
                 template: Some(Template::ForgotPassword),
                 data: Some(Data {
                     token: password_token.token,
-                    username: user_email,
+                    username: user_email.as_ref().to_string(),
                     url: state.config.read().await.base_url.clone(),
                 }),
             };
@@ -227,16 +229,16 @@ pub async fn forgot_password_reset_handler(
 pub async fn forgot_password_reset_post_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
-    Form(form): Form<ForgotPasswordResetForm>,
+    form: Result<ValidatedForm<ForgotPasswordResetForm>, ServerError>,
 ) -> impl IntoResponse {
     let toast = ToastCtx::<UnauthenticatedState>::new(&state, &messages);
 
-    if form.validate().is_err() {
+    let Ok(ValidatedForm(form)) = form else {
         return toast.error(
             Error::Form.into_response(),
             &messages.toast_auth_password_invalid(),
         );
-    }
+    };
 
     let entry = match PasswordResetToken::find_by_token(&state.mm, &form.token).await {
         Ok(Some(token)) => {
@@ -268,7 +270,7 @@ pub async fn forgot_password_reset_post_handler(
 
     let user_id = entry.user_id;
 
-    if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, &form.password).await {
+    if let Err(err) = User::update_password_by_user_id(&state.mm, user_id, form.password).await {
         error!(?user_id, ?err, "Failed to update password for user");
         return toast.error(
             Error::Form.into_response(),
@@ -305,21 +307,22 @@ pub async fn login_handler(
     }
 }
 
+#[axum::debug_handler]
 /// Handles user login requests.
 pub async fn login_post_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
     cookies: Cookies,
-    Form(form): Form<LoginForm>,
+    form: Result<ValidatedForm<LoginForm>, ServerError>,
 ) -> impl IntoResponse {
     let toast = ToastCtx::<UnauthenticatedState>::new(&state, &messages);
 
-    if form.validate().is_err() {
+    let Ok(ValidatedForm(form)) = form else {
         return toast.error(
             Error::Form.into_response(),
             &messages.toast_auth_credentials_invalid(),
         );
-    }
+    };
 
     let user = match User::get_user_by_email(&state.mm, &form.email).await {
         Ok(user) => match user {
@@ -331,13 +334,18 @@ pub async fn login_post_handler(
             }
             Some(user) => user,
         },
-        Err(error) => return Error::Model(error).into_response(),
+        Err(_) => {
+            return toast.error(
+                Error::LoginFailUsernameNotFound.into_response(),
+                &messages.toast_auth_credentials_invalid(),
+            );
+        }
     };
 
     let scheme_status = match validate_pwd(
         ContentToHash {
             salt: user.password_salt,
-            content: String::from(&form.password),
+            content: form.password.clone().into_inner(),
         },
         &user.password_hash,
     )
@@ -362,7 +370,7 @@ pub async fn login_post_handler(
     if matches!(scheme_status, SchemeStatus::Outdated) {
         debug!("pwd encrypt scheme outdated, upgrading");
         if user
-            .update_password(&state.mm, &form.password)
+            .update_password(&state.mm, form.password.clone())
             .await
             .is_err()
         {
@@ -453,7 +461,7 @@ pub async fn register_post_handler(
     OptionalAuth(user): OptionalAuth,
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
-    Form(form): Form<RegisterForm>,
+    form: Result<ValidatedForm<RegisterForm>, ServerError>,
 ) -> impl IntoResponse {
     if user.is_some() {
         Redirect::to("/recipes").into_response()
@@ -464,6 +472,28 @@ pub async fn register_post_handler(
         if config.states.signups == SignupsState::Off {
             return Redirect::to("/auth/login").into_response();
         }
+
+        let ValidatedForm(form) = match form {
+            Ok(form) => form,
+            Err(ServerError::ValidationError(err)) => {
+                let message = err
+                    .field_errors()
+                    .values()
+                    .flat_map(|errors| errors.iter())
+                    .filter_map(|err| err.message.as_ref())
+                    .map(ToString::to_string)
+                    .next()
+                    .unwrap_or_else(|| "Validation error".to_string());
+
+                return toast.error(StatusCode::UNPROCESSABLE_ENTITY.into_response(), &message);
+            }
+            Err(ServerError::AxumFormRejection(_)) => {
+                return toast.error(
+                    StatusCode::BAD_REQUEST.into_response(),
+                    &messages.toast_auth_credentials_invalid(),
+                );
+            }
+        };
 
         if let Err(err) = form.validate() {
             let message = err
@@ -522,7 +552,7 @@ pub async fn register_post_handler(
                             template: Some(Template::Intro),
                             data: Some(Data {
                                 token: token_entry.token,
-                                username,
+                                username: username.into_inner(),
                                 url: base_url,
                             }),
                         })
@@ -579,7 +609,7 @@ pub async fn user_delete_handler(
 }
 
 async fn is_demo_user(state: &AppState, user_id: Uuid) -> bool {
-    match User::get_user_by_email(&state.mm, "demo@demo.com").await {
+    match User::get_user_by_email(&state.mm, &EmailType::demo()).await {
         Ok(Some(user)) => user.id == user_id,
         _ => false,
     }

@@ -16,9 +16,9 @@ use models::{
         section::{Item, SectionComponents, SectionItem},
         time::{Times, TimesForCreate},
         tool::{ToolForCreate, ToolRecipe},
-        types::Source,
     },
     settings::UserSettingDetails,
+    types::{Rating, RecipeYield, Source},
     user::User,
 };
 use test_db::default_config;
@@ -28,6 +28,7 @@ use test_harness::{assert_must_be_logged_in, build_server_logged_in, build_serve
 use test_models::a_complete_recipe_for_create;
 
 use crate::handlers::helpers::create_form;
+use crate::{FSI, PDI};
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -263,7 +264,7 @@ mod tests_put {
     }
 
     #[tokio::test]
-    async fn test_submit_recipe_ok() -> Result<()> {
+    async fn test_edit_submit_recipe_ok() -> Result<()> {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let settings = UserSettingDetails::get(&state.mm, user_id).await?;
@@ -274,10 +275,10 @@ mod tests_put {
             description: Some("Trust me. They're delicious.".into()),
             images: vec![Uuid::new_v4(), Uuid::new_v4()],
             measurement_system_id: 2,
-            r#yield: Some(12),
+            r#yield: RecipeYield::from(12),
             source: Source::new("My father's maple syrup recipes cookbook"),
             is_favourite: false,
-            rating: Some(4),
+            rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: Uuid::new_v4(),
                 duration: Some(Duration::minutes(30)),
@@ -329,8 +330,8 @@ mod tests_put {
                 }),
             },
             times: Some(TimesForCreate {
-                prep_seconds: 2000,
-                cook_seconds: 800,
+                prep_seconds: 2000.into(),
+                cook_seconds: 800.into(),
             }),
             ingredients: SectionComponents::Flat(vec![
                 Item::new("8 lbs blueberries"),
@@ -535,7 +536,9 @@ fn assert_recipe_form(res: &TestResponse, images: &RecipeImages, recipe_id: i64)
         "<textarea required name=\"instruction&lt;&gt;Chicken\" rows=\"4\" class=\"textarea textarea-bordered rounded-none w-full\" placeholder=\"Mix all ingredients together\" _=\"on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))\">Turn the oven at 300 F</textarea></label><div class=\"grid gap-2 p-2 grid-flow-col\"><div class=\"inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl\" data-drag-handle>⠿</div><div class=\"flex gap-2 justify-end\"><button type=\"button\" class=\"btn btn-sm btn-outline btn-success\" title=\"Shortcut: \u{2068}CTRL + Enter\u{2069}\" onclick=\"addItem(event)\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"size-6\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 4.5v15m7.5-7.5h-15\"></svg>Add</button><button type=\"button\" class=\"delete-button btn btn-square btn-sm btn-outline btn-error\" onclick=\"deleteItem(this, 'instruction')\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"size-6 hover:text-red-600\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"size-6\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\"></path></svg></button></div></div></div></li><li class=\"flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium\" data-drag-row><div class=\"w-full bg-base-300\" data-drageable draggable=\"true\"><label class=\"w-11/12\">",
         "<textarea required name=\"instruction&lt;&gt;Chicken\" rows=\"4\" class=\"textarea textarea-bordered rounded-none w-full\" placeholder=\"Mix all ingredients together\" _=\"on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))\">Soak the chicken in the lemon juice</textarea></label><div class=\"grid gap-2 p-2 grid-flow-col\"><div class=\"inline-flex size-6 cursor-grab mt-1 items-center justify-center text-2xl\" data-drag-handle>⠿</div><div class=\"flex gap-2 justify-end\"><button type=\"button\" class=\"btn btn-sm btn-outline btn-success\" title=\"Shortcut: \u{2068}CTRL + Enter\u{2069}\" onclick=\"addItem(event)\"><svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"size-6\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 4.5v15m7.5-7.5h-15\"></svg>Add</button><button type=\"button\" class=\"delete-button btn btn-square btn-sm btn-outline btn-error\" onclick=\"deleteItem(this, 'instruction')\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"size-6 hover:text-red-600\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"size-6\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0\"></path></svg></button></div></div></div></li><li class=\"flex items-start gap-2 pt-2 md:pl-0 [counter-increment:steps] before:content-[counter(steps)_'.'] before:pt-2 before:font-medium\" data-drag-row><div class=\"w-full bg-base-300\" data-drageable draggable=\"true\"><label class=\"w-11/12\">",
         r#"<textarea required name="instruction&lt;&gt;Chicken" rows="4" class="textarea textarea-bordered rounded-none w-full" placeholder="Mix all ingredients together" _="on keydown if event.ctrlKey and event.key is 'Enter' halt the event then call addItem(event) end on paste call pasteText(me,event.clipboardData.getData('text/plain'))">Bake for 35 minutes</textarea>"#,
-        "<div class=\"rating\"><input class=\"rating-hidden\" type=\"radio\" name=\"rating\" value=\"\" aria-label=\"Clear\"><input type=\"radio\" name=\"rating\" class=\"mask mask-star-2\" value=\"1\" aria-label=\"\u{2068}1\u{2069} star\"><input type=\"radio\" name=\"rating\" class=\"mask mask-star-2\" value=\"2\" aria-label=\"\u{2068}2\u{2069} stars\"><input type=\"radio\" name=\"rating\" class=\"mask mask-star-2\" value=\"3\" aria-label=\"\u{2068}3\u{2069} stars\"><input type=\"radio\" name=\"rating\" class=\"mask mask-star-2\" value=\"4\" aria-label=\"\u{2068}4\u{2069} stars\" checked><input type=\"radio\" name=\"rating\" class=\"mask mask-star-2\" value=\"5\" aria-label=\"\u{2068}5\u{2069} stars\"></div></div>",
+        &format!(
+            r#"<div class="rating rating-half rating-md"><input class="rating-hidden" type="radio" name="rating" value="" aria-label="Clear"><input type="radio" name="rating" class="mask mask-star-2 mask-half-1" value="1" aria-label="{FSI}0.5{PDI} stars"><input type="radio" name="rating" class="mask mask-star-2 mask-half-2" value="2" aria-label="{FSI}1{PDI} star"><input type="radio" name="rating" class="mask mask-star-2 mask-half-1" value="3" aria-label="{FSI}1.5{PDI} stars"><input type="radio" name="rating" class="mask mask-star-2 mask-half-2" value="4" aria-label="{FSI}2{PDI} stars" checked><input type="radio" name="rating" class="mask mask-star-2 mask-half-1" value="5" aria-label="{FSI}2.5{PDI} stars"><input type="radio" name="rating" class="mask mask-star-2 mask-half-2" value="6" aria-label="{FSI}3{PDI} stars"><input type="radio" name="rating" class="mask mask-star-2 mask-half-1" value="7" aria-label="{FSI}3.5{PDI} stars"><input type="radio" name="rating" class="mask mask-star-2 mask-half-2" value="8" aria-label="{FSI}4{PDI} stars"><input type="radio" name="rating" class="mask mask-star-2 mask-half-1" value="9" aria-label="{FSI}4.5{PDI} stars"><input type="radio" name="rating" class="mask mask-star-2 mask-half-2" value="10" aria-label="{FSI}5{PDI} stars"></div></div>"#
+        ),
         r#"<button class="btn btn-primary btn-block btn-sm">Submit</button>"#,
     ];
     for want in expected {
@@ -563,13 +566,13 @@ fn recipe_for_create_to_details(
             name: recipe_c.name,
             description: recipe_c.description,
             image: reference.recipe.image,
-            r#yield: recipe_c.r#yield.unwrap_or(4),
+            r#yield: recipe_c.r#yield,
             language: "eng".into(),
             measurement_system_id: 2,
             notes: recipe_c.notes,
             source: recipe_c.source,
             is_favourite: false,
-            rating: Some(4),
+            rating: Rating::from(4),
             created_at: reference.recipe.created_at,
             updated_at: reference.recipe.updated_at,
             user_id,

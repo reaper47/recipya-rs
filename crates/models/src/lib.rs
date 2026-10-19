@@ -14,6 +14,7 @@ pub mod shopping;
 pub mod theme;
 pub mod time;
 pub mod tokens;
+pub mod types;
 pub mod user;
 pub mod view;
 

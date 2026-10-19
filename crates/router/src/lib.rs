@@ -3,6 +3,7 @@
 mod admin_router;
 mod auth_router;
 mod error;
+mod extractors;
 mod general_router;
 mod handlers;
 mod recipes_router;

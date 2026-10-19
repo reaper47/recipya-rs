@@ -6,6 +6,7 @@ use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
 use app::state::AppState;
+use auth::types::{Email, Password};
 use models::shopping::ShareShoppingList;
 use models::user::UserForCreate;
 use models::{
@@ -589,8 +590,8 @@ mod tests_share {
         Ok(User::new(
             mm,
             UserForCreate {
-                email: "another@gmail.com".into(),
-                password_clear: "12345677".into(),
+                email: Email::try_from("another@gmail.com").unwrap(),
+                password_clear: Password::try_from("12345677").unwrap(),
             },
         )
         .await?)
