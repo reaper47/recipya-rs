@@ -17,7 +17,7 @@ use time::PrimitiveDateTime;
 use time::macros::format_description;
 use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
-use tracing::error;
+use tracing::{Instrument, Span, error};
 use uuid::Uuid;
 
 use app::message::ToastCtx;
@@ -319,12 +319,15 @@ async fn pdf_export_options(
             let state = state.clone();
             let messages = messages.clone();
 
-            tokio::spawn(async move {
-                let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
-                toast
-                    .error(&messages.toast_users_fetch_settings_failed())
-                    .await;
-            });
+            tokio::spawn(
+                async move {
+                    let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
+                    toast
+                        .error(&messages.toast_users_fetch_settings_failed())
+                        .await;
+                }
+                .instrument(Span::current()),
+            );
             Error::Database
         })?;
 
@@ -335,10 +338,13 @@ async fn pdf_export_options(
             let state = state.clone();
             let messages = messages.clone();
 
-            tokio::spawn(async move {
-                let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
-                toast.error(&messages.toast_paper_sizes_failed()).await;
-            });
+            tokio::spawn(
+                async move {
+                    let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
+                    toast.error(&messages.toast_paper_sizes_failed()).await;
+                }
+                .instrument(Span::current()),
+            );
             Error::Database
         })?;
 

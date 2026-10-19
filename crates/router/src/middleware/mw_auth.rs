@@ -20,7 +20,7 @@ use auth::token::http::{AUTH_TOKEN, REFRESH_TOKEN, clear_auth_cookies, set_auth_
 use auth::token::jwt::validate_token;
 use models::user::User;
 use tower_cookies::Cookies;
-use tracing::error;
+use tracing::{Instrument, Span, error};
 use uuid::Uuid;
 
 use crate::{Error, Result};
@@ -268,15 +268,18 @@ pub async fn mw_refresh_token(
             if let Some(service) = state.email_service
                 && let Ok(Some(user)) = User::get_user_by_id(&state.mm, user_id).await
             {
-                tokio::spawn(async move {
-                    service.send(Email {
-                        to: user.email,
-                        subject: "Security Alert: Suspicious Activity Detected".into(),
-                        body: String::new(),
-                        template: Some(Template::SecurityAlert),
-                        data: None,
-                    })
-                });
+                tokio::spawn(
+                    async move {
+                        service.send(Email {
+                            to: user.email,
+                            subject: "Security Alert: Suspicious Activity Detected".into(),
+                            body: String::new(),
+                            template: Some(Template::SecurityAlert),
+                            data: None,
+                        })
+                    }
+                    .instrument(Span::current()),
+                );
             }
 
             clear_auth_cookies(&cookies);

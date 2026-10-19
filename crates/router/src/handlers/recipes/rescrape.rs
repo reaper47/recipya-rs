@@ -10,7 +10,7 @@ use axum_htmx::{HX_REDIRECT, HxRequest};
 use fluent_static::support::axum::RequestLanguage;
 use indexmap::IndexMap;
 use reqwest::StatusCode;
-use tracing::error;
+use tracing::{Instrument, Span, error};
 use uuid::Uuid;
 
 use app::{message::ToastCtx, state::AppState};
@@ -189,9 +189,12 @@ pub async fn recrape_recipe_put_handler(
                     let fs_support = Arc::clone(&state.fs_support);
                     let thumbnails_dir = state.data_dir.images.thumbnails.clone();
                     let path = state.data_dir.images.root.join(format!("{file_name}.webp"));
-                    tokio::spawn(async move {
-                        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
-                    });
+                    tokio::spawn(
+                        async move {
+                            fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                        }
+                        .instrument(Span::current()),
+                    );
                     recipe.images.push(file_name);
                 }
             }

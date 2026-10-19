@@ -19,7 +19,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use tokio::fs;
 use tokio_util::{bytes, io::ReaderStream};
-use tracing::{error, warn};
+use tracing::{Instrument, Span, error, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -362,7 +362,10 @@ impl Drop for ConnectedClientsGuard {
     fn drop(&mut self) {
         let state = self.state.clone();
         let user_id = self.user_id;
-        tokio::spawn(async move { state.channels.unsubscribe_client(user_id).await });
+        tokio::spawn(
+            async move { state.channels.unsubscribe_client(user_id).await }
+                .instrument(Span::current()),
+        );
     }
 }
 

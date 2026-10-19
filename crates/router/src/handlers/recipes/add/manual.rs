@@ -5,8 +5,7 @@ use axum_htmx::{HX_REDIRECT, HxRequest};
 use fluent_static::support::axum::RequestLanguage;
 use futures_util::future::join_all;
 use reqwest::StatusCode;
-use support::states::AuthenticatedState;
-use tracing::error;
+use tracing::{Instrument, Span, error};
 use uuid::Uuid;
 
 use app::{message::ToastCtx, state::AppState};
@@ -23,6 +22,7 @@ use models::{
     settings::UserSettingDetails,
     types::Source,
 };
+use support::states::AuthenticatedState;
 
 use crate::{
     Error, Result,
@@ -90,9 +90,12 @@ pub async fn add_manual_recipe_post_handler(
 
             let thumbnails_dir = state.data_dir.images.thumbnails.clone();
             let fs_support = Arc::clone(&state.fs_support);
-            tokio::spawn(async move {
-                fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
-            });
+            tokio::spawn(
+                async move {
+                    fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                }
+                .instrument(Span::current()),
+            );
 
             file_name
         })

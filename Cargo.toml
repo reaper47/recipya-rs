@@ -71,7 +71,6 @@ time-tz = { version = "2.0.0", features = ["db"] }
 tracing-test = "0.2.6"
 tokio = { version = "1.50.0", features = ["fs", "process", "signal"] }
 tower-cookies = "0.11.0"
-tower-http = { version = "0.7.0", features = ["fs"] }
 tracing = "0.1.44"
 url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.23.0", features = ["fast-rng", "serde", "v4"] }
