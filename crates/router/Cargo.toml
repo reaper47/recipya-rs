@@ -55,8 +55,9 @@ time.workspace = true
 tokio.workspace = true
 tokio-stream = { version = "0.1.19", features = ["sync"] }
 tokio-util = "0.7.18"
+tower = "0.5.3"
 tower-cookies.workspace = true
-tower-http.workspace = true
+tower-http = { version = "0.7.1", features = ["fs", "request-id", "trace", "util"] }
 tracing.workspace = true
 url.workspace = true
 uuid.workspace = true
@@ -72,7 +73,6 @@ jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
 time.workspace = true
 tokio.workspace = true
-tower = "0.5.3"
 tracing-test.workspace = true
 test-db.workspace = true
 test-fixtures.workspace = true

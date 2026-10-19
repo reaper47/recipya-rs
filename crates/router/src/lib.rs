@@ -28,6 +28,7 @@ use app::state::AppState;
 use crate::admin_router::admin_routes;
 use crate::auth_router::auth_routes;
 use crate::general_router::general_routes;
+use crate::middleware::mw_request_id::RequestIdExt;
 use crate::recipes_router::recipes_routes;
 use crate::reports_router::reports_routes;
 use crate::shared_router::shared_routes;
@@ -50,7 +51,8 @@ pub fn router(state: &AppState) -> Result<Router<AppState>> {
         .nest("/shopping", shopping_routes(state))
         .merge(general_routes(state))
         .merge(static_files_routes(state))
-        .layer(Extension(request_lang_config));
+        .layer(Extension(request_lang_config))
+        .with_request_id();
 
     Ok(router)
 }

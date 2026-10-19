@@ -18,7 +18,7 @@ use time::Duration;
 use tokio::process::Command;
 use tokio::task;
 use tokio::time::Instant;
-use tracing::{error, info, warn};
+use tracing::{Instrument, Span, error, info, warn};
 use uuid::Uuid;
 use webp::Encoder;
 
@@ -142,51 +142,54 @@ impl FsSupport for AppFs {
                 .join(temp_path.file_name().unwrap_or_default())
                 .with_extension("webm");
 
-            tokio::spawn(async move {
-                info!("Converting video '{:?}' to WebM", temp_path);
-                let start = Instant::now();
+            tokio::spawn(
+                async move {
+                    info!("Converting video '{:?}' to WebM", temp_path);
+                    let start = Instant::now();
 
-                let Some(input_path) = temp_path.to_str() else {
-                    error!(?temp_path, "Failed to convert input path to string");
-                    return;
-                };
+                    let Some(input_path) = temp_path.to_str() else {
+                        error!(?temp_path, "Failed to convert input path to string");
+                        return;
+                    };
 
-                let Some(output_path) = output_path.to_str() else {
-                    error!(?output_path, "Failed to convert output path to string");
-                    return;
-                };
+                    let Some(output_path) = output_path.to_str() else {
+                        error!(?output_path, "Failed to convert output path to string");
+                        return;
+                    };
 
-                let status = Command::new("ffmpeg")
-                    .args([
-                        "-i",
-                        input_path,
-                        "-c:v",
-                        "libvpx",
-                        "-b:v",
-                        "1M",
-                        "-c:a",
-                        "libvorbis",
-                        output_path,
-                    ])
-                    .status()
-                    .await;
+                    let status = Command::new("ffmpeg")
+                        .args([
+                            "-i",
+                            input_path,
+                            "-c:v",
+                            "libvpx",
+                            "-b:v",
+                            "1M",
+                            "-c:a",
+                            "libvorbis",
+                            output_path,
+                        ])
+                        .status()
+                        .await;
 
-                match status {
-                    Ok(exit_status) if exit_status.success() => {
-                        fs::remove_file(temp_path).ok();
-                        info!(
-                            "Converted video to WebM ({output_path}) in {:?}",
-                            start.elapsed()
-                        );
-                    }
-                    Ok(exit_status) => {
-                        error!(?temp_path, ?exit_status, "FFmpeg failed");
-                    }
-                    Err(err) => {
-                        error!(?temp_path, ?err, "Error running FFmpeg");
+                    match status {
+                        Ok(exit_status) if exit_status.success() => {
+                            fs::remove_file(temp_path).ok();
+                            info!(
+                                "Converted video to WebM ({output_path}) in {:?}",
+                                start.elapsed()
+                            );
+                        }
+                        Ok(exit_status) => {
+                            error!(?temp_path, ?exit_status, "FFmpeg failed");
+                        }
+                        Err(err) => {
+                            error!(?temp_path, ?err, "Error running FFmpeg");
+                        }
                     }
                 }
-            })
+                .instrument(Span::current()),
+            )
         });
 
         join_all(tasks).await;

@@ -14,7 +14,7 @@ use itertools::Itertools;
 use rand::RngExt;
 use reqwest::StatusCode;
 use tokio::{sync::mpsc, time::Instant};
-use tracing::{error, warn};
+use tracing::{Instrument, Span, error, warn};
 use url::Url;
 use uuid::Uuid;
 
@@ -168,111 +168,117 @@ pub async fn add_website_post_handler(
 
 #[allow(clippy::too_many_lines)]
 fn scrape_recipes(state: AppState, urls: Vec<Url>, user_id: Uuid, messages: Messages) {
-    tokio::spawn(async move {
-        let num_urls = urls.len();
-        let (tx, mut rx) = mpsc::channel::<()>(num_urls.min(64));
-        let fetch_ctx = FetchWebsiteContext::new(num_urls, user_id);
-        let total_exec_time = Instant::now();
+    tokio::spawn(
+        async move {
+            let num_urls = urls.len();
+            let (tx, mut rx) = mpsc::channel::<()>(num_urls.min(64));
+            let fetch_ctx = FetchWebsiteContext::new(num_urls, user_id);
+            let total_exec_time = Instant::now();
 
-        let mut by_host: HashMap<String, Vec<(usize, Url)>> = HashMap::new();
-        for (idx, url) in urls.into_iter().enumerate() {
-            let host = url.host_str().unwrap_or("unknown").to_string();
-            by_host.entry(host).or_default().push((idx, url));
-        }
+            let mut by_host: HashMap<String, Vec<(usize, Url)>> = HashMap::new();
+            for (idx, url) in urls.into_iter().enumerate() {
+                let host = url.host_str().unwrap_or("unknown").to_string();
+                by_host.entry(host).or_default().push((idx, url));
+            }
 
-        for (_host, host_urls) in by_host {
-            let tx = tx.clone();
-            let fetch_ctx = fetch_ctx.clone();
-            let state = state.clone();
-            let semaphore = state.scraper.semaphore.clone();
+            for (_host, host_urls) in by_host {
+                let tx = tx.clone();
+                let fetch_ctx = fetch_ctx.clone();
+                let state = state.clone();
+                let semaphore = state.scraper.semaphore.clone();
 
-            tokio::spawn(async move {
-                let _permit = match semaphore.acquire().await {
-                    Ok(p) => p,
-                    Err(err) => {
-                        warn!(?err, "Failed to acquire scrape semaphore, aborting work");
-                        for _ in host_urls {
-                            fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
+                tokio::spawn(
+                    async move {
+                        let _permit = match semaphore.acquire().await {
+                            Ok(p) => p,
+                            Err(err) => {
+                                warn!(?err, "Failed to acquire scrape semaphore, aborting work");
+                                for _ in host_urls {
+                                    fetch_ctx.count_error.fetch_add(1, Ordering::SeqCst);
+                                    let _ = tx.send(()).await;
+                                }
+                                return;
+                            }
+                        };
+
+                        let mut host_urls = host_urls.into_iter().peekable();
+
+                        while let Some((idx, url)) = host_urls.next() {
+                            process_recipe_url(&state, &fetch_ctx, idx, url, user_id).await;
+
                             let _ = tx.send(()).await;
+
+                            if host_urls.peek().is_some() {
+                                let jitter = rand::rng().random_range(0..500);
+                                tokio::time::sleep(Duration::from_millis(jitter)).await;
+                            }
                         }
-                        return;
                     }
-                };
+                    .instrument(Span::current()),
+                );
+            }
+            drop(tx);
 
-                let mut host_urls = host_urls.into_iter().peekable();
+            let num_urls = num_urls
+                .try_into()
+                .inspect_err(|err| {
+                    error!(?num_urls, ?err, "Failed to convert num_urls to i64");
+                })
+                .unwrap_or(i64::MAX);
 
-                while let Some((idx, url)) = host_urls.next() {
-                    process_recipe_url(&state, &fetch_ctx, idx, url, user_id).await;
+            state
+                .broadcast_progress(
+                    &messages.toast_recipes_fetch_progress(),
+                    0,
+                    num_urls,
+                    true,
+                    user_id,
+                    &messages,
+                )
+                .await;
 
-                    let _ = tx.send(()).await;
-
-                    if host_urls.peek().is_some() {
-                        let jitter = rand::rng().random_range(0..500);
-                        tokio::time::sleep(Duration::from_millis(jitter)).await;
-                    }
+            let mut processed = 0;
+            while rx.recv().await.is_some() {
+                processed += 1;
+                if fetch_ctx.total > 1 {
+                    state
+                        .broadcast_progress(
+                            &messages.toast_recipes_fetch_progress(),
+                            processed,
+                            fetch_ctx.total,
+                            true,
+                            user_id,
+                            &messages,
+                        )
+                        .await;
                 }
-            });
-        }
-        drop(tx);
+            }
 
-        let num_urls = num_urls
-            .try_into()
-            .inspect_err(|err| {
-                error!(?num_urls, ?err, "Failed to convert num_urls to i64");
-            })
-            .unwrap_or(i64::MAX);
+            state.hide_broadcast(user_id, &messages).await;
+            let items = Items::from(&fetch_ctx);
+            fetch_ctx
+                .send_toast_after_processing(&state, user_id, &messages)
+                .await;
 
-        state
-            .broadcast_progress(
-                &messages.toast_recipes_fetch_progress(),
-                0,
-                num_urls,
-                true,
+            let report = ReportForCreate::new(
+                ReportTypeFull::website(),
+                Arc::try_unwrap(fetch_ctx.report_logs)
+                    .expect("report logs arc still has multiple owners")
+                    .into_inner(),
+                items,
+                i64::try_from(total_exec_time.elapsed().as_millis()).unwrap_or_default(),
                 user_id,
-                &messages,
-            )
-            .await;
+            );
 
-        let mut processed = 0;
-        while rx.recv().await.is_some() {
-            processed += 1;
-            if fetch_ctx.total > 1 {
-                state
-                    .broadcast_progress(
-                        &messages.toast_recipes_fetch_progress(),
-                        processed,
-                        fetch_ctx.total,
-                        true,
-                        user_id,
-                        &messages,
-                    )
-                    .await;
+            match report.insert(&state.mm).await {
+                Ok(_) => state.broadcast_trigger("refreshReports", user_id).await,
+                Err(err) => {
+                    error!(?err, "Error inserting website report into the database");
+                }
             }
         }
-
-        state.hide_broadcast(user_id, &messages).await;
-        let items = Items::from(&fetch_ctx);
-        fetch_ctx
-            .send_toast_after_processing(&state, user_id, &messages)
-            .await;
-
-        let report = ReportForCreate::new(
-            ReportTypeFull::website(),
-            Arc::try_unwrap(fetch_ctx.report_logs)
-                .expect("report logs arc still has multiple owners")
-                .into_inner(),
-            items,
-            i64::try_from(total_exec_time.elapsed().as_millis()).unwrap_or_default(),
-            user_id,
-        );
-
-        match report.insert(&state.mm).await {
-            Ok(_) => state.broadcast_trigger("refreshReports", user_id).await,
-            Err(err) => {
-                error!(?err, "Error inserting website report into the database");
-            }
-        }
-    });
+        .instrument(Span::current()),
+    );
 }
 
 async fn process_recipe_url(
@@ -312,7 +318,11 @@ async fn process_recipe_url(
                 }
                 Err(err) => {
                     fetch_ctx.count_warning.fetch_add(1, Ordering::SeqCst);
-                    error!(?url, ?err, "Error inserting recipe into database");
+                    error!(
+                        url = url.to_string(),
+                        ?err,
+                        "Error inserting recipe into database"
+                    );
                     match err {
                         models::Error::DuplicateEntityWithID(id) => {
                             fetch_ctx.recipe_ids.lock().await.push(id);

@@ -6,7 +6,7 @@ use axum::http::{HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Redirect};
 use fluent_static::support::axum::RequestLanguage;
 use tower_cookies::Cookies;
-use tracing::{debug, error, warn};
+use tracing::{Instrument, Span, debug, error, warn};
 use uuid::Uuid;
 use validator::Validate;
 
@@ -167,11 +167,14 @@ pub async fn forgot_password_post_handler(
                 }),
             };
 
-            tokio::spawn(async move {
-                if let Err(err) = email.send(payload) {
-                    error!("Could not send email 'Reset password': {:?}", err);
+            tokio::spawn(
+                async move {
+                    if let Err(err) = email.send(payload) {
+                        error!("Could not send email 'Reset password': {:?}", err);
+                    }
                 }
-            });
+                .instrument(Span::current()),
+            );
         }
 
         templates::general::simple(
@@ -457,6 +460,7 @@ pub async fn register_handler(
 }
 
 /// Handles user registration.
+#[allow(clippy::too_many_lines)]
 pub async fn register_post_handler(
     OptionalAuth(user): OptionalAuth,
     RequestLanguage(messages): RequestLanguage<Messages>,
@@ -544,19 +548,22 @@ pub async fn register_post_handler(
                     let base_url = config.base_url.clone();
                     drop(config);
 
-                    tokio::spawn(async move {
-                        service.send(Email {
-                            to: user.email,
-                            subject: messages.toast_auth_verify_email().to_string(),
-                            body: String::new(),
-                            template: Some(Template::Intro),
-                            data: Some(Data {
-                                token: token_entry.token,
-                                username: username.into_inner(),
-                                url: base_url,
-                            }),
-                        })
-                    });
+                    tokio::spawn(
+                        async move {
+                            service.send(Email {
+                                to: user.email,
+                                subject: messages.toast_auth_verify_email().to_string(),
+                                body: String::new(),
+                                template: Some(Template::Intro),
+                                data: Some(Data {
+                                    token: token_entry.token,
+                                    username: username.into_inner(),
+                                    url: base_url,
+                                }),
+                            })
+                        }
+                        .instrument(Span::current()),
+                    );
                 }
 
                 (StatusCode::SEE_OTHER, [("HX-Redirect", "/auth/login")]).into_response()

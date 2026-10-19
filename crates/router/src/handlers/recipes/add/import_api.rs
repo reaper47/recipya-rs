@@ -3,7 +3,7 @@ use fluent_static::support::axum::RequestLanguage;
 use futures_util::{StreamExt, pin_mut};
 use reqwest::StatusCode;
 use tokio::time::Instant;
-use tracing::{error, warn};
+use tracing::{Instrument, Span, error, warn};
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -48,170 +48,181 @@ fn fetch_recipes_from_api(
 ) {
     let preparing_import_msg = messages.toast_recipes_preparing_import();
 
-    tokio::spawn(async move {
-        let api = form.api.to_string();
-        let start_time = Instant::now();
+    tokio::spawn(
+        async move {
+            let api = form.api.to_string();
+            let start_time = Instant::now();
 
-        state
-            .broadcast_progress(&preparing_import_msg, 0, 100, true, user_id, &messages)
-            .await;
+            state
+                .broadcast_progress(&preparing_import_msg, 0, 100, true, user_id, &messages)
+                .await;
 
-        let api_stream = form
-            .api
-            .fetch_recipes_stream(&form.url, Credentials::new(form.username, form.password));
+            let api_stream = form
+                .api
+                .fetch_recipes_stream(&form.url, Credentials::new(form.username, form.password));
 
-        let db_stream = api_stream
-            .map(|res| {
-                let state = state.clone();
+            let db_stream = api_stream
+                .map(|res| {
+                    let state = state.clone();
 
-                async move {
-                    match res {
-                        Ok((id, recipe, num_recipes)) => {
-                            let recipe_name = recipe.name.first().cloned().unwrap_or_default();
+                    async move {
+                        match res {
+                            Ok((id, recipe, num_recipes)) => {
+                                let recipe_name = recipe.name.first().cloned().unwrap_or_default();
 
-                            match push_recipe_in_db(&state, recipe, user_id).await {
-                                Ok(recipe_id_db) => Ok((recipe_id_db, recipe_name, num_recipes)),
-                                Err((name, err)) => {
-                                    error!(?id, ?err, "Failed to push recipe with id to database",);
-                                    Err((id, Some(name), num_recipes, Error::Database))
+                                match push_recipe_in_db(&state, recipe, user_id).await {
+                                    Ok(recipe_id_db) => {
+                                        Ok((recipe_id_db, recipe_name, num_recipes))
+                                    }
+                                    Err((name, err)) => {
+                                        error!(
+                                            ?id,
+                                            ?err,
+                                            "Failed to push recipe with id to database",
+                                        );
+                                        Err((id, Some(name), num_recipes, Error::Database))
+                                    }
                                 }
                             }
+                            Err((id, num_recipes, err)) => {
+                                error!(?id, ?err, "Failed to fetch recipe with id from API");
+                                Err((id, None, num_recipes, Error::FailFetch))
+                            }
                         }
-                        Err((id, num_recipes, err)) => {
-                            error!(?id, ?err, "Failed to fetch recipe with id from API");
-                            Err((id, None, num_recipes, Error::FailFetch))
+                    }
+                })
+                .buffer_unordered(16);
+
+            pin_mut!(db_stream);
+
+            let mut total = -1;
+            let mut processed = 0;
+            let mut successes = Vec::new();
+            let mut report_logs = Vec::new();
+
+            let mut last_progress_time = Instant::now();
+            let progress_interval = std::time::Duration::from_millis(500);
+            let batch_size = 10;
+
+            while let Some(res) = db_stream.next().await {
+                let seq_num = i32::try_from(processed + 1).unwrap_or(1);
+                let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
+
+                match res {
+                    Ok((recipe_id, recipe_name, num_recipes)) => {
+                        if total == -1 {
+                            total = num_recipes;
+                        }
+
+                        report_logs.push(ReportLogForCreate::success(
+                            seq_num,
+                            &recipe_name,
+                            Some(recipe_id),
+                            exec_time_ms,
+                        ));
+
+                        successes.push(recipe_id);
+                    }
+                    Err((recipe_api_id, recipe_name, num_recipes, err)) => {
+                        if total == -1 {
+                            total = num_recipes;
+                        }
+
+                        match (err, recipe_name) {
+                            (Error::Model(DuplicateEntityWithID(id)), Some(name)) => {
+                                report_logs.push(ReportLogForCreate::warning(
+                                    seq_num,
+                                    &name,
+                                    Some(id),
+                                    &messages.fetch_recipes_exists(),
+                                    exec_time_ms,
+                                ));
+                            }
+                            (Error::Model(err), Some(name)) => {
+                                report_logs.push(ReportLogForCreate::error(
+                                    seq_num,
+                                    &name,
+                                    None,
+                                    "ImportApiModelFail",
+                                    &err.to_string(),
+                                    exec_time_ms,
+                                ));
+                            }
+                            (err, _) => {
+                                report_logs.push(ReportLogForCreate::error(
+                                    seq_num,
+                                    &format!("{api} - id '{recipe_api_id}'"),
+                                    None,
+                                    &messages.fetch_recipes_failed(),
+                                    &err.to_string(),
+                                    exec_time_ms,
+                                ));
+                            }
                         }
                     }
                 }
-            })
-            .buffer_unordered(16);
 
-        pin_mut!(db_stream);
+                processed += 1;
 
-        let mut total = -1;
-        let mut processed = 0;
-        let mut successes = Vec::new();
-        let mut report_logs = Vec::new();
-
-        let mut last_progress_time = Instant::now();
-        let progress_interval = std::time::Duration::from_millis(500);
-        let batch_size = 10;
-
-        while let Some(res) = db_stream.next().await {
-            let seq_num = i32::try_from(processed + 1).unwrap_or(1);
-            let exec_time_ms = i64::try_from(start_time.elapsed().as_millis()).unwrap_or(0);
-
-            match res {
-                Ok((recipe_id, recipe_name, num_recipes)) => {
-                    if total == -1 {
-                        total = num_recipes;
-                    }
-
-                    report_logs.push(ReportLogForCreate::success(
-                        seq_num,
-                        &recipe_name,
-                        Some(recipe_id),
-                        exec_time_ms,
-                    ));
-
-                    successes.push(recipe_id);
-                }
-                Err((recipe_api_id, recipe_name, num_recipes, err)) => {
-                    if total == -1 {
-                        total = num_recipes;
-                    }
-
-                    match (err, recipe_name) {
-                        (Error::Model(DuplicateEntityWithID(id)), Some(name)) => {
-                            report_logs.push(ReportLogForCreate::warning(
-                                seq_num,
-                                &name,
-                                Some(id),
-                                &messages.fetch_recipes_exists(),
-                                exec_time_ms,
-                            ));
-                        }
-                        (Error::Model(err), Some(name)) => {
-                            report_logs.push(ReportLogForCreate::error(
-                                seq_num,
-                                &name,
-                                None,
-                                "ImportApiModelFail",
-                                &err.to_string(),
-                                exec_time_ms,
-                            ));
-                        }
-                        (err, _) => {
-                            report_logs.push(ReportLogForCreate::error(
-                                seq_num,
-                                &format!("{api} - id '{recipe_api_id}'"),
-                                None,
-                                &messages.fetch_recipes_failed(),
-                                &err.to_string(),
-                                exec_time_ms,
-                            ));
-                        }
-                    }
+                if processed % batch_size == 0
+                    || last_progress_time.elapsed() >= progress_interval
+                    || processed == total
+                {
+                    state
+                        .broadcast_progress(
+                            &messages.toast_recipes_fetch_progress(),
+                            processed,
+                            total,
+                            true,
+                            user_id,
+                            &messages,
+                        )
+                        .await;
+                    last_progress_time = Instant::now();
                 }
             }
 
-            processed += 1;
+            state
+                .broadcast_progress(
+                    &messages.toast_recipes_fetch_progress(),
+                    processed,
+                    total,
+                    true,
+                    user_id,
+                    &messages,
+                )
+                .await;
 
-            if processed % batch_size == 0
-                || last_progress_time.elapsed() >= progress_interval
-                || processed == total
-            {
-                state
-                    .broadcast_progress(
-                        &messages.toast_recipes_fetch_progress(),
-                        processed,
-                        total,
-                        true,
-                        user_id,
-                        &messages,
-                    )
-                    .await;
-                last_progress_time = Instant::now();
-            }
-        }
+            let report_type = match form.api {
+                integrations::api::Api::Mealie => ReportTypeFull::api(TertiaryReportType::mealie()),
+                integrations::api::Api::Nextcloud => {
+                    ReportTypeFull::api(TertiaryReportType::nextcloud())
+                }
+                integrations::api::Api::Tandoor => {
+                    ReportTypeFull::api(TertiaryReportType::tandoor())
+                }
+                integrations::api::Api::Unknown => ReportTypeFull {
+                    primary: PrimaryReportType::<Import>::new(),
+                    secondary: None,
+                    tertiary: None,
+                },
+            };
 
-        state
-            .broadcast_progress(
-                &messages.toast_recipes_fetch_progress(),
-                processed,
-                total,
-                true,
+            let items = Items::from(report_logs.as_slice());
+            let report = ReportForCreate::new(
+                report_type,
+                report_logs,
+                items,
+                i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
                 user_id,
-                &messages,
+            );
+            broadcast_import_done_toast(
+                &state, successes, processed, report, api, user_id, &messages,
             )
             .await;
-
-        let report_type = match form.api {
-            integrations::api::Api::Mealie => ReportTypeFull::api(TertiaryReportType::mealie()),
-            integrations::api::Api::Nextcloud => {
-                ReportTypeFull::api(TertiaryReportType::nextcloud())
-            }
-            integrations::api::Api::Tandoor => ReportTypeFull::api(TertiaryReportType::tandoor()),
-            integrations::api::Api::Unknown => ReportTypeFull {
-                primary: PrimaryReportType::<Import>::new(),
-                secondary: None,
-                tertiary: None,
-            },
-        };
-
-        let items = Items::from(report_logs.as_slice());
-        let report = ReportForCreate::new(
-            report_type,
-            report_logs,
-            items,
-            i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
-            user_id,
-        );
-        broadcast_import_done_toast(
-            &state, successes, processed, report, api, user_id, &messages,
-        )
-        .await;
-    });
+        }
+        .instrument(Span::current()),
+    );
 }
 
 async fn push_recipe_in_db(

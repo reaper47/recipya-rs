@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use futures_util::{StreamExt, future::join_all, stream};
-use tracing::{error, info, warn};
+use tracing::{Instrument, Span, error, info, warn};
 use uuid::Uuid;
 
 use app::message::ToastCtx;
@@ -184,9 +184,12 @@ async fn extract_images(
                     };
 
                 let fs_support = Arc::clone(&state.fs_support);
-                tokio::spawn(async move {
-                    fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
-                });
+                tokio::spawn(
+                    async move {
+                        fs_support.generate_thumbnail(&path, file_name, &thumbnails_dir);
+                    }
+                    .instrument(Span::current()),
+                );
 
                 res
             }

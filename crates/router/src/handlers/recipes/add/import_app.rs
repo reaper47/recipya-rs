@@ -12,7 +12,7 @@ use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 use tokio::time::Instant;
 use tokio_util::bytes;
-use tracing::{error, warn};
+use tracing::{Instrument, Span, error, warn};
 use uuid::Uuid;
 
 use app::message::ToastCtx;
@@ -57,107 +57,124 @@ fn save_parsed_recipes(
     user_id: Uuid,
     messages: Messages,
 ) {
-    tokio::spawn(async move {
-        let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
-        let app = form.app.clone();
-        let start_time = Arc::new(Instant::now());
+    tokio::spawn(
+        async move {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
+            let app = form.app.clone();
+            let start_time = Arc::new(Instant::now());
 
-        let mut recipes = match parse_recipes(&state, form, user_id, &messages).await {
-            Ok(r) => r,
-            Err(Error::NoRecipe) => {
-                state.hide_broadcast(user_id, &messages).await;
-                toast.warning(&messages.toast_recipes_not_found()).await;
-                return;
-            }
-            Err(_) => {
-                state.hide_broadcast(user_id, &messages).await;
-                toast.error(&messages.toast_recipes_parsing_failed()).await;
-                return;
-            }
-        };
+            let mut recipes = match parse_recipes(&state, form, user_id, &messages).await {
+                Ok(r) => r,
+                Err(Error::NoRecipe) => {
+                    state.hide_broadcast(user_id, &messages).await;
+                    toast.warning(&messages.toast_recipes_not_found()).await;
+                    return;
+                }
+                Err(_) => {
+                    state.hide_broadcast(user_id, &messages).await;
+                    toast.error(&messages.toast_recipes_parsing_failed()).await;
+                    return;
+                }
+            };
 
-        upload_images(&state, &mut recipes).await;
+            upload_images(&state, &mut recipes).await;
 
-        let num_recipes = recipes
-            .len()
-            .try_into()
-            .inspect_err(|err| error!(len = recipes.len(), ?err, "Failed to cast recipes length"))
-            .unwrap_or(i64::MAX);
+            let num_recipes = recipes
+                .len()
+                .try_into()
+                .inspect_err(|err| {
+                    error!(len = recipes.len(), ?err, "Failed to cast recipes length");
+                })
+                .unwrap_or(i64::MAX);
 
-        let state = Arc::new(state);
-        let (recipe_ids, report_logs) = push_recipes_to_db(
-            Arc::clone(&state),
-            recipes,
-            Arc::clone(&start_time),
-            user_id,
-            &messages,
-        )
-        .await;
+            let state = Arc::new(state);
+            let (recipe_ids, report_logs) = push_recipes_to_db(
+                Arc::clone(&state),
+                recipes,
+                Arc::clone(&start_time),
+                user_id,
+                &messages,
+            )
+            .await;
 
-        let report_type = match app {
-            integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
-            integrations::App::BigOven => ReportTypeFull::app(TertiaryReportType::bigoven()),
-            integrations::App::ChefTap => ReportTypeFull::app(TertiaryReportType::cheftap()),
-            integrations::App::ComputerCuisineDeluxe => {
-                ReportTypeFull::app(TertiaryReportType::computer_cuisine_deluxe())
-            }
-            integrations::App::CookBook => ReportTypeFull::app(TertiaryReportType::cookbook()),
-            integrations::App::Cooklang => ReportTypeFull::app(TertiaryReportType::cooklang()),
-            integrations::App::CookMate => ReportTypeFull::app(TertiaryReportType::cookmate()),
-            integrations::App::Crouton => ReportTypeFull::app(TertiaryReportType::crouton()),
-            integrations::App::Cookn => ReportTypeFull::app(TertiaryReportType::cookn()),
-            integrations::App::CopyMeThat => ReportTypeFull::app(TertiaryReportType::copymethat()),
-            integrations::App::HomeCookin => ReportTypeFull::app(TertiaryReportType::home_cookin()),
-            integrations::App::Kalorio => ReportTypeFull::app(TertiaryReportType::kalorio()),
-            integrations::App::LeCollectionneurDeRecettes => {
-                ReportTypeFull::app(TertiaryReportType::lecollectionneurderecettes())
-            }
-            integrations::App::MasterCook => ReportTypeFull::app(TertiaryReportType::mastercook()),
-            integrations::App::MealMaster => ReportTypeFull::app(TertiaryReportType::mealmaster()),
-            integrations::App::MrCook => ReportTypeFull::app(TertiaryReportType::mrcook()),
-            integrations::App::MyRecipeBox => {
-                ReportTypeFull::app(TertiaryReportType::myrecipebox())
-            }
-            integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
-            integrations::App::Pepperplate => {
-                ReportTypeFull::app(TertiaryReportType::pepperplate())
-            }
-            integrations::App::RecipeKeeper => {
-                ReportTypeFull::app(TertiaryReportType::recipekeeper())
-            }
-            integrations::App::RecipeMD => ReportTypeFull::app(TertiaryReportType::recipe_md()),
-            integrations::App::RecipeSage => ReportTypeFull::app(TertiaryReportType::recipe_sage()),
-            integrations::App::Recipya => ReportTypeFull::app(TertiaryReportType::recipya()),
-            integrations::App::Rezkonv => ReportTypeFull::app(TertiaryReportType::rezkonv()),
-            integrations::App::Saffron => ReportTypeFull::app(TertiaryReportType::saffron()),
-            integrations::App::ShopNCook => ReportTypeFull::app(TertiaryReportType::shopncook()),
-            integrations::App::Umami => ReportTypeFull::app(TertiaryReportType::umami()),
-            integrations::App::Unknown => ReportTypeFull {
-                primary: PrimaryReportType::<Import>::new(),
-                secondary: None,
-                tertiary: None,
-            },
-        };
+            let report_type = match app {
+                integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
+                integrations::App::BigOven => ReportTypeFull::app(TertiaryReportType::bigoven()),
+                integrations::App::ChefTap => ReportTypeFull::app(TertiaryReportType::cheftap()),
+                integrations::App::ComputerCuisineDeluxe => {
+                    ReportTypeFull::app(TertiaryReportType::computer_cuisine_deluxe())
+                }
+                integrations::App::CookBook => ReportTypeFull::app(TertiaryReportType::cookbook()),
+                integrations::App::Cooklang => ReportTypeFull::app(TertiaryReportType::cooklang()),
+                integrations::App::CookMate => ReportTypeFull::app(TertiaryReportType::cookmate()),
+                integrations::App::Crouton => ReportTypeFull::app(TertiaryReportType::crouton()),
+                integrations::App::Cookn => ReportTypeFull::app(TertiaryReportType::cookn()),
+                integrations::App::CopyMeThat => {
+                    ReportTypeFull::app(TertiaryReportType::copymethat())
+                }
+                integrations::App::HomeCookin => {
+                    ReportTypeFull::app(TertiaryReportType::home_cookin())
+                }
+                integrations::App::Kalorio => ReportTypeFull::app(TertiaryReportType::kalorio()),
+                integrations::App::LeCollectionneurDeRecettes => {
+                    ReportTypeFull::app(TertiaryReportType::lecollectionneurderecettes())
+                }
+                integrations::App::MasterCook => {
+                    ReportTypeFull::app(TertiaryReportType::mastercook())
+                }
+                integrations::App::MealMaster => {
+                    ReportTypeFull::app(TertiaryReportType::mealmaster())
+                }
+                integrations::App::MrCook => ReportTypeFull::app(TertiaryReportType::mrcook()),
+                integrations::App::MyRecipeBox => {
+                    ReportTypeFull::app(TertiaryReportType::myrecipebox())
+                }
+                integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
+                integrations::App::Pepperplate => {
+                    ReportTypeFull::app(TertiaryReportType::pepperplate())
+                }
+                integrations::App::RecipeKeeper => {
+                    ReportTypeFull::app(TertiaryReportType::recipekeeper())
+                }
+                integrations::App::RecipeMD => ReportTypeFull::app(TertiaryReportType::recipe_md()),
+                integrations::App::RecipeSage => {
+                    ReportTypeFull::app(TertiaryReportType::recipe_sage())
+                }
+                integrations::App::Recipya => ReportTypeFull::app(TertiaryReportType::recipya()),
+                integrations::App::Rezkonv => ReportTypeFull::app(TertiaryReportType::rezkonv()),
+                integrations::App::Saffron => ReportTypeFull::app(TertiaryReportType::saffron()),
+                integrations::App::ShopNCook => {
+                    ReportTypeFull::app(TertiaryReportType::shopncook())
+                }
+                integrations::App::Umami => ReportTypeFull::app(TertiaryReportType::umami()),
+                integrations::App::Unknown => ReportTypeFull {
+                    primary: PrimaryReportType::<Import>::new(),
+                    secondary: None,
+                    tertiary: None,
+                },
+            };
 
-        let items = Items::from(report_logs.as_slice());
-        let report = ReportForCreate::new(
-            report_type,
-            report_logs,
-            items,
-            i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
-            user_id,
-        );
-        broadcast_import_done_toast(
-            &state,
-            recipe_ids,
-            num_recipes,
-            report,
-            app.to_string(),
-            user_id,
-            &messages,
-        )
-        .await;
-    });
+            let items = Items::from(report_logs.as_slice());
+            let report = ReportForCreate::new(
+                report_type,
+                report_logs,
+                items,
+                i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
+                user_id,
+            );
+            broadcast_import_done_toast(
+                &state,
+                recipe_ids,
+                num_recipes,
+                report,
+                app.to_string(),
+                user_id,
+                &messages,
+            )
+            .await;
+        }
+        .instrument(Span::current()),
+    );
 }
 
 async fn upload_images(state: &AppState, recipes: &mut [schema_org::Recipe]) {
