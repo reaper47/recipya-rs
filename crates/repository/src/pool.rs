@@ -13,7 +13,6 @@ use rustls::pki_types::CertificateDer;
 use rustls::{ClientConfig, RootCertStore};
 use tokio_postgres::{Config, NoTls};
 use tokio_rustls::TlsConnector;
-use tracing::{error, info, warn};
 
 pub type PgConn = AsyncPgConnection;
 pub type PgPooledConn<'a> = bb8::PooledConnection<'a, PgConn>;
@@ -77,23 +76,23 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
 
     match res {
         Ok(row) if row.count > 0 => {
-            info!("Connected to database '{db_url}'");
+            println!("Connected to database '{db_url}'");
             Ok(())
         }
         Ok(_) => {
-            warn!("Database '{db_name}' does not exist, creating it");
+            println!("Database '{db_name}' does not exist, creating it");
 
             sql_query(format!("CREATE DATABASE {db_name}"))
                 .execute(conn)
-                .inspect(|_| info!("Connected to database '{db_url}'"))
+                .inspect(|_| println!("Connected to database '{db_url}'"))
                 .map(|_| ())
                 .map_err(|err| {
-                    error!(?db_name, ?err, "Failed to create database");
+                    eprintln!("Failed to create database '{db_name}': {err}");
                     err
                 })
         }
         Err(err) => {
-            error!(?err, "Error checking database existence");
+            eprintln!("Error checking database existence: {err}");
             Err(err)
         }
     }
@@ -120,7 +119,7 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
 
         tokio::spawn(async move {
             if let Err(err) = connection.await {
-                error!(?err, "connection error");
+                eprintln!("connection error; {err}");
             }
         });
 
@@ -148,7 +147,7 @@ async fn establish(database_url: &str) -> ConnectionResult<AsyncPgConnection> {
 
         tokio::spawn(async move {
             if let Err(err) = connection.await {
-                error!(?err, "connection error");
+                eprintln!("connection error; {err}");
             }
         });
 

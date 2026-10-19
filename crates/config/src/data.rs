@@ -1,8 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
 
-use tracing::info;
-
 use support::fs::get_base_dir;
 
 use super::Result;
@@ -82,12 +80,12 @@ impl DataDir {
 
     /// Logs the data directory paths.
     pub fn log(&self) {
-        info!("File locations:");
-        info!("\t- Backups: {:?}", self.backup);
-        info!("\t- Debug: {:?}", self.debug);
-        info!("\t- Images: {:?}", self.images.root);
-        info!("\t- Logs: {:?}", self.logs);
-        info!("\t- Videos: {:?}", self.videos);
+        println!("File locations:");
+        println!("\t- Backups: {}", self.backup.display());
+        println!("\t- Debug: {}", self.debug.display());
+        println!("\t- Images: {}", self.images.root.display());
+        println!("\t- Logs: {}", self.logs.display());
+        println!("\t- Videos: {}", self.videos.display());
     }
 }
 

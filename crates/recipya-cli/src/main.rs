@@ -1,13 +1,13 @@
 mod cli;
 mod error;
-mod l10n;
 mod sandbox;
 mod server;
 mod sponsors;
 
 use dotenvy::dotenv;
 use rustls::crypto::ring;
-use tracing::warn;
+use support::fs::get_base_dir;
+use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 
 use error::Result;
@@ -17,12 +17,14 @@ async fn main() -> Result<()> {
     let args = cli::parse_args()?;
 
     if let Err(err) = dotenv() {
-        warn!(
+        println!(
             "Could not load .env file ({err}). This is expected when environment variables are injected by the host"
         );
     }
+
     init_crypto();
-    init_tracing()?;
+
+    let _guard = init_tracing()?;
 
     args.run_command().await
 }
@@ -33,7 +35,11 @@ fn init_crypto() {
         .expect("failed to install crypto provider");
 }
 
-fn init_tracing() -> Result<()> {
+fn init_tracing() -> Result<WorkerGuard> {
+    let base_dir = get_base_dir()?;
+    let file_appender = tracing_appender::rolling::daily(base_dir.join("Logs"), "recipya.log");
+    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
+
     let subscriber = tracing_subscriber::fmt()
         .compact()
         .with_file(false)
@@ -41,9 +47,10 @@ fn init_tracing() -> Result<()> {
         .with_thread_ids(false)
         .with_target(false)
         .with_env_filter(EnvFilter::from_default_env())
+        .with_writer(non_blocking)
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
 
-    Ok(())
+    Ok(guard)
 }
