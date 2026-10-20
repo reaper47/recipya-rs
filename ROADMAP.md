@@ -26,10 +26,9 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 
 ### Maintenance
 
-- [ ] Move function validations to the type system
+- [x] Move function validations to the type system
 - [ ] Update htmx to version 4.0
 - [ ] Add benchmarks
-- [ ] Look into improving error handling
 - [ ] Prevent importing from multiple sources at the same time
 - [ ] Accept importing multiple files for the same application
 
