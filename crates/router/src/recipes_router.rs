@@ -38,20 +38,33 @@ pub mod params {
     /// Represents the content of the "Add Recipe -> Import -> Software" form.
     #[derive(Clone, Default)]
     pub struct ImportFromAppForm {
-        pub file_data: Vec<u8>,
-        pub file_name: String,
         pub app: App,
-        pub file_format: FileFormat,
+        pub files: Vec<AppFile>,
+    }
+
+    /// The description and content of a file.
+    #[derive(Clone, Default)]
+    pub struct AppFile {
+        pub data: Vec<u8>,
+        pub name: String,
+        pub format: FileFormat,
     }
 
     impl ImportFromAppForm {
-        /// Parses the recipe file contained in the form.
+        /// Parses the recipe files contained in the form.
         pub fn parse_recipes(&self) -> crate::error::Result<Vec<Recipe>> {
-            let mut data = Cursor::new(&self.file_data);
-            let app = &self.app;
-            let file_name = &self.file_name;
-            let file_format = &self.file_format;
-            Ok(parse_recipe(&mut data, app, file_name, file_format)?)
+            let mut recipes = Vec::new();
+
+            for file in &self.files {
+                recipes.extend(parse_recipe(
+                    &mut Cursor::new(&file.data),
+                    &self.app,
+                    &file.name,
+                    &file.format,
+                )?);
+            }
+
+            Ok(recipes)
         }
     }
 
@@ -63,7 +76,6 @@ pub mod params {
 
         async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
             let mut multipart = Multipart::from_request(req, state).await?;
-
             let mut form = Self::default();
 
             while let Some(field) = multipart.next_field().await.map_err(|err| {
@@ -76,44 +88,44 @@ pub mod params {
                 let name = field.name().unwrap_or("");
                 match name {
                     "app" => {
-                        let app_name =
-                            field.text().await.map_err(|_| InvalidBoundary::default())?;
-                        let app = App::from_str(&app_name.to_lowercase()).unwrap_or_default();
+                        let name = field.text().await.map_err(|_| InvalidBoundary::default())?;
+                        let app = App::from_str(&name.to_lowercase()).unwrap_or_default();
                         if matches!(app, App::Unknown) {
-                            error!(
-                                ?app_name,
-                                "Import recipes from app form field 'app' is invalid"
-                            );
+                            error!(?name, "Import recipes from app form field 'app' is invalid");
                             Err(InvalidBoundary::default())?;
                         }
                         form.app = app;
                     }
                     "file" => {
-                        let filename = field
+                        let file_name = field
                             .file_name()
                             .map(ToString::to_string)
                             .ok_or_else(InvalidBoundary::default)?;
-                        form.file_name.clone_from(&filename);
 
-                        form.file_data = field
-                            .bytes()
-                            .await
-                            .map_err(|err| {
-                                error!(?filename, ?err, "Failed to read file bytes");
-                                InvalidBoundary::default()
-                            })?
-                            .to_vec();
-
-                        form.file_format = FileFormat::from_filename(&filename);
+                        form.files.push(AppFile {
+                            data: field
+                                .bytes()
+                                .await
+                                .map_err(|err| {
+                                    error!(?file_name, ?err, "Failed to read file bytes");
+                                    InvalidBoundary::default()
+                                })?
+                                .to_vec(),
+                            format: FileFormat::from_filename(&file_name),
+                            name: file_name,
+                        });
                     }
                     _ => {}
                 }
             }
 
-            info!(
-                "Importing recipes from '{}' using {} parser (format: {})",
-                form.file_name, form.app, form.file_format
-            );
+            for f in &form.files {
+                info!(
+                    "Importing recipes from '{}' using {} parser (format: {})",
+                    f.name, form.app, f.format
+                );
+            }
+
             Ok(form)
         }
     }

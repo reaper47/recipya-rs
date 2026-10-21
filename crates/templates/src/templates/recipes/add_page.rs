@@ -286,7 +286,7 @@ fn import_recipes_dialog(messages: &Messages) -> Markup {
                                     legend .fieldset-legend {
                                         (messages.import_recipes_dialog_select_file())
                                     }
-                                    input #import-dialog-file type="file" name="file" required class="file-input w-full" accept=(FileFormat::extensions().join(","));
+                                    input #import-dialog-file type="file" name="file" required class="file-input w-full" accept=(FileFormat::extensions().join(",")) multiple;
                                 }
                             }
                             button type="submit" class="btn btn-block btn-sm btn-primary w-full" {

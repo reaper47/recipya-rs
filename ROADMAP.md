@@ -8,7 +8,7 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 
 #### Recipes
 
-- [ ] Add structured data to /recipes/{id}
+- [x] Add structured data to /recipes/{id}
 - [ ] Implement PDF file type
 - [ ] Implement OCR
 
@@ -22,7 +22,7 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 
 #### Language 
 
-- [ ] Implement i18n
+- [x] Implement i18n
 
 ### Maintenance
 
@@ -30,11 +30,7 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 - [ ] Update htmx to version 4.0
 - [ ] Add benchmarks
 - [ ] Prevent importing from multiple sources at the same time
-- [ ] Accept importing multiple files for the same application
-
-### Improvements
-
-- [ ] Improve bold ingredients in instructions algorithm
+- [x] Accept importing multiple files for the same application
 
 ## v1.1.0
 
@@ -61,6 +57,10 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 
 - [ ] Don't allow changing of units of measurement in recipes when changing servings
 - [ ] Add queueing/retry for website import
+
+### Improvements
+
+- [ ] Improve bold ingredients in instructions algorithm
 
 ## v1.2.0
 
