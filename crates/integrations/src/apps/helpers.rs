@@ -20,7 +20,7 @@ use schema_org::{ImageObject, Recipe};
 use support::strings::auto_convert_to_utf8;
 
 use crate::apps::mastercook::parse_mx2;
-use crate::{FileFormat, Result};
+use crate::{Error, FileFormat, Result};
 
 #[derive(Clone, Debug)]
 pub(super) enum Instruction<'a> {
@@ -205,7 +205,18 @@ where
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
-        let file_name = file.name().to_string();
+        let file_name = file
+            .enclosed_name()
+            .as_deref()
+            .ok_or_else(|| {
+                Error::InvalidArchivePath(
+                    file.name()
+                        .unwrap_or(Cow::Borrowed("<invalid>"))
+                        .to_string(),
+                )
+            })?
+            .to_string_lossy()
+            .into_owned();
         let format = FileFormat::from_filename(&file_name);
 
         if format == FileFormat::Jpg || format == FileFormat::Png {

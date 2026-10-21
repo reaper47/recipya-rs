@@ -174,7 +174,7 @@ impl ExportData {
         zip: &mut zip::ZipWriter<&mut NamedTempFile>,
         recipe: &RecipeDetails,
         idx: usize,
-        options: FileOptions<'_, ()>,
+        options: FileOptions<'_, '_, ()>,
         images_dir: &Path,
     ) -> Result<()> {
         for img in recipe.all_images() {

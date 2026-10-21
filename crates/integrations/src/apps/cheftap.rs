@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::io::{Cursor, Read, Seek};
 
 use scraper::{Html, Selector};
@@ -106,7 +107,18 @@ where
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
-        let file_name = file.name().to_string();
+        let file_name = file
+            .enclosed_name()
+            .as_deref()
+            .ok_or_else(|| {
+                Error::InvalidArchivePath(
+                    file.name()
+                        .unwrap_or(Cow::Borrowed("<invalid>"))
+                        .to_string(),
+                )
+            })?
+            .to_string_lossy()
+            .into_owned();
 
         let mut buf = Vec::new();
         file.read_to_end(&mut buf)?;

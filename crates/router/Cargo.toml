@@ -43,7 +43,7 @@ rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
-rust-embed = { version = "8.11.0", features = ["axum-ex"] }
+rust-embed = { version = "8.12.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
@@ -54,7 +54,7 @@ thiserror = "2.0.21"
 time.workspace = true
 tokio.workspace = true
 tokio-stream = { version = "0.1.19", features = ["sync"] }
-tokio-util = "0.7.18"
+tokio-util = "0.7.20"
 tower = "0.5.3"
 tower-cookies.workspace = true
 tower-http = { version = "0.7.1", features = ["fs", "request-id", "trace", "util"] }

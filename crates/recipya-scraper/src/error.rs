@@ -28,7 +28,7 @@ pub enum Error {
 
 impl_display_as_debug!(Error);
 
-impl From<scraper::error::SelectorErrorKind<'_>> for Error {
+impl From<scraper::error::SelectorErrorKind> for Error {
     fn from(value: scraper::error::SelectorErrorKind) -> Self {
         Self::Select(value.to_string())
     }
