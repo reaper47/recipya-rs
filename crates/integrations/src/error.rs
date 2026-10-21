@@ -17,6 +17,7 @@ pub enum RequiredField {
 #[derive(Debug, From)]
 pub enum Error {
     ApiError(String),
+    InvalidArchivePath(String),
     MissingRequiredField(RequiredField),
     Parse(String),
     UnsupportedApi,

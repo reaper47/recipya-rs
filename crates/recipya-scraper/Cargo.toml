@@ -26,7 +26,7 @@ serde_json.workspace = true
 support.workspace = true
 tokio.workspace = true
 tracing.workspace = true
-unicode-normalization = "0.1.25"
+unicode-normalization = "0.1.26"
 url.workspace = true
 wreq-util = "0.2.0"
 
@@ -43,4 +43,4 @@ tracing-test.workspace = true
 
 [build-dependencies]
 serde = { workspace = true, features = ["derive"] }
-toml = "1.1.2"
+toml = "1.1.8"

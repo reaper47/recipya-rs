@@ -24,7 +24,7 @@ use schema_org::{
 };
 
 use crate::{
-    Result,
+    Error, Result,
     apps::helpers::{
         Ingredient, Instruction, Parsers, ToSections, parse_archive_helper, read_file,
     },
@@ -299,7 +299,18 @@ where
     let mut archive = ZipArchive::new(r)?;
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
-        let file_name = file.name().to_string();
+        let file_name = file
+            .enclosed_name()
+            .as_deref()
+            .ok_or_else(|| {
+                Error::InvalidArchivePath(
+                    file.name()
+                        .unwrap_or(Cow::Borrowed("<invalid>"))
+                        .to_string(),
+                )
+            })?
+            .to_string_lossy()
+            .into_owned();
 
         if file_name.starts_with("recipes") {
             let recipes_de: Vec<RecipeRtk> = serde_json::from_reader(file)?;

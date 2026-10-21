@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::env::temp_dir;
 use std::fs::File;
@@ -23,7 +24,18 @@ where
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
-        let file_name = file.name().to_string();
+        let file_name = file
+            .enclosed_name()
+            .as_deref()
+            .ok_or_else(|| {
+                Error::InvalidArchivePath(
+                    file.name()
+                        .unwrap_or(Cow::Borrowed("<invalid>"))
+                        .to_string(),
+                )
+            })?
+            .to_string_lossy()
+            .into_owned();
         let path = Path::new(&file_name);
 
         let folder = match path.components().next() {
@@ -36,7 +48,7 @@ where
             .and_then(|ext| ext.to_str())
             .unwrap_or_default();
 
-        debug!("Processing file: {file_name} with extension: {ext}");
+        debug!("Processing file: {file_name:?} with extension: {ext}");
 
         let entry = entries.entry(folder).or_default();
 
@@ -47,7 +59,13 @@ where
             entry.0 = Some(recipe);
         } else if ext == "webp" {
             // import the image to the recipe
-            let dest_path = temp_dir().join(file.name().split('/').next_back().unwrap_or_default());
+            let dest_path = temp_dir().join(
+                file.enclosed_name()
+                    .as_deref()
+                    .and_then(Path::file_name)
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+            );
             let mut dest = File::create(&dest_path)?;
             copy(&mut file, &mut dest)?;
             entry.1.push(dest_path);
