@@ -36,7 +36,7 @@ tokio-cron-scheduler = "0.15.1"
 tower-cookies.workspace = true
 tracing.workspace = true
 tracing-appender = "0.2.5"
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 walkdir = "2.5.0"
 yansi = "1.0.1"
 

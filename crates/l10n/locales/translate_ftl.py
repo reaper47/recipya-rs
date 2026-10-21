@@ -368,17 +368,20 @@ def process_file(args, cache, locale, lang, cats, ref_file: Path, tgt_file: Path
     hashes = {entry_label(e): entry_hash(e) for e in ref_map.values()}
     file_cache = {} if args.no_cache else cache.get(locale, {}).get(str(rel), {})
 
+    keys = set(args.keys)
     added = 0
     todo = []
     for k, ref_e in ref_map.items():
         label = entry_label(ref_e)
+        if keys and label not in keys:
+            continue  # --keys given: leave every other entry untouched
         was_missing = k not in tgt_index
         if was_missing:
             tgt_res.body.append(copy.deepcopy(ref_e))
             tgt_index[k] = len(tgt_res.body) - 1
             added += 1
         tgt_e = tgt_res.body[tgt_index[k]]
-        if not args.force and not was_missing:
+        if not args.force and not keys and not was_missing:
             cached = file_cache.get(label)
             if cached == hashes[label]:
                 continue  # already translated by this script, reference unchanged
@@ -450,6 +453,7 @@ def main() -> None:
     p.add_argument("--failures-file", default="l10n_failures.json")
     p.add_argument("--cache-file", default=None, help="default: .translate-cache.json next to this script")
     p.add_argument("--no-cache", action="store_true", help="ignore and don't update the cache")
+    p.add_argument("--keys", nargs="*", default=[], help="only (re)translate these entry ids, ignoring cache/diff checks (terms need the leading '-', e.g. -brand-name)")
     args = p.parse_args()
 
     root = Path(args.root)

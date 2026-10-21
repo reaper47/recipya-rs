@@ -236,13 +236,18 @@ async fn parse_recipes(
         Err(err) => {
             error!(?err, "Failed to parse recipes");
 
-            let saved_file =
-                state
-                    .data_dir
-                    .debug
-                    .join(format!("{}_{}", Uuid::new_v4(), form.file_name));
-            fs::write(&saved_file, &form.file_data).await?;
-            error!(?saved_file, "Saved file to for debugging purposes");
+            for file in &form.files {
+                let saved_file =
+                    state
+                        .data_dir
+                        .debug
+                        .join(format!("{}_{}", Uuid::new_v4(), file.name));
+
+                match fs::write(&saved_file, &file.data).await {
+                    Ok(()) => warn!(?saved_file, "Saved file to for debugging"),
+                    Err(err) => error!(?err, ?saved_file, "Failed to save debug file"),
+                }
+            }
 
             return Err(err);
         }

@@ -41,6 +41,7 @@ fn init_tracing() -> Result<WorkerGuard> {
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
     let subscriber = tracing_subscriber::fmt()
+        .json()
         .compact()
         .with_file(false)
         .with_line_number(false)
