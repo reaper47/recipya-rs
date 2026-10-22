@@ -597,3 +597,6 @@ supported = stuðlað
 wakelock-activated = Skermilásingin er virkin.
 wakelock-deactivated = Skermilásingin er avvígð.
 recipe-page-added-to-collection = Uppskriftin er vorðin løgd í tín savn.
+toast-failed-verify-import-state = Tað eydnaðist ikki at staðfesta innflutningsstøðuna.
+toast-failed-update-import-state = Tað eydnaðist ikki at seta innflutningsstøðuna.
+toast-import-in-progress = Innflutningur í gongd. Roynd aftur seinni.

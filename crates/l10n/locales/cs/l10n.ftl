@@ -597,3 +597,6 @@ supported = podporováno
 wakelock-activated = Uzamčení obrazovky bylo aktivováno.
 wakelock-deactivated = Uzamčení obrazovky bylo deaktivováno.
 recipe-page-added-to-collection = Recept byl přidán do vaší sbírky.
+toast-failed-verify-import-state = Nepodařilo se ověřit stav importu.
+toast-failed-update-import-state = Nepodařilo se nastavit stav importu.
+toast-import-in-progress = Probíhá import. Zkuste to prosím později znovu.

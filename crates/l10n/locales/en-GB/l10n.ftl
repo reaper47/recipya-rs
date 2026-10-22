@@ -251,6 +251,12 @@ toast-shopping-title-exists = Title already exists.
 toast-shopping-title-update-failed = Failed to update shopping list title.
 toast-shopping-write-list-failed = Failed to write shopping list.
 
+## Toasts: states
+
+toast-failed-verify-import-state = Failed to verify import state.
+toast-failed-update-import-state = Failed to set import state.
+toast-import-in-progress = Import in progress. Please try again later.
+
 ## Fetching recipes
 
 fetch-recipes-failed = Fetch failure

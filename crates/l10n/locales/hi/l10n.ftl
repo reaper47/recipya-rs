@@ -597,3 +597,6 @@ supported = समर्थित
 wakelock-activated = स्क्रीन लॉक सक्रिय हो गया है।
 wakelock-deactivated = स्क्रीन लॉक निष्क्रिय कर दिया गया है।
 recipe-page-added-to-collection = रेसिपी को आपके संग्रह में जोड़ दिया गया है।
+toast-failed-verify-import-state = आयात स्थिति को सत्यापित करने में विफल।
+toast-failed-update-import-state = आयात स्थिति सेट करने में विफल।
+toast-import-in-progress = आयात प्रगति पर है। कृपया बाद में पुनः प्रयास करें।

@@ -597,3 +597,6 @@ supported = tuettu
 wakelock-activated = Näyttölukko aktivoitu.
 wakelock-deactivated = Näytön lukitus poistettu käytöstä.
 recipe-page-added-to-collection = Resepti on lisätty kokoelmaasi.
+toast-failed-verify-import-state = Tuonnin tilan vahvistaminen epäonnistui.
+toast-failed-update-import-state = Tuontitilan asettaminen epäonnistui.
+toast-import-in-progress = Tuonti on käynnissä. Yritä uudelleen myöhemmin.

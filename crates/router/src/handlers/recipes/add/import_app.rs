@@ -17,6 +17,7 @@ use uuid::Uuid;
 
 use app::message::ToastCtx;
 use app::state::AppState;
+use integrations::App;
 use l10n::Messages;
 use models::Error::DuplicateEntityWithID;
 use models::Recipe;
@@ -24,9 +25,10 @@ use models::recipe::structs::recipe::RecipeForCreate;
 use models::reports::report::{Items, ReportForCreate};
 use models::reports::report_log::ReportLogForCreate;
 use models::reports::report_types::{
-    Import, PrimaryReportType, ReportTypeFull, TertiaryReportType,
+    Import, PrimaryReportType, ReportTypeFull, Software, TertiaryReportType,
 };
 use models::settings::UserSettingDetails;
+use models::states::UserStates;
 use support::states::AuthenticatedState;
 
 use crate::handlers::recipes::common::{broadcast_import_done_toast, schema_to_recipe_for_create};
@@ -57,9 +59,37 @@ fn save_parsed_recipes(
     user_id: Uuid,
     messages: Messages,
 ) {
+    let state = Arc::new(state);
+
     tokio::spawn(
         async move {
             let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
+            let user_states = UserStates::new(&state.mm, user_id);
+
+            match user_states.is_importing_app_or_api().await {
+                Ok(true) => {
+                    toast.error(&messages.toast_import_in_progress()).await;
+                    return;
+                }
+                Ok(false) => {
+                    if let Err(err) = user_states.set_is_importing_app().await {
+                        error!(?err, ?user_id, "Failed to set app import state");
+                        state.hide_broadcast(user_id, &messages).await;
+                        toast
+                            .error(&messages.toast_failed_update_import_state())
+                            .await;
+                        return;
+                    }
+                }
+                Err(err) => {
+                    error!(?err, ?user_id, "Failed to verify import state");
+                    toast
+                        .error(&messages.toast_failed_verify_import_state())
+                        .await;
+                    return;
+                }
+            }
+
             let app = form.app.clone();
             let start_time = Arc::new(Instant::now());
 
@@ -87,7 +117,6 @@ fn save_parsed_recipes(
                 })
                 .unwrap_or(i64::MAX);
 
-            let state = Arc::new(state);
             let (recipe_ids, report_logs) = push_recipes_to_db(
                 Arc::clone(&state),
                 recipes,
@@ -97,71 +126,15 @@ fn save_parsed_recipes(
             )
             .await;
 
-            let report_type = match app {
-                integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
-                integrations::App::BigOven => ReportTypeFull::app(TertiaryReportType::bigoven()),
-                integrations::App::ChefTap => ReportTypeFull::app(TertiaryReportType::cheftap()),
-                integrations::App::ComputerCuisineDeluxe => {
-                    ReportTypeFull::app(TertiaryReportType::computer_cuisine_deluxe())
-                }
-                integrations::App::CookBook => ReportTypeFull::app(TertiaryReportType::cookbook()),
-                integrations::App::Cooklang => ReportTypeFull::app(TertiaryReportType::cooklang()),
-                integrations::App::CookMate => ReportTypeFull::app(TertiaryReportType::cookmate()),
-                integrations::App::Crouton => ReportTypeFull::app(TertiaryReportType::crouton()),
-                integrations::App::Cookn => ReportTypeFull::app(TertiaryReportType::cookn()),
-                integrations::App::CopyMeThat => {
-                    ReportTypeFull::app(TertiaryReportType::copymethat())
-                }
-                integrations::App::HomeCookin => {
-                    ReportTypeFull::app(TertiaryReportType::home_cookin())
-                }
-                integrations::App::Kalorio => ReportTypeFull::app(TertiaryReportType::kalorio()),
-                integrations::App::LeCollectionneurDeRecettes => {
-                    ReportTypeFull::app(TertiaryReportType::lecollectionneurderecettes())
-                }
-                integrations::App::MasterCook => {
-                    ReportTypeFull::app(TertiaryReportType::mastercook())
-                }
-                integrations::App::MealMaster => {
-                    ReportTypeFull::app(TertiaryReportType::mealmaster())
-                }
-                integrations::App::MrCook => ReportTypeFull::app(TertiaryReportType::mrcook()),
-                integrations::App::MyRecipeBox => {
-                    ReportTypeFull::app(TertiaryReportType::myrecipebox())
-                }
-                integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
-                integrations::App::Pepperplate => {
-                    ReportTypeFull::app(TertiaryReportType::pepperplate())
-                }
-                integrations::App::RecipeKeeper => {
-                    ReportTypeFull::app(TertiaryReportType::recipekeeper())
-                }
-                integrations::App::RecipeMD => ReportTypeFull::app(TertiaryReportType::recipe_md()),
-                integrations::App::RecipeSage => {
-                    ReportTypeFull::app(TertiaryReportType::recipe_sage())
-                }
-                integrations::App::Recipya => ReportTypeFull::app(TertiaryReportType::recipya()),
-                integrations::App::Rezkonv => ReportTypeFull::app(TertiaryReportType::rezkonv()),
-                integrations::App::Saffron => ReportTypeFull::app(TertiaryReportType::saffron()),
-                integrations::App::ShopNCook => {
-                    ReportTypeFull::app(TertiaryReportType::shopncook())
-                }
-                integrations::App::Umami => ReportTypeFull::app(TertiaryReportType::umami()),
-                integrations::App::Unknown => ReportTypeFull {
-                    primary: PrimaryReportType::<Import>::new(),
-                    secondary: None,
-                    tertiary: None,
-                },
-            };
-
             let items = Items::from(report_logs.as_slice());
             let report = ReportForCreate::new(
-                report_type,
+                report_type_from_app(&app),
                 report_logs,
                 items,
                 i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
                 user_id,
             );
+
             broadcast_import_done_toast(
                 &state,
                 recipe_ids,
@@ -235,7 +208,6 @@ async fn parse_recipes(
         Ok(r) => r,
         Err(err) => {
             error!(?err, "Failed to parse recipes");
-
             for file in &form.files {
                 let saved_file =
                     state
@@ -431,4 +403,45 @@ async fn push_recipe(
     }
 
     Ok(RecipeResult { recipe_id, log })
+}
+
+const fn report_type_from_app(app: &App) -> ReportTypeFull<Import, Software> {
+    match app {
+        integrations::App::AccuChef => ReportTypeFull::app(TertiaryReportType::accuchef()),
+        integrations::App::BigOven => ReportTypeFull::app(TertiaryReportType::bigoven()),
+        integrations::App::ChefTap => ReportTypeFull::app(TertiaryReportType::cheftap()),
+        integrations::App::ComputerCuisineDeluxe => {
+            ReportTypeFull::app(TertiaryReportType::computer_cuisine_deluxe())
+        }
+        integrations::App::CookBook => ReportTypeFull::app(TertiaryReportType::cookbook()),
+        integrations::App::Cooklang => ReportTypeFull::app(TertiaryReportType::cooklang()),
+        integrations::App::CookMate => ReportTypeFull::app(TertiaryReportType::cookmate()),
+        integrations::App::Crouton => ReportTypeFull::app(TertiaryReportType::crouton()),
+        integrations::App::Cookn => ReportTypeFull::app(TertiaryReportType::cookn()),
+        integrations::App::CopyMeThat => ReportTypeFull::app(TertiaryReportType::copymethat()),
+        integrations::App::HomeCookin => ReportTypeFull::app(TertiaryReportType::home_cookin()),
+        integrations::App::Kalorio => ReportTypeFull::app(TertiaryReportType::kalorio()),
+        integrations::App::LeCollectionneurDeRecettes => {
+            ReportTypeFull::app(TertiaryReportType::lecollectionneurderecettes())
+        }
+        integrations::App::MasterCook => ReportTypeFull::app(TertiaryReportType::mastercook()),
+        integrations::App::MealMaster => ReportTypeFull::app(TertiaryReportType::mealmaster()),
+        integrations::App::MrCook => ReportTypeFull::app(TertiaryReportType::mrcook()),
+        integrations::App::MyRecipeBox => ReportTypeFull::app(TertiaryReportType::myrecipebox()),
+        integrations::App::Paprika => ReportTypeFull::app(TertiaryReportType::paprika()),
+        integrations::App::Pepperplate => ReportTypeFull::app(TertiaryReportType::pepperplate()),
+        integrations::App::RecipeKeeper => ReportTypeFull::app(TertiaryReportType::recipekeeper()),
+        integrations::App::RecipeMD => ReportTypeFull::app(TertiaryReportType::recipe_md()),
+        integrations::App::RecipeSage => ReportTypeFull::app(TertiaryReportType::recipe_sage()),
+        integrations::App::Recipya => ReportTypeFull::app(TertiaryReportType::recipya()),
+        integrations::App::Rezkonv => ReportTypeFull::app(TertiaryReportType::rezkonv()),
+        integrations::App::Saffron => ReportTypeFull::app(TertiaryReportType::saffron()),
+        integrations::App::ShopNCook => ReportTypeFull::app(TertiaryReportType::shopncook()),
+        integrations::App::Umami => ReportTypeFull::app(TertiaryReportType::umami()),
+        integrations::App::Unknown => ReportTypeFull {
+            primary: PrimaryReportType::<Import>::new(),
+            secondary: None,
+            tertiary: None,
+        },
+    }
 }

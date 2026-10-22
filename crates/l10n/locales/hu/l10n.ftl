@@ -597,3 +597,6 @@ supported = támogatott
 wakelock-activated = Képernyőzárolás aktiválva.
 wakelock-deactivated = A képernyőzár deaktiválva.
 recipe-page-added-to-collection = A recept hozzáadva került a gyűjteményéhez.
+toast-failed-verify-import-state = Nem sikerült ellenőrizni az importálási állapotot.
+toast-failed-update-import-state = Nem sikerült beállítani az importálási állapotot.
+toast-import-in-progress = Import folyamatban. Kérjük, próbálja meg később.

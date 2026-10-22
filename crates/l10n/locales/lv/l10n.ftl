@@ -597,3 +597,6 @@ supported = atbalstīts
 wakelock-activated = Ekrāna bloķēšana aktivizēta.
 wakelock-deactivated = Ekrāna bloķēšana ir deaktivizēta.
 recipe-page-added-to-collection = Recepte ir pievienota jūsu kolekcijai.
+toast-failed-verify-import-state = Neizdevās verificēt importa stāvokli.
+toast-failed-update-import-state = Neizdevās iestatīt importa stāvokli.
+toast-import-in-progress = Importēšana notiek. Lūdzu, pamēģiniet vēlāk.

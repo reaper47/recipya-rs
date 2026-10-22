@@ -597,3 +597,6 @@ supported = podprto
 wakelock-activated = Zaslon je zaklenjen.
 wakelock-deactivated = Zaslon je bil odklenjen.
 recipe-page-added-to-collection = Recept je bil dodan v vašo zbirko.
+toast-failed-verify-import-state = Ni bilo mogoče preveriti stanja uvoza.
+toast-failed-update-import-state = Ni bilo mogoče nastaviti stanja uvoza.
+toast-import-in-progress = Uvoz je v teku. Poskusite znova pozneje.

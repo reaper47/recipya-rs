@@ -597,3 +597,6 @@ supported = колдоого алынган
 wakelock-activated = Экрандын кулпусу иштетилди.
 wakelock-deactivated = Экрандын кулпусу өчүрүлдү.
 recipe-page-added-to-collection = Рецепт сиздин коллекцияңызга кошулду.
+toast-failed-verify-import-state = Импорттун абалын текшерүү ишке ашкан жок.
+toast-failed-update-import-state = Импорт абалын коюуга мүмкүн болгон жок.
+toast-import-in-progress = Импат жүрүп жатат. Кийинчерээк кайра аракет кылыңыз.

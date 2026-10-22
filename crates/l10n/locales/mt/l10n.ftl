@@ -597,3 +597,6 @@ supported = appoġġjat
 wakelock-activated = Is-skrin huwa mblukkat.
 wakelock-deactivated = Is-skrin mhuwiex aktar imblukkat.
 recipe-page-added-to-collection = Ir-riċetta ġiet miżjuda fil-kollezzjoni tiegħek.
+toast-failed-verify-import-state = Ma rnexxiex tiġi vverifikata l-istat tal-importazzjoni.
+toast-failed-update-import-state = Ma rnexxiexx li jiġi stabbilit l-istat tal-importazzjoni.
+toast-import-in-progress = Import fil-progress. Jekk jogħġbok ipprova mill-ġdid aktar tard.

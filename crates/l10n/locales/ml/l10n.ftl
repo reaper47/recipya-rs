@@ -597,3 +597,6 @@ supported = പിന്തുണയ്ക്കപ്പെടുന്നു
 wakelock-activated = സ്ക്രീൻ ലോക്ക് സജീവമാക്കി.
 wakelock-deactivated = സ്ക്രീൻ ലോക്ക് നിഷ്ക്രിയമാക്കി.
 recipe-page-added-to-collection = പാചകക്കുറിപ്പ് നിങ്ങളുടെ ശേഖരത്തിൽ ചേർത്തു.
+toast-failed-verify-import-state = ഇറക്കുമതി സ്ഥിതി സ്ഥിരീകരിക്കാൻ പരാജയപ്പെട്ടു.
+toast-failed-update-import-state = ഇറക്കുമതി സ്ഥിതി സജ്ജീകരിക്കാൻ പരാജയപ്പെട്ടു.
+toast-import-in-progress = ഇറക്കുമതി പുരോഗമിച്ചുകൊണ്ടിരിക്കുകയാണ്. ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക.

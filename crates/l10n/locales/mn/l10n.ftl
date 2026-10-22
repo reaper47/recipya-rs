@@ -597,3 +597,6 @@ supported = дэмжигдсэн
 wakelock-activated = Дэлгэцийн түгжээ идэвхжүүлэгдлээ.
 wakelock-deactivated = Дэлгэцийн түгжээ унтрагдлаа.
 recipe-page-added-to-collection = Жорыг танай цуглуулгад нэмсэн болно.
+toast-failed-verify-import-state = Импортын төлөвийг шалгахад алдаа гарлаа.
+toast-failed-update-import-state = Импортын төлөвийг тохируулахад бүтэлгүйтлээ.
+toast-import-in-progress = Импорт явагдаж байна. Дараа нь дахин оролдоно уу.

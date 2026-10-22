@@ -597,3 +597,6 @@ supported = მხარდაჭერილი
 wakelock-activated = ეკრანის ბლოკირება გააქტიურდა.
 wakelock-deactivated = ეკრანის ბლოკირება გამორთულია.
 recipe-page-added-to-collection = რეცეპტი დაემატა თქვენს კოლექციას.
+toast-failed-verify-import-state = იმპორტის მდგომარეობის შემოწმება ვერ შედგა.
+toast-failed-update-import-state = იმპორტის მდგომარეობის დაყენება ვერ მოხერხდა.
+toast-import-in-progress = იმპორტი მიმდინარეობს. გთხოვთ, მოგვიანებით სცადოთ.

@@ -593,3 +593,6 @@ supported = ສະໜັບສະໜູນ
 wakelock-activated = ໄດ້ເປີດໃຊ້ການລັອກໜ້າຈໍ.
 wakelock-deactivated = ໄດ້ປິດການລັອກໜ້າຈໍແລ້ວ.
 recipe-page-added-to-collection = ສູດອາຫານໄດ້ຖືກເພີ່ມເຂົ້າໄປໃນຊຸດສູດອາຫານຂອງທ່ານແລ້ວ.
+toast-failed-verify-import-state = ການກວດສອບສະຖານະການນຳເຂົ້າລົ້ມເຫຼວ.
+toast-failed-update-import-state = ບໍ່ສາມາດກຳນົດສະຖານະການນຳເຂົ້າໄດ້.
+toast-import-in-progress = ການນຳເຂົ້າກຳລັງດຳເນີນຢູ່. ກະລຸນາລອງອີກຄັ້ງໃນພາຍຫຼັງ.

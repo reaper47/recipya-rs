@@ -593,3 +593,6 @@ supported = รองรับ
 wakelock-activated = การล็อกหน้าจอถูกเปิดใช้งานแล้ว
 wakelock-deactivated = การล็อกหน้าจอถูกปิดใช้งานแล้ว
 recipe-page-added-to-collection = สูตรอาหารได้ถูกเพิ่มไปยังคอลเลกชันของคุณแล้ว
+toast-failed-verify-import-state = ไม่สามารถตรวจสอบสถานะการนำเข้าได้
+toast-failed-update-import-state = ไม่สามารถตั้งค่าสถานะการนำเข้าได้
+toast-import-in-progress = กำลังนำเข้า โปรดลองอีกครั้งในภายหลัง

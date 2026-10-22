@@ -597,3 +597,6 @@ supported = Cefnogedig
 wakelock-activated = Mae'r clo sgrin wedi'i actifadu.
 wakelock-deactivated = Mae clo'r sgrin wedi'i an actifadu.
 recipe-page-added-to-collection = Mae'r rysáit wedi'i ychwanegu at eich casgliad.
+toast-failed-verify-import-state = Methu gwirio cyflwr yr mewnforio.
+toast-failed-update-import-state = Methu gosod cyflwr mewnforio.
+toast-import-in-progress = Mewnforio yn y blaen. Gwnewch gais eto yn nes ymlaen.

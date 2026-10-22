@@ -6,8 +6,8 @@ use tokio::time::Instant;
 use tracing::{Instrument, Span, error, warn};
 use uuid::Uuid;
 
-use app::state::AppState;
-use integrations::api::Credentials;
+use app::{message::ToastCtx, state::AppState};
+use integrations::api::{Api, Credentials};
 use l10n::Messages;
 use models::{
     Error::{DuplicateEntity, DuplicateEntityWithID},
@@ -15,10 +15,12 @@ use models::{
     reports::{
         report::{Items, ReportForCreate},
         report_log::ReportLogForCreate,
-        report_types::{Import, PrimaryReportType, ReportTypeFull, TertiaryReportType},
+        report_types::{API, Import, PrimaryReportType, ReportTypeFull, TertiaryReportType},
     },
     settings::UserSettingDetails,
+    states::UserStates,
 };
+use support::states::AuthenticatedState;
 
 use crate::{
     Error,
@@ -50,6 +52,33 @@ fn fetch_recipes_from_api(
 
     tokio::spawn(
         async move {
+            let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
+            let user_states = UserStates::new(&state.mm, user_id);
+
+            match user_states.is_importing_app_or_api().await {
+                Ok(true) => {
+                    toast.error(&messages.toast_import_in_progress()).await;
+                    return;
+                }
+                Ok(false) => {
+                    if let Err(err) = user_states.set_is_importing_app().await {
+                        error!(?err, ?user_id, "Failed to set api import state");
+                        state.hide_broadcast(user_id, &messages).await;
+                        toast
+                            .error(&messages.toast_failed_update_import_state())
+                            .await;
+                        return;
+                    }
+                }
+                Err(err) => {
+                    error!(?err, ?user_id, "Failed to verify import state");
+                    toast
+                        .error(&messages.toast_failed_verify_import_state())
+                        .await;
+                    return;
+                }
+            }
+
             let api = form.api.to_string();
             let start_time = Instant::now();
 
@@ -193,29 +222,15 @@ fn fetch_recipes_from_api(
                 )
                 .await;
 
-            let report_type = match form.api {
-                integrations::api::Api::Mealie => ReportTypeFull::api(TertiaryReportType::mealie()),
-                integrations::api::Api::Nextcloud => {
-                    ReportTypeFull::api(TertiaryReportType::nextcloud())
-                }
-                integrations::api::Api::Tandoor => {
-                    ReportTypeFull::api(TertiaryReportType::tandoor())
-                }
-                integrations::api::Api::Unknown => ReportTypeFull {
-                    primary: PrimaryReportType::<Import>::new(),
-                    secondary: None,
-                    tertiary: None,
-                },
-            };
-
             let items = Items::from(report_logs.as_slice());
             let report = ReportForCreate::new(
-                report_type,
+                report_type_from_api(&form.api),
                 report_logs,
                 items,
                 i64::try_from(start_time.elapsed().as_millis()).unwrap_or_default(),
                 user_id,
             );
+
             broadcast_import_done_toast(
                 &state, successes, processed, report, api, user_id, &messages,
             )
@@ -245,5 +260,18 @@ async fn push_recipe_in_db(
             error!(name = recipe.name, ?err, "Error saving recipe");
             Err((recipe.name, Error::Model(err)))
         }
+    }
+}
+
+const fn report_type_from_api(api: &Api) -> ReportTypeFull<Import, API> {
+    match api {
+        integrations::api::Api::Mealie => ReportTypeFull::api(TertiaryReportType::mealie()),
+        integrations::api::Api::Nextcloud => ReportTypeFull::api(TertiaryReportType::nextcloud()),
+        integrations::api::Api::Tandoor => ReportTypeFull::api(TertiaryReportType::tandoor()),
+        integrations::api::Api::Unknown => ReportTypeFull {
+            primary: PrimaryReportType::<Import>::new(),
+            secondary: None,
+            tertiary: None,
+        },
     }
 }

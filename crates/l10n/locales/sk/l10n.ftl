@@ -597,3 +597,6 @@ supported = podporované
 wakelock-activated = Blokovanie obrazovky je aktivované.
 wakelock-deactivated = Zámka obrazovky bola deaktivovaná.
 recipe-page-added-to-collection = Recept bol pridaný do vašej zbierky.
+toast-failed-verify-import-state = Nepodarilo sa overiť stav importu.
+toast-failed-update-import-state = Nepodarilo sa nastaviť stav importu.
+toast-import-in-progress = Prebieha import. Skúste to neskôr.

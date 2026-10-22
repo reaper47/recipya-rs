@@ -593,3 +593,6 @@ supported = ត្រូវបានគាំទ្រ
 wakelock-activated = អ័ព្ទអេក្រង់ត្រូវបានសកម្ម។
 wakelock-deactivated = ការចាក់សោអេក្រង់ត្រូវបានផ្អាក។
 recipe-page-added-to-collection = ម្ហូបនេះត្រូវបានបន្ថែមទៅក្នុងបណ្តុំរបស់អ្នក។
+toast-failed-verify-import-state = មិនអាចផ្ទៀងផ្ទាត់ស្ថានភាពនៃការនាំចូលបានទេ។
+toast-failed-update-import-state = មិនអាចកំណត់ស្ថានភាពនាំចូលបានទេ។
+toast-import-in-progress = កំពុងនាំចូល។ សូមសាកល្បងម្តងទៀតនៅពេលក្រោយ។

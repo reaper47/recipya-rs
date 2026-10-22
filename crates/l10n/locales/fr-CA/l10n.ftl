@@ -597,3 +597,6 @@ supported = pris en charge
 wakelock-activated = Verrouillage de l’écran activé.
 wakelock-deactivated = Verrouillage de l’écran désactivé.
 recipe-page-added-to-collection = La recette a été ajoutée à votre collection.
+toast-failed-verify-import-state = Échec de la vérification de l'état d'importation.
+toast-failed-update-import-state = Impossible de définir l'état de l'importation.
+toast-import-in-progress = Import en cours. Veuillez réessayer plus tard.

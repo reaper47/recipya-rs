@@ -597,3 +597,6 @@ supported = נתמך
 wakelock-activated = נעילת המסך הופעלה.
 wakelock-deactivated = נעילת המסך הושבתה.
 recipe-page-added-to-collection = המתכון נוסף לאוסף שלך.
+toast-failed-verify-import-state = נכשל אימות מצב הייבוא.
+toast-failed-update-import-state = לא ניתן לקבוע את מצב הייבוא.
+toast-import-in-progress = ייבוא מתבצע. אנא נסה שוב מאוחר יותר.

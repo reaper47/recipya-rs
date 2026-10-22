@@ -597,3 +597,6 @@ supported = acceptat
 wakelock-activated = Blocarea ecranului a fost activată.
 wakelock-deactivated = Blocarea ecranului a fost dezactivată.
 recipe-page-added-to-collection = Rețeta a fost adăugată la colecția dumneavoastră.
+toast-failed-verify-import-state = Verificarea stării de import a eșuat.
+toast-failed-update-import-state = Nu s-a putut seta starea de import.
+toast-import-in-progress = Import în curs. Vă rugăm să încercați din nou mai târziu.

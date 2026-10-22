@@ -593,3 +593,6 @@ supported = disokong
 wakelock-activated = Kunci skrin diaktifkan.
 wakelock-deactivated = Kunci skrin dinyahaktifkan.
 recipe-page-added-to-collection = Resipi telah ditambah ke koleksi anda.
+toast-failed-verify-import-state = Gagal mengesahkan keadaan import.
+toast-failed-update-import-state = Gagal menetapkan keadaan import.
+toast-import-in-progress = Import sedang berjalan. Sila cuba lagi kemudian.

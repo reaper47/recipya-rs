@@ -597,3 +597,6 @@ supported = پشتیبانی‌شده
 wakelock-activated = قفل صفحه فعال شد.
 wakelock-deactivated = قفل صفحه غیرفعال شد.
 recipe-page-added-to-collection = دستور پخت به مجموعه شما اضافه شد.
+toast-failed-verify-import-state = نتوانست وضعیت واردات را بررسی کند.
+toast-failed-update-import-state = نتوانست وضعیت واردات تنظیم شود.
+toast-import-in-progress = در حال انجام است. لطفاً بعداً دوباره تلاش کنید.

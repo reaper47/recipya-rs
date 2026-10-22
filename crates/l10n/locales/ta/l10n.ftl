@@ -597,3 +597,6 @@ supported = ஆதரிக்கப்பட்டது
 wakelock-activated = திரை பூட்டம் செயல்படுத்தப்பட்டது.
 wakelock-deactivated = திரைப் பூட்டம் நீக்கப்பட்டது.
 recipe-page-added-to-collection = சமையல் குறிப்பு உங்கள் தொகுப்பில் சேர்க்கப்பட்டுள்ளது.
+toast-failed-verify-import-state = இறக்குமதி நிலையைச் சரிபார்க்கத் தவறியது.
+toast-failed-update-import-state = இறக்குமதி நிலையை அமைக்க முடியவில்லை.
+toast-import-in-progress = இறக்குமதி நடைபெறுகிறது. தயவுசெய்து பின்னர் மீண்டும் முயற்சியுங்கள்.

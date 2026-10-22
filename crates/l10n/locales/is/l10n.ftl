@@ -597,3 +597,6 @@ supported = stytt
 wakelock-activated = Skjálokkun virkjuð.
 wakelock-deactivated = Skjálokkunin var slökkt.
 recipe-page-added-to-collection = Uppskriftin hefur verið bætt við safninu þínu.
+toast-failed-verify-import-state = Ekki tókst að sannreyna innflutningsástandið.
+toast-failed-update-import-state = Ekki tókst að stilla innflutningsástandið.
+toast-import-in-progress = Innflutningur í gangi. Prófaðu aftur seinna.

@@ -593,3 +593,6 @@ supported = サポート済み
 wakelock-activated = 画面ロックが有効になりました。
 wakelock-deactivated = 画面ロックが解除されました。
 recipe-page-added-to-collection = レシピがコレクションに追加されました。
+toast-failed-verify-import-state = インポート状態の検証に失敗しました。
+toast-failed-update-import-state = 輸送状態の設定に失敗しました。
+toast-import-in-progress = インポートが進行中です。後ほど再度お試しください。

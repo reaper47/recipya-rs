@@ -7,14 +7,15 @@ Reason is I wanted to translate all locales using a local LLM model without copy
 
 To run on your local machine:
 1. Install llama.cpp: https://llama.app/
-2. Run the llama server with the Index -Translate-35B-A3B-preview-GGUP (https://huggingface.co/IndexTeam/Index-Translate-35B-A3B-preview-GGUF) LLM model: `llama serve -hf IndexTeam/Index-Translate-35B-A3B-preview-GGUF:Q4_K_M`
+2. Run the llama server with the Index -Translate-35B-A3B-preview-GGUP (https://huggingface.co/IndexTeam/Index-Translate-35B-A3B-preview-GGUF) LLM model:
+    `llama serve -hf IndexTeam/Index-Translate-35B-A3B-preview-GGUF:Q4_K_M`
 3. Activate a virtual environment:
 ```bash
 python -m venv venv
 . venv/bin/activate
 pip install fluent.syntax babel
 ```
-5. Run the the script: `python translate_ftl.py`
+5. Run the the script: `python translate_ftl.py --skip en-US en-GB`
 
 -- Disclaimer End --
 
@@ -468,7 +469,8 @@ def main() -> None:
     locales = sorted(d.name for d in root.iterdir() if d.is_dir() and d.name != args.reference)
     if args.locales:
         locales = [l for l in locales if l in args.locales]
-    locales = [l for l in locales if l not in args.skip]
+    skip = set(args.skip or []) | {"venv"}
+    locales = [l for l in locales if l not in skip]
     if not locales:
         sys.exit("No locales to process.")
 

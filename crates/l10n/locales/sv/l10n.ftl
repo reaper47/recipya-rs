@@ -597,3 +597,6 @@ supported = stöds
 wakelock-activated = Skärmlåset har aktiverats.
 wakelock-deactivated = Skärmlåset har avaktiverats.
 recipe-page-added-to-collection = Receptet har lagts till i din samling.
+toast-failed-verify-import-state = Gick inte att verifiera importstatus.
+toast-failed-update-import-state = Misslyckades med att ställa in importstatus.
+toast-import-in-progress = Import pågår. Försök igen senare.

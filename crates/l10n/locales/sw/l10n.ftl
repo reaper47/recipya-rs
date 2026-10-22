@@ -597,3 +597,6 @@ supported = inayoungwa mkono
 wakelock-activated = Sakafu imeamilishwa.
 wakelock-deactivated = Sakafu imezimwa.
 recipe-page-added-to-collection = Mpishi umeongezwa kwenye mkusanyiko wako.
+toast-failed-verify-import-state = Imeshindwa kuthibitisha hali ya uingizaji.
+toast-failed-update-import-state = Imeshindwa kuweka hali ya uingizaji.
+toast-import-in-progress = Uingizaji uko katika maendeleo. Tafadhali jaribu tena baadaye.

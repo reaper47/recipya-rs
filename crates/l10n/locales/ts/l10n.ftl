@@ -597,3 +597,6 @@ supported = sekeletswa
 wakelock-activated = Seloqo sa skrin se sefumele.
 wakelock-deactivated = Selo sa skrin se yisiwe.
 recipe-page-added-to-collection = Resipi ya hlangiselwe ku qoqo lakho.
+toast-failed-verify-import-state = A vha ni hlela kuqinisekisa imeko yokungenisa.
+toast-failed-update-import-state = A vuna ku seta state ya import.
+toast-import-in-progress = Ukungenisa kuqhubeka. Nceda uzame kwakhona kamva.

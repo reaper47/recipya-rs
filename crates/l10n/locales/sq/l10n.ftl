@@ -597,3 +597,6 @@ supported = i mbështetur
 wakelock-activated = Kyçja e ekranit është aktivizuar.
 wakelock-deactivated = Bllokimi i ekranit është çaktivizuar.
 recipe-page-added-to-collection = Receta është shtuar në koleksionin tuaj.
+toast-failed-verify-import-state = Nuk arrit të verifikohet gjendja e importit.
+toast-failed-update-import-state = Nuk arriti të caktohet gjendja e importimit.
+toast-import-in-progress = Importimi është në proces. Ju lutemi provoni përsëri më vonë.

@@ -11,6 +11,7 @@ pub mod reports;
 pub mod settings;
 pub mod share;
 pub mod shopping;
+pub mod states;
 pub mod theme;
 pub mod time;
 pub mod tokens;

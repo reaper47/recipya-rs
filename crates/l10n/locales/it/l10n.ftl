@@ -597,3 +597,6 @@ supported = supportato
 wakelock-activated = Blocco schermo attivato.
 wakelock-deactivated = Blocco schermo disattivato.
 recipe-page-added-to-collection = La ricetta è stata aggiunta alla tua collezione.
+toast-failed-verify-import-state = Impossibile verificare lo stato dell'importazione.
+toast-failed-update-import-state = Impossibile impostare lo stato di importazione.
+toast-import-in-progress = Importazione in corso. Riprova più tardi.
