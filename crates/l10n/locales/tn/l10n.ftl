@@ -597,3 +597,6 @@ supported = e tšehelitsoeng
 wakelock-activated = Senotso sa skrine se sebetse.
 wakelock-deactivated = Leqheka la skrine le ile la timetsoa.
 recipe-page-added-to-collection = Resepi e kentse pokellong ya hao.
+toast-failed-verify-import-state = Ho hloleha ho netefatsa boemo ba ho kenya.
+toast-failed-update-import-state = Ho hloleha ho beha boemo ba ho kenya.
+toast-import-in-progress = Ho kenya ho ntse ho tsoela pele. Ka kopo leka hape hamorao.

@@ -597,3 +597,6 @@ supported = toetatud
 wakelock-activated = Ekraani lukk aktiveeriti.
 wakelock-deactivated = Ekraanilukk on deaktiveeritud.
 recipe-page-added-to-collection = Retsept on lisatud teie kollektsiooni.
+toast-failed-verify-import-state = Impordi oleku kontrollimine ebaõnnestus.
+toast-failed-update-import-state = Impordi oleku määramine ebaõnnestus.
+toast-import-in-progress = Impordimine käimas. Palun proovi hiljem uuesti.

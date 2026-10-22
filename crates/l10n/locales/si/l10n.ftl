@@ -597,3 +597,6 @@ supported = සහාය දක්වනු ලබයි
 wakelock-activated = තිර අගුළුව සක්‍රිය කර ඇත.
 wakelock-deactivated = තිර අගුළුව අක්‍රිය කර ඇත.
 recipe-page-added-to-collection = වට්ටෝරුව ඔබේ රැස්කරණයට එක් කර ඇත.
+toast-failed-verify-import-state = ආනයන තත්ත්වය තහවුරු කිරීමට අසමත් විය.
+toast-failed-update-import-state = ආනයන තත්ත්වය සකස් කිරීමට අසමත් විය.
+toast-import-in-progress = ආයාතය සිදු වෙමින් පවතී. කරුණාකර පසුව නැවත උත්සාහ කරන්න.

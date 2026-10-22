@@ -597,3 +597,6 @@ supported = dəstəklənir
 wakelock-activated = Ekran kilidi aktivləşdirildi.
 wakelock-deactivated = Ekran kilidi deaktivasiya edildi.
 recipe-page-added-to-collection = Resept kolleksiyana əlavə edilib.
+toast-failed-verify-import-state = idxal vəziyyətinin yoxlanılması uğursuz oldu.
+toast-failed-update-import-state = İdxal vəziyyəti təyin edilmədi.
+toast-import-in-progress = İdxal davam edir. Zəhmət olmasa, bir az sonra yenidən cəhd edin.

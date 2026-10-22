@@ -593,3 +593,6 @@ supported = e tautokona ana
 wakelock-activated = Kua whakahohea te aukati mata.
 wakelock-deactivated = Kua whakawetohia te kati mata.
 recipe-page-added-to-collection = Kua tāpirihia te pānui kai ki tō kohinga.
+toast-failed-verify-import-state = I turaki te manatoko i te āhua o te kawemai.
+toast-failed-update-import-state = Kāore i taea te tautuhi i te āhua kaweake.
+toast-import-in-progress = Kei te tukuna atu. Me whakamātau anō ā muri ake.

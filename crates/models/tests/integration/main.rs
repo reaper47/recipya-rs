@@ -8,6 +8,7 @@ mod reports;
 mod settings;
 mod share;
 mod shopping;
+mod states;
 mod theme;
 mod token;
 mod user;

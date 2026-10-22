@@ -597,3 +597,6 @@ supported = subtenata
 wakelock-activated = Ekranŝlosilo aktivigita.
 wakelock-deactivated = Ekranŝlosilo malaktivigita.
 recipe-page-added-to-collection = La recepto estis aldonita al via kolekto.
+toast-failed-verify-import-state = Malsukcesis verifi la importan staton.
+toast-failed-update-import-state = Ne sukcesis agordi la importostaton.
+toast-import-in-progress = Importo estas en progreso. Bonvolu provi denove poste.

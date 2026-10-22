@@ -593,3 +593,6 @@ supported = 支援
 wakelock-activated = 螢幕鎖定已啟動。
 wakelock-deactivated = 螢幕鎖定已停用。
 recipe-page-added-to-collection = 食譜已加入您的收藏。
+toast-failed-verify-import-state = 無法驗證匯入狀態。
+toast-failed-update-import-state = 無法設定匯入狀態。
+toast-import-in-progress = 正在進行匯入。請稍後再試。

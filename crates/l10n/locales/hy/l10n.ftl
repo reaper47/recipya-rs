@@ -597,3 +597,6 @@ supported = աջակցվում է
 wakelock-activated = Էկրանի կողպեքը ակտիվացված է։
 wakelock-deactivated = Էկրանի կողպեքը անջատվել է։
 recipe-page-added-to-collection = Բաղադրատոմսը ավելացվել է ձեր հավաքածուին։
+toast-failed-verify-import-state = Չհաջողվեց ստուգել ներմուծման վիճակը։
+toast-failed-update-import-state = Չհաջողվեց սահմանել ներմուծման վիճակը։
+toast-import-in-progress = Ներմուծումը ընթացքի մեջ է։ Խնդրում ենք փորձել ավելի ուշ։

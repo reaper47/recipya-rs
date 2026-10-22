@@ -593,3 +593,6 @@ supported = soportado
 wakelock-activated = Pantay harkayta wakaychasqa.
 wakelock-deactivated = Pantay harkay p'allarisqa.
 recipe-page-added-to-collection = Receta kayman tukuraykuymanmi.
+toast-failed-verify-import-state = Import estado verifikaytaq manatiray.
+toast-failed-update-import-state = Import estado añaqichiymanakusqa.
+toast-import-in-progress = Importación en progreso. Inténtelo nuevamente más tarde.

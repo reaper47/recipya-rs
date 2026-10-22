@@ -597,3 +597,6 @@ supported = ይደገፋል
 wakelock-activated = የስክሪን መቆለፊያ ተንቀሳቃሽ ሆኗል።
 wakelock-deactivated = የስክሪን መቆለፊያ ተሰርዟል።
 recipe-page-added-to-collection = ሪሴፕቱ ወደ ስብስብዎ ተጨምሯል።
+toast-failed-verify-import-state = የአስገቢያውን ሁኔታ መረጋገጥ አልተቻለም።
+toast-failed-update-import-state = የአመጋገብ ሁኔታውን ለመቀየር አልተቻለም።
+toast-import-in-progress = ማስገባት እየተከናወነ ነው። እባክዎ በኋላ እንደገና ይሞክሩ።

@@ -593,3 +593,6 @@ supported = được hỗ trợ
 wakelock-activated = Màn hình khóa đã được kích hoạt.
 wakelock-deactivated = Khóa màn hình đã được tắt.
 recipe-page-added-to-collection = Công thức đã được thêm vào bộ sưu tập của bạn.
+toast-failed-verify-import-state = Không thể xác minh trạng thái nhập khẩu.
+toast-failed-update-import-state = Không thể đặt trạng thái nhập.
+toast-import-in-progress = Đang nhập. Vui lòng thử lại sau.

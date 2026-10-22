@@ -597,3 +597,6 @@ supported = onartuta
 wakelock-activated = Pantaila-blokeoa aktibatuta dago.
 wakelock-deactivated = Pantaila-blokeoa desaktibatuta dago.
 recipe-page-added-to-collection = Errezeta zure bildumara gehitu da.
+toast-failed-verify-import-state = Ezin izan da inportazio-egoera egiaztatu.
+toast-failed-update-import-state = Ezin izan da inportazio-egoera ezarri.
+toast-import-in-progress = Inporta-prozesua ari da. Mesedez, saiatu berriro geroxeago.

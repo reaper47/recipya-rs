@@ -597,3 +597,6 @@ supported = υποστηρίζεται
 wakelock-activated = Ο αποκλεισμός της οθόνης ενεργοποιήθηκε.
 wakelock-deactivated = Ο αποκλεισμός της οθόνης απενεργοποιήθηκε.
 recipe-page-added-to-collection = Η συνταγή προστέθηκε στη συλλογή σας.
+toast-failed-verify-import-state = Αποτυχήθηκε ο έλεγχος της κατάστασης εισαγωγής.
+toast-failed-update-import-state = Αποτύχει ο καθορισμός της κατάστασης εισαγωγής.
+toast-import-in-progress = Εισαγωγή σε εξέλιξη. Παρακαλούμε δοκιμάστε ξανά αργότερα.

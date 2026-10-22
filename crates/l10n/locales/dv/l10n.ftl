@@ -597,3 +597,6 @@ supported = ތެދުވެރި
 wakelock-activated = ސްކްރީން ލޮކް އެކްޓިވޭޓް ކުރެވިއްޖެ.
 wakelock-deactivated = ސްކްރީން ލޮކް ނިއްވާލެވިއްޖެ.
 recipe-page-added-to-collection = ރެސިޕީ ތިޔަ ޖަމާކުރާ ލިސްޓަށް އިތުރުކޮށްފި.
+toast-failed-verify-import-state = އިމްޕޯޓް ސްޓޭޓް ވެރިފައި ކުރެވިފައި ނުވެއެ.
+toast-failed-update-import-state = އިމްޕޯޓް ސްޓޭޓް ސެޓް ކުރުމަށް ނުކުޅެދުނު.
+toast-import-in-progress = އިމްޕޯޓް ކުރަމުން ދެއެވެ. އެއްކަލަ ފަހުން އަލުން ތަޖުރިބާ ކުރައްވާ.

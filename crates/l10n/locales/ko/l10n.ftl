@@ -593,3 +593,6 @@ supported = 지원됨
 wakelock-activated = 화면 잠금이 활성화되었습니다.
 wakelock-deactivated = 화면 잠금이 비활성화되었습니다.
 recipe-page-added-to-collection = 레시피가 컬렉션에 추가되었습니다.
+toast-failed-verify-import-state = 가져오기 상태를 확인하지 못했습니다.
+toast-failed-update-import-state = 가져오기 상태를 설정하지 못했습니다.
+toast-import-in-progress = 가져오기가 진행 중입니다. 잠시 후 다시 시도해 주세요.

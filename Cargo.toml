@@ -80,6 +80,7 @@ winnow = "1.0.1"
 zip = "9.0.5"
 
 [workspace.metadata.tasks]
+check-sql = "diesel-guard check crates/repository/src/migrations/"
 web-install-deps = "npm --prefix ./web/app install"
 web-build = "npm --prefix ./web/app run build"
 

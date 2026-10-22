@@ -597,3 +597,6 @@ supported = падтрымліваецца
 wakelock-activated = Экран зафіксаваны.
 wakelock-deactivated = Экранны блакіроўка дэактывавана.
 recipe-page-added-to-collection = Рэцэпт дададзены ў вашу калекцыю.
+toast-failed-verify-import-state = Не ўдалося праверыць стан імпарту.
+toast-failed-update-import-state = Не ўдалося ўстанавіць стан імпарту.
+toast-import-in-progress = Імпорт выконваецца. Паўтарыце спробу пазней.

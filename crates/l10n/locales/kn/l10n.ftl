@@ -597,3 +597,6 @@ supported = ಬೆಂಬಲಿತ
 wakelock-activated = ಪರದೆ ಲಾಕ್ ಸಕ್ರಿಯಗೊಂಡಿದೆ.
 wakelock-deactivated = ಪರದೆ ಲಾಕ್ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ.
 recipe-page-added-to-collection = ಪಾಕವಿಧಾನವನ್ನು ನಿಮ್ಮ ಸಂಗ್ರಹಕ್ಕೆ ಸೇರಿಸಲಾಗಿದೆ.
+toast-failed-verify-import-state = ಆಮದು ಸ್ಥಿತಿಯನ್ನು ಪರಿಶೀಲಿಸಲು ವಿಫಲವಾಯಿತು.
+toast-failed-update-import-state = ಆಮದು ಸ್ಥಿತಿಯನ್ನು ನಿಗದಿಪಡಿಸಲು ವಿಫಲವಾಯಿತು.
+toast-import-in-progress = ಆಮದು ಪ್ರಗತಿಯಲ್ಲಿದೆ. ದಯವಿಟ್ಟು ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.

@@ -597,3 +597,6 @@ supported = ondersteund
 wakelock-activated = Schermvergrendeling geactiveerd.
 wakelock-deactivated = Schermvergrendeling is gedeactiveerd.
 recipe-page-added-to-collection = Het recept is aan uw verzameling toegevoegd.
+toast-failed-verify-import-state = Het importbestand kon niet worden geverifieerd.
+toast-failed-update-import-state = Het importstatus kon niet worden ingesteld.
+toast-import-in-progress = Import wordt uitgevoerd. Probeer het later opnieuw.

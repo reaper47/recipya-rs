@@ -597,3 +597,6 @@ supported = palaikoma
 wakelock-activated = Ekrano užraktas aktyvuotas.
 wakelock-deactivated = Ekrano užraktas išjungtas.
 recipe-page-added-to-collection = Receptas pridėtas prie jūsų kolekcijos.
+toast-failed-verify-import-state = Nepavyko patikrinti importo būsenos.
+toast-failed-update-import-state = Nepavyko nustatyti importo būsenos.
+toast-import-in-progress = Importas vyksta. Prašome pabandyti dar kartą vėliau.

@@ -597,3 +597,6 @@ supported = మద్దతు ఇవ్వబడింది
 wakelock-activated = స్క్రీన్ లాక్ చాల్చేయబడింది.
 wakelock-deactivated = స్క్రీన్ లాక్ నిష్క్రియం చేయబడింది.
 recipe-page-added-to-collection = వంటకం మీ సేకరణలో చేర్చబడింది.
+toast-failed-verify-import-state = దిగుమతి స్థితిని ధృవీకరించడం విఫలమైంది.
+toast-failed-update-import-state = దిగుమతి స్థితిని నిర్దేశించలేకపోయింది.
+toast-import-in-progress = దిగుమతి జరుగుతోంది. దయచేసి తరువాత ప్రయత్నించండి.

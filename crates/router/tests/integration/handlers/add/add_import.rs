@@ -4,7 +4,7 @@ use axum_test::http::StatusCode;
 use axum_test::multipart::{MultipartForm, Part};
 use serde_json::json;
 
-use models::Recipe;
+use models::{Recipe, reports::ViewReport, user::User};
 use router::params::PreviewForm;
 use test_db::default_config;
 use test_fixtures::open_test_file;
@@ -102,9 +102,6 @@ fn other_valid_preview_form2() -> PreviewForm {
 }
 
 mod tests_import_app {
-    use models::{reports::ViewReport, user::User};
-    use test_db::default_config;
-
     use super::*;
 
     const BASE_URI: &str = "/recipes/add/import/app";
@@ -289,8 +286,6 @@ mod tests_recipe_add_import_preview {
 }
 
 mod tests_recipe_add_import_raw_json {
-    use models::{Recipe, reports::ViewReport, user::User};
-
     use super::*;
 
     const BASE_URI: &str = "/recipes/add/import/raw-json";

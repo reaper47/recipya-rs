@@ -657,6 +657,18 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    user_states (user_id) {
+        user_id -> Uuid,
+        is_importing_app -> Bool,
+        is_importing_api -> Bool,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     users (id) {
         id -> Uuid,
         email -> Text,
@@ -783,6 +795,7 @@ diesel::joinable!(user_settings -> measurement_systems (measurement_system_id));
 diesel::joinable!(user_settings -> nutrition_sources (nutrition_source_id));
 diesel::joinable!(user_settings -> themes (selected_theme));
 diesel::joinable!(user_settings -> users (user_id));
+diesel::joinable!(user_states -> users (user_id));
 diesel::joinable!(users_categories -> categories (category_id));
 diesel::joinable!(users_categories -> users (user_id));
 diesel::joinable!(users_keywords -> keywords (keyword_id));
@@ -844,6 +857,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     tools,
     tools_recipes,
     user_settings,
+    user_states,
     users,
     users_categories,
     users_keywords,

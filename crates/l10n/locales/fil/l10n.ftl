@@ -597,3 +597,6 @@ supported = sinusuportahan
 wakelock-activated = Na-activate ang screen lock.
 wakelock-deactivated = Na-deactivate na ang screen lock.
 recipe-page-added-to-collection = Naidagdag na ang resipe sa iyong koleksyon.
+toast-failed-verify-import-state = Nabigo ang pag-verify sa estado ng import.
+toast-failed-update-import-state = Nabigo ang pagtatakda ng estado ng pag-import.
+toast-import-in-progress = Nagpapatuloy ang pag-import. Pakisubukang muli mamaya.

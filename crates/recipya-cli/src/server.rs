@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use auth::types::{Email, Password};
+use models::states::UserStates;
 use rand::{RngExt, distr::Alphanumeric};
 use tokio::signal;
 use tokio::{net::TcpListener, sync::watch};
@@ -87,6 +88,11 @@ async fn run_server_helper() -> Result<()> {
     .await?;
 
     let mm = state.mm.clone();
+
+    UserStates::reset(&mm)
+        .await
+        .expect("import flags for all users to be reset");
+
     tokio::spawn(async move {
         NutritionDataSource::update_all(&mm).await;
     });
