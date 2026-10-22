@@ -597,3 +597,6 @@ supported = زیرِ حمایت
 wakelock-activated = اسکرین لاک فعال کر دیا گیا ہے۔
 wakelock-deactivated = اسکرین لاک غیر فعال کر دیا گیا ہے۔
 recipe-page-added-to-collection = نسخہ آپ کے مجموعے میں شامل کر دیا گیا ہے۔
+toast-failed-verify-import-state = درآمد کی حالت کی تصدیق ناکام ہو گئی۔
+toast-failed-update-import-state = درآمدی حالت مقرر کرنے میں ناکام۔
+toast-import-in-progress = درآمد جاری ہے۔ براہِ کرم بعد میں دوبارہ کوشش کریں۔
