@@ -1,10 +1,19 @@
-use l10n::Messages;
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 
-use models::paper::PaperSize;
+use l10n::Messages;
+use models::{paper::PaperSize, recipe::structs::recipe::Category};
 
 use super::layouts;
 use crate::settings::SEARCH_INPUT_JS;
+
+/// Renders each of the categories as an option.
+pub fn render_categories_for_datalist(categories: &[Category]) -> Markup {
+    html! {
+        @for c in categories {
+            option value=(c.name) {}
+        }
+    }
+}
 
 /// Renders the paper sizes table.
 pub fn render_paper_sizes_table(data: &[(usize, &str, &PaperSize)], messages: &Messages) -> Markup {

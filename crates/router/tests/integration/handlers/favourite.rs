@@ -1,7 +1,7 @@
 use axum::http::Method;
 
 use models::{Recipe, settings::UserSettingDetails, user::User};
-use router::params::FavouriteParams;
+use router::schemas::recipes::FavouriteParams;
 use test_db::default_config;
 use test_harness::{assert_html, assert_sse_message};
 use test_harness::{assert_must_be_logged_in, build_server_logged_in, build_server_sse};

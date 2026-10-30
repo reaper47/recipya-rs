@@ -6,7 +6,7 @@ use models::user::UserCategory;
 use models::{Error, Recipe};
 use repository::schema;
 use test_db::default_config;
-use test_fixtures::insert_user;
+use test_fixtures::{insert_other_user, insert_user};
 use test_harness::create_app_state;
 
 use crate::{Result, recipe::utils::a_complete_recipe_for_create};
@@ -160,6 +160,50 @@ mod tests_delete {
 
     fn fail_message(component: &str) -> String {
         format!("should not be any {component} associated with recipe")
+    }
+}
+
+mod tests_delete_bulk {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_delete_recipes_found_ok() -> Result<()> {
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state.mm).await?;
+        let settings = UserSettingDetails::get(&state.mm, user.id).await?;
+        let (recipe1, _) = a_complete_recipe_for_create();
+        let (mut recipe2, _) = a_complete_recipe_for_create();
+        recipe2.name = "Brazilian Chicken".into();
+        let id1 = Recipe::create(&state.mm, user.id, &recipe1, &settings).await?;
+        let id2 = Recipe::create(&state.mm, user.id, &recipe2, &settings).await?;
+
+        Recipe::delete_bulk(&state.mm, &[id1, id2], user.id).await?;
+
+        let got = Recipe::all(&state.mm, user.id).await?;
+        assert_eq!(got.len(), 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_recipes_some_found_ok() -> Result<()> {
+        let state = create_app_state(default_config()).await;
+        let user1 = insert_user(&state.mm).await?;
+        let user2 = insert_other_user(&state.mm, "slava@ukraini.ua").await?;
+        let settings1 = UserSettingDetails::get(&state.mm, user1.id).await?;
+        let settings2 = UserSettingDetails::get(&state.mm, user2.id).await?;
+        let (recipe1, _) = a_complete_recipe_for_create();
+        let (mut recipe2, _) = a_complete_recipe_for_create();
+        recipe2.name = "Brazilian Chicken".into();
+        let id1 = Recipe::create(&state.mm, user1.id, &recipe1, &settings1).await?;
+        let id2 = Recipe::create(&state.mm, user2.id, &recipe2, &settings2).await?;
+
+        Recipe::delete_bulk(&state.mm, &[id1, id2], user1.id).await?;
+
+        let got1 = Recipe::all(&state.mm, user1.id).await?;
+        assert_eq!(got1.len(), 0);
+        let got2 = Recipe::all(&state.mm, user2.id).await?;
+        assert_eq!(got2.len(), 1);
+        Ok(())
     }
 }
 

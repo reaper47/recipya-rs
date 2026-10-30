@@ -27,8 +27,8 @@ pub fn edit_recipe(
     mut data: Data,
     data_dir: &DataDir,
     user_setting: &UserSettingDetails,
-    categories: Vec<Category>,
-    keywords: Vec<Keyword>,
+    categories: &[Category],
+    keywords: &[Keyword],
     messages: &Messages,
 ) -> Result<Markup> {
     let view = data
@@ -58,8 +58,8 @@ fn render_edit_recipe(
     fs_support: &Arc<dyn FsSupport + Sync + Send>,
     view: &ViewRecipe,
     data_dir: &DataDir,
-    categories: Vec<Category>,
-    keywords: Vec<Keyword>,
+    categories: &[Category],
+    keywords: &[Keyword],
     messages: &Messages,
 ) -> Markup {
     let recipe_id = view.recipe_details.recipe.id;
@@ -161,7 +161,7 @@ fn render_edit_recipe(
     }
 }
 
-fn render_categories(view: &ViewRecipe, categories: Vec<Category>, messages: &Messages) -> Markup {
+fn render_categories(view: &ViewRecipe, categories: &[Category], messages: &Messages) -> Markup {
     html! {
         fieldset .fieldset {
             label .label for="category" {
@@ -281,7 +281,7 @@ fn render_instructions(view: &ViewRecipe, messages: &Messages) -> Markup {
     }
 }
 
-fn render_keywords(view: &ViewRecipe, keywords: Vec<Keyword>, messages: &Messages) -> Markup {
+fn render_keywords(view: &ViewRecipe, keywords: &[Keyword], messages: &Messages) -> Markup {
     html! {
         div class="p-4 flex gap-2 flex-wrap" {
             @for kw in view.recipe_details.keywords.iter() {

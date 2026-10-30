@@ -8,7 +8,7 @@ use reqwest::{Method, StatusCode};
 use models::reports::report_log::ReportLog;
 use recipya_scraper::tests::support::scraper::scrape_test_websites;
 use repository::schema;
-use router::params::RecipeScrapeForm;
+use router::schemas::recipes::RecipeScrapeForm;
 use test_db::default_config;
 use test_harness::{
     HIDDEN_SSE_NOTIFICATION, assert_must_be_logged_in, assert_sse_message, build_server_sse,
@@ -77,8 +77,8 @@ async fn test_add_one_valid_url_from_unsupported_websites_ok() -> Result<()> {
         .await;
 
     res.assert_status(StatusCode::ACCEPTED);
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes…</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"#).await;
-    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default hidden\"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\"></p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">-1 of -1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-10 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes…</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"#).await;
+    assert_sse_message(&mut ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-10 fixed bottom-0 right-0 p-6 cursor-default hidden\"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\"></p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">-1 of -1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"#).await;
     assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","action":"View /reports?view=latest","message":"Error fetching recipes.","status":"alert-error","title":"Operation failed"}}"#).await;
     tokio::time::sleep(Duration::from_millis(500)).await;
     let got_logs = fetch_logs(&state).await?;
@@ -113,7 +113,7 @@ async fn test_add_one_valid_url_from_supported_websites_ok() -> Result<()> {
     let messages: Vec<String> = ws_server.receive_all_data(3).await;
     pretty_assertions::assert_eq!(
         messages[0],
-        r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
+        r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
     );
     pretty_assertions::assert_eq!(messages[1], HIDDEN_SSE_NOTIFICATION);
     let success_msg = r#"{"notification":{"type":"toast","action":"View /recipes/1","message":"Recipe has been added to your collection.","status":"alert-info","title":"Success"}}"#;
@@ -197,11 +197,11 @@ async fn test_add_a_website_that_has_already_been_added_ok() -> Result<()> {
     assert_eq!(messages.len(), 4);
     pretty_assertions::assert_eq!(
         messages[0],
-        r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
+        r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
     );
     pretty_assertions::assert_eq!(
         messages[1],
-        r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
+        r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default hidden"><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1"></p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">-1 of -1</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#
     );
     pretty_assertions::assert_eq!(
         messages[2],
@@ -249,10 +249,10 @@ async fn test_add_many_valid_urls_from_supported_websites_ok() -> Result<()> {
         }).await;
 
     res.assert_status(StatusCode::ACCEPTED);
-    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 3</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
-    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">1 of 3</span><span class="font-semibold">33.3%</span></div><div id="export-progress"><progress max="100" value="33.33"></progress></div></div></div>"#).await;
-    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">2 of 3</span><span class="font-semibold">66.7%</span></div><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
-    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">3 of 3</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
+    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">0 of 3</span><span class="font-semibold">0.0%</span></div><div id="export-progress"><progress max="100" value="0.00"></progress></div></div></div>"#).await;
+    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">1 of 3</span><span class="font-semibold">33.3%</span></div><div id="export-progress"><progress max="100" value="33.33"></progress></div></div></div>"#).await;
+    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">2 of 3</span><span class="font-semibold">66.7%</span></div><div id="export-progress"><progress max="100" value="66.67"></progress></div></div></div>"#).await;
+    assert_sse_message(&mut ws_server, r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default "><div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md"><p class="font-medium text-center pb-1">Fetching recipes</p><div class="flex justify-between items-center text-sm mb-2"><span class="font-semibold">3 of 3</span><span class="font-semibold">100.0%</span></div><div id="export-progress"><progress max="100" value="100.00"></progress></div></div></div>"#).await;
     assert_sse_message(&mut ws_server, HIDDEN_SSE_NOTIFICATION).await;
     assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","action":"View /reports?view=latest","message":"Fetched: 3. Skipped: 0","status":"alert-info","title":"Success"}}"#).await;
     tokio::time::sleep(Duration::from_millis(50)).await;

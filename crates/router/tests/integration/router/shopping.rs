@@ -13,6 +13,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use models::download::Download;
+use models::shopping::SortBy;
 use models::{
     Recipe,
     settings::UserSettingDetails,
@@ -23,7 +24,7 @@ use models::{
 use repository::schema;
 use router::{
     SHOPPING_VIEW_COOKIE_NAME,
-    params::ShareRecipeForm,
+    schemas::recipes::ShareRecipeForm,
     schemas::shopping::{ListItemPayload, ListPayload},
 };
 use test_db::default_config;
@@ -136,7 +137,7 @@ mod tests_lists {
         let res = server.post(BASE_URI).add_header(HX_PROMPT, "Costco").await;
 
         res.assert_status_ok();
-        let lists = ShoppingList::get_all(&state.mm, user_id).await?;
+        let lists = ShoppingList::get_all(&state.mm, user_id, SortBy::default()).await?;
         assert_eq!(lists.len(), 1);
         assert_eq!(lists[0].name, "Costco".to_string());
         let list_id = lists[0].id;
@@ -322,7 +323,7 @@ mod tests_list {
         let res = c.server.delete(&base_uri(c.list_id)).await;
 
         res.assert_status_see_other();
-        let lists = ShoppingList::get_all(&c.state.mm, c.user_id).await?;
+        let lists = ShoppingList::get_all(&c.state.mm, c.user_id, SortBy::default()).await?;
         assert_eq!(lists, [] as [models::shopping::ShoppingList; 0]);
         res.assert_header(HX_REDIRECT, "/shopping/lists");
         Ok(())
@@ -336,7 +337,7 @@ mod tests_list {
         let res = server.delete(&base_uri(Uuid::new_v4())).await;
 
         res.assert_status_see_other();
-        let lists = ShoppingList::get_all(&state.mm, user_id).await?;
+        let lists = ShoppingList::get_all(&state.mm, user_id, SortBy::default()).await?;
         assert_eq!(lists, [] as [models::shopping::ShoppingList; 0]);
         res.assert_header(HX_REDIRECT, "/shopping/lists");
         Ok(())
@@ -785,6 +786,11 @@ mod tests_recipes_ingredients {
             );
             Ok(())
         }
+
+        #[tokio::test]
+        async fn test_select_recipes_add_to_list_dialog_ok() -> Result<()> {
+            todo!()
+        }
     }
 
     mod tests_post {
@@ -897,6 +903,11 @@ mod tests_recipes_ingredients {
                 ]
             );
             Ok(())
+        }
+
+        #[tokio::test]
+        async fn test_select_recipes_add_ingredients_to_list_ok() -> Result<()> {
+            todo!()
         }
     }
 }

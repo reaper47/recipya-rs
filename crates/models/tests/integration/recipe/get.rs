@@ -466,14 +466,14 @@ async fn test_fetch_sources_ok() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_ingredients_ok() -> Result<()> {
+async fn test_ingredients_single_recipe_ok() -> Result<()> {
     let (_, state) = build_server_anonymous(default_config()).await?;
     let user_id = User::all(&state.mm).await?[0].id;
     let (recipe, _) = a_complete_recipe_for_create();
     let settings = UserSettingDetails::get(&state.mm, user_id).await?;
     let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
 
-    let got = Recipe::ingredients(&state.mm, recipe_id).await?;
+    let got = Recipe::ingredients(&state.mm, &[recipe_id]).await?;
 
     pretty_assertions::assert_eq!(
         got,
@@ -482,6 +482,39 @@ async fn test_ingredients_ok() -> Result<()> {
             IngredientParser::new(false).from_str("1/2 tbsp cinnamon"),
             IngredientParser::new(false).from_str("4 pounds top quality chicken filet"),
             IngredientParser::new(false).from_str("1/8 cup lemon juice"),
+        ]
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_ingredients_multiple_recipes_ok() -> Result<()> {
+    let (_, state) = build_server_anonymous(default_config()).await?;
+    let user_id = User::all(&state.mm).await?[0].id;
+    let (mut recipe, _) = a_complete_recipe_for_create();
+    let settings = UserSettingDetails::get(&state.mm, user_id).await?;
+    let id1 = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+    recipe.name = "Witch fingers".into();
+    recipe.ingredients = SectionComponents::Flat(vec![
+        Item::new("1 cup of pistachios"),
+        Item::new("1 cup blue spinach"),
+        Item::new("3 tbsp butter, melted"),
+    ]);
+    let id2 = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
+
+    let mut got = Recipe::ingredients(&state.mm, &[id1, id2]).await?;
+
+    got.sort_by(|a, b| a.name.cmp(&b.name));
+    assert_eq!(got.len(), 6);
+    pretty_assertions::assert_eq!(
+        got,
+        vec![
+            IngredientParser::new(false).from_str("2 cup blue spinach"),
+            IngredientParser::new(false).from_str("3 tbsp butter, melted"),
+            IngredientParser::new(false).from_str("1/2 tbsp cinnamon"),
+            IngredientParser::new(false).from_str("1/8 cup lemon juice"),
+            IngredientParser::new(false).from_str("1 cup of pistachios"),
+            IngredientParser::new(false).from_str("4 pounds top quality chicken filet"),
         ]
     );
     Ok(())

@@ -16,7 +16,6 @@ pub mod middleware;
 pub mod schemas;
 pub mod static_files_router;
 use fluent_static::support::axum::RequestLanguageConfig;
-pub use recipes_router::params;
 
 pub use error::{Error, Result};
 pub use handlers::{shopping::SHOPPING_VIEW_COOKIE_NAME, static_files::copy_to_fs};

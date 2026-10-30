@@ -1,6 +1,7 @@
 mod admin;
 mod auth;
 mod general;
+mod recipes;
 mod reports;
 mod settings;
 mod shared;

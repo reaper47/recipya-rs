@@ -113,6 +113,7 @@ impl User {
         let categories = UserCategory::belonging_to(&user)
             .inner_join(schema::categories::table)
             .select(Category::as_select())
+            .order_by(schema::categories::name.asc())
             .load(&mut conn)
             .await?;
 

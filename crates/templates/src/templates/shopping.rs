@@ -1023,6 +1023,12 @@ pub struct AddShoppingIngredient {
 pub fn render_recipe_add_shopping_dialog() -> Markup {
     html! {
         dialog #add-to-shopping-list-dialog .modal {}
+        (master_toggled_behaviour())
+    }
+}
+
+pub fn master_toggled_behaviour() -> Markup {
+    html! {
         script type="text/hyperscript" {
             (PreEscaped(r#"
                 behavior OnMasterToggled
@@ -1058,19 +1064,24 @@ pub fn render_recipe_add_shopping_dialog() -> Markup {
 
 /// Renders the ingredient selection content for the add to shopping list dialog.
 pub fn render_recipe_add_shopping_dialog_content(
-    recipe_id: i64,
+    recipe_ids: &[i64],
     shopping_lists: Vec<ShoppingList>,
     ingredients: Vec<AddShoppingIngredient>,
     messages: &Messages,
 ) -> Markup {
+    let post_url = match recipe_ids {
+        [id] => format!("/shopping/recipes/{id}/ingredients"),
+        _ => "/shopping/recipes/ingredients".to_owned(),
+    };
+
     html! {
         form class="card bg-base-100 shadow-sm"
-            hx-post={ "/shopping/recipes/" (recipe_id) "/ingredients" }
+            hx-post=(post_url)
             hx-indicator="#add-ingredients-submit-button-spinner"
             hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()" {
             div .card-body {
                 h3 class="mb-1 grid grid-flow-col" {
-                    p .text-lg {
+                    p class="text-lg pr-4" {
                         (messages.shopping_list_add_ingredients())
                     }
                     @if shopping_lists.is_empty() {

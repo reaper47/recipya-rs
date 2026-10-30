@@ -58,8 +58,8 @@ pub async fn duplicate_recipe_handler(
             ..Default::default()
         },
         &settings,
-        categories,
-        keywords,
+        &categories,
+        &keywords,
         &messages,
     )
     .into_response())

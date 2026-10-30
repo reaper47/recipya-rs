@@ -20,7 +20,7 @@ use models::{
 };
 use support::states::AuthenticatedState;
 
-use crate::{Error, Result, middleware::mw_auth::RequireAuth, params::PreviewForm};
+use crate::{Error, Result, middleware::mw_auth::RequireAuth, schemas::recipes::PreviewForm};
 
 /// Handles generating a preview of the recipe based on the input JSON recipe schema.
 pub async fn add_recipe_import_preview_handler(

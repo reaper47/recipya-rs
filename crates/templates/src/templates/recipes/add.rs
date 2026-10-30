@@ -19,8 +19,8 @@ use crate::templates::layouts;
 pub fn add_recipe_manual(
     data: &Data,
     user_setting: &UserSettingDetails,
-    categories: Vec<Category>,
-    keywords: Vec<Keyword>,
+    categories: &[Category],
+    keywords: &[Keyword],
     messages: &Messages,
 ) -> Markup {
     let path = "/add/manual";
@@ -42,8 +42,8 @@ pub fn add_recipe_manual(
 
 fn render_add_recipe_manual(
     view: Option<&ViewRecipe>,
-    categories: Vec<Category>,
-    keywords: Vec<Keyword>,
+    categories: &[Category],
+    keywords: &[Keyword],
     messages: &Messages,
 ) -> Markup {
     html! {
@@ -141,9 +141,11 @@ fn render_add_recipe_manual(
         }
     }
 }
-fn render_categories(
+
+/// Renders a datalist with all the user's categories.
+pub fn render_categories(
     view: Option<&ViewRecipe>,
-    categories: Vec<Category>,
+    categories: &[Category],
     messages: &Messages,
 ) -> Markup {
     html! {
@@ -157,9 +159,7 @@ fn render_categories(
                 value=(view.map_or_else(|| "", |v| &v.recipe_details.category));
             datalist #categories {
                 @for c in categories {
-                    option {
-                        (c.name)
-                    }
+                    option value=(c.name) {}
                 }
             }
         }
@@ -278,11 +278,7 @@ fn render_instructions(view: Option<&ViewRecipe>, messages: &Messages) -> Markup
     }
 }
 
-fn render_keywords(
-    view: Option<&ViewRecipe>,
-    keywords: Vec<Keyword>,
-    messages: &Messages,
-) -> Markup {
+fn render_keywords(view: Option<&ViewRecipe>, keywords: &[Keyword], messages: &Messages) -> Markup {
     html! {
         @if let Some(v) = view {
             @for kw in v.recipe_details.keywords.iter() {

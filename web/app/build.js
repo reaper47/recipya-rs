@@ -1,26 +1,16 @@
 import { execSync } from "node:child_process";
+import { readdirSync } from "node:fs";
 
-const files = [
-  "core",
-  "toast",
-  "wakelock",
-  "json-highlighter",
-  "media",
-  "timer",
-  "gestures",
-];
+const files = readdirSync(".").filter((file) => file.endsWith(".js") && file !== "build.js").join(" ");
 
-for (const file of files) {
-  try {
-    console.log(`Minifying ${file}...`);
-    execSync(
-      `uglifyjs ${file}.js --compress --mangle -o ../public/js/${file}.min.js`,
-      { stdio: "inherit" },
-    );
-  } catch (err) {
-    console.error(`Failed to minify ${file}`);
-    process.exit(1);
-  }
+try {
+  execSync(
+    `uglifyjs ${files} --compress --mangle -o ../public/js/bundle.min.js`,
+    { stdio: "inherit" },
+  );
+} catch (err) {
+  console.error(`Failed to minify files`);
+  process.exit(1);
 }
 
 console.log("Build complete!");

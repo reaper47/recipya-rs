@@ -4,7 +4,9 @@
 
 ## Shared vocabulary
 
+categorise = Categorize
 cookbooks = Cookbooks
+cookbook = Cookbook
 recipes = Recipes
 reports = Reports
 settings = Settings
@@ -15,6 +17,7 @@ signup = Sign up
 unknown = Unknown
 of = of
 or = or
+selected = selected
 supported = supported
 
 title = { $title }:
@@ -34,6 +37,10 @@ column-environment = Environment
 column-value = Value
 
 country-usa = United States of America
+
+## Pages
+
+recipes-page = Recipes page
 
 ## Inputs
 
@@ -171,6 +178,11 @@ toast-recipes-category-empty = Category cannot be empty or uncategorized.
 toast-recipes-category-delete-failed = Failed to delete recipe category.
 toast-recipes-count-failed = Error fetching number of recipes.
 toast-recipes-delete-failed = Recipe could not be deleted.
+toast-recipes-delete-failed =
+   { $count ->
+       [one] The recipe could not be deleted.
+      *[other] { $count } recipes could not be deleted.
+   }
 toast-recipes-exist = Recipe exists.
 toast-recipes-export-failed = Failed to export recipes.
 toast-recipes-fetch-progress = Fetching recipes…
@@ -256,6 +268,7 @@ toast-shopping-write-list-failed = Failed to write shopping list.
 toast-failed-verify-import-state = Failed to verify import state.
 toast-failed-update-import-state = Failed to set import state.
 toast-import-in-progress = Import in progress. Please try again later.
+toast-bulk-update-failed = Bulk update failed.
 
 ## Fetching recipes
 
@@ -282,6 +295,10 @@ search-favourites-button =
     .title = View all recipes marked as favorites
     .aria-label = View all recipes marked as favorites
 
+delete-recipes-confirm = Are you sure you want to delete these recipes?
+categorise-recipes-title = Categorise recipes
+categorise-recipes-description = Set a new or existing category for these recipes.
+
 ## Recipe page
 
 recipe-page-title-add = Add recipe manually
@@ -289,6 +306,7 @@ recipe-page-tab-title-add = { recipe-page-title-add } | { -brand }
 recipe-page-tab-title-view = { $recipe } | { -brand }
 
 recipe-page-add-to-collection = Add recipe to collection
+recipe-page-added-to-collection = Recipe has been added to your collection.
 recipe-page-add-to-favourites = Add to favorites
 recipe-page-edit-recipe = Edit recipe
 recipe-page-empty-collection = Your recipe collection looks a bit empty at the moment.
@@ -354,6 +372,9 @@ keywords-new = New keyword
 
 wakelock-activated = Screen lock activated.
 wakelock-deactivated = Screen lock deactivated.
+
+select-recipes-label = Select recipes to perform a bulk action.
+sort-recipes-label = Sort recipes by...
 
 ## Recipe timeline
 
@@ -510,6 +531,8 @@ keyboard-shortcuts-print-recipe = Print the recipe
 keyboard-shortcuts-share-recipe = Share the recipe
 keyboard-shortcuts-delete-recipe = Delete the recipe
 keyboard-shortcuts-macos-replacement = { $ctrl } can also be replaced with { $cmd } instead for macOS users.
+keyboard-shortcuts-select-all-recipes = Select all recipes (select mode)
+keyboard-shortcuts-select-range-recipes = Select a range of recipes (select mode)
 
 ## Export and paper sizes
 
@@ -700,6 +723,7 @@ placeholders-title = Placeholders
 ## Shopping
 
 shopping-list-title = Shopping lists
+shopping-list-single-title = Shopping list
 shopping-list-tab-title = { shopping-list-title } | { -brand }
 shopping-list-add-to-list = Add to shopping list
 shopping-list-add-ingredients = Add ingredients to shopping list
@@ -743,4 +767,3 @@ update-div-last-checked-at = Last checked: { $date }
 update-div-last-updated-at = Last updated: { $date }
 update-div-read-release-notes = Read the { $link }
 update-div-release-notes = release notes
-recipe-page-added-to-collection = Recipe has been added to your collection.

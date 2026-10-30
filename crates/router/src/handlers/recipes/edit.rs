@@ -71,8 +71,8 @@ pub async fn edit_recipe_handler(
         },
         &state.data_dir,
         &settings,
-        categories,
-        keywords,
+        &categories,
+        &keywords,
         &messages,
     ) {
         Ok(res) => Ok(res),

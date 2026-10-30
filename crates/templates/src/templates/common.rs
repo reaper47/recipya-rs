@@ -10,7 +10,7 @@ pub fn cancel_submit_form_actions(
 ) -> Markup {
     html! {
         div class="card-actions justify-end" {
-            button type="button" class="btn btn-sm" onclick="this.closest('dialog').close()" {
+            button type="button" class="btn btn-sm" onclick="const el = this.closest('dialog, [popover]'); el.matches('dialog') ? el.close() : el.hidePopover()" {
                 (messages.action_cancel())
             }
             div .cursor-not-allowed {

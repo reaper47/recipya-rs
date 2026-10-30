@@ -56,8 +56,7 @@ pub fn search_bar(data: &Data, messages: &Messages) -> Markup {
         div class="flex flex-col pb-2" {
             section class="grid w-full max-w-xl mx-auto px-4 pt-4" {
                 search {
-                    form
-                        class="flex w-full"
+                    form class="flex w-full"
                         hx-get="/recipes/search"
                         hx-vals=(
                             data.pagination.as_ref().map_or_else(String::new, |p| json!({

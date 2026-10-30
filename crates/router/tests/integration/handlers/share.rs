@@ -9,7 +9,7 @@ use models::share::ShareRecipe;
 use models::user::User;
 use models::{Recipe, settings::UserSettingDetails};
 use repository::schema;
-use router::params::ShareRecipeForm;
+use router::schemas::recipes::ShareRecipeForm;
 use test_db::default_config;
 use test_harness::assert_html;
 use test_harness::{assert_must_be_logged_in, build_server_logged_in};

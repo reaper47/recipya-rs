@@ -18,7 +18,7 @@ use models::{
     user::User,
 };
 use recipya_scraper::tests::support::scraper::scrape_test_websites;
-use router::params::RecipeScrapeForm;
+use router::schemas::recipes::RecipeScrapeForm;
 use test_db::default_config;
 use test_harness::assert_sse_messages_any_order;
 use test_harness::{TestSse, assert_must_be_logged_in, build_server_sse};
@@ -971,8 +971,8 @@ async fn insert_zweigles_recipe(
     let res = server.post("/recipes/add/website").form(&form).await;
 
     res.assert_status(StatusCode::ACCEPTED);
-    assert_sse_message(ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes…</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"# ).await;
-    assert_sse_message(ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-20 fixed bottom-0 right-0 p-6 cursor-default hidden\"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\"></p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">-1 of -1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"# ).await;
+    assert_sse_message(ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-10 fixed bottom-0 right-0 p-6 cursor-default \"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\">Fetching recipes…</p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">0 of 1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"# ).await;
+    assert_sse_message(ws_server, r#"{"notification":{"type":"snack","message":"<div id=\"sse-notification-container\" class=\"z-10 fixed bottom-0 right-0 p-6 cursor-default hidden\"><div class=\"bg-blue-500 text-white px-4 py-2 rounded shadow-md\"><p class=\"font-medium text-center pb-1\"></p><div class=\"flex justify-between items-center text-sm mb-2\"><span class=\"font-semibold\">-1 of -1</span><span class=\"font-semibold\">0.0%</span></div><div id=\"export-progress\"><progress max=\"100\" value=\"0.00\"></progress></div></div></div>","status":"alert-info","title":"Success"}}"# ).await;
     let user_id = User::all(&state.mm).await?[0].id;
     let last_recipe_id = Recipe::all(&state.mm, user_id).await?.last().unwrap().id;
     assert_sse_message(ws_server, &format!(r#"{{"notification":{{"type":"toast","action":"View /recipes/{last_recipe_id}","message":"Recipe has been added to your collection.","status":"alert-info","title":"Success"}}}}"#)).await;

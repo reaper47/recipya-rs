@@ -2,20 +2,36 @@ use axum::http::Method;
 use axum_test::http::StatusCode;
 
 use models::{Recipe, settings::UserSettingDetails, user::User};
-use router::params::RecipeCategoryForm;
+use router::schemas::recipes::RecipeCategoryForm;
 use test_db::default_config;
-use test_harness::assert_sse_message;
+use test_harness::{assert_html, assert_sse_message};
 use test_harness::{assert_must_be_logged_in, build_server_logged_in, build_server_sse};
 use test_models::a_complete_recipe_for_create;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-const BASE_URI: &str = "/recipes/categories";
+const BASE_URI: &str = "/recipes/bulk/categorise";
 
 #[tokio::test]
 async fn test_must_be_logged_in_ok() -> Result<()> {
     assert_must_be_logged_in(Method::POST, BASE_URI).await?;
     assert_must_be_logged_in(Method::DELETE, BASE_URI).await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_get_categories_for_datalist_ok() -> Result<()> {
+    let (server, _) = build_server_logged_in(default_config()).await?;
+
+    let res = server.get(BASE_URI).await;
+
+    res.assert_status_ok();
+    assert_html(
+        &res,
+        &[
+            r#"<option value="appetizers"></option><option value="bread"></option><option value="breakfasts"></option><option value="condiments"></option><option value="dessert"></option><option value="lunch"></option><option value="main dish"></option><option value="salad"></option><option value="side dish"></option><option value="snacks"></option><option value="soups"></option><option value="stews"></option><option value="uncategorized"></option>"#,
+        ],
+    );
     Ok(())
 }
 

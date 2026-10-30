@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use app::state::AppState;
 use auth::types::{Email, Password};
-use models::shopping::ShareShoppingList;
+use models::shopping::{ShareShoppingList, SortBy};
 use models::user::UserForCreate;
 use models::{
     Error, Recipe,
@@ -80,7 +80,7 @@ async fn test_get_all_shopping_lists_ok() -> Result<()> {
         let _ = ShoppingList::create(&state.mm, &format!("List {i}"), user_id).await?;
     }
 
-    let lists = ShoppingList::get_all(&state.mm, user_id).await?;
+    let lists = ShoppingList::get_all(&state.mm, user_id, SortBy::default()).await?;
 
     assert_eq!(lists.len(), 3);
     pretty_assertions::assert_eq!(
@@ -438,11 +438,13 @@ async fn test_update_shopping_list_name_ok() -> Result<()> {
     let (_, state) = build_server_anonymous(default_config()).await?;
     let user_id = User::all(&state.mm).await?[0].id;
     let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
-    let original_list = ShoppingList::get_all(&state.mm, user_id).await?[0].clone();
+    let original_list =
+        ShoppingList::get_all(&state.mm, user_id, SortBy::default()).await?[0].clone();
 
     ShoppingList::update_title(&state.mm, list_id, "New Title", user_id).await?;
 
-    let modified_list = ShoppingList::get_all(&state.mm, user_id).await?[0].clone();
+    let modified_list =
+        ShoppingList::get_all(&state.mm, user_id, SortBy::default()).await?[0].clone();
     pretty_assertions::assert_ne!(original_list, modified_list);
     Ok(())
 }
@@ -456,7 +458,7 @@ async fn test_delete_shopping_list_ok() -> Result<()> {
 
     ShoppingList::delete(&state.mm, list_id, user_id).await?;
 
-    let got = ShoppingList::get_all(&state.mm, user_id).await?;
+    let got = ShoppingList::get_all(&state.mm, user_id, SortBy::default()).await?;
     assert_eq!(got, [] as [models::shopping::ShoppingList; 0]);
     let got_res = ShoppingListDetails::get(&state.mm, list_id, user_id).await;
     assert!(got_res.is_err());

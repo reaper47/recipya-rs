@@ -31,6 +31,14 @@ const FONT_SIZE_BODY_PT: f32 = 11.0;
 const FONT_SIZE_TITLE_PT: f32 = 14.0;
 const ROW_STEP: f32 = 7.5 * 2.834_645_7;
 
+/// Sort order for listing shopping lists.
+#[derive(Default)]
+pub enum SortBy {
+    NameAsc,
+    #[default]
+    CreatedAtDesc,
+}
+
 /// Database representation of a shopping list.
 #[derive(Clone, Debug, Eq, PartialEq, Queryable, Associations, Identifiable, Selectable)]
 #[diesel(belongs_to(User))]
@@ -611,12 +619,28 @@ impl ShoppingList {
     }
 
     /// Gets all of the user's shopping lists.
-    pub async fn get_all(mm: &ModelManager, user_id: Uuid) -> Result<Vec<Self>> {
-        Ok(schema::shopping_lists::table
-            .filter(schema::shopping_lists::user_id.eq(user_id))
-            .order(schema::shopping_lists::created_at.desc())
-            .load::<Self>(&mut mm.pool.get().await?)
-            .await?)
+    pub async fn get_all(mm: &ModelManager, user_id: Uuid, sort_by: SortBy) -> Result<Vec<Self>> {
+        let mut conn = mm.pool.get().await?;
+
+        let query =
+            schema::shopping_lists::table.filter(schema::shopping_lists::user_id.eq(user_id));
+
+        let lists = match sort_by {
+            SortBy::NameAsc => {
+                query
+                    .order(schema::shopping_lists::name.asc())
+                    .load::<Self>(&mut conn)
+                    .await?
+            }
+            SortBy::CreatedAtDesc => {
+                query
+                    .order(schema::shopping_lists::created_at.desc())
+                    .load::<Self>(&mut conn)
+                    .await?
+            }
+        };
+
+        Ok(lists)
     }
 
     /// Adds an item to a shopping list.

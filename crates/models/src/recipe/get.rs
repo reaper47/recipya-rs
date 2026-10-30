@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
@@ -292,19 +292,55 @@ impl Recipe {
     }
 
     /// Fetches the ingredients of a recipe.
-    pub async fn ingredients(mm: &ModelManager, recipe_id: i64) -> Result<Vec<Ingredient>> {
-        Ok(schema::ingredients_recipes::table
+    ///
+    /// # Panics
+    ///
+    /// The unwrap implies a possible panic, but none can actually occur since
+    /// we verify whether the vector is not empty.
+    pub async fn ingredients(mm: &ModelManager, recipe_ids: &[i64]) -> Result<Vec<Ingredient>> {
+        let ingredients = schema::ingredients_recipes::table
             .inner_join(
                 schema::ingredients::table
                     .on(schema::ingredients::id.eq(schema::ingredients_recipes::ingredient_id)),
             )
-            .filter(schema::ingredients_recipes::recipe_id.eq(recipe_id))
+            .filter(schema::ingredients_recipes::recipe_id.eq_any(recipe_ids))
             .select(schema::ingredients::name)
             .load::<String>(&mut mm.pool.get().await?)
             .await?
             .into_iter()
             .map(|s| IngredientParser::new(false).from_str(&s))
-            .collect())
+            .collect_vec();
+
+        if recipe_ids.len() > 1 {
+            let mut map: HashMap<String, Vec<Ingredient>> =
+                ingredients
+                    .into_iter()
+                    .fold(HashMap::new(), |mut acc, ing| {
+                        acc.entry(ing.name.clone()).or_default().push(ing);
+                        acc
+                    });
+
+            map.values_mut().filter(|v| v.len() > 1).for_each(|vec| {
+                let mut iter = std::mem::take(vec).into_iter();
+                let mut merged = iter.next().unwrap();
+                for ing in iter {
+                    merged.amounts.extend(ing.amounts);
+                }
+                merged.amounts = merged
+                    .amounts
+                    .into_iter()
+                    .reduce(|acc, m| acc.add(m).unwrap_or(acc))
+                    .map(ingredient::unit::Measure::denormalize)
+                    .into_iter()
+                    .collect();
+
+                *vec = vec![merged];
+            });
+
+            Ok(map.values().flatten().cloned().collect_vec())
+        } else {
+            Ok(ingredients)
+        }
     }
 }
 

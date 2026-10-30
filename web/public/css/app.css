@@ -274,3 +274,35 @@ body.dragging #ingredients-list {
         left: anchor(left);
     }
 }
+
+[popover]:popover-open {
+  opacity: 1;
+}
+
+[popover] {
+  font-size: 1.2rem;
+  padding: 10px;
+  opacity: 0;
+  transition: all 0.5s allow-discrete;
+}
+
+@starting-style {
+  [popover]:popover-open {
+    opacity: 0;
+  }
+}
+
+[popover]::backdrop {
+  background-color: transparent;
+  transition: all 0.5s allow-discrete;
+}
+
+[popover]:popover-open::backdrop {
+  background-color: rgb(0 0 0 / 50%);
+}
+
+@starting-style {
+  [popover]:popover-open::backdrop {
+    background-color: transparent;
+  }
+}

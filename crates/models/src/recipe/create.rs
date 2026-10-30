@@ -104,7 +104,7 @@ impl Recipe {
                 insert_additional_images(&mut *conn, recipe_id, additional_images).await?;
 
                 // Category
-                let category_id = get_category_id(conn, recipe_c.category.as_ref()).await?;
+                let category_id = get_category_id(conn, recipe_c.category.as_deref()).await?;
 
                 diesel::insert_into(schema::categories_recipes::table)
                     .values(&CategoryRecipe {

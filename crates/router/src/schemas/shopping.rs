@@ -40,6 +40,12 @@ where
     }
 }
 
+/// The recipes to fetch ingredients from.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RecipesPayload {
+    pub ids: Vec<i64>,
+}
+
 /// The payload of a recipe's ingredients to add to a shopping list.
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct RecipeIngredientsPayload {

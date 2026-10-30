@@ -10,8 +10,6 @@ use crate::{Error, Result, recipe::structs::recipe::Recipe};
 impl Recipe {
     /// Deletes a user's recipe from the database.
     pub async fn delete(mm: &ModelManager, recipe_id: i64, user_id: Uuid) -> Result<()> {
-        let mut conn = mm.pool.get().await?;
-
         let num_deleted = diesel::delete(
             schema::recipes::table.filter(exists(
                 schema::users_recipes::table
@@ -20,7 +18,7 @@ impl Recipe {
                     .select(schema::users_recipes::recipe_id),
             )),
         )
-        .execute(&mut conn)
+        .execute(&mut mm.pool.get().await?)
         .await?;
 
         match num_deleted {
@@ -32,6 +30,20 @@ impl Recipe {
         }
     }
 
+    /// Deletes the given recipes from the databse, skipping any that do not belong to the user.
+    pub async fn delete_bulk(mm: &ModelManager, ids: &[i64], user_id: Uuid) -> Result<()> {
+        diesel::delete(
+            schema::recipes::table
+                .filter(schema::recipes::user_id.eq(user_id))
+                .filter(schema::recipes::id.eq_any(ids)),
+        )
+        .execute(&mut mm.pool.get().await?)
+        .await?;
+
+        Ok(())
+    }
+
+    /// Deletes a category from a user's category list and moves their recipes in it to `uncategorized`.
     pub async fn delete_recipe_category(
         mm: &ModelManager,
         category: &str,

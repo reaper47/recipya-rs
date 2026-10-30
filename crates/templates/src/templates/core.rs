@@ -41,13 +41,7 @@ pub(super) fn head(title: &str) -> Markup {
             script src=(format!("/public/js/vendor/cropper-2.1.1.min.js?v={BUILD_HASH}")) {}
             script src=(format!("/public/js/vendor/easymde.min.js?v={BUILD_HASH}")) {}
             script type="module" src=(format!("/public/js/vendor/cally.min.js?v={BUILD_HASH}")) {}
-            script defer src=(format!("/public/js/core.min.js?v={BUILD_HASH}")) {}
-            script defer src=(format!("/public/js/gestures.min.js?v={BUILD_HASH}")) {}
-            script defer src=(format!("/public/js/json-highlighter.min.js?v={BUILD_HASH}")) {}
-            script defer src=(format!("/public/js/toast.min.js?v={BUILD_HASH}")) {}
-            script defer src=(format!("/public/js/media.min.js?v={BUILD_HASH}")) {}
-            script defer src=(format!("/public/js/timer.min.js?v={BUILD_HASH}")) {}
-            script defer src=(format!("/public/js/wakelock.min.js?v={BUILD_HASH}")) {}
+            script defer src=(format!("/public/js/bundle.min.js?v={BUILD_HASH}")) {}
         }
     }
 }
