@@ -1072,7 +1072,7 @@ pub fn render_recipe_add_shopping_dialog_content(
         form class="card bg-base-100 shadow-sm"
             hx-post="/shopping/recipes/ingredients"
             hx-indicator="#add-ingredients-submit-button-spinner"
-            hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()" {
+            hx-on--after-request="if (!event.detail.successful) return; const el = this.closest('dialog, [popover]'); el.matches('dialog') ? el.close() : el.hidePopover();" {
             div .card-body {
                 h3 class="mb-1 grid grid-flow-col" {
                     p class="text-lg pr-4" {
