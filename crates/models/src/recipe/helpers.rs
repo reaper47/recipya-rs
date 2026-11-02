@@ -34,7 +34,7 @@ use crate::recipe::structs::tool::{ToolForCreate, ToolForInsert, ToolRecipeForIn
 use crate::types::RecipeYield;
 use crate::user::UserKeyword;
 
-pub async fn get_category_id<C>(conn: &mut C, category: Option<&String>) -> Result<i64>
+pub async fn get_category_id<C>(conn: &mut C, category: Option<&str>) -> Result<i64>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
 {
@@ -684,8 +684,8 @@ pub async fn text_trim(field: Field<'_>) -> Option<String> {
 pub async fn update_category<C>(
     conn: &mut C,
     user_id: Uuid,
-    recipe_id: i64,
-    category: Option<&String>,
+    recipe_ids: &[i64],
+    category: Option<&str>,
 ) -> Result<()>
 where
     C: AsyncConnection<Backend = diesel::pg::Pg>,
@@ -694,7 +694,7 @@ where
 
     diesel::update(
         schema::categories_recipes::table
-            .filter(schema::categories_recipes::recipe_id.eq(recipe_id)),
+            .filter(schema::categories_recipes::recipe_id.eq_any(recipe_ids)),
     )
     .set(schema::categories_recipes::category_id.eq(category_id))
     .execute(&mut *conn)

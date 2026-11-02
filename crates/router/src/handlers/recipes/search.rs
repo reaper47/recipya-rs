@@ -23,7 +23,7 @@ use crate::{Error, Result, handlers::get_settings, middleware::mw_auth::RequireA
 /// Handles searching recipes.
 pub async fn search_recipes_handler(
     HxRequest(is_hx_request): HxRequest,
-    Query(search_params): Query<SearchParams>,
+    Query(params): Query<SearchParams>,
     OriginalUri(uri): OriginalUri,
     RequestLanguage(messages): RequestLanguage<Messages>,
     RequireAuth(user): RequireAuth,
@@ -31,7 +31,7 @@ pub async fn search_recipes_handler(
 ) -> Result<impl IntoResponse> {
     let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
 
-    let recipes = match Recipe::get_page(&state.mm, user.id, &search_params).await {
+    let recipes = match Recipe::get_page(&state.mm, user.id, &params).await {
         Ok(recipes) => {
             let mapped_recipes: std::result::Result<Vec<ViewRecipe>, _> = recipes
                 .into_iter()
@@ -58,14 +58,14 @@ pub async fn search_recipes_handler(
             }
         }
         Err(err) => {
-            error!(user = ?user.id, ?search_params, ?err, "(search_recipes_handler) Error fetching recipes with search params");
+            error!(user = ?user.id, ?params, ?err, "(search_recipes_handler) Error fetching recipes with search params");
             toast.error(&messages.toast_recipes_fetch_failed()).await;
             return Err(Error::Database);
         }
     };
 
     if recipes.is_empty() {
-        let is_favourites = search_params.is_favourites.unwrap_or_default();
+        let is_favourites = params.is_favourites.unwrap_or_default();
 
         return Ok(templates::search::no_results(is_favourites, &messages).into_response());
     }
@@ -85,11 +85,11 @@ pub async fn search_recipes_handler(
             is_hx_request,
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
             pagination: Some(PaginationData::new_for_recipes(
-                &search_params,
+                &params,
                 recipes.len().try_into().unwrap_or(i64::MAX),
                 is_hx_request,
             )),
-            searchbar: Some(SearchbarData::from_params(search_params)),
+            searchbar: Some(SearchbarData::from_params(params)),
             recipes,
             ..Default::default()
         },

@@ -1160,6 +1160,7 @@ fn render_theme_button_content(theme_name: &Theme) -> Markup {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn settings_about(data: &Data, messages: &Messages) -> Markup {
     html! {
         div #settings-about class={
@@ -1226,26 +1227,30 @@ fn settings_about(data: &Data, messages: &Messages) -> Markup {
                         (messages.keyboard_shortcuts_title())
                     }
                     div class="grid gap-4 p-2" {
-                        (&render_shortcuts_table(&messages.keyboard_shortcuts_title(), vec![
-                            (vec!["Ctrl", "Alt", "S"], &messages.keyboard_shortcuts_open_settings_dialog()),
-                            (vec!["Ctrl", "Alt", "N"], &messages.keyboard_shortcuts_create_recipe_manually()),
-                            (vec!["Ctrl", "Alt", "I"], &messages.keyboard_shortcuts_open_import_recipes_dialog()),
-                            (vec!["Ctrl", "Alt", "W"], &messages.keyboard_shortcuts_open_fetch_recipes_dialog()),
-                            (vec!["Ctrl", "Alt", "R"], &messages.keyboard_shortcuts_open_reports_page())
+                        (&render_shortcuts_table(&messages.keyboard_shortcuts_title(), &[
+                            (&["Ctrl", "Alt", "S"], &messages.keyboard_shortcuts_open_settings_dialog()),
+                            (&["Ctrl", "Alt", "N"], &messages.keyboard_shortcuts_create_recipe_manually()),
+                            (&["Ctrl", "Alt", "I"], &messages.keyboard_shortcuts_open_import_recipes_dialog()),
+                            (&["Ctrl", "Alt", "W"], &messages.keyboard_shortcuts_open_fetch_recipes_dialog()),
+                            (&["Ctrl", "Alt", "R"], &messages.keyboard_shortcuts_open_reports_page())
                         ]))
-                        (render_shortcuts_table(&messages.keyboard_shortcuts_manual_recipe_form(), vec![
-                            (vec!["Ctrl", "S"], &messages.keyboard_shortcuts_save_recipe()),
+                        (render_shortcuts_table(&messages.keyboard_shortcuts_manual_recipe_form(), &[
+                            (&["Ctrl", "S"], &messages.keyboard_shortcuts_save_recipe()),
                         ]))
-                        (render_shortcuts_table(&messages.keyboard_shortcuts_edit_recipe_form(), vec![
-                            (vec!["Ctrl", "S"], &messages.keyboard_shortcuts_save_recipe()),
+                        (render_shortcuts_table(&messages.keyboard_shortcuts_edit_recipe_form(), &[
+                            (&["Ctrl", "S"], &messages.keyboard_shortcuts_save_recipe()),
                         ]))
-                        (render_shortcuts_table(&messages.keyboard_shortcuts_view_recipe(), vec![
-                            (vec!["Ctrl", "Alt", "D"], &messages.keyboard_shortcuts_duplicate_recipe()),
-                            (vec!["Ctrl", "E"], &messages.keyboard_shortcuts_edit_recipe()),
-                            (vec!["Ctrl", "Shift", "F"], &messages.keyboard_shortcuts_toggle_favourite_recipe()),
-                            (vec!["Ctrl", "P"], &messages.keyboard_shortcuts_print_recipe()),
-                            (vec!["Ctrl", "X"], &messages.keyboard_shortcuts_share_recipe()),
-                            (vec!["Ctrl", "Del"], &messages.keyboard_shortcuts_delete_recipe()),
+                        (render_shortcuts_table(&messages.recipes_page(), &[
+                            (&["Ctrl", "A"], &messages.keyboard_shortcuts_select_all_recipes()),
+                            (&["Click", "Shift", "Click"], &messages.keyboard_shortcuts_select_range_recipes()),
+                        ]))
+                        (render_shortcuts_table(&messages.keyboard_shortcuts_view_recipe(), &[
+                            (&["Ctrl", "Alt", "D"], &messages.keyboard_shortcuts_duplicate_recipe()),
+                            (&["Ctrl", "E"], &messages.keyboard_shortcuts_edit_recipe()),
+                            (&["Ctrl", "Shift", "F"], &messages.keyboard_shortcuts_toggle_favourite_recipe()),
+                            (&["Ctrl", "P"], &messages.keyboard_shortcuts_print_recipe()),
+                            (&["Ctrl", "X"], &messages.keyboard_shortcuts_share_recipe()),
+                            (&["Ctrl", "Del"], &messages.keyboard_shortcuts_delete_recipe()),
                         ]))
                         p .text-center {
                             @let ctrl_markup = html! { kbd class="kbd" { "Ctrl" } };
@@ -1262,7 +1267,7 @@ fn settings_about(data: &Data, messages: &Messages) -> Markup {
     }
 }
 
-fn render_shortcuts_table(title: &Message, shortcuts: Vec<(Vec<&str>, &Message)>) -> Markup {
+fn render_shortcuts_table(title: &Message, shortcuts: &[(&[&str], &Message)]) -> Markup {
     html! {
         div {
             p .font-medium {

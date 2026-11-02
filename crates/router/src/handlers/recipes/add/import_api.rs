@@ -26,7 +26,7 @@ use crate::{
     Error,
     handlers::recipes::common::{broadcast_import_done_toast, schema_to_recipe_for_create},
     middleware::mw_auth::RequireAuth,
-    params::ImportFromApiForm,
+    schemas::recipes::ImportFromApiForm,
 };
 
 /// Handles the importing recipes from an API endpoint.

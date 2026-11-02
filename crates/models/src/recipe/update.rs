@@ -16,6 +16,7 @@ use crate::recipe::structs::nutrition::NutritionDetails;
 use crate::recipe::structs::recipe::RecipeForCreate;
 use crate::recipe::structs::time::TimesForInsert;
 use crate::settings::UserSettingDetails;
+use crate::types::NonEmptyVec;
 use crate::{Error, Result};
 
 impl Recipe {
@@ -78,12 +79,22 @@ impl Recipe {
                 // Category
                 match &new_recipe.category {
                     None if old_recipe.category != *"uncategorized" => {
-                        update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
-                            .await?;
+                        update_category(
+                            conn,
+                            user_id,
+                            &[recipe_id],
+                            new_recipe.category.as_deref(),
+                        )
+                        .await?;
                     }
                     Some(category) if old_recipe.category != *category => {
-                        update_category(conn, user_id, recipe_id, new_recipe.category.as_ref())
-                            .await?;
+                        update_category(
+                            conn,
+                            user_id,
+                            &[recipe_id],
+                            new_recipe.category.as_deref(),
+                        )
+                        .await?;
                     }
                     _ => {}
                 }
@@ -269,8 +280,6 @@ impl Recipe {
     ) -> Result<bool> {
         use schema::recipes;
 
-        let mut conn = mm.pool.get().await?;
-
         let new_value = diesel::update(
             recipes::table
                 .filter(recipes::id.eq(recipe_id))
@@ -278,9 +287,25 @@ impl Recipe {
         )
         .set(recipes::is_favourite.eq(not(recipes::is_favourite)))
         .returning(recipes::is_favourite)
-        .get_result::<bool>(&mut conn)
+        .get_result::<bool>(&mut mm.pool.get().await?)
         .await?;
 
         Ok(new_value)
+    }
+
+    /// Sets the category for all specified recipes.
+    pub async fn update_category(
+        mm: &ModelManager,
+        category: &str,
+        recipe_ids: &NonEmptyVec<i64>,
+        user_id: Uuid,
+    ) -> Result<()> {
+        update_category(
+            &mut mm.pool.get().await?,
+            user_id,
+            recipe_ids.as_ref(),
+            (!category.is_empty()).then_some(category),
+        )
+        .await
     }
 }

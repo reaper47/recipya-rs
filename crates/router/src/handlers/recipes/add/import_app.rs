@@ -32,7 +32,7 @@ use models::states::UserStates;
 use support::states::AuthenticatedState;
 
 use crate::handlers::recipes::common::{broadcast_import_done_toast, schema_to_recipe_for_create};
-use crate::params::ImportFromAppForm;
+use crate::schemas::recipes::ImportFromAppForm;
 use crate::{Error, Result, middleware::mw_auth::RequireAuth};
 
 struct RecipeResult {

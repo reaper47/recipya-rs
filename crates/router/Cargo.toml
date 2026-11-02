@@ -19,7 +19,7 @@ app.workspace = true
 async-stream.workspace = true
 auth.workspace = true
 axum.workspace = true
-axum-extra = { version = "0.12.6", features = ["cookie", "form"] }
+axum-extra = { version = "0.12.6", features = ["cookie", "form", "query"] }
 axum-htmx = "0.8.1"
 base64.workspace = true
 config.workspace = true

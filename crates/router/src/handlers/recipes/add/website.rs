@@ -34,7 +34,7 @@ use support::{net::validate_ip, states::AuthenticatedState};
 
 use crate::{
     Error, handlers::recipes::common::schema_to_recipe_for_create,
-    middleware::mw_auth::RequireAuth, params::RecipeScrapeForm,
+    middleware::mw_auth::RequireAuth, schemas::recipes::RecipeScrapeForm,
 };
 
 #[derive(Debug, Clone)]

@@ -1023,6 +1023,12 @@ pub struct AddShoppingIngredient {
 pub fn render_recipe_add_shopping_dialog() -> Markup {
     html! {
         dialog #add-to-shopping-list-dialog .modal {}
+        (master_toggled_behaviour())
+    }
+}
+
+pub fn master_toggled_behaviour() -> Markup {
+    html! {
         script type="text/hyperscript" {
             (PreEscaped(r#"
                 behavior OnMasterToggled
@@ -1058,19 +1064,18 @@ pub fn render_recipe_add_shopping_dialog() -> Markup {
 
 /// Renders the ingredient selection content for the add to shopping list dialog.
 pub fn render_recipe_add_shopping_dialog_content(
-    recipe_id: i64,
     shopping_lists: Vec<ShoppingList>,
-    ingredients: Vec<AddShoppingIngredient>,
+    ingredients: Vec<(i64, AddShoppingIngredient)>,
     messages: &Messages,
 ) -> Markup {
     html! {
         form class="card bg-base-100 shadow-sm"
-            hx-post={ "/shopping/recipes/" (recipe_id) "/ingredients" }
+            hx-post="/shopping/recipes/ingredients"
             hx-indicator="#add-ingredients-submit-button-spinner"
-            hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()" {
+            hx-on--after-request="if (!event.detail.successful) return; const el = this.closest('dialog, [popover]'); el.matches('dialog') ? el.close() : el.hidePopover();" {
             div .card-body {
                 h3 class="mb-1 grid grid-flow-col" {
-                    p .text-lg {
+                    p class="text-lg pr-4" {
                         (messages.shopping_list_add_ingredients())
                     }
                     @if shopping_lists.is_empty() {
@@ -1109,8 +1114,9 @@ pub fn render_recipe_add_shopping_dialog_content(
                             }
                         }
                         tbody {
-                            @for ing in ingredients {
+                            @for (recipe_id, ing) in ingredients {
                                 tr {
+                                    input type="hidden" name="recipe-ids" value=(recipe_id);
                                     td .py-1 {
                                         input type="checkbox" checked class="checkbox checkbox-ingredient"
                                             _="on change or change from <input.master-checkbox/> for el in <input.ingredient-element/> in closest <tr/> toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')";

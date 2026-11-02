@@ -12,7 +12,7 @@ use l10n::Messages;
 use models::share::ShareRecipe;
 use support::states::AuthenticatedState;
 
-use crate::{Error, middleware::mw_auth::RequireAuth, params::ShareRecipeForm};
+use crate::{Error, middleware::mw_auth::RequireAuth, schemas::recipes::ShareRecipeForm};
 
 /// Handles generating a link for the recipe to share.
 pub async fn share_recipe_post_handler(

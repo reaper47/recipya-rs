@@ -57,7 +57,15 @@ pub(super) fn searchbar(data: &SearchbarData, messages: &Messages) -> Markup {
                     on click from elsewhere
                         add .hidden to me")) {}
         }
-        div class="dropdown dropdown-left ml-1" {
+        (render_sort_options_button(&data.sort, messages))
+        (render_search_favourites_button(data.is_favourites, false, messages))
+        (render_select_recipes_button(messages))
+    }
+}
+
+fn render_sort_options_button(sort: &str, messages: &Messages) -> Markup {
+    html! {
+        div class="dropdown dropdown-left ml-1" title=(messages.sort_recipes_label()) aria-label=(messages.sort_recipes_label()) {
             div tabindex="0" role="button" class="btn btn-sm p-1" {
                 (icons::bars_3_bottom_left())
             }
@@ -65,35 +73,12 @@ pub(super) fn searchbar(data: &SearchbarData, messages: &Messages) -> Markup {
                 h4 class="text-center underline" {
                     (messages.sort_recipes_action())
                 }
-                (search_sort_option(&messages.sort_recipes_default(), None, "default", &data.sort))
-                (search_sort_option(&messages.sort_recipes_name(), Some(&messages.sort_recipes_a_to_z()), "a-z", &data.sort))
-                (search_sort_option(&messages.sort_recipes_name(), Some(&messages.sort_recipes_z_to_a()), "z-a", &data.sort))
-                (search_sort_option(&messages.sort_recipes_date_created(), Some(&messages.sort_recipes_new_to_old()), "new-old", &data.sort))
-                (search_sort_option(&messages.sort_recipes_date_created(), Some(&messages.sort_recipes_old_to_new()), "old-new", &data.sort))
-                (search_sort_option(&messages.sort_recipes_random(), None, "random", &data.sort))
-            }
-        }
-        (render_search_favourites_button(data.is_favourites, false, messages))
-    }
-}
-
-/// Renders the button to search recipes marked as favourites.
-pub fn render_search_favourites_button(
-    is_show_favourites: bool,
-    is_oob_swap: bool,
-    messages: &Messages,
-) -> Markup {
-    html! {
-        div #search-favourites
-            hx-swap-oob=[is_oob_swap.then_some("true")] {
-            input #fav type="hidden" name="fav" value=(is_show_favourites);
-            button #toggle-favourites-button type="submit"
-                    title=(messages.search_favourites_button_title())
-                    class="btn btn-square btn-sm ml-1 hover:text-secondary"
-                    aria-label=(messages.search_favourites_button_aria_label())
-                    aria-pressed=(is_show_favourites)
-                    _=(format!("on mousedown set #fav.value to '{}'", !is_show_favourites)) {
-                (icons::heart(is_show_favourites))
+                (search_sort_option(&messages.sort_recipes_default(), None, "default", sort))
+                (search_sort_option(&messages.sort_recipes_name(), Some(&messages.sort_recipes_a_to_z()), "a-z", sort))
+                (search_sort_option(&messages.sort_recipes_name(), Some(&messages.sort_recipes_z_to_a()), "z-a", sort))
+                (search_sort_option(&messages.sort_recipes_date_created(), Some(&messages.sort_recipes_new_to_old()), "new-old", sort))
+                (search_sort_option(&messages.sort_recipes_date_created(), Some(&messages.sort_recipes_old_to_new()), "old-new", sort))
+                (search_sort_option(&messages.sort_recipes_random(), None, "random", sort))
             }
         }
     }
@@ -122,6 +107,42 @@ fn search_sort_option(
                     }
                 }
             }
+        }
+    }
+}
+
+/// Renders the button to search recipes marked as favourites.
+pub fn render_search_favourites_button(
+    is_show_favourites: bool,
+    is_oob_swap: bool,
+    messages: &Messages,
+) -> Markup {
+    html! {
+        div #search-favourites hx-swap-oob=[is_oob_swap.then_some("true")] {
+            input #fav type="hidden" name="fav" value=(is_show_favourites);
+            button #toggle-favourites-button type="submit"
+                    title=(messages.search_favourites_button_title())
+                    class="btn btn-square btn-sm ml-1 hover:text-secondary"
+                    aria-label=(messages.search_favourites_button_aria_label())
+                    aria-pressed=(is_show_favourites)
+                    _=(format!("on mousedown set #fav.value to '{}'", !is_show_favourites)) {
+                (icons::heart(is_show_favourites))
+            }
+        }
+    }
+}
+
+fn render_select_recipes_button(messages: &Messages) -> Markup {
+    html! {
+        div #select-recipes {
+            button #toggle-select-recipes-button type="button"
+                title=(messages.select_recipes_label())
+                class="btn btn-square btn-sm ml-1 hover:text-secondary aria-pressed:bg-primary"
+                aria-label=(messages.select_recipes_label())
+                aria-pressed="false"
+                onclick="toggleSelectRecipes(this)" {
+                    (icons::check_circle())
+                }
         }
     }
 }

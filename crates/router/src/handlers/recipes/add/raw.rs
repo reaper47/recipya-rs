@@ -19,7 +19,7 @@ use models::{
 };
 use support::states::AuthenticatedState;
 
-use crate::{Error, middleware::mw_auth::RequireAuth, params::PreviewForm};
+use crate::{Error, middleware::mw_auth::RequireAuth, schemas::recipes::PreviewForm};
 
 /// Handles parsing a recipe from raw JSON.
 #[allow(clippy::too_many_lines)]

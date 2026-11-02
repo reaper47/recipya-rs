@@ -1183,7 +1183,7 @@ pub fn render_favourite_button(
     let class = if is_view_recipe {
         "mr-2 hidden sm:block hover:text-secondary"
     } else {
-        "btn btn-square btn-sm rounded-md absolute top-2 right-2 cursor-default hover:text-secondary"
+        "btn btn-square btn-sm rounded-md absolute top-2 right-2 min-h-4 cursor-default hover:text-secondary group-data-[select=true]/select:hidden"
     };
 
     let (hx_target, hx_swap) = if is_deletable && is_favourite && !is_view_recipe {

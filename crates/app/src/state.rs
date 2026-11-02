@@ -194,7 +194,7 @@ impl AppState {
         };
 
         let content = format!(
-            r#"<div id="sse-notification-container" class="z-20 fixed bottom-0 right-0 p-6 cursor-default {}">
+            r#"<div id="sse-notification-container" class="z-10 fixed bottom-0 right-0 p-6 cursor-default {}">
                 <div class="bg-blue-500 text-white px-4 py-2 rounded shadow-md">
                     <p class="font-medium text-center pb-1">{title}</p>
 

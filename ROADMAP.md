@@ -18,7 +18,7 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 
 #### Shopping Lists
 
-- [ ] Export grocery list by selecting multiple recipes
+- [x] Export grocery list by selecting multiple recipes
 
 #### Language 
 
@@ -29,7 +29,7 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 - [x] Move function validations to the type system
 - [ ] Update htmx to version 4.0
 - [ ] Add benchmarks
-- [ ] Prevent importing from multiple sources at the same time
+- [x] Prevent importing from multiple sources at the same time
 - [x] Accept importing multiple files for the same application
 
 ## v1.1.0
@@ -107,3 +107,4 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 ### Features 
 
 - [ ] Make Windows Installer
+- [ ] Migrate away from Tailwindcss to modern CSS

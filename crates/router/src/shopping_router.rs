@@ -66,8 +66,11 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
         )
         .route(
             "/recipes/{:recipe_id}/ingredients",
-            get(h::shopping_recipe_ingredients_handler)
-                .post(h::shopping_recipe_ingredients_post_handler),
+            get(h::shopping_recipe_ingredients_handler),
+        )
+        .route(
+            "/recipes/ingredients",
+            get(h::get_ingredients_handler).post(h::post_ingredients_handler),
         )
         .layer(from_fn_with_state(state.clone(), mw_refresh_token));
 

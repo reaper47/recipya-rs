@@ -12,7 +12,7 @@ use l10n::Messages;
 use models::{Recipe, data::ViewRecipe, time::FormattedTimes};
 use support::states::AuthenticatedState;
 
-use crate::{Error, middleware::mw_auth::RequireAuth, params::FavouriteParams};
+use crate::{Error, middleware::mw_auth::RequireAuth, schemas::recipes::FavouriteParams};
 
 /// Toggles the favourite state of a recipe.
 pub async fn toggle_favourite_handler(
