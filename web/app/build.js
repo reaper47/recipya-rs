@@ -1,11 +1,12 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 
-const files = readdirSync(".").filter((file) => file.endsWith(".js") && file !== "build.js").join(" ");
+const files = readdirSync(".").filter((file) => file.endsWith(".js") && file !== "build.js");
 
 try {
-  execSync(
-    `uglifyjs ${files} --compress --mangle -o ../public/js/bundle.min.js`,
+  execFileSync(
+    "uglifyjs",
+    [...files, "--compress", "--mangle", "-o", "../public/js/bundle.min.js"],
     { stdio: "inherit" },
   );
 } catch (err) {
