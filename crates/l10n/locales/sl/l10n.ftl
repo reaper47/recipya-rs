@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Recepta ni bilo mogoče dodati v zbirko.
 toast-recipes-category-empty = Kategorija ne sme biti prazna ali neklasificirana.
 toast-recipes-category-delete-failed = Ni bilo mogoče odstraniti kategorije receptov.
 toast-recipes-count-failed = Napaka pri pridobivanju števila receptov.
-toast-recipes-delete-failed = Recepta ni bilo mogoče odstraniti.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Recepta ni bilo mogoče izbrisati.
+       *[other] { $count } receptov ni bilo mogoče izbrisati.
+    }
 toast-recipes-exist = Recept že obstaja.
 toast-recipes-export-failed = Izvoz receptov ni bil uspešen.
 toast-recipes-fetch-progress = Pridobivanje receptov…

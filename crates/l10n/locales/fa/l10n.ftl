@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = افزودن دستور پخت به مجم
 toast-recipes-category-empty = دسته‌بندی نمی‌تواند خالی یا بدون دسته‌بندی باشد.
 toast-recipes-category-delete-failed = حذف دستهٔ دستورپخت با شکست مواجه شد.
 toast-recipes-count-failed = خطا در دریافت تعداد دستورهای پخت.
-toast-recipes-delete-failed = نتوانستیم دستور پخت را حذف کنیم.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] نمی‌شد این دستورپخت را حذف کرد.
+       *[other] نمی‌شد { $count } دستورپخت را حذف کرد.
+    }
 toast-recipes-exist = دستور پخت وجود دارد.
 toast-recipes-export-failed = نتوانستیم دستورهای پخت را صادر کنیم.
 toast-recipes-fetch-progress = در حال دریافت دستورپخت‌ها…

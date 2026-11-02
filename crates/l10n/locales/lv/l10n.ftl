@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Neizdevās pievienot recepti kolekcijai.
 toast-recipes-category-empty = Kategoriju nevar atstāt tukšu vai neklasificētu.
 toast-recipes-category-delete-failed = Neizdevās izdzēst recepšu kategoriju.
 toast-recipes-count-failed = Neizdevās iegūt recepšu skaitu.
-toast-recipes-delete-failed = Recepti neizdevās izdzēst.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Recepti neizdevās izdzēst.
+       *[other] { $count } receptes neizdevās izdzēst.
+    }
 toast-recipes-exist = Recepte jau pastāv.
 toast-recipes-export-failed = Neizdevās eksportēt receptes.
 toast-recipes-fetch-progress = Receptes tiek ielādētas…

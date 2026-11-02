@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Kon nie resep by die versameling voeg nie.
 toast-recipes-category-empty = Die kategorie kan nie leeg of ongekategoriseerd wees nie.
 toast-recipes-category-delete-failed = Kon nie die resepkategorie uitvee nie.
 toast-recipes-count-failed = Fout by die ophaal van die aantal resepte.
-toast-recipes-delete-failed = Die resep kon nie uitgevee word nie.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Die resep kon nie uitgevee word nie.
+       *[other] { $count } resepte kon nie uitgevee word nie.
+    }
 toast-recipes-exist = Resep bestaan reeds.
 toast-recipes-export-failed = Kon nie resepte uitvoer nie.
 toast-recipes-fetch-progress = Resepte word ingelaai…

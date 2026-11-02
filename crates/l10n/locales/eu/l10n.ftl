@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Ezin izan da errezeta bilduman gehitu.
 toast-recipes-category-empty = Kategoría ezin da hutsa edo kategorizatu gabea izan.
 toast-recipes-category-delete-failed = Ezin izan da errezeta-kategoria ezabatu.
 toast-recipes-count-failed = Errezeten kopurua eskuratzean errorea gertatu da.
-toast-recipes-delete-failed = Ezin izan da errezeta ezabatu.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Ezin izan da errezeta ezabatu.
+       *[other] Ezin izan dira { $count } errezetarik ezabatu.
+    }
 toast-recipes-exist = Errezeta dago.
 toast-recipes-export-failed = Ezin izan dira errezetak esportatu.
 toast-recipes-fetch-progress = Errezetak eskuratzen…

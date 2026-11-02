@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = რეცეპტის კოლექ�
 toast-recipes-category-empty = კატეგორია არ შეიძლება იყოს ცარიელი ან დაუკატეგორიებელი.
 toast-recipes-category-delete-failed = რეცეპტების კატეგორიის წაშლა ვერ შედგა.
 toast-recipes-count-failed = რეცეპტების რაოდენობის მოპოვებისას შეცდომა დაფიქსირდა.
-toast-recipes-delete-failed = რეცეპტის წაშლა ვერ შეძლებულა.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] რეცეპტის წაშლა ვერ შეძლეს.
+       *[other] { $count } რეცეპტის წაშლა ვერ შეძლეს.
+    }
 toast-recipes-exist = რეცეპტი უკვე არსებობს.
 toast-recipes-export-failed = რეცეპტების ექსპორტი ვერ შედგა.
 toast-recipes-fetch-progress = რეცეპტები იტვირთება…

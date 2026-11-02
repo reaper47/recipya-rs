@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Не успя да добавите рец
 toast-recipes-category-empty = Категорията не може да бъде празна или некласифицирана.
 toast-recipes-category-delete-failed = Неуспешно изтриване на категорията с рецепти.
 toast-recipes-count-failed = При извличането на броя на рецептите възникна грешка.
-toast-recipes-delete-failed = Рецептата не може да бъде изтрита.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Рецептата не може да бъде изтрита.
+       *[other] { $count } рецепти не можеха да бъдат изтрити.
+    }
 toast-recipes-exist = Рецептата вече съществува.
 toast-recipes-export-failed = Не можаха да бъдат експортирани рецептите.
 toast-recipes-fetch-progress = Извличане на рецептите…

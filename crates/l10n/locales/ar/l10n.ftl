@@ -124,7 +124,11 @@ toast-recipes-add-collection-failed = تعذّر إضافة الوصفة إلى 
 toast-recipes-category-empty = لا يمكن أن يكون التصنيف فارغًا أو غير مصنَّف.
 toast-recipes-category-delete-failed = تعذّر حذف فئة الوصفات.
 toast-recipes-count-failed = تعذّر جلب عدد الوصفات.
-toast-recipes-delete-failed = تعذّر حذف الوصفة.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] تعذّر حذف الوصفة.
+       *[other] تعذّر حذف { $count } وصفة.
+    }
 toast-recipes-exist = توجد الوصفة.
 toast-recipes-export-failed = تعذّر تصدير الوصفات.
 toast-recipes-fetch-progress = جاري جلب الوصفات…

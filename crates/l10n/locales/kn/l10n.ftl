@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = ಪಾಕವಿಧಾನವನ್ನು �
 toast-recipes-category-empty = ವರ್ಗವು ಖಾಲಿ ಅಥವಾ ವರ್ಗೀಕರಿಸದಂತಿರಬಾರದು.
 toast-recipes-category-delete-failed = ಪಾಕವಿಧಾನ ವರ್ಗವನ್ನು ಅಳಿಸಲು ವಿಫಲವಾಯಿತು.
 toast-recipes-count-failed = ಪಾಕವಿಧಾನಗಳ ಸಂಖ್ಯೆಯನ್ನು ಪಡೆಯುವಾಗ ದೋಷ ಉಂಟಾಯಿತು.
-toast-recipes-delete-failed = ಪಾಕವಿಧಾನವನ್ನು ಅಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] ಪಾಕವಿಧಾನವನ್ನು ಅಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.
+       *[other] { $count } ಪಾಕವಿಧಾನಗಳನ್ನು ಅಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.
+    }
 toast-recipes-exist = ಪಾಕವಿಧಾನವು ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ.
 toast-recipes-export-failed = ಪಾಕವಿಧಾನಗಳನ್ನು ರಫ್ತು ಮಾಡಲು ವಿಫಲವಾಯಿತು.
 toast-recipes-fetch-progress = ಪಾಕವಿಧಾನಗಳನ್ನು ಪಡೆಯಲಾಗುತ್ತಿದೆ…

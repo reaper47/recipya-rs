@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = පිළිගැනීම කලාව�
 toast-recipes-category-empty = කාණ්ඩය හිස් හෝ කාණ්ඩගත නොකළ තත්ත්වයේ පැවතිය නොහැක.
 toast-recipes-category-delete-failed = වට්ටෝරු කාණ්ඩය අයත් කිරීමට අසමත් විය.
 toast-recipes-count-failed = වට්ටෝරු ගණන ලබාගැනීමේදී දෝෂයක් සිදුවිය.
-toast-recipes-delete-failed = වට්ටෝරුව මකා දැමීමට නොහැකි විය.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] මෙම වට්ටෝරුව මකා දැමීමට නොහැකි විය.
+       *[other] { $count } වට්ටෝරු මකා දැමීමට නොහැකි විය.
+    }
 toast-recipes-exist = පිළිගැනීම පවතී.
 toast-recipes-export-failed = වට්ටෝරු අපට්ලෝඩ් කිරීමට අසමත් විය.
 toast-recipes-fetch-progress = වට්ටෝරු ලබාගන්නා අතරයි…

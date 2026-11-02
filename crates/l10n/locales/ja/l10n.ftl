@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = レシピをコレクションに追加で
 toast-recipes-category-empty = カテゴリは空または未分類にすることはできません。
 toast-recipes-category-delete-failed = レシピカテゴリの削除に失敗しました。
 toast-recipes-count-failed = レシピの件数の取得に失敗しました。
-toast-recipes-delete-failed = レシピを削除できませんでした。
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] { $count } 個のレシピを削除できませんでした。
+    }
 toast-recipes-exist = レシピは既に存在します。
 toast-recipes-export-failed = レシピのエクスポートに失敗しました。
 toast-recipes-fetch-progress = レシピを取得中…

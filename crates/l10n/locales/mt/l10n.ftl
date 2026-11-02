@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Ma rnexxiex iżid ir-riċetta mal-kollezzj
 toast-recipes-category-empty = Il-kategorija ma tistax tkun vojta jew mhux ikkategorizzata.
 toast-recipes-category-delete-failed = Ma rnexxiexx li tħassar il-kategorija tar-riċetti.
 toast-recipes-count-failed = Żball fil-ġibda tan-numru ta’ riċetti.
-toast-recipes-delete-failed = Ir-riċetta ma setgħetx tintrema.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Ir-riċetta ma setgħetx tintħasel.
+       *[other] { $count } riċetti ma setgħux jintħaslu.
+    }
 toast-recipes-exist = Ir-riċetta teżisti.
 toast-recipes-export-failed = Ma rnexxiexx l-esportazzjoni tar-riċetti.
 toast-recipes-fetch-progress = Qed nġibu r-riċetti…

@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Nu s-a reușit adăugarea rețetei în col
 toast-recipes-category-empty = Categoria nu poate fi goală sau necategorizată.
 toast-recipes-category-delete-failed = Nu s-a putut șterge categoria de rețete.
 toast-recipes-count-failed = Eroare la preluarea numărului de rețete.
-toast-recipes-delete-failed = Rețeta nu a putut fi ștearsă.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Rețeta nu a putut fi ștearsă.
+       *[other] { $count } rețete nu au putut fi șterse.
+    }
 toast-recipes-exist = Rețeta există.
 toast-recipes-export-failed = Nu s-a putut exporta rețetele.
 toast-recipes-fetch-progress = Se încarcă rețetele…

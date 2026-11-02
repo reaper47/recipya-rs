@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = I hinga te tāpiri reipea ki te kohinga.
 toast-recipes-category-empty = Kāore e taea te waiho i te kāwai kia kaua he mea, kia kore rānei e whakarōpūtia.
 toast-recipes-category-delete-failed = I hinga te whakakore i te kāwai tākaro.
 toast-recipes-count-failed = Hapa i te whiwhi i te maha o ngā reipea.
-toast-recipes-delete-failed = Kāore i taea te whakakore i te reipea.
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] Kāore i taea te mukua ngā reipea { $count }.
+    }
 toast-recipes-exist = Kei te whai reipea kē.
 toast-recipes-export-failed = I hinga te kaweake i ngā reipea.
 toast-recipes-fetch-progress = Kei te kohi reipea…

@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Methu ychwanegu'r rysáit i'r casgliad.
 toast-recipes-category-empty = Ni all categori fod yn wag nac yn anghategoriedig.
 toast-recipes-category-delete-failed = Methu dileu categori ryseitiau.
 toast-recipes-count-failed = Gwall wrth ddodrefn nifer y rysáit.
-toast-recipes-delete-failed = Ni ellid dileu'r rysáit.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Ni ellid dileu'r rysáit.
+       *[other] Ni ellid dileu { $count } o rysáit.
+    }
 toast-recipes-exist = Mae'r rysáit yn bodoli.
 toast-recipes-export-failed = Methu allforio'r rysáit.
 toast-recipes-fetch-progress = Yn tynnu rysáit…

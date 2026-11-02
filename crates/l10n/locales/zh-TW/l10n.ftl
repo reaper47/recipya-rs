@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = 無法將食譜新增至收藏。
 toast-recipes-category-empty = 分類不能為空或未分類。
 toast-recipes-category-delete-failed = 無法刪除食譜分類。
 toast-recipes-count-failed = 無法擷取食譜數量。
-toast-recipes-delete-failed = 無法刪除食譜。
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] 無法刪除 { $count } 份食譜。
+    }
 toast-recipes-exist = 食譜已存在。
 toast-recipes-export-failed = 無法匯出食譜。
 toast-recipes-fetch-progress = 正在擷取食譜…

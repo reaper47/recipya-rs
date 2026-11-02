@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = Gagal menambahkan resep ke koleksi.
 toast-recipes-category-empty = Kategori tidak boleh kosong atau tidak dikategorikan.
 toast-recipes-category-delete-failed = Gagal menghapus kategori resep.
 toast-recipes-count-failed = Terjadi kesalahan saat mengambil jumlah resep.
-toast-recipes-delete-failed = Resep tidak dapat dihapus.
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] { $count } resep tidak dapat dihapus.
+    }
 toast-recipes-exist = Resep sudah ada.
 toast-recipes-export-failed = Gagal mengekspor resep.
 toast-recipes-fetch-progress = Sedang mengambil resep…

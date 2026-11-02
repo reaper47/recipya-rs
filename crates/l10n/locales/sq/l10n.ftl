@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Nuk arriti të shtohej receta në koleksio
 toast-recipes-category-empty = Kategoria nuk mund të jetë bosh ose e paklasifikuar.
 toast-recipes-category-delete-failed = Nuk mundi të fshihet kategoria e recetave.
 toast-recipes-count-failed = Gabim gjatë marrjes së numrit të recetave.
-toast-recipes-delete-failed = Receta nuk mund të fshihet.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Receta nuk mund të fshihet.
+       *[other] { $count } receta nuk mund të fshihen.
+    }
 toast-recipes-exist = Receta ekziston.
 toast-recipes-export-failed = Nuk arrit të eksportohen recetat.
 toast-recipes-fetch-progress = Duke marrë recetat…

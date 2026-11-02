@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = ሪሴፕቱን ወደ ስብስብ መጨ
 toast-recipes-category-empty = ምድቡ ባዶ ወይም ያልተመደበ ሊሆን አይችልም።
 toast-recipes-category-delete-failed = የምግብ ምድቡን ማስወገድ አልተቻለም።
 toast-recipes-count-failed = የቀመሞችን ብዛት ለማግኘት ስህተት ተከሰተ።
-toast-recipes-delete-failed = ሪሴፕቱን ማስወገድ አልተቻለም።
+toast-recipes-delete-failed =
+    { $count ->
+        [one] ሪሴፕቱን ማስወገድ አልተቻለም።
+       *[other] { $count } ሪሴፕቶችን ማስወገድ አልተቻለም።
+    }
 toast-recipes-exist = ሪሴፕቱ አለ።
 toast-recipes-export-failed = ሪሴፕቶቹን ለማውጣት አልተቻለም።
 toast-recipes-fetch-progress = ሪሴፖች እየተገኙ ነው…

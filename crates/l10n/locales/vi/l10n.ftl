@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = Không thể thêm công thức vào bộ 
 toast-recipes-category-empty = Danh mục không thể trống hoặc chưa được phân loại.
 toast-recipes-category-delete-failed = Không thể xóa danh mục công thức.
 toast-recipes-count-failed = Lỗi khi lấy số lượng công thức.
-toast-recipes-delete-failed = Không thể xóa công thức.
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] { $count } công thức không thể bị xóa.
+    }
 toast-recipes-exist = Công thức đã tồn tại.
 toast-recipes-export-failed = Không thể xuất công thức.
 toast-recipes-fetch-progress = Đang tải công thức…

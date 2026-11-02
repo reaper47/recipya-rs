@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Não foi possível adicionar a receita à 
 toast-recipes-category-empty = A categoria não pode estar vazia ou sem categoria.
 toast-recipes-category-delete-failed = Não foi possível excluir a categoria de receitas.
 toast-recipes-count-failed = Erro ao buscar o número de receitas.
-toast-recipes-delete-failed = Não foi possível excluir a receita.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] A receita não pôde ser excluída.
+       *[other] { $count } receitas não puderam ser excluídas.
+    }
 toast-recipes-exist = A receita já existe.
 toast-recipes-export-failed = Não foi possível exportar as receitas.
 toast-recipes-fetch-progress = Buscando receitas…

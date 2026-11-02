@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = ไม่สามารถเพิ่ม
 toast-recipes-category-empty = หมวดหมู่ไม่สามารถว่างเปล่าหรือไม่ได้จัดหมวดหมู่ได้
 toast-recipes-category-delete-failed = ไม่สามารถลบหมวดหมู่สูตรอาหารได้
 toast-recipes-count-failed = เกิดข้อผิดพลาดขณะดึงจำนวนสูตรอาหาร
-toast-recipes-delete-failed = ไม่สามารถลบสูตรอาหารได้
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] ไม่สามารถลบรายการได้ { $count } รายการ
+    }
 toast-recipes-exist = สูตรอาหารมีอยู่แล้ว
 toast-recipes-export-failed = ไม่สามารถส่งออกสูตรอาหารได้
 toast-recipes-fetch-progress = กำลังดึงข้อมูลสูตรอาหาร…

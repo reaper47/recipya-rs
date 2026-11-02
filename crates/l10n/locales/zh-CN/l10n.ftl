@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = 无法将食谱添加到收藏夹。
 toast-recipes-category-empty = 分类不能为空或未分类。
 toast-recipes-category-delete-failed = 无法删除食谱分类。
 toast-recipes-count-failed = 无法获取食谱数量。
-toast-recipes-delete-failed = 无法删除食谱。
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] 无法删除 { $count } 个食谱。
+    }
 toast-recipes-exist = 食谱已存在。
 toast-recipes-export-failed = 无法导出食谱。
 toast-recipes-fetch-progress = 正在获取食谱…

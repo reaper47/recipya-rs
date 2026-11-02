@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Ekki tókst að bæta uppskriftinni við s
 toast-recipes-category-empty = Flokkurinn má ekki vera tómur eða flokkunarlaus.
 toast-recipes-category-delete-failed = Ekki tókst að eyða uppskriftaflokki.
 toast-recipes-count-failed = Vandi við sóun á fjölda uppskrifta.
-toast-recipes-delete-failed = Ekki tókst að eyða uppskriftinni.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Ekki tókst að eyða uppskriftinni.
+       *[other] Ekki tókst að eyða { $count } uppskriftum.
+    }
 toast-recipes-exist = Uppskriftin er til.
 toast-recipes-export-failed = Ekki tókst að flytja út uppskriftirnar.
 toast-recipes-fetch-progress = Sótti uppskriftir…

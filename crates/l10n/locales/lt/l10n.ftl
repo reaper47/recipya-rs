@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Nepavyko pridėti recepto į kolekciją.
 toast-recipes-category-empty = Kategorija negali būti tuščia arba nepriskirta jokiai kategorijai.
 toast-recipes-category-delete-failed = Nepavyko ištrinti receptų kategorijos.
 toast-recipes-count-failed = Nepavyko gauti receptų skaičiaus.
-toast-recipes-delete-failed = Nepavyko ištrinti recepto.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Nepavyko ištrinti recepto.
+       *[other] Nepavyko ištrinti { $count } receptų.
+    }
 toast-recipes-exist = Receptas jau egzistuoja.
 toast-recipes-export-failed = Nepavyko eksportuoti receptų.
 toast-recipes-fetch-progress = Renkami receptai…

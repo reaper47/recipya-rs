@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = לא ניתן היה להוסיף את ה�
 toast-recipes-category-empty = הקטגוריה לא יכולה להיות ריקה או בלתי מסווגת.
 toast-recipes-category-delete-failed = לא ניתן היה למחוק את קטגוריית המתכונים.
 toast-recipes-count-failed = שגיאה בקבלת מספר המתכונים.
-toast-recipes-delete-failed = לא ניתן היה למחוק את המתכון.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] לא ניתן היה למחוק את המתכון.
+       *[other] לא ניתן היה למחוק את { $count } המתכונים.
+    }
 toast-recipes-exist = המתכון כבר קיים.
 toast-recipes-export-failed = נכשל יצוא המתכונים.
 toast-recipes-fetch-progress = מביאים מתכונים…

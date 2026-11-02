@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Αποτυχία προσθήκης της
 toast-recipes-category-empty = Η κατηγορία δεν μπορεί να είναι κενή ή αταξινόμητη.
 toast-recipes-category-delete-failed = Αποτυχήθηκε η διαγραφή της κατηγορίας συνταγών.
 toast-recipes-count-failed = Σφάλμα κατά την ανάκτηση του αριθμού των συνταγών.
-toast-recipes-delete-failed = Δεν κατέστη δυνατό να διαγραφεί η συνταγή.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Η συνταγή δεν μπορούσε να διαγραφεί.
+       *[other] { $count } συνταγές δεν μπορούσαν να διαγραφούν.
+    }
 toast-recipes-exist = Η συνταγή υπάρχει.
 toast-recipes-export-failed = Αποτυχία εξαγωγής συνταγών.
 toast-recipes-fetch-progress = Λήψη συνταγών…

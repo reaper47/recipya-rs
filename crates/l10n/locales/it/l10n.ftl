@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Impossibile aggiungere la ricetta alla rac
 toast-recipes-category-empty = La categoria non può essere vuota o non categorizzata.
 toast-recipes-category-delete-failed = Impossibile eliminare la categoria di ricette.
 toast-recipes-count-failed = Impossibile recuperare il numero di ricette.
-toast-recipes-delete-failed = La ricetta non è stata eliminata.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] La ricetta non è stata eliminata.
+       *[other] { $count } ricette non sono state eliminate.
+    }
 toast-recipes-exist = La ricetta esiste.
 toast-recipes-export-failed = Impossibile esportare le ricette.
 toast-recipes-fetch-progress = Recupero delle ricette…

@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Resepti kolleksiyaya əlavə etmək mümk�
 toast-recipes-category-empty = Kateqoriya boş və ya kateqoriyalaşdırılmamış ola bilməz.
 toast-recipes-category-delete-failed = Resept kateqoriyasını silmək mümkün olmadı.
 toast-recipes-count-failed = Reseptlərin sayı götürülərkən xəta baş verdi.
-toast-recipes-delete-failed = Resept silinə bilmədi.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Resept silinə bilmədi.
+       *[other] { $count } resept silinə bilmədi.
+    }
 toast-recipes-exist = Resept mövcuddur.
 toast-recipes-export-failed = Reseptləri ixrac etmək mümkün olmadı.
 toast-recipes-fetch-progress = Reseptlər əldə edilir…

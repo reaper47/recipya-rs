@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Imeshindwa kuongeza mapishi kwenye mkusany
 toast-recipes-category-empty = Kategoria haiwezi kuwa tupu au isiyo na kategoria.
 toast-recipes-category-delete-failed = Imeshindwa kufuta kategoria ya mapishi.
 toast-recipes-count-failed = Hitilafu wakati wa kupata idadi ya mapishi.
-toast-recipes-delete-failed = Recepta haiwezi kufutwa.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Recepta haiwezi kufutwa.
+       *[other] { $count } recepta haiwezi kufutwa.
+    }
 toast-recipes-exist = Recepti ipo.
 toast-recipes-export-failed = Imeshindwa kuagiza nje mapishi.
 toast-recipes-fetch-progress = Inavuta mapishi…
