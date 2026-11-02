@@ -66,8 +66,7 @@ pub fn shopping_routes(state: &AppState) -> Router<AppState> {
         )
         .route(
             "/recipes/{:recipe_id}/ingredients",
-            get(h::shopping_recipe_ingredients_handler)
-                .post(h::shopping_recipe_ingredients_post_handler),
+            get(h::shopping_recipe_ingredients_handler),
         )
         .route(
             "/recipes/ingredients",

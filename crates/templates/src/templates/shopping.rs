@@ -1064,19 +1064,13 @@ pub fn master_toggled_behaviour() -> Markup {
 
 /// Renders the ingredient selection content for the add to shopping list dialog.
 pub fn render_recipe_add_shopping_dialog_content(
-    recipe_ids: &[i64],
     shopping_lists: Vec<ShoppingList>,
-    ingredients: Vec<AddShoppingIngredient>,
+    ingredients: Vec<(i64, AddShoppingIngredient)>,
     messages: &Messages,
 ) -> Markup {
-    let post_url = match recipe_ids {
-        [id] => format!("/shopping/recipes/{id}/ingredients"),
-        _ => "/shopping/recipes/ingredients".to_owned(),
-    };
-
     html! {
         form class="card bg-base-100 shadow-sm"
-            hx-post=(post_url)
+            hx-post="/shopping/recipes/ingredients"
             hx-indicator="#add-ingredients-submit-button-spinner"
             hx-on--after-request="document.querySelector('#add-to-shopping-list-dialog').close()" {
             div .card-body {
@@ -1120,8 +1114,9 @@ pub fn render_recipe_add_shopping_dialog_content(
                             }
                         }
                         tbody {
-                            @for ing in ingredients {
+                            @for (recipe_id, ing) in ingredients {
                                 tr {
+                                    input type="hidden" name="recipe-ids" value=(recipe_id);
                                     td .py-1 {
                                         input type="checkbox" checked class="checkbox checkbox-ingredient"
                                             _="on change or change from <input.master-checkbox/> for el in <input.ingredient-element/> in closest <tr/> toggle @disabled on el end then call checkDataSubmit('checkbox-ingredient', 'add-ingredients-submit-button')";

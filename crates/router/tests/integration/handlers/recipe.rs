@@ -367,7 +367,7 @@ mod tests_delete {
         let res = server.delete(&base_uri(1)).await;
 
         res.assert_status_internal_server_error();
-        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"Recipe could not be deleted.","status":"alert-error","title":"Operation failed"}}"#).await;
+        assert_sse_message(&mut ws_server, r#"{"notification":{"type":"toast","message":"The recipe could not be deleted.","status":"alert-error","title":"Operation failed"}}"#).await;
         Ok(())
     }
 

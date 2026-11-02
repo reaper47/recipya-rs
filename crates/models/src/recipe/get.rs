@@ -297,36 +297,44 @@ impl Recipe {
     ///
     /// The unwrap implies a possible panic, but none can actually occur since
     /// we verify whether the vector is not empty.
-    pub async fn ingredients(mm: &ModelManager, recipe_ids: &[i64]) -> Result<Vec<Ingredient>> {
-        let ingredients = schema::ingredients_recipes::table
+    pub async fn ingredients(
+        mm: &ModelManager,
+        recipe_ids: &[i64],
+    ) -> Result<Vec<(i64, Ingredient)>> {
+        let ingredients: Vec<(i64, Ingredient)> = schema::ingredients_recipes::table
             .inner_join(
                 schema::ingredients::table
                     .on(schema::ingredients::id.eq(schema::ingredients_recipes::ingredient_id)),
             )
             .filter(schema::ingredients_recipes::recipe_id.eq_any(recipe_ids))
-            .select(schema::ingredients::name)
-            .load::<String>(&mut mm.pool.get().await?)
+            .select((
+                schema::ingredients_recipes::recipe_id,
+                schema::ingredients::name,
+            ))
+            .load::<(i64, String)>(&mut mm.pool.get().await?)
             .await?
             .into_iter()
-            .map(|s| IngredientParser::new(false).from_str(&s))
+            .map(|(recipe_id, ing)| (recipe_id, IngredientParser::new(false).from_str(&ing)))
             .collect_vec();
 
         if recipe_ids.len() > 1 {
-            let mut map: HashMap<String, Vec<Ingredient>> =
+            let mut map: HashMap<String, Vec<(i64, Ingredient)>> =
                 ingredients
                     .into_iter()
-                    .fold(HashMap::new(), |mut acc, ing| {
-                        acc.entry(ing.name.clone()).or_default().push(ing);
+                    .fold(HashMap::new(), |mut acc, (recipe_id, ing)| {
+                        acc.entry(ing.name.clone())
+                            .or_default()
+                            .push((recipe_id, ing));
                         acc
                     });
 
             map.values_mut().filter(|v| v.len() > 1).for_each(|vec| {
                 let mut iter = std::mem::take(vec).into_iter();
-                let mut merged = iter.next().unwrap();
-                for ing in iter {
-                    merged.amounts.extend(ing.amounts);
+                let (merged_recipe_id, mut merged_ing) = iter.next().unwrap();
+                for (_, ing) in iter {
+                    merged_ing.amounts.extend(ing.amounts);
                 }
-                merged.amounts = merged
+                merged_ing.amounts = merged_ing
                     .amounts
                     .into_iter()
                     .reduce(|acc, m| acc.add(m).unwrap_or(acc))
@@ -334,7 +342,7 @@ impl Recipe {
                     .into_iter()
                     .collect();
 
-                *vec = vec![merged];
+                *vec = vec![(merged_recipe_id, merged_ing)];
             });
 
             Ok(map.values().flatten().cloned().collect_vec())

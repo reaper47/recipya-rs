@@ -35,6 +35,8 @@ mod test_all {
 }
 
 mod test_categories {
+    use itertools::Itertools;
+
     use super::*;
 
     #[derive(Insertable)]
@@ -62,88 +64,29 @@ mod test_categories {
 
         let categories = User::categories(&state.mm, user_id).await?;
 
-        let want = vec![
-            Category {
-                id: categories
-                    .iter()
-                    .find(|c| c.name == "uncategorized")
-                    .unwrap()
-                    .id,
-                name: "uncategorized".into(),
-            },
-            Category {
-                id: categories
-                    .iter()
-                    .find(|c| c.name == "appetizers")
-                    .unwrap()
-                    .id,
-                name: "appetizers".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "bread").unwrap().id,
-                name: "bread".into(),
-            },
-            Category {
-                id: categories
-                    .iter()
-                    .find(|c| c.name == "breakfasts")
-                    .unwrap()
-                    .id,
-                name: "breakfasts".into(),
-            },
-            Category {
-                id: categories
-                    .iter()
-                    .find(|c| c.name == "condiments")
-                    .unwrap()
-                    .id,
-                name: "condiments".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "dessert").unwrap().id,
-                name: "dessert".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "lunch").unwrap().id,
-                name: "lunch".into(),
-            },
-            Category {
-                id: categories
-                    .iter()
-                    .find(|c| c.name == "main dish")
-                    .unwrap()
-                    .id,
-                name: "main dish".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "salad").unwrap().id,
-                name: "salad".into(),
-            },
-            Category {
-                id: categories
-                    .iter()
-                    .find(|c| c.name == "side dish")
-                    .unwrap()
-                    .id,
-                name: "side dish".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "snacks").unwrap().id,
-                name: "snacks".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "soups").unwrap().id,
-                name: "soups".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "stews").unwrap().id,
-                name: "stews".into(),
-            },
-            Category {
-                id: categories.iter().find(|c| c.name == "date").unwrap().id,
-                name: "date".into(),
-            },
+        let names = [
+            "appetizers",
+            "bread",
+            "breakfasts",
+            "condiments",
+            "date",
+            "dessert",
+            "lunch",
+            "main dish",
+            "salad",
+            "side dish",
+            "snacks",
+            "soups",
+            "stews",
+            "uncategorized",
         ];
+        let want = names
+            .iter()
+            .map(|name| Category {
+                id: categories.iter().find(|c| c.name == *name).unwrap().id,
+                name: (*name).into(),
+            })
+            .collect_vec();
         pretty_assertions::assert_eq!(want, categories);
         Ok(())
     }

@@ -478,10 +478,22 @@ async fn test_ingredients_single_recipe_ok() -> Result<()> {
     pretty_assertions::assert_eq!(
         got,
         vec![
-            IngredientParser::new(false).from_str("1 cup blue spinach"),
-            IngredientParser::new(false).from_str("1/2 tbsp cinnamon"),
-            IngredientParser::new(false).from_str("4 pounds top quality chicken filet"),
-            IngredientParser::new(false).from_str("1/8 cup lemon juice"),
+            (
+                recipe_id,
+                IngredientParser::new(false).from_str("1 cup blue spinach")
+            ),
+            (
+                recipe_id,
+                IngredientParser::new(false).from_str("1/2 tbsp cinnamon")
+            ),
+            (
+                recipe_id,
+                IngredientParser::new(false).from_str("4 pounds top quality chicken filet")
+            ),
+            (
+                recipe_id,
+                IngredientParser::new(false).from_str("1/8 cup lemon juice")
+            ),
         ]
     );
     Ok(())
@@ -504,17 +516,35 @@ async fn test_ingredients_multiple_recipes_ok() -> Result<()> {
 
     let mut got = Recipe::ingredients(&state.mm, &[id1, id2]).await?;
 
-    got.sort_by(|a, b| a.name.cmp(&b.name));
+    got.sort_by(|a, b| a.1.name.cmp(&b.1.name));
     assert_eq!(got.len(), 6);
     pretty_assertions::assert_eq!(
         got,
         vec![
-            IngredientParser::new(false).from_str("2 cup blue spinach"),
-            IngredientParser::new(false).from_str("3 tbsp butter, melted"),
-            IngredientParser::new(false).from_str("1/2 tbsp cinnamon"),
-            IngredientParser::new(false).from_str("1/8 cup lemon juice"),
-            IngredientParser::new(false).from_str("1 cup of pistachios"),
-            IngredientParser::new(false).from_str("4 pounds top quality chicken filet"),
+            (
+                id2,
+                IngredientParser::new(false).from_str("2 cup blue spinach")
+            ),
+            (
+                id2,
+                IngredientParser::new(false).from_str("3 tbsp butter, melted")
+            ),
+            (
+                id1,
+                IngredientParser::new(false).from_str("1/2 tbsp cinnamon")
+            ),
+            (
+                id1,
+                IngredientParser::new(false).from_str("1/8 cup lemon juice")
+            ),
+            (
+                id2,
+                IngredientParser::new(false).from_str("1 cup of pistachios")
+            ),
+            (
+                id1,
+                IngredientParser::new(false).from_str("4 pounds top quality chicken filet")
+            ),
         ]
     );
     Ok(())

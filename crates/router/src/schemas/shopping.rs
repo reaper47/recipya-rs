@@ -55,6 +55,8 @@ pub struct RecipeIngredientsPayload {
     pub notes: Vec<String>,
     #[serde(rename = "with-quantity", default)]
     pub with_quantities: Vec<String>,
+    #[serde(rename = "recipe-ids")]
+    pub recipe_ids: Vec<i64>,
 }
 
 impl RecipeIngredientsPayload {

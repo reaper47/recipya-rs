@@ -10,11 +10,13 @@ use test_models::a_complete_recipe_for_create;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-const BASE_URI: &str = "/recipes/bulk/categorise";
+const BASE_URI: &str = "/recipes/categories";
+const BASE_URI_BULK: &str = "/recipes/bulk/categorise";
 
 #[tokio::test]
 async fn test_must_be_logged_in_ok() -> Result<()> {
     assert_must_be_logged_in(Method::POST, BASE_URI).await?;
+    assert_must_be_logged_in(Method::POST, BASE_URI_BULK).await?;
     assert_must_be_logged_in(Method::DELETE, BASE_URI).await?;
     Ok(())
 }

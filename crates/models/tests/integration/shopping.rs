@@ -290,7 +290,7 @@ async fn test_add_items_ok() -> Result<()> {
     let mut item2 = an_item_with_recipe(recipe_id);
     item2.ingredient = "Muffins".into();
 
-    list.add_items_for_recipe(&state.mm, &[item1, item2], recipe_id, user_id)
+    list.add_items_for_recipe(&state.mm, &[item1, item2], user_id)
         .await?;
 
     let got = ShoppingListDetails::get(&state.mm, list_id, user_id).await?;

@@ -6,6 +6,7 @@ use axum::body::Body;
 use axum::extract::{OriginalUri, Path, Query};
 use axum::response::Response;
 use axum::{extract::State, response::IntoResponse};
+use axum_extra::extract::Form as FormExtra;
 use axum_extra::extract::Query as QueryExtra;
 use axum_htmx::{HX_TRIGGER, HxPrompt, HxRequest};
 use fluent_static::support::axum::RequestLanguage;
@@ -827,19 +828,24 @@ pub async fn shopping_recipe_ingredients_handler(
     let ingredients = match Recipe::ingredients(&state.mm, &[recipe_id]).await {
         Ok(v) => v
             .into_iter()
-            .map(|ing| AddShoppingIngredient {
-                name: ing.name,
-                quantity: ing.amounts.first().map(|s| {
-                    let value = s.values().0;
-                    let unit = s.unit().to_str();
+            .map(|(recipe_id, ing)| {
+                (
+                    recipe_id,
+                    AddShoppingIngredient {
+                        name: ing.name,
+                        quantity: ing.amounts.first().map(|s| {
+                            let value = s.values().0;
+                            let unit = s.unit().to_str();
 
-                    if &unit == "whole" {
-                        format!("{value}")
-                    } else {
-                        format!("{value} {unit}")
-                    }
-                }),
-                notes: ing.modifier,
+                            if &unit == "whole" {
+                                format!("{value}")
+                            } else {
+                                format!("{value} {unit}")
+                            }
+                        }),
+                        notes: ing.modifier,
+                    },
+                )
             })
             .collect::<Vec<_>>(),
         Err(err) => {
@@ -863,7 +869,6 @@ pub async fn shopping_recipe_ingredients_handler(
     };
 
     templates::shopping::render_recipe_add_shopping_dialog_content(
-        &[recipe_id],
         shopping_lists,
         ingredients,
         &messages,
@@ -871,13 +876,72 @@ pub async fn shopping_recipe_ingredients_handler(
     .into_response()
 }
 
-/// Handles the POST request for adding ingredients to a shopping list for a recipe.
-pub async fn shopping_recipe_ingredients_post_handler(
+/// Handles the list of ingredients to add to a shopping list from a list of recipes.
+pub async fn get_ingredients_handler(
     RequireAuth(user): RequireAuth,
     RequestLanguage(messages): RequestLanguage<Messages>,
-    Path(recipe_id): Path<i64>,
     State(state): State<AppState>,
-    axum_extra::extract::Form(mut payload): axum_extra::extract::Form<RecipeIngredientsPayload>,
+    QueryExtra(params): QueryExtra<RecipesPayload>,
+) -> impl IntoResponse {
+    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
+
+    let shopping_lists = match ShoppingList::get_all(&state.mm, user.id, SortBy::NameAsc).await {
+        Ok(lists) => lists,
+        Err(err) => {
+            error!(user = ?user.id, ?err, "Failed to fetch shopping lists");
+            toast
+                .error(&messages.toast_shopping_fetch_lists_failed())
+                .await;
+            return Error::Database.into_response();
+        }
+    };
+
+    let ingredients = match Recipe::ingredients(&state.mm, &params.ids).await {
+        Ok(v) => v
+            .into_iter()
+            .map(|(recipe_id, ing)| {
+                (
+                    recipe_id,
+                    AddShoppingIngredient {
+                        name: ing.name,
+                        quantity: ing.amounts.first().map(|s| {
+                            let value = s.values().0;
+                            let unit = s.unit().to_str();
+
+                            if &unit == "whole" {
+                                format!("{value}")
+                            } else {
+                                format!("{value} {unit}")
+                            }
+                        }),
+                        notes: ing.modifier,
+                    },
+                )
+            })
+            .collect::<Vec<_>>(),
+        Err(err) => {
+            error!(ids = ?params.ids, ?err, "Failed to fetch ingredients");
+            toast
+                .error(&messages.toast_recipes_fetch_ingredients_failed())
+                .await;
+            return Error::Database.into_response();
+        }
+    };
+
+    templates::shopping::render_recipe_add_shopping_dialog_content(
+        shopping_lists,
+        ingredients,
+        &messages,
+    )
+    .into_response()
+}
+
+/// Handles adding the ingredients to a shopping list.
+pub async fn post_ingredients_handler(
+    RequireAuth(user): RequireAuth,
+    RequestLanguage(messages): RequestLanguage<Messages>,
+    State(state): State<AppState>,
+    FormExtra(mut payload): FormExtra<RecipeIngredientsPayload>,
 ) -> impl IntoResponse {
     payload.clean();
     let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
@@ -914,10 +978,11 @@ pub async fn shopping_recipe_ingredients_post_handler(
         &payload.ingredients,
         payload.quantities,
         payload.with_quantities,
-        payload.notes
+        payload.notes,
+        payload.recipe_ids,
     )
     .map(
-        |(ingredient, quantity, with_quantity, notes)| ShoppingListItemForCreate {
+        |(ingredient, quantity, with_quantity, notes, recipe_id)| ShoppingListItemForCreate {
             ingredient: ingredient.clone(),
             quantity: if &with_quantity == "true" && &quantity != "-" {
                 Some(quantity)
@@ -931,11 +996,8 @@ pub async fn shopping_recipe_ingredients_post_handler(
     )
     .collect::<Vec<_>>();
 
-    if let Err(err) = list
-        .add_items_for_recipe(&state.mm, items.as_slice(), recipe_id, user.id)
-        .await
-    {
-        error!(?recipe_id, ?err, "Failed to add items");
+    if let Err(err) = list.add_items_for_recipe(&state.mm, &items, user.id).await {
+        error!(?err, "Failed to add items");
         toast
             .error(&messages.toast_shopping_add_items_failed())
             .await;
@@ -946,71 +1008,5 @@ pub async fn shopping_recipe_ingredients_post_handler(
         .success(&messages.toast_shopping_add_items_success())
         .await;
 
-    ().into_response()
-}
-
-/// Handles the list of ingredients to add to a shopping list from a list of recipes.
-pub async fn get_ingredients_handler(
-    RequireAuth(user): RequireAuth,
-    RequestLanguage(messages): RequestLanguage<Messages>,
-    State(state): State<AppState>,
-    QueryExtra(params): QueryExtra<RecipesPayload>,
-) -> impl IntoResponse {
-    let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
-
-    let shopping_lists = match ShoppingList::get_all(&state.mm, user.id, SortBy::NameAsc).await {
-        Ok(lists) => lists,
-        Err(err) => {
-            error!(user = ?user.id, ?err, "Failed to fetch shopping lists");
-            toast
-                .error(&messages.toast_shopping_fetch_lists_failed())
-                .await;
-            return Error::Database.into_response();
-        }
-    };
-
-    let ingredients = match Recipe::ingredients(&state.mm, &params.ids).await {
-        Ok(v) => v
-            .into_iter()
-            .map(|ing| AddShoppingIngredient {
-                name: ing.name,
-                quantity: ing.amounts.first().map(|s| {
-                    let value = s.values().0;
-                    let unit = s.unit().to_str();
-
-                    if &unit == "whole" {
-                        format!("{value}")
-                    } else {
-                        format!("{value} {unit}")
-                    }
-                }),
-                notes: ing.modifier,
-            })
-            .collect::<Vec<_>>(),
-        Err(err) => {
-            error!(ids = ?params.ids, ?err, "Failed to fetch ingredients");
-            toast
-                .error(&messages.toast_recipes_fetch_ingredients_failed())
-                .await;
-            return Error::Database.into_response();
-        }
-    };
-
-    templates::shopping::render_recipe_add_shopping_dialog_content(
-        &params.ids,
-        shopping_lists,
-        ingredients,
-        &messages,
-    )
-    .into_response()
-}
-
-/// Handles adding the ingredients to a shopping list.
-pub async fn post_ingredients_handler(
-    RequireAuth(user): RequireAuth,
-    RequestLanguage(messages): RequestLanguage<Messages>,
-    State(state): State<AppState>,
-    axum_extra::extract::Form(mut payload): axum_extra::extract::Form<RecipeIngredientsPayload>,
-) -> impl IntoResponse {
     StatusCode::NO_CONTENT.into_response()
 }

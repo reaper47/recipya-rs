@@ -709,40 +709,36 @@ impl ShoppingList {
         &self,
         mm: &ModelManager,
         items_c: &[ShoppingListItemForCreate],
-        recipe_id: i64,
         user_id: Uuid,
     ) -> Result<()> {
         let mut conn = mm.pool.get().await?;
 
         Self::verify_ownership(&mut conn, self.id, user_id).await?;
 
-        let values = items_c
-            .iter()
-            .map(|item| ShoppingListItemForInsert {
-                shopping_list_id: self.id,
-                ingredient: item.ingredient.as_str(),
-                quantity: item.quantity.as_deref(),
-                notes: item.notes.as_deref(),
-                shopping_list_label_id: None,
-            })
-            .collect::<Vec<_>>();
+        for item in items_c {
+            let inserted = diesel::insert_into(schema::shopping_list_items::table)
+                .values(ShoppingListItemForInsert {
+                    shopping_list_id: self.id,
+                    ingredient: item.ingredient.as_str(),
+                    quantity: item.quantity.as_deref(),
+                    notes: item.notes.as_deref(),
+                    shopping_list_label_id: None,
+                })
+                .on_conflict_do_nothing()
+                .get_result::<ShoppingListItem>(&mut conn)
+                .await
+                .optional()?;
 
-        let values = diesel::insert_into(schema::shopping_list_items::table)
-            .values(&values)
-            .on_conflict_do_nothing()
-            .get_results::<ShoppingListItem>(&mut conn)
-            .await?
-            .into_iter()
-            .map(|item| ShoppingListRecipeForInsert {
-                shopping_list_item_id: item.id,
-                recipe_id,
-            })
-            .collect::<Vec<_>>();
-
-        diesel::insert_into(schema::shopping_list_recipes::table)
-            .values(&values)
-            .execute(&mut conn)
-            .await?;
+            if let (Some(recipe_id), Some(inserted)) = (item.recipe_id, inserted) {
+                diesel::insert_into(schema::shopping_list_recipes::table)
+                    .values(ShoppingListRecipeForInsert {
+                        shopping_list_item_id: inserted.id,
+                        recipe_id,
+                    })
+                    .execute(&mut conn)
+                    .await?;
+            }
+        }
 
         Ok(())
     }
