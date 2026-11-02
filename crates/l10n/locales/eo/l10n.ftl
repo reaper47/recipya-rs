@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Ne sukcesis aldoni la recepton al la kolek
 toast-recipes-category-empty = Kategorio ne povas esti malplena nek nekategorizita.
 toast-recipes-category-delete-failed = Ne sukcesis forigi la receptokategorion.
 toast-recipes-count-failed = Eraro dum eltiro de la nombro de receptoj.
-toast-recipes-delete-failed = La recepto ne povis esti forigita.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] La recepto ne povis esti forigita.
+       *[other] { $count } receptoj ne povis esti forigitaj.
+    }
 toast-recipes-exist = Recepto jam ekzistas.
 toast-recipes-export-failed = Ne sukcesis eksporti la receptojn.
 toast-recipes-fetch-progress = Eltirante receptojn…

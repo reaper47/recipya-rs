@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = ރެސިޕީ ކޮލެކްޝަނަށް އި
 toast-recipes-category-empty = ފައިލުގެ ބައެއް ހުސް ނުވަތަ ބައެއް ނުކުރެވިފައި ނުވާނެ.
 toast-recipes-category-delete-failed = ރެސިޕީ ކެޓެގަރީ ފޮހެވެން ނުކުޅެދުނު.
 toast-recipes-count-failed = ރެސިޕީތަކުގެ އަދަދު ހޯދުމުގައި ކުށެއް ހިނގައިފި.
-toast-recipes-delete-failed = ރެސިޕީ ފޮހެވޭނެ ނޫން.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] ރެސިޕީ ފޮހެވޭނެ ނޫން.
+       *[other] { $count } ރެސިޕީ ފޮހެވޭނެ ނޫން.
+    }
 toast-recipes-exist = ރެސިޕީ ވެއެ.
 toast-recipes-export-failed = ރެސިޕީތައް އެކްސްޕޯޓް ކުރުމަށް ނުކުޅެދުނު.
 toast-recipes-fetch-progress = ރެސިޕީތައް ފެޗް ކުރަމުން…

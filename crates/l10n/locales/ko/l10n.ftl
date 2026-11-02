@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = 레시피를 컬렉션에 추가하지 못
 toast-recipes-category-empty = 카테고리를 비워두거나 분류되지 않은 상태로 둘 수 없습니다.
 toast-recipes-category-delete-failed = 레시피 카테고리를 삭제할 수 없습니다.
 toast-recipes-count-failed = 레시피 개수를 가져오는 중 오류가 발생했습니다.
-toast-recipes-delete-failed = 레시피를 삭제할 수 없습니다.
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] { $count }개의 레시피를 삭제할 수 없습니다.
+    }
 toast-recipes-exist = 레시피가 이미 존재합니다.
 toast-recipes-export-failed = 레시피 내보내기에 실패했습니다.
 toast-recipes-fetch-progress = 레시피를 가져오는 중…

@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Не вдалося додати реце�
 toast-recipes-category-empty = Категорія не може бути порожньою або некатегоризованою.
 toast-recipes-category-delete-failed = Не вдалося видалити категорію рецептів.
 toast-recipes-count-failed = Помилка під час отримання кількості рецептів.
-toast-recipes-delete-failed = Рецепт не вдалося видалити.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Рецепт не вдалося видалити.
+       *[other] { $count } рецептів не вдалося видалити.
+    }
 toast-recipes-exist = Рецепт існує.
 toast-recipes-export-failed = Не вдалося експортувати рецепти.
 toast-recipes-fetch-progress = Отримання рецептів…

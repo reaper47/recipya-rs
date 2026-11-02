@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = نسخہ مجموعے میں شامل کر
 toast-recipes-category-empty = زمرہ خالی یا غیر درجہ بند نہیں ہو سکتا۔
 toast-recipes-category-delete-failed = نسخہ جات کی زمرے کو حذف کرنا ناکام رہا۔
 toast-recipes-count-failed = نسخوں کی تعداد حاصل کرتے ہوئے خطا ہو گئی۔
-toast-recipes-delete-failed = نسخہ حذف نہیں کیا جا سکا۔
+toast-recipes-delete-failed =
+    { $count ->
+        [one] نسخہ حذف نہیں کیا جا سکا۔
+       *[other] { $count } نسخے حذف نہیں کیے جا سکے۔
+    }
 toast-recipes-exist = نسخہ پہلے سے موجود ہے۔
 toast-recipes-export-failed = نسخوں کو ایکسپورٹ کرنے میں ناکامی۔
 toast-recipes-fetch-progress = نسخے حاصل کیے جا رہے ہیں…

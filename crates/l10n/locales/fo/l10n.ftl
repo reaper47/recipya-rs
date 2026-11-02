@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Tað eydnaðist ikki at leggja uppskriftin
 toast-recipes-category-empty = Flokkurin kann ikki vera tómur ella óflokkaður.
 toast-recipes-category-delete-failed = Tað eydnaðist ikki at strika uppskriftaflokkin.
 toast-recipes-count-failed = Villa við innhending av talið á uppskriftum.
-toast-recipes-delete-failed = Uppskriftin kundi ikki strikast.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Uppskriftin kundi ikki strikast.
+       *[other] { $count } uppskriftir kundu ikki strikast.
+    }
 toast-recipes-exist = Uppskriftin er longu til.
 toast-recipes-export-failed = Tað eydnaðist ikki at flyta uppskriftir út.
 toast-recipes-fetch-progress = Heint uppskriftir…

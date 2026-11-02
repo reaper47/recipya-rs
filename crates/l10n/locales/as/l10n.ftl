@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = ৰেচিপিটো সংগ্ৰ�
 toast-recipes-category-empty = শ্ৰেণী খালী বা শ্ৰেণীবদ্ধ নোহোৱা হ’ব নোৱাৰে।
 toast-recipes-category-delete-failed = ৰেচিপি শ্ৰেণীটো মচি পেলাব নোৱাৰা গ’ল।
 toast-recipes-count-failed = ৰেচিপিৰ সংখ্যা আনিবলৈ ত্ৰুটি ঘটিল।
-toast-recipes-delete-failed = ৰেচিপিটো মচি পেলাব পৰা নগ’ল।
+toast-recipes-delete-failed =
+    { $count ->
+        [one] ৰেচিপিটি মচি পেলাব পৰা নগ’ল।
+       *[other] { $count }টা ৰেচিপি মচি পেলাব পৰা নগ’ল।
+    }
 toast-recipes-exist = ৰেচিপিটো ইতিমধ্যে আছে।
 toast-recipes-export-failed = ৰেসিপি এক্সপ’ৰ্ট কৰিবলৈ ব্যৰ্থ হ’ল।
 toast-recipes-fetch-progress = ৰেচিপিসমূহ আনি লোৱা হৈছে…

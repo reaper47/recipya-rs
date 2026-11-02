@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = Recetaqa colecciónman yapaytapaq mana ati
 toast-recipes-category-empty = Kategoriya mana chaychu, mana yuyaykuyasqa kawsayman.
 toast-recipes-category-delete-failed = Receta-kategoriyata mana uraykusqachu.
 toast-recipes-count-failed = Recetas llak’aykuna yachayta hark’aypaq error.
-toast-recipes-delete-failed = Receta mana llallisqachu.
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] { $count } recetasqa mana churaytaqachu.
+    }
 toast-recipes-exist = Receta kañan.
 toast-recipes-export-failed = Recetas exportar chaymanakusqachu.
 toast-recipes-fetch-progress = Recetas kachakachakusqa…

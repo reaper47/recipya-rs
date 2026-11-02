@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Ho hlolehile ho kenya resepe pokellong.
 toast-recipes-category-empty = Sehlopha ha se lokela ho ba se se nang letho kapa se sa hlophiswang sehlopheng.
 toast-recipes-category-delete-failed = Ha ho ka hlakoloa sehlopha sa liresepe.
 toast-recipes-count-failed = Ho hlokahetse ho fumana palo ea liresepe.
-toast-recipes-delete-failed = Sirecipi ha e ka hlakoloa.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Recepta ha e ka hlakoloa.
+       *[other] Direkete tse { $count } ha di ka hlakolwa.
+    }
 toast-recipes-exist = Resepi e se e ntse e le teng.
 toast-recipes-export-failed = Ho hloleha ho romela liresepe.
 toast-recipes-fetch-progress = Ho ntse ho jaruoa liresepe…

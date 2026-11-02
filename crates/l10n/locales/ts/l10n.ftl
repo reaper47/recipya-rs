@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = A vuna ho engelela resipele kuqoqelwa.
 toast-recipes-category-empty = Khategori a ke kea lefela kapa e sa hlolelwa khategoring.
 toast-recipes-category-delete-failed = A vekiwe ho hlakula category ya resipi.
 toast-recipes-count-failed = Phoso ekuhloleni inani lezidzwa.
-toast-recipes-delete-failed = Resipeyi ayikwazanga ukususiwa.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Resipeyi ha yi swi hlela.
+       *[other] { $count } resipiyi ha yi swi hlela.
+    }
 toast-recipes-exist = Resipiyo iko.
 toast-recipes-export-failed = Kuhanisa mareshi phutha.
 toast-recipes-fetch-progress = Kuza maresipidi…

@@ -177,7 +177,6 @@ toast-recipes-add-collection-failed = Failed to add recipe to collection.
 toast-recipes-category-empty = Category cannot be empty or uncategorised.
 toast-recipes-category-delete-failed = Failed to delete recipe category.
 toast-recipes-count-failed = Error fetching number of recipes.
-toast-recipes-delete-failed = Recipe could not be deleted.
 toast-recipes-delete-failed =
    { $count ->
        [one] The recipe could not be deleted.

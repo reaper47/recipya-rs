@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = റെസിപ്പി കളക്ഷ�
 toast-recipes-category-empty = വിഭാഗം ഒഴിഞ്ഞതോ വിഭാഗീകരിക്കാത്തതോ ആയിരിക്കരുത്.
 toast-recipes-category-delete-failed = റെസിപ്പി വിഭാഗം നീക്കം ചെയ്യാൻ പരാജയപ്പെട്ടു.
 toast-recipes-count-failed = റെസിപ്പികളുടെ എണ്ണം ലഭിക്കുന്നതിൽ പിശക്.
-toast-recipes-delete-failed = റെസിപ്പി ഡിലീറ്റ് ചെയ്യാനായില്ല.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] ഈ റെസിപ്പി ഡിലീറ്റ് ചെയ്യാൻ കഴിഞ്ഞില്ല.
+       *[other] { $count } റെസിപ്പികൾ ഡിലീറ്റ് ചെയ്യാൻ കഴിഞ്ഞില്ല.
+    }
 toast-recipes-exist = പാചകക്കുറിപ്പ് നിലവിലുണ്ട്.
 toast-recipes-export-failed = റെസിപ്പികൾ എക്സ്പോർട്ട് ചെയ്യാൻ പരാജയപ്പെട്ടു.
 toast-recipes-fetch-progress = റെസിപ്പികൾ എടുക്കുന്നു…

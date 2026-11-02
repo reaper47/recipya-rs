@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = មិនអាចបន្ថែមរូ
 toast-recipes-category-empty = ប្រភេទមិនអាចទទេ ឬមិនត្រូវបានចាត់ថ្នាក់បានទេ។
 toast-recipes-category-delete-failed = មិនអាចលុបប្រភេទរូបមន្តបានទេ។
 toast-recipes-count-failed = មានកំហុសពេលទាញយកចំនួនម្ហូបអាហារ។
-toast-recipes-delete-failed = មិនអាចលុបវិធីធ្វើម្ហូបបានទេ។
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] មិនអាចលុបរូបភាពម្ហូបចំនួន { $count } បានទេ។
+    }
 toast-recipes-exist = រូបធ្វើម្ហូបនេះមានស្រាប់។
 toast-recipes-export-failed = មិនអាចនាំចេញរូបមន្តបានទេ។
 toast-recipes-fetch-progress = កំពុងទាញយករូបធ្វើម្ហូប…

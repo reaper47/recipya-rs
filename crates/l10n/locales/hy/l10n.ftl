@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Չհաջողվեց ավելացնել բա
 toast-recipes-category-empty = Կատեգորիան չի կարող դատարկ կամ չկատեգորացված լինել։
 toast-recipes-category-delete-failed = Չհաջողվեց ջնջել բաղադրատոմսերի կատեգորիան։
 toast-recipes-count-failed = Սխալ՝ ռեցեպտների քանակը ստանալիս։
-toast-recipes-delete-failed = Ռեցեպտը չհաջողվեց ջնջել։
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Ռեցեպտը չհաջողվեց ջնջել։
+       *[other] { $count } ռեցեպտներ չհաջողվեց ջնջել։
+    }
 toast-recipes-exist = Բաղադրատոմսը գոյություն ունի։
 toast-recipes-export-failed = Չհաջողվեց արտահանել բաղադրատոմսերը։
 toast-recipes-fetch-progress = Ռեցեպտները բերվում են…

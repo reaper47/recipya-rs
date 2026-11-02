@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Nepodařilo se přidat recept do kolekce.
 toast-recipes-category-empty = Kategorie nemůže být prázdná nebo nezařazená.
 toast-recipes-category-delete-failed = Nepodařilo se odstranit kategorii receptů.
 toast-recipes-count-failed = Chyba při načítávání počtu receptů.
-toast-recipes-delete-failed = Recept nelze odstranit.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Recept nelze smazat.
+       *[other] { $count } receptů nelze smazat.
+    }
 toast-recipes-exist = Recept již existuje.
 toast-recipes-export-failed = Export receptů se nezdařil.
 toast-recipes-fetch-progress = Načítání receptů…

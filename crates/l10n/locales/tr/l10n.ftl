@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Tarif koleksiyona eklenemedi.
 toast-recipes-category-empty = Kategori boş veya kategorize edilmemiş olamaz.
 toast-recipes-category-delete-failed = Tarif kategorisi silinemedi.
 toast-recipes-count-failed = Tarif sayısı alınamadı.
-toast-recipes-delete-failed = Tarif silinemedi.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Tarif silinemedi.
+       *[other] { $count } tarif silinemedi.
+    }
 toast-recipes-exist = Tarif mevcut.
 toast-recipes-export-failed = Tarifler dışa aktarılamadı.
 toast-recipes-fetch-progress = Tarifler getiriliyor…

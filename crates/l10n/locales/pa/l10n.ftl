@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = ਰੈਸਿਪੀ ਨੂੰ ਸੰਗ੍�
 toast-recipes-category-empty = ਸ਼੍ਰੇਣੀ ਖਾਲੀ ਜਾਂ ਬਿਨਾਂ ਸ਼੍ਰੇਣੀ ਵਾਲੀ ਨਹੀਂ ਹੋ ਸਕਦੀ।
 toast-recipes-category-delete-failed = ਰੈਸਿਪੀ ਸ਼੍ਰੇਣੀ ਨੂੰ ਮਿਟਾਉਣ ਵਿੱਚ ਅਸਫਲ।
 toast-recipes-count-failed = ਰੈਸਿਪੀਆਂ ਦੀ ਗਿਣਤੀ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਤਰੁੱਟੀ।
-toast-recipes-delete-failed = ਰੈਸਿਪੀ ਨੂੰ ਮਿਟਾਇਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।
+toast-recipes-delete-failed =
+    { $count ->
+        [one] ਰੈਸਿਪੀ ਨੂੰ ਮਿਟਾਇਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।
+       *[other] { $count } ਰੈਸਿਪੀਆਂ ਨੂੰ ਮਿਟਾਇਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।
+    }
 toast-recipes-exist = ਰੈਸਿਪੀ ਮੌਜੂਦ ਹੈ।
 toast-recipes-export-failed = ਰੈਸਿਪੀਆਂ ਨੂੰ ਨਿਰਯਾਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ।
 toast-recipes-fetch-progress = ਰੈਸਿਪੀਆਂ ਲੱਭੀਆਂ ਜਾ ਰਹੀਆਂ ਹਨ…

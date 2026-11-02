@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Het lukte niet om het recept aan de verzam
 toast-recipes-category-empty = De categorie kan niet leeg of ongesorteerd zijn.
 toast-recipes-category-delete-failed = Het verwijderen van de receptencategorie is mislukt.
 toast-recipes-count-failed = Fout bij het ophalen van het aantal recepten.
-toast-recipes-delete-failed = Het recept kon niet worden verwijderd.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Het recept kon niet worden verwijderd.
+       *[other] { $count } recepten konden niet worden verwijderd.
+    }
 toast-recipes-exist = Recept bestaat.
 toast-recipes-export-failed = Het exporteren van recepten is mislukt.
 toast-recipes-fetch-progress = Recepten worden opgehaald…

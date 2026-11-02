@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Retsepti lisamine kollektsiooni ebaõnnest
 toast-recipes-category-empty = Kategooria ei saa olla tühi ega kategoriseerimata.
 toast-recipes-category-delete-failed = Retseptikategooriat ei õnnestunud kustutada.
 toast-recipes-count-failed = Retseptide arvu hankimisel esines viga.
-toast-recipes-delete-failed = Retsepti ei õnnestunud kustutada.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Retsepti ei õnnestunud kustutada.
+       *[other] { $count } retsepti ei õnnestunud kustutada.
+    }
 toast-recipes-exist = Retsept on olemas.
 toast-recipes-export-failed = Retseptide eksportimine ebaõnnestus.
 toast-recipes-fetch-progress = Retseptide allalaadimine…

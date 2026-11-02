@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Reseptiä ei voitu lisätä kokoelmaan.
 toast-recipes-category-empty = Kategoria ei voi olla tyhjä tai luokittelematon.
 toast-recipes-category-delete-failed = Reseptiluokan poistaminen epäonnistui.
 toast-recipes-count-failed = Reseptien lukumäärää ei voitu hakea.
-toast-recipes-delete-failed = Reseptiä ei voitu poistaa.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Reseptiä ei voitu poistaa.
+       *[other] { $count } reseptiä ei voitu poistaa.
+    }
 toast-recipes-exist = Resepti on jo olemassa.
 toast-recipes-export-failed = Reseptien vienti epäonnistui.
 toast-recipes-fetch-progress = Haetaan reseptejä…

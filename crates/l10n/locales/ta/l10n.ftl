@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = சமையல் குறிப்ப�
 toast-recipes-category-empty = பிரிவு காலியாகவோ வகைப்படுத்தப்படாததாகவோ இருக்க முடியாது.
 toast-recipes-category-delete-failed = சமையல் பிரிவை நீக்க முடியவில்லை.
 toast-recipes-count-failed = சமையல்களின் எண்ணிக்கையைப் பெறுவதில் பிழை ஏற்பட்டது.
-toast-recipes-delete-failed = சமையல் புதியது நீக்கப்படவில்லை.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] அந்தச் சமையல் குறிப்பை நீக்க முடியவில்லை.
+       *[other] { $count } சமையல் குறிப்புகளை நீக்க முடியவில்லை.
+    }
 toast-recipes-exist = செய்முறை ஏற்கனவே உள்ளது.
 toast-recipes-export-failed = சமையல்களை ஏற்றுமதி செய்ய தவறியது.
 toast-recipes-fetch-progress = சமையல் குறிப்புகள் பெறப்படுகின்றன…

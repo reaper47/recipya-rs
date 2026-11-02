@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = ບໍ່ສາມາດເພີ່ມສ
 toast-recipes-category-empty = ບໍ່ສາມາດປະໜວກໝູ່ໄວ້ໄດ້ ຫຼື ຍັງບໍ່ໄດ້ຈັດໝູ່ໄວ້.
 toast-recipes-category-delete-failed = ບໍ່ສາມາດລຶບປະເພດສູດອາຫານໄດ້.
 toast-recipes-count-failed = ຂໍ້ຜິດພາດໃນການດຶງຂໍ້ມູນຈຳນວນສູດອາຫານ.
-toast-recipes-delete-failed = ບໍ່ສາມາດລຶບສູດອາຫານໄດ້.
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] ບໍ່ສາມາດລຶບສູດອາຫານໄດ້ຈຳນວນ { $count } ສູດ.
+    }
 toast-recipes-exist = ສູດອາຫານມີຢູ່ແລ້ວ.
 toast-recipes-export-failed = ບໍ່ສາມາດສົ່ງອອກສູດອາຫານໄດ້.
 toast-recipes-fetch-progress = ກຳລັງດຶງຂໍ້ມູນສູດອາຫານ…

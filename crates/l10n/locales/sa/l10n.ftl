@@ -121,7 +121,10 @@ toast-recipes-add-collection-failed = रेसिपी को संग्र�
 toast-recipes-category-empty = श्रेणी को खाली या अवर्गीकृत नहीं रखा जा सकता।
 toast-recipes-category-delete-failed = व्यंजन श्रेणी को हटाने में विफलता हुई।
 toast-recipes-count-failed = रेसिपी की संख्या प्राप्त करने में त्रुटि हुई।
-toast-recipes-delete-failed = रेसिपी को हटाया नहीं जा सका।
+toast-recipes-delete-failed =
+    { $count ->
+       *[other] { $count } रेसिपियों को हटाया नहीं जा सका।
+    }
 toast-recipes-exist = रेसिपी मौजूद है।
 toast-recipes-export-failed = रेसिपी निर्यात करने में विफलता।
 toast-recipes-fetch-progress = रेसिपी प्राप्त की जा रही हैं…

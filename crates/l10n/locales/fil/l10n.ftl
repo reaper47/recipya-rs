@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Nabigo ang pagdaragdag ng resipe sa koleks
 toast-recipes-category-empty = Hindi maaaring maging walang laman o hindi nakakategorya ang kategorya.
 toast-recipes-category-delete-failed = Nabigo ang pagtanggal sa kategorya ng resipe.
 toast-recipes-count-failed = Error sa pagkuha ng bilang ng mga recipe.
-toast-recipes-delete-failed = Hindi mabura ang resipe.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Hindi mabura ang resipe.
+       *[other] Hindi mabura ang { $count } na resipe.
+    }
 toast-recipes-exist = Umiiral na ang resipe.
 toast-recipes-export-failed = Nabigo ang pag-export ng mga resipe.
 toast-recipes-fetch-progress = Kinukuha ang mga resipe…

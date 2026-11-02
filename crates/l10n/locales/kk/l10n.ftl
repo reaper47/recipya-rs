@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Рецептті жинаққа қосу �
 toast-recipes-category-empty = Санат бос немесе жіктелмеген болмауы керек.
 toast-recipes-category-delete-failed = Рецепттер санатын жою сәтсіз аяқталды.
 toast-recipes-count-failed = Рецепттер санын алу кезінде қате кетті.
-toast-recipes-delete-failed = Рецептті өшіру мүмкін болмады.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Рецептті өшіру мүмкін болмады.
+       *[other] { $count } рецептті өшіру мүмкін болмады.
+    }
 toast-recipes-exist = Рецепт бар.
 toast-recipes-export-failed = Рецепттерді экспорттау сәтсіз аяқталды.
 toast-recipes-fetch-progress = Рецепттер жүктеліп жатыр…

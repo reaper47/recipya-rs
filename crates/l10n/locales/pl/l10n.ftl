@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Nie udało się dodać przepisu do kolekcj
 toast-recipes-category-empty = Kategoria nie może być pusta ani nieprzypisana do kategorii.
 toast-recipes-category-delete-failed = Nie udało się usunąć kategorii przepisów.
 toast-recipes-count-failed = Błąd podczas pobierania liczby przepisów.
-toast-recipes-delete-failed = Przepisu nie można było usunąć.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Przepisu nie można było usunąć.
+       *[other] { $count } przepisów nie można było usunąć.
+    }
 toast-recipes-exist = Przepis już istnieje.
 toast-recipes-export-failed = Nie udało się wyeksportować przepisów.
 toast-recipes-fetch-progress = Pobieranie przepisów…

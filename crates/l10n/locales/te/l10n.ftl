@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = రెసిపీని సేకరణ�
 toast-recipes-category-empty = వర్గం ఖాళీగా లేదా వర్గీకరించని స్థితిలో ఉండకూడదు.
 toast-recipes-category-delete-failed = వంటకాల వర్గాన్ని తొలగించడం విఫలమైంది.
 toast-recipes-count-failed = వంటకాల సంఖ్యను పొందడంలో తప్పు సంభవించింది.
-toast-recipes-delete-failed = వంటకాన్ని తొలగించలేకపోయింది.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] ఈ వంటకాన్ని తొలగించలేకపోయాం.
+       *[other] { $count } వంటకాలను తొలగించలేకపోయాం.
+    }
 toast-recipes-exist = వంటకం ఉంది.
 toast-recipes-export-failed = వంటకాలను ఎగుమతి చేయడం విఫలమైంది.
 toast-recipes-fetch-progress = వంటకాలు సంగ్రహిస్తున్నాం…

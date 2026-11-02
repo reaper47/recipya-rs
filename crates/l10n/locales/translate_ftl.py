@@ -8,7 +8,7 @@ Reason is I wanted to translate all locales using a local LLM model without copy
 To run on your local machine:
 1. Install llama.cpp: https://llama.app/
 2. Run the llama server with the Index -Translate-35B-A3B-preview-GGUP (https://huggingface.co/IndexTeam/Index-Translate-35B-A3B-preview-GGUF) LLM model:
-    `llama serve -hf IndexTeam/Index-Translate-35B-A3B-preview-GGUF:Q4_K_M`
+    `llama serve -hf IndexTeam/Index-Translate-35B-A3B-preview-GGUF:Q4_K_M --port 8080`
 3. Activate a virtual environment:
 ```bash
 python -m venv venv

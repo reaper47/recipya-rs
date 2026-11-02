@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Det gick inte att lägga till receptet i s
 toast-recipes-category-empty = Kategorin kan inte vara tom eller okategoriserad.
 toast-recipes-category-delete-failed = Det gick inte att ta bort receptkategorin.
 toast-recipes-count-failed = Fel vid hämtning av antalet recept.
-toast-recipes-delete-failed = Receptet kunde inte tas bort.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Receptet kunde inte raderas.
+       *[other] { $count } recept kunde inte raderas.
+    }
 toast-recipes-exist = Receptet finns redan.
 toast-recipes-export-failed = Gick inte att exportera recept.
 toast-recipes-fetch-progress = Hämtar recept…

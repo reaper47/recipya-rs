@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Nem sikerült hozzáadni a receptet a gyű
 toast-recipes-category-empty = A kategória nem lehet üres vagy kategorizálatlan.
 toast-recipes-category-delete-failed = Nem sikerült törölni a receptkategóriát.
 toast-recipes-count-failed = Hiba történt a receptek számának lekérésekor.
-toast-recipes-delete-failed = A recept nem törölhető.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] A recept nem törölhető.
+       *[other] { $count } recept nem törölhető.
+    }
 toast-recipes-exist = A recept már létezik.
 toast-recipes-export-failed = Nem sikerült exportálni a recepteket.
 toast-recipes-fetch-progress = Receptek lekérdezése…

@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Жорыг цуглуулгад нэмэх
 toast-recipes-category-empty = Ангилал хоосон эсвэл ангилалгүй байж болохгүй.
 toast-recipes-category-delete-failed = Жорны ангиллыг устгахад алдаа гарлаа.
 toast-recipes-count-failed = Жорын тоог авахад алдаа гарлаа.
-toast-recipes-delete-failed = Жорыг устгаж чадаагүй.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Жорыг устгаж чадсангүй.
+       *[other] { $count } жорыг устгаж чадсангүй.
+    }
 toast-recipes-exist = Жор аль хэдийн байна.
 toast-recipes-export-failed = Жорыг экспортолж чадсангүй.
 toast-recipes-fetch-progress = Жорыг татаж байна…

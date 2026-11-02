@@ -122,7 +122,11 @@ toast-recipes-add-collection-failed = Det lykkedes ikke at føje opskriften til 
 toast-recipes-category-empty = Kategorien kan ikke være tom eller ukategoriseret.
 toast-recipes-category-delete-failed = Det lykkedes ikke at slette opskriftskategorien.
 toast-recipes-count-failed = Fejl ved hentning af antallet af opskrifter.
-toast-recipes-delete-failed = Opskriften kunne ikke slettes.
+toast-recipes-delete-failed =
+    { $count ->
+        [one] Opskriften kunne ikke slettes.
+       *[other] { $count } opskrifter kunne ikke slettes.
+    }
 toast-recipes-exist = Opskriften findes allerede.
 toast-recipes-export-failed = Det lykkedes ikke at eksportere opskrifter.
 toast-recipes-fetch-progress = Henter opskrifter…
