@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-#[derive(Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd, Display, EnumIter)]
+#[derive(Debug, Default, Copy, Clone, Eq, Hash, PartialEq, Ord, PartialOrd, Display, EnumIter)]
 pub enum MeasurementSystem {
     #[strum(serialize = "Imperial (UK)")]
     ImperialUK,
@@ -49,6 +49,7 @@ impl MeasurementSystem {
         }
     }
 
+    /// Scales ingredient strings by a factor, independently.
     pub fn scale(&self, elements: Vec<String>, factor: f64) -> Vec<String> {
         elements
             .into_iter()
