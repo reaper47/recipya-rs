@@ -83,11 +83,11 @@ fn render_index(
                 @if data.is_hx_request && let Some(p) = &data.pagination {
                     (pagination(p, messages))
                 }
-                div class="grid invisible z-20 bg-base-200 fixed top-0 right-0 left-0 duration-300 group-data-[select=true]/select:block min-h-[4rem] opacity-0 transition-[opacity,visibility] group-data-[select=true]/select:visible group-data-[select=true]/select:opacity-100" {
-                    p #num-recipes-selected class="text-sm mr-4 text-end" {
+                div class="grid invisible z-20 bg-base-200 fixed top-0 right-0 left-0 duration-300 group-data-[select=true]/select:block min-h-[4rem] opacity-0 transition-[opacity,visibility] group-data-[select=true]/select:visible group-data-[select=true]/select:opacity-100 px-2 py-2" {
+                    p #num-recipes-selected class="text-sm mr-2 sm:mr-4 text-end" {
                         span { "0" } " " (messages.selected())
                     }
-                    div #select-recipes-actions class="flex justify-center gap-2" {
+                    div #select-recipes-actions class="flex flex-wrap justify-center gap-2 max-w-full overflow-x-auto" {
                         button popovertarget="select-recipes-shopping"
                             class="btn btn-sm btn-soft" disabled autocomplete="off"
                             hx-get="/shopping/recipes/ingredients"
