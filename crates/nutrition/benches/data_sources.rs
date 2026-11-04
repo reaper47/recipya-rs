@@ -1,4 +1,4 @@
-#[path = "../src/testdata/mod.rs"]
+#[path = "../src/testdata/nutrition_data.rs"]
 mod testdata;
 
 use std::sync::LazyLock;
@@ -13,7 +13,7 @@ use nutrition::{
 };
 use test_db::default_config;
 use test_harness::{AppState, create_app_state};
-use testdata::nutrition_data::{FDC_FF_DATASET_3, FdcClientForTests};
+use testdata::{FDC_FF_DATASET_3, FdcClientForTests};
 
 static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| Runtime::new().unwrap());
 
