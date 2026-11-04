@@ -3894,6 +3894,7 @@ dependencies = [
  "derive_more",
  "diesel",
  "diesel-async",
+ "divan",
  "ingredient",
  "math",
  "pretty_assertions",

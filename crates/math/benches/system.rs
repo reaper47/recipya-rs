@@ -9,6 +9,10 @@ const SYSTEMS: [MeasurementSystem; 4] = [
     MeasurementSystem::UsCustomary,
 ];
 
+fn main() {
+    divan::main();
+}
+
 #[divan::bench_group]
 mod from_id {
     use super::*;
@@ -207,8 +211,4 @@ mod from_str_vec {
             ],
         )
     }
-}
-
-fn main() {
-    divan::main();
 }
