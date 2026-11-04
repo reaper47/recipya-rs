@@ -83,11 +83,11 @@ fn render_index(
                 @if data.is_hx_request && let Some(p) = &data.pagination {
                     (pagination(p, messages))
                 }
-                div class="grid invisible z-20 bg-base-200 fixed top-0 right-0 left-0 duration-300 group-data-[select=true]/select:block min-h-[4rem] opacity-0 transition-[opacity,visibility] group-data-[select=true]/select:visible group-data-[select=true]/select:opacity-100" {
-                    p #num-recipes-selected class="text-sm mr-4 text-end" {
+                div class="grid invisible z-20 bg-base-200 fixed top-0 right-0 left-0 duration-300 group-data-[select=true]/select:block min-h-[4rem] opacity-0 transition-[opacity,visibility] group-data-[select=true]/select:visible group-data-[select=true]/select:opacity-100 px-2 py-2" {
+                    p #num-recipes-selected class="text-sm mr-2 sm:mr-4 text-end" {
                         span { "0" } " " (messages.selected())
                     }
-                    div #select-recipes-actions class="flex justify-center gap-2" {
+                    div #select-recipes-actions class="flex flex-wrap justify-center gap-2 max-w-full" {
                         button popovertarget="select-recipes-shopping"
                             class="btn btn-sm btn-soft" disabled autocomplete="off"
                             hx-get="/shopping/recipes/ingredients"
@@ -100,16 +100,33 @@ fn render_index(
                             (icons::book_open())
                             (messages.cookbook())
                         }
-                        button popovertarget="select-recipes-categorise" class="btn btn-sm btn-soft" disabled autocomplete="off" {
+                        button popovertarget="select-recipes-categorise" class="hidden btn btn-sm btn-soft sm:flex" disabled autocomplete="off" {
                             (icons::tag())
                             (messages.categorise())
                         }
-                        button class="btn btn-sm btn-error btn-square"
+                        button class="hidden btn btn-sm btn-error btn-square sm:flex"
                             disabled
                             hx-post="/recipes/bulk"
                             hx-include="#list-recipes input[name='ids']"
                             hx-confirm=(messages.delete_recipes_confirm()) {
                             (icons::trash())
+                        }
+                        button class="btn btn-sm btn-soft sm:hidden" disabled popovertarget="popover-select-other-actions" style="anchor-name:--anchor-select-other-actions" {
+                            (icons::ellipsis_vertical())
+                        }
+                        ul popover #popover-select-other-actions class="dropdown dropdown-end menu rounded-box bg-base-100 shadow-sm sm:hidden" style="position-anchor:--anchor-select-other-actions" {
+                            li {
+                                button type="button" popovertarget="select-recipes-categorise" disabled autocomplete="off" {
+                                    (icons::tag())
+                                    (messages.categorise())
+                               }
+                            }
+                            li class="py-1 border-t border-base-300" {
+                                button type="button" class="gap-3 text-error active:bg-error" disabled hx-post="/recipes/bulk" hx-include="#list-recipes input[name='ids']" hx-confirm=(messages.delete_recipes_confirm()) {
+                                    (icons::trash())
+                                    (messages.action_delete())
+                                }
+                            }
                         }
                     }
                 }
