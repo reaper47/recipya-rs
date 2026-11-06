@@ -12,13 +12,13 @@
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
-    "@tailwindcss/cli": "^4.3.3",
+    "@tailwindcss/cli": "^4.3.5",
     "@tailwindcss/typography": "^0.5.20",
     "copyfiles": "^2.4.1",
     "daisyui": "^5.7.50",
     "esbuild": "^0.28.2",
     "mjml": "^5.4.1",
-    "tailwindcss": "^4.3.3",
+    "tailwindcss": "^4.3.5",
     "uglify-js": "^3.19.3"
   },
   "allowScripts": {
