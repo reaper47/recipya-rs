@@ -43,19 +43,14 @@ pub fn auto_convert_to_utf8(buffer: &[u8]) -> String {
 
 /// Calculates the number of seconds from a string in the format `hh:mm:ss`.
 pub fn calc_seconds_from_parts(s: &str) -> i32 {
-    let parts: Vec<&str> = s.split(':').collect();
-    if parts.len() == 3 {
-        let [hours, minutes, seconds]: [i32; 3] = parts
-            .iter()
-            .map(|&part| part.parse::<i32>().unwrap_or(0))
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap_or([0, 0, 0]);
+    let mut iter = s.split(':');
+    let (Some(hours), Some(minutes), Some(seconds)) = (iter.next(), iter.next(), iter.next())
+    else {
+        return 0;
+    };
 
-        hours * 60 * 60 + minutes * 60 + seconds
-    } else {
-        0
-    }
+    let f = |s: &str| s.parse::<i32>().unwrap_or_default();
+    f(hours) * 60 * 60 + f(minutes) * 60 + f(seconds)
 }
 
 /// Extracts a number from a string, if it exists.
@@ -352,6 +347,31 @@ mod tests {
             let result = auto_convert_to_utf8(&high_ascii);
 
             assert_ne!(result, "");
+        }
+    }
+
+    mod tests_calc_seconds_from_parts {
+        use super::*;
+
+        #[test]
+        fn test_not_well_formatted_string() {
+            let got = calc_seconds_from_parts("05:50");
+
+            assert_eq!(got, 0);
+        }
+
+        #[test]
+        fn test_invalid_time() {
+            let got = calc_seconds_from_parts("00:05:80");
+
+            assert_eq!(got, 380);
+        }
+
+        #[test]
+        fn test_well_formatted_string() {
+            let got = calc_seconds_from_parts("06:05:50");
+
+            assert_eq!(got, 21950);
         }
     }
 

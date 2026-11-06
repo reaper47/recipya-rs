@@ -6104,6 +6104,7 @@ dependencies = [
  "base64 0.23.1",
  "derive_more",
  "directories",
+ "divan",
  "encoding_rs",
  "futures-util",
  "image",
