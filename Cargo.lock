@@ -3628,6 +3628,7 @@ dependencies = [
  "diesel",
  "diesel-async",
  "diesel_full_text_search",
+ "divan",
  "futures",
  "humantime",
  "indexmap",

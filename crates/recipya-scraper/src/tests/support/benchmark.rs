@@ -6,11 +6,14 @@ use flate2::read::GzDecoder;
 
 use crate::{HttpClient, Result, Website};
 
+/// An in-memory [`HttpClient`] for tests and benchmarks, serving fetched HTML
+/// instead of making network requests.
 pub struct InMemoryClient {
     pub pages: HashMap<String, String>,
 }
 
 impl InMemoryClient {
+    /// Creates a client that servers a single page.
     pub fn new(url: &str, html: &str) -> Self {
         Self {
             pages: HashMap::from([(url.to_string(), html.to_string())]),
@@ -29,6 +32,11 @@ impl HttpClient for InMemoryClient {
     }
 }
 
+/// Loads an HTML test fixture for the given website.
+///
+/// # Panics
+///
+/// Panics when the file cannot be read or if the gzip decompression fails.
 pub fn load_fixture(website: Website, number: usize) -> String {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("src")

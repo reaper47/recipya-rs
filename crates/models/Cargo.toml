@@ -61,6 +61,7 @@ zip.workspace = true
 
 [dev-dependencies]
 app.workspace = true
+divan.workspace = true
 pretty_assertions.workspace = true
 test-fixtures.workspace = true
 test-harness.workspace = true
