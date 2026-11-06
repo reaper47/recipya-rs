@@ -4996,6 +4996,7 @@ dependencies = [
  "async-trait",
  "axum",
  "derive_more",
+ "divan",
  "flate2",
  "itertools 0.15.0",
  "pretty_assertions",
