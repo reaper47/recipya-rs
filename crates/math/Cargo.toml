@@ -19,3 +19,8 @@ strum.workspace = true
 
 [dev-dependencies]
 approx = "0.5.1"
+divan.workspace = true
+
+[[bench]]
+name = "system"
+harness = false

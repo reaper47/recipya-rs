@@ -8,7 +8,7 @@ use std::str::FromStr;
 use lazy_regex::regex_captures;
 use uuid::Uuid;
 
-use self::scheme::{DEFAULT_SCHEME, Scheme, SchemeStatus, get_scheme};
+use scheme::{DEFAULT_SCHEME, Scheme, SchemeStatus, get_scheme};
 
 pub use crate::{Error, Result};
 

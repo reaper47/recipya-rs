@@ -5,7 +5,7 @@ pub use crate::{Error, Result};
 
 use uuid::Uuid;
 
-use crate::token::jwt::generate_token;
+use jwt::generate_token;
 
 /// Generates a short-lived access token for the given user.
 pub fn generate_access_token(user: &Uuid) -> Result<String> {
