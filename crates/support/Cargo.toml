@@ -36,4 +36,29 @@ whatlang.workspace = true
 winnow.workspace = true
 
 [dev-dependencies]
+divan.workspace = true
 pretty_assertions.workspace = true
+
+[[bench]]
+name = "b64"
+harness = false
+
+[[bench]]
+name = "net"
+harness = false
+
+[[bench]]
+name = "numbers"
+harness = false
+
+[[bench]]
+name = "regexp"
+harness = false
+
+[[bench]]
+name = "strings"
+harness = false
+
+[[bench]]
+name = "time"
+harness = false

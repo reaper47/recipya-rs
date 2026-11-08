@@ -1,5 +1,6 @@
-use crate::impl_display_as_debug;
 use base64::engine::{Engine, general_purpose};
+
+use crate::impl_display_as_debug;
 
 /// Encodes the given byte slice to a URL-safe base64 string without padding.
 pub fn b64u_encode(content: impl AsRef<[u8]>) -> String {

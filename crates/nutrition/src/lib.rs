@@ -1,13 +1,15 @@
 mod data_sources;
 mod error;
+#[cfg(test)]
 mod testdata;
 
 pub mod fdc;
 pub mod states;
 pub mod tables;
-
 pub use data_sources::*;
 pub use error::{Error, Result};
+
+extern crate self as nutrition;
 
 /// Represents calculated nutritional information per 100g and per serving.
 #[derive(Debug, Default, PartialEq)]

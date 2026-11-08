@@ -411,7 +411,7 @@ mod tests {
             CalculatedNutrition, NutritionComponents,
             fdc::parser::{DataFetched as _, DataNotFetched as _, FdcParser},
             states::DataFetchedState,
-            testdata::nutrition_data::nutrition_data_for_tests::*,
+            testdata::nutrition_data::*,
         };
 
         use super::*;

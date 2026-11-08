@@ -36,7 +36,12 @@ uuid.workspace = true
 zip.workspace = true
 
 [dev-dependencies]
+divan.workspace = true
 pretty_assertions.workspace = true
 test-db.workspace = true
 test-harness.workspace = true
 tokio.workspace = true
+
+[[bench]]
+name = "data_sources"
+harness = false

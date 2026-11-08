@@ -11,7 +11,6 @@ use tokio::time::timeout;
 use tower_cookies::{Cookie, CookieManagerLayer};
 use tracing::error;
 
-use app::state::AppState;
 use auth::{
     token::{generate_access_token, http::AUTH_TOKEN},
     types::Email,
@@ -21,6 +20,8 @@ use models::user::{User, UserForCreate};
 use recipya_scraper::tests::MockHttpClient;
 use router::router;
 use support::fs::MockFs;
+
+pub use app::state::AppState;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 

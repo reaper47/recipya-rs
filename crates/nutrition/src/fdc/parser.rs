@@ -544,7 +544,7 @@ mod tests {
     use test_harness::create_app_state;
 
     use super::*;
-    use crate::testdata::nutrition_data::nutrition_data_for_tests::*;
+    use crate::testdata::nutrition_data::*;
 
     type Result<T> = core::result::Result<T, Error>;
     type Error = Box<dyn std::error::Error>;

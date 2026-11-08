@@ -167,10 +167,12 @@ impl Default for TimeParser {
 }
 
 impl TimeParser {
+    /// Creates a new instance of [`TimeParser`].
     pub const fn new() -> Self {
         Self
     }
 
+    /// Extracts the duration from a number of seconds from text in several languages.
     pub fn parse_max_time_seconds(&self, text: &str) -> Option<i32> {
         let lang = detect_lang(text)?;
 

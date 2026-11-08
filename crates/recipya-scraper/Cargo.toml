@@ -30,17 +30,38 @@ unicode-normalization = "0.1.26"
 url.workspace = true
 wreq-util = "0.2.0"
 
+[dev-dependencies]
+divan.workspace = true
+pretty_assertions.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+tracing-test.workspace = true
+
 [target.'cfg(target_os = "linux")'.dependencies]
 wreq = { version = "0.16.1", features = ["prefix-symbols"] }
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
 wreq = { version = "0.16.1" }
 
-[dev-dependencies]
-pretty_assertions.workspace = true
-tokio.workspace = true
-tracing-test.workspace = true
-
 [build-dependencies]
 serde = { workspace = true, features = ["derive"] }
 toml = "1.1.8"
+
+[[bench]]
+name = "scraper_a"
+harness = false
+
+[[bench]]
+name = "scraper_e"
+harness = false
+
+[[bench]]
+name = "scraper_s"
+harness = false
+
+[[bench]]
+name = "scraper_t"
+harness = false
+
+[[bench]]
+name = "scraper_z"
+harness = false
