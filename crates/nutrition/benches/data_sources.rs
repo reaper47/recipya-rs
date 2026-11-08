@@ -46,7 +46,7 @@ fn main() {
     divan::main();
 }
 
-fn run(bencher: Bencher, source: NutritionDataSource, ingredients: &[&str], num_servings: i16) {
+fn run(bencher: Bencher, source: &NutritionDataSource, ingredients: &[&str], num_servings: i16) {
     let mut conn = RUNTIME.block_on(STATE.mm.pool.get()).unwrap();
 
     bencher.counter(ingredients.len()).bench_local(|| {
@@ -56,16 +56,16 @@ fn run(bencher: Bencher, source: NutritionDataSource, ingredients: &[&str], num_
 
 #[divan::bench_group]
 mod calculate_nutrition {
-    use super::*;
+    use super::{Bencher, FOUR_SERVINGS, NutritionDataSource, RECIPE, run};
 
     mod fdc {
-        use super::*;
+        use super::{Bencher, FOUR_SERVINGS, NutritionDataSource, RECIPE, run};
 
         const SOURCE: NutritionDataSource = NutritionDataSource::USDAFoodDataCentral;
 
         #[divan::bench]
         fn full_recipe(bencher: Bencher) {
-            run(bencher, SOURCE, RECIPE, FOUR_SERVINGS)
+            run(bencher, &SOURCE, RECIPE, FOUR_SERVINGS);
         }
 
         #[divan::bench(args = [
@@ -78,7 +78,7 @@ mod calculate_nutrition {
             "1 cup ingredientdoesntexist"
         ])]
         fn single_ingredient(bencher: Bencher, ing: &str) {
-            run(bencher, SOURCE, &[ing], 1)
+            run(bencher, &SOURCE, &[ing], 1);
         }
     }
 }

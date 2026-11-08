@@ -11,7 +11,9 @@ const A_PRIME_NUMBER: usize = 251;
 const SIZES: [usize; 4] = [11, 256, 4 * 1024, 1024 * 1024];
 
 fn payload(n: usize) -> Vec<u8> {
-    (0..n).map(|i| (i % A_PRIME_NUMBER) as u8).collect()
+    (0..n)
+        .map(|i| u8::try_from(i % A_PRIME_NUMBER).unwrap())
+        .collect()
 }
 
 #[divan::bench(args = SIZES)]

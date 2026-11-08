@@ -16,7 +16,6 @@ use test_harness::create_app_state;
 use crate::{Result, recipe::utils::a_complete_recipe_for_create};
 
 mod test_new {
-
     use super::*;
 
     async fn add_user(mm: &ModelManager) -> Result<User> {

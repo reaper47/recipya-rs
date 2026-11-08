@@ -66,3 +66,83 @@ pretty_assertions.workspace = true
 test-fixtures.workspace = true
 test-harness.workspace = true
 test-db.workspace = true
+
+[[bench]]
+name = "data"
+harness = false
+
+[[bench]]
+name = "download"
+harness = false
+
+[[bench]]
+name = "export"
+harness = false
+
+[[bench]]
+name = "language"
+harness = false
+
+[[bench]]
+name = "paper"
+harness = false
+
+[[bench]]
+name = "recipe_bold"
+harness = false
+
+[[bench]]
+name = "recipe_create"
+harness = false
+
+[[bench]]
+name = "recipe_delete"
+harness = false
+
+[[bench]]
+name = "recipe_export"
+harness = false
+
+[[bench]]
+name = "recipe_get"
+harness = false
+
+[[bench]]
+name = "recipe_search"
+harness = false
+
+[[bench]]
+name = "recipe_timeline"
+harness = false
+
+[[bench]]
+name = "recipe_update"
+harness = false
+
+[[bench]]
+name = "settings"
+harness = false
+
+[[bench]]
+name = "share"
+harness = false
+
+[[bench]]
+name = "shopping"
+harness = false
+
+[[bench]]
+name = "states"
+harness = false
+
+[[bench]]
+name = "theme"
+harness = false
+
+[[bench]]
+name = "token"
+harness = false
+
+[[bench]]
+name = "user"
+harness = false

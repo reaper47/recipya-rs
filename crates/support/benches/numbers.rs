@@ -11,7 +11,7 @@ fn main() {
     -216.0,                  // negative integer
     216.0001,                // short fraction
     0.5,                     // typical recipe fraction
-    123_456_789.123_456_789, // large fraction
+    123_456_789.123_456_79,  // large fraction
     216e15,                  // large integer
     1.0 / 3.0,               // vinculum
 ])]

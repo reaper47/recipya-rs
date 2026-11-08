@@ -39,8 +39,8 @@ fn input_to_case(input: &str) -> Vec<u8> {
         "windows 1252" => "Café résumé naïve".as_bytes().to_vec(),
         "mixed windows 1252" => vec![0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0xE9],
         "undefined windows 1252" => vec![0x81, 0x8D, 0x8F, 0x90, 0x9D],
-        "long ascii" => b"A".repeat(10_000).to_vec(),
-        "long windows 1252" => vec![0x63, 0x61, 0x66, 0xE9].repeat(2_500),
+        "long ascii" => b"A".repeat(10_000),
+        "long windows 1252" => [0x63, 0x61, 0x66, 0xE9].repeat(2_500),
         _ => unreachable!("unreachable case"),
     }
 }

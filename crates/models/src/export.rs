@@ -141,7 +141,7 @@ impl ExportData {
                     ExportType::Text => match recipe.to_text(&base_url) {
                         Ok(serialized) => serialized.into_bytes(),
                         Err(err) => {
-                            warn!("Failed to write recipe '{recipe_id}' as markdown: {err}");
+                            warn!("Failed to write recipe '{recipe_id}' as text: {err}");
                             continue;
                         }
                     },

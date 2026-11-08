@@ -15,15 +15,15 @@ fn main() {
 
 #[divan::bench_group]
 mod from_id {
-    use super::*;
+    use super::{Bencher, Error, MeasurementSystem, black_box};
 
     #[divan::bench(args = [1, 2, 3, 4])]
-    fn valid(id: i16) -> Result<MeasurementSystem, Error> {
+    const fn valid(id: i16) -> Result<MeasurementSystem, Error> {
         MeasurementSystem::from_id(black_box(id))
     }
 
     #[divan::bench(args = [i16::MIN, -5, -1, 0, i16::MAX])]
-    fn invalid(id: i16) -> Result<MeasurementSystem, Error> {
+    const fn invalid(id: i16) -> Result<MeasurementSystem, Error> {
         MeasurementSystem::from_id(black_box(id))
     }
 
@@ -41,9 +41,9 @@ mod from_id {
 
 #[divan::bench_group]
 mod scale {
-    use super::*;
+    use super::{Bencher, ItemsCount, MeasurementSystem, SYSTEMS, black_box};
 
-    fn run(bencher: Bencher, system: &MeasurementSystem, samples: &[&str]) {
+    fn run(bencher: Bencher, system: MeasurementSystem, samples: &[&str]) {
         const NUM_INPUTS: usize = 64;
 
         bencher
@@ -57,7 +57,7 @@ mod scale {
             .iter()
             .cycle()
             .take(n)
-            .map(|s| s.to_string())
+            .map(ToString::to_string)
             .collect()
     }
 
@@ -65,7 +65,7 @@ mod scale {
     fn unparseable(bencher: Bencher, system: MeasurementSystem) {
         run(
             bencher,
-            &system,
+            system,
             &["salt", "a pinch of pepper", "to taste", "fresh basil"],
         );
     }
@@ -74,7 +74,7 @@ mod scale {
     fn remapped_volume(bencher: Bencher, system: MeasurementSystem) {
         run(
             bencher,
-            &system,
+            system,
             &["2 tsp", "1 tbsp", "1 dessertspoon", "1 cup"],
         );
     }
@@ -83,14 +83,14 @@ mod scale {
     fn imperial_volume(bencher: Bencher, system: MeasurementSystem) {
         run(
             bencher,
-            &system,
+            system,
             &["8 fl oz", "1 pint", "1 quart", "1 gallon"],
         );
     }
 
     #[divan::bench(args = SYSTEMS)]
     fn non_volume(bencher: Bencher, system: MeasurementSystem) {
-        run(bencher, &system, &["500 g", "2 kg", "1 lb", "8 oz"]);
+        run(bencher, system, &["500 g", "2 kg", "1 lb", "8 oz"]);
     }
 
     #[divan::bench(args = [0.0, 0.5, 1.0, 2.0, 1e12])]
@@ -119,7 +119,7 @@ mod scale {
 
 #[divan::bench_group]
 mod from_str_vec {
-    use super::*;
+    use super::{Bencher, ItemsCount, MeasurementSystem};
 
     fn run(bencher: Bencher, ingredients: &[&str]) {
         bencher
@@ -130,7 +130,7 @@ mod from_str_vec {
 
     #[divan::bench]
     fn empty(bencher: Bencher) {
-        run(bencher, &[])
+        run(bencher, &[]);
     }
 
     #[divan::bench]
@@ -150,7 +150,7 @@ mod from_str_vec {
                 "1 tsp salt",
                 "½ tsp black pepper",
             ],
-        )
+        );
     }
 
     #[divan::bench]
@@ -169,7 +169,7 @@ mod from_str_vec {
                 "5 g salt",
                 "2 g black pepper",
             ],
-        )
+        );
     }
 
     #[divan::bench]
@@ -188,7 +188,7 @@ mod from_str_vec {
                 "1 tsp ground coriander",
                 "½ tsp chili flakes",
             ],
-        )
+        );
     }
 
     #[divan::bench]
@@ -209,6 +209,6 @@ mod from_str_vec {
                 "1 tsp dried oregano",
                 "½ tsp paprika",
             ],
-        )
+        );
     }
 }
