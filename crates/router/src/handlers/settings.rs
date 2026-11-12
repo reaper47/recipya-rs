@@ -33,7 +33,7 @@ use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::{
     Error,
-    handlers::recipes::common::fetch_categories_keywords,
+    handlers::{common::export_options, recipes::common::fetch_categories_keywords},
     middleware::mw_auth::RequireAuth,
     schemas::settings::{
         BoldIngredientsPayload, ExportDataPayload, LanguagePayload, NutritionSourcePayload,
@@ -212,10 +212,18 @@ pub async fn export_data_post_handler(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
-    let file_path = match ExportData::new(payload.r#type, recipes, &state.data_dir.images.root)
-        .export()
+    let options = export_options(&state, user.id, &messages)
         .await
-    {
+        .unwrap_or_default();
+
+    let data = ExportData::new(
+        payload.r#type,
+        recipes,
+        &state.data_dir.images.root,
+        options,
+    );
+
+    let file_path = match data.export().await {
         Ok(file) => file,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to export recipes");

@@ -1,12 +1,22 @@
 use std::fmt::Write;
 
+use itertools::Itertools;
+use krilla::metadata::{DateTime, Metadata, PageLayout};
+use krilla::page::PageSettings;
+use pdf::math::FONT_SIZE_BODY_PT;
+use tracing::error;
+
+use pdf::components::{FooterOptions, PageNumberFormat};
+use pdf::document::{Document, InitialState, PageDimensions};
+
+use crate::export::ExportOptions;
 use crate::recipe::structs::recipe::RecipeDetails;
 use crate::recipe::structs::section::SectionComponents;
 use crate::time::FormattedTimes;
 use crate::{Error, Result};
 
 impl RecipeDetails {
-    /// Converts the `Recipe` instance into a Markdown-formatted string.
+    /// Converts the `RecipeDetails` instance into a Markdown-formatted string.
     #[allow(clippy::too_many_lines)]
     pub fn to_markdown(&self, base_url: &str) -> Result<String> {
         let mut md = String::new();
@@ -169,7 +179,142 @@ impl RecipeDetails {
         Ok(md)
     }
 
-    /// Converts the `Recipe` instance into a text-formatted string.
+    /// Converts the `RecipeDetails` instance to a PDF.
+    #[allow(clippy::too_many_lines)]
+    pub fn to_pdf(&self, options: &ExportOptions) -> Result<Vec<u8>> {
+        // Prepare the pages.
+        let (page_width, page_height) = options.paper_size;
+
+        let mut doc = Document::<InitialState>::new(
+            PageDimensions::new(page_width, page_height),
+            FooterOptions::new_page_number_right(
+                PageNumberFormat::Minimal,
+                Some(self.recipe.source.as_str().to_string()),
+                None,
+            ),
+        );
+        doc.push_header(Some(self.recipe.name.clone()), Some(self.category.clone()));
+        doc.push_title(&self.recipe.name);
+
+        let metadata_start_y = doc.y();
+        doc.push_metadata(vec![
+            (
+                "Prep:".to_string(),
+                humantime::format_duration(self.times.prep_seconds.into()).to_string(),
+            ),
+            (
+                "Cook:".to_string(),
+                humantime::format_duration(self.times.cook_seconds.into()).to_string(),
+            ),
+            ("Yield:".to_string(), self.recipe.r#yield.to_string()),
+        ]);
+
+        let width_half_page = doc.page_dimensions().half_width();
+        let mut max_ingredient_width = 0.0;
+        match self.ingredients.clone() {
+            SectionComponents::Grouped(section_items) => {
+                for section in section_items {
+                    doc.set_y(1.25f32.mul_add(doc.line_metrics().body, doc.y()));
+                    doc.push_label(&section.title, None);
+                    max_ingredient_width = doc.push_checkbox_list(
+                        section.items.into_iter().map(|s| s.text).collect(),
+                        width_half_page,
+                    );
+                }
+            }
+            SectionComponents::Flat(items) => {
+                doc.increment_y(doc.line_metrics().body);
+                max_ingredient_width = doc.push_checkbox_list(
+                    items.into_iter().map(|s| s.text).collect(),
+                    width_half_page,
+                );
+            }
+        }
+
+        doc.set_y(metadata_start_y);
+        match self.instructions.clone() {
+            SectionComponents::Grouped(section_items) => {
+                for section in section_items {
+                    doc.set_y(1.25f32.mul_add(doc.line_metrics().body, doc.y()));
+
+                    if !section.title.is_empty() {
+                        doc.push_label(&section.title, Some(max_ingredient_width));
+                    }
+
+                    doc.push_paragraphs(
+                        &section.items.into_iter().map(|it| it.text).collect_vec(),
+                        max_ingredient_width,
+                    );
+                }
+            }
+            SectionComponents::Flat(items) => doc.push_paragraphs(
+                &items.into_iter().map(|it| it.text).collect_vec(),
+                max_ingredient_width,
+            ),
+        }
+
+        if let Some(notes) = &self.recipe.notes {
+            doc.increment_y(doc.line_metrics().body);
+            doc.push_line_across_page();
+            doc.push_text("Notes", doc.font().semibold(), FONT_SIZE_BODY_PT, None);
+            doc.increment_y(doc.line_metrics().body + 3.0);
+
+            doc.push_paragraphs(
+                &notes
+                    .lines()
+                    .filter(|s| !s.is_empty())
+                    .map(ToString::to_string)
+                    .collect_vec(),
+                0.0,
+            );
+        }
+
+        // Render the pages
+        let doc = doc.finalise();
+        let mut krilla_doc = krilla::Document::new();
+
+        krilla_doc.set_metadata(
+            Metadata::new()
+                .title(self.recipe.name.clone())
+                .creation_date({
+                    let now = time::UtcDateTime::now();
+                    DateTime::new(u16::try_from(now.year()).unwrap_or_default())
+                        .day(now.day())
+                        .month(now.month() as u8)
+                        .hour(now.hour())
+                        .minute(now.minute())
+                        .second(now.second())
+                })
+                .creator("Recipya".into())
+                .description(format!("PDF export of the {}", self.recipe.name))
+                .page_layout(PageLayout::SinglePage)
+                .language("en".into()),
+        );
+
+        let pages = doc.pages();
+        for (idx, commands) in pages.iter().enumerate() {
+            let mut page = krilla_doc.start_page_with(
+                PageSettings::from_wh(page_width, page_height).unwrap_or_default(),
+            );
+            let mut surface = page.surface();
+
+            for cmd in commands {
+                doc.draw(cmd, &mut surface, idx + 1);
+            }
+
+            surface.finish();
+            page.finish();
+        }
+
+        let bytes = krilla_doc
+            .finish()
+            .inspect_err(|err| error!(?err, "Failed to create recipe PDF"))
+            .unwrap_or_default();
+
+        Ok(bytes)
+    }
+
+    /// Converts the `RecipeDetails` instance into a text-formatted string.
     #[allow(clippy::too_many_lines)]
     pub fn to_text(&self, base_url: &str) -> Result<String> {
         let mut out = String::new();

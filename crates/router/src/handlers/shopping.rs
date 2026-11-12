@@ -19,7 +19,7 @@ use time::PrimitiveDateTime;
 use time::macros::format_description;
 use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
-use tracing::{Instrument, Span, error};
+use tracing::error;
 use uuid::Uuid;
 
 use app::message::ToastCtx;
@@ -29,10 +29,7 @@ use l10n::Messages;
 use models::Recipe;
 use models::data::{Data, ShoppingData};
 use models::download::{Download, DownloadForCreate};
-use models::export::{ExportOptions, ExportType};
-use models::paper::PaperSize;
 use models::params::{ShoppingListExportParams, ViewParams};
-use models::settings::UserSettingDetails;
 use models::shopping::{
     ShareShoppingList, ShoppingList, ShoppingListDetails, ShoppingListItemForCreate,
     ShoppingListItemForUpdate, SortBy,
@@ -41,6 +38,7 @@ use models::view::ViewMode;
 use support::states::AuthenticatedState;
 use templates::shopping::AddShoppingIngredient;
 
+use crate::handlers::common::export_options;
 use crate::handlers::get_settings;
 use crate::middleware::mw_auth::{OptionalAuth, RequireAuth};
 use crate::schemas::recipes::ShareRecipeForm;
@@ -260,14 +258,9 @@ pub async fn shopping_list_export_handler(
 ) -> Result<impl IntoResponse> {
     let toast = ToastCtx::<AuthenticatedState>::new(&state, user.id, &messages);
     let list = ShoppingListDetails::get(&state.mm, list_id, user.id).await?;
+    let options = export_options(&state, user.id, &messages).await?;
 
-    let options = if params.format == ExportType::Pdf {
-        pdf_export_options(&state, user.id, &messages).await?
-    } else {
-        None
-    };
-
-    let path = match list.export(&params.format, options) {
+    let path = match list.export(&params.format, &options) {
         Ok(f) => f,
         Err(models::Error::EmptyInput) => {
             toast.warning(&messages.toast_shopping_list_empty()).await;
@@ -308,56 +301,6 @@ pub async fn shopping_list_export_handler(
             Err(Error::Fs)
         }
     }
-}
-
-#[allow(clippy::cast_possible_truncation)]
-async fn pdf_export_options(
-    state: &AppState,
-    user_id: Uuid,
-    messages: &Messages,
-) -> Result<Option<ExportOptions>> {
-    let settings = UserSettingDetails::get(&state.mm, user_id)
-        .await
-        .inspect_err(|err| error!(?err, "Failed to get user settings"))
-        .map_err(|_| {
-            let state = state.clone();
-            let messages = messages.clone();
-
-            tokio::spawn(
-                async move {
-                    let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
-                    toast
-                        .error(&messages.toast_users_fetch_settings_failed())
-                        .await;
-                }
-                .instrument(Span::current()),
-            );
-            Error::Database
-        })?;
-
-    let paper_size = PaperSize::get(&state.mm, settings.paper_size_id)
-        .await
-        .inspect_err(|err| error!(user = ?user_id, ?err, "Failed to get paper size"))
-        .map_err(|_| {
-            let state = state.clone();
-            let messages = messages.clone();
-
-            tokio::spawn(
-                async move {
-                    let toast = ToastCtx::<AuthenticatedState>::new(&state, user_id, &messages);
-                    toast.error(&messages.toast_paper_sizes_failed()).await;
-                }
-                .instrument(Span::current()),
-            );
-            Error::Database
-        })?;
-
-    Ok(Some(ExportOptions {
-        paper_size: (
-            paper_size.width_in as f32 * 72.0,
-            paper_size.height_in as f32 * 72.0,
-        ),
-    }))
 }
 
 /// Handles GET requests to print a shopping list.
