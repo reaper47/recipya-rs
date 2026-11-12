@@ -50,7 +50,7 @@ impl From<RecipeYaml> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: RecipeYaml) -> Self {
         let mut images = r.images.unwrap_or_default();
-        images.extend(r.image.map(|s| vec![s]).unwrap_or_default());
+        images.extend(r.image.map_or_default(|s| vec![s]));
 
         let mut keywords = r.tags.unwrap_or_default();
         keywords.extend(
@@ -69,13 +69,11 @@ impl From<RecipeYaml> for Recipe {
             context: at_context(),
             aggregate_rating: r
                 .rating
-                .map(|n| vec![AggregateRating::new(n, 1)])
-                .unwrap_or_default(),
-            comment: r.notes.map(|n| vec![Comment::new(n)]).unwrap_or_default(),
+                .map_or_default(|n| vec![AggregateRating::new(n, 1)]),
+            comment: r.notes.map_or_default(|n| vec![Comment::new(n)]),
             description: r
                 .description
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s)]),
             image: images.into_iter().map(RecipeImageFieldEnum::URL).collect(),
             keywords: keywords
                 .into_iter()
@@ -84,16 +82,14 @@ impl From<RecipeYaml> for Recipe {
             name: vec![r.name],
             prep_time: r
                 .prep_time
-                .map(|s| vec![DurationOrText::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s)]),
             cook_time: r
                 .cook_time
-                .map(|s| vec![DurationOrText::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s)]),
             nutrition: r
                 .nutrition
                 .filter(|n| !n.trim().is_empty())
-                .map(|n| {
+                .map_or_default(|n| {
                     let lines = n.lines().map(ToString::to_string).collect::<Vec<_>>();
 
                     let extract = |prefix: &str| {
@@ -104,16 +100,12 @@ impl From<RecipeYaml> for Recipe {
                             .filter(|s| !s.starts_with("0.00"))
                     };
 
-                    let extract_mass = |prefix: &str| {
-                        extract(prefix)
-                            .map(|l| vec![Mass::new(l)])
-                            .unwrap_or_default()
-                    };
+                    let extract_mass =
+                        |prefix: &str| extract(prefix).map_or_default(|l| vec![Mass::new(l)]);
 
                     let nut = NutritionInformation {
                         calories: extract("Calories:")
-                            .map(|l| vec![Energy::new(l.trim().to_string())])
-                            .unwrap_or_default(),
+                            .map_or_default(|l| vec![Energy::new(l.trim().to_string())]),
                         carbohydrate_content: extract_mass("Carbs:"),
                         cholesterol_content: extract_mass("Cholesterol:"),
                         context: at_context(),
@@ -122,8 +114,7 @@ impl From<RecipeYaml> for Recipe {
                         protein_content: extract_mass("Protein:"),
                         saturated_fat_content: extract_mass("Saturated fat:"),
                         serving_size: extract("Servings:")
-                            .map(|l| vec![l.trim().to_string()])
-                            .unwrap_or_default(),
+                            .map_or_default(|l| vec![l.trim().to_string()]),
                         sodium_content: extract_mass("Sodium:"),
                         sugar_content: extract_mass("Sugars:"),
                         r#type: AtType::NutritionInformation.to_opt(),
@@ -131,8 +122,7 @@ impl From<RecipeYaml> for Recipe {
                         unsaturated_fat_content: extract_mass("Unsaturated fat:"),
                     };
                     if nut.is_empty() { vec![] } else { vec![nut] }
-                })
-                .unwrap_or_default(),
+                }),
             recipe_category: cat
                 .filter(|c| !c.is_empty())
                 .map_or(Vec::new(), |c| vec![c]),
@@ -214,9 +204,8 @@ impl From<RecipeYaml> for Recipe {
                 }),
             recipe_yield: r
                 .servings
-                .map(|s| vec![RecipeRecipeYieldFieldEnum::Text(s)])
-                .unwrap_or_default(),
-            url: r.source.map(|u| vec![u]).unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeRecipeYieldFieldEnum::Text(s)]),
+            url: r.source.map_or_default(|u| vec![u]),
             ..Default::default()
         }
     }
@@ -241,32 +230,26 @@ impl From<RecipeComponents<'_>> for Recipe {
             context: at_context(),
             aggregate_rating: r
                 .rating
-                .map(|n| vec![AggregateRating::new(n, 1)])
-                .unwrap_or_default(),
-            comment: r
-                .notes
-                .map(|n| {
-                    vec![Comment::new(
-                        n.lines()
-                            .map(str::trim)
-                            .filter(|s| !s.is_empty())
-                            .collect::<Vec<_>>()
-                            .join("\n\n"),
-                    )]
-                })
-                .unwrap_or_default(),
+                .map_or_default(|n| vec![AggregateRating::new(n, 1)]),
+            comment: r.notes.map_or_default(|n| {
+                vec![Comment::new(
+                    n.lines()
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .collect::<Vec<_>>()
+                        .join("\n\n"),
+                )]
+            }),
             description: r
                 .description
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s.into())])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s.into())]),
             name: vec![r.title.into()],
             recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions: r.instructions.to_sections(),
             recipe_yield: r
                 .servings
-                .map(|s| vec![RecipeRecipeYieldFieldEnum::Text(s.to_string())])
-                .unwrap_or_default(),
-            url: r.url.map(|u| vec![u.to_string()]).unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeRecipeYieldFieldEnum::Text(s.to_string())]),
+            url: r.url.map_or_default(|u| vec![u.to_string()]),
             ..Default::default()
         }
     }
@@ -473,19 +456,15 @@ where
                     .iter()
                     .map(|el| el.text().collect::<String>())
                     .collect::<Vec<_>>(),
-                directions: el
-                    .select(&sel_ins)
-                    .next()
-                    .map(|el| {
-                        el.children()
-                            .filter_map(ElementRef::wrap)
-                            .map(|el| {
-                                let txt = el.text().collect::<String>();
-                                txt.trim().to_string()
-                            })
-                            .collect::<Vec<_>>()
-                    })
-                    .unwrap_or_default(),
+                directions: el.select(&sel_ins).next().map_or_default(|el| {
+                    el.children()
+                        .filter_map(ElementRef::wrap)
+                        .map(|el| {
+                            let txt = el.text().collect::<String>();
+                            txt.trim().to_string()
+                        })
+                        .collect::<Vec<_>>()
+                }),
                 ..Default::default()
             }
             .into()

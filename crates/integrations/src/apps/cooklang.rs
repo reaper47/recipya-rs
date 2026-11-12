@@ -52,13 +52,11 @@ impl From<CooklangRecipe> for Recipe {
             r#type: AtType::Recipe.to_opt(),
             author: r
                 .author
-                .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(&s)]),
             cook_time: seconds_to_duration(r.times.cook_seconds),
             description: r
                 .description
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s)]),
             is_based_on: r.source.as_deref().map_or(Vec::new(), |s| {
                 if s.parse::<Url>().is_ok() {
                     vec![RecipeIsBasedOnFieldEnum::URL(s.into())]
@@ -73,15 +71,13 @@ impl From<CooklangRecipe> for Recipe {
                 .collect(),
             name: Some(r.name)
                 .filter(|s| !s.is_empty())
-                .map(|s| vec![s])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![s]),
             prep_time: seconds_to_duration(r.times.prep_seconds),
-            recipe_category: r.category.map(|s| vec![s]).unwrap_or_default(),
+            recipe_category: r.category.map_or_default(|s| vec![s]),
             recipe_cuisine: r
                 .cuisine
                 .filter(|s| !s.is_empty())
-                .map(|s| vec![s])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![s]),
             image: r
                 .images
                 .into_iter()
@@ -89,17 +85,14 @@ impl From<CooklangRecipe> for Recipe {
                 .collect(),
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
-            recipe_yield: to_yield(r.servings.map(i64::from).unwrap_or_default()),
-            suitable_for_diet: r
-                .diet
-                .map(|diets| {
-                    diets
-                        .into_iter()
-                        .map(From::from)
-                        .filter(|d| !matches!(d, RestrictedDietEnum::UnspecifiedDiet))
-                        .collect::<Vec<_>>()
-                })
-                .unwrap_or_default(),
+            recipe_yield: to_yield(r.servings.map_or_default(i64::from)),
+            suitable_for_diet: r.diet.map_or_default(|diets| {
+                diets
+                    .into_iter()
+                    .map(From::from)
+                    .filter(|d| !matches!(d, RestrictedDietEnum::UnspecifiedDiet))
+                    .collect::<Vec<_>>()
+            }),
             tool: r
                 .tools
                 .into_iter()
@@ -261,7 +254,7 @@ impl CookLang {
                 .or(images)
                 .or(picture)
                 .or(pictures)
-                .map(|s| {
+                .map_or_default(|s| {
                     s.trim_end_matches(']')
                         .to_owned()
                         .trim_start_matches('[')
@@ -269,8 +262,7 @@ impl CookLang {
                         .map(str::trim)
                         .map(String::from)
                         .collect_vec()
-                })
-                .unwrap_or_default(),
+                }),
             ingredients: recipe
                 .ingredients
                 .into_iter()
@@ -311,20 +303,16 @@ impl CookLang {
                     }
                 })
                 .collect(),
-            servings: servings
-                .map(|v| {
-                    v.as_number().map(|v| {
-                        i16::try_from(v)
-                            .inspect_err(|err| {
-                                error!(?err, ?v, "Failed to convert servings to i16");
-                            })
-                            .unwrap_or_default()
-                    })
+            servings: servings.map_or_default(|v| {
+                v.as_number().map(|v| {
+                    i16::try_from(v)
+                        .inspect_err(|err| {
+                            error!(?err, ?v, "Failed to convert servings to i16");
+                        })
+                        .unwrap_or_default()
                 })
-                .unwrap_or_default(),
-            source: source
-                .map(|v| v.url().or_else(|| v.name()).map(String::from))
-                .unwrap_or_default(),
+            }),
+            source: source.map_or_default(|v| v.url().or_else(|| v.name()).map(String::from)),
             tags,
             times: Times {
                 prep_seconds: (prep.0 * 60 * 60 + prep.1 * 60).cast_signed(),

@@ -67,8 +67,7 @@ impl ToRecipeSchema for Recipe {
 
         let url = Url::parse(&self.source_url)
             .ok()
-            .map(String::from)
-            .unwrap_or_default();
+            .map_or_default(String::from);
 
         let pictures = self
             .photos

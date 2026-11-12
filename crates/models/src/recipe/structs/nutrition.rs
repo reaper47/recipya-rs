@@ -17,20 +17,14 @@ impl NutritionDetails {
     /// Formats the nutrition as a sentence.
     pub fn to_line(&self) -> (Option<String>, Option<String>) {
         (
-            self.per_100g
-                .as_ref()
-                .map(|n| {
-                    n.to_line()
-                        .map(|line| format!("Nutrition Facts\nPer 100g: {line}"))
-                })
-                .unwrap_or_default(),
+            self.per_100g.as_ref().map_or_default(|n| {
+                n.to_line()
+                    .map(|line| format!("Nutrition Facts\nPer 100g: {line}"))
+            }),
             self.per_serving.as_ref().map(|n| {
-                n.nutrition
-                    .to_line()
-                    .map(|line| {
-                        format!("Nutrition Facts\nPer serving ({}): {line}", n.serving_size)
-                    })
-                    .unwrap_or_default()
+                n.nutrition.to_line().map_or_default(|line| {
+                    format!("Nutrition Facts\nPer serving ({}): {line}", n.serving_size)
+                })
             }),
         )
     }

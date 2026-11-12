@@ -260,8 +260,7 @@ impl NextcloudRecipeClient {
             date_created: vec![recipe.date_created.to_string()],
             date_modified: recipe
                 .date_modified
-                .map(|date| vec![date.to_string()])
-                .unwrap_or_default(),
+                .map_or_default(|date| vec![date.to_string()]),
             keywords: keywords
                 .into_iter()
                 .map(|kw| RecipeKeywordsFieldEnum::TextOrURL(kw.into()))

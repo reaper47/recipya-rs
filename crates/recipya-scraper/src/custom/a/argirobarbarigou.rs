@@ -59,8 +59,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         context: at_context(),
         description: extract_attr(root, "meta[property='og:description']", "content")
             .unwrap_or_default()
-            .map(|s| vec![RecipeDescriptionFieldEnum::Text(s.trim().to_string())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s.trim().to_string())]),
         keywords: container
             .select(&Selector::parse(
                 ".special-diets-wrapper ul.special-diets-list li a span.full-name",
@@ -69,12 +68,10 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .collect(),
         image: extract_attr(root, "meta[property='og:image:secure_url']", "content")
             .unwrap_or_default()
-            .map(|s| vec![RecipeImageFieldEnum::URL(s.trim().to_string())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeImageFieldEnum::URL(s.trim().to_string())]),
         name: extract_attr(root, "meta[property='og:title']", "content")
             .unwrap_or_default()
-            .map(|s| vec![s.trim_end_matches("| ARGIRO BARBARIGOU").trim().to_string()])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s.trim_end_matches("| ARGIRO BARBARIGOU").trim().to_string()]),
         prep_time: times
             .clone()
             .map(|(prep, _)| DurationOrText::Text(prep))

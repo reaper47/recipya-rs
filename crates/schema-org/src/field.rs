@@ -856,8 +856,7 @@ impl FieldEnum20 {
                 QuantitativeValueValueFieldEnum::StructuredValue(v) => v
                     .name
                     .first()
-                    .map(|v| v.parse::<i16>().unwrap_or_default())
-                    .unwrap_or_default(),
+                    .map_or_default(|v| v.parse::<i16>().unwrap_or_default()),
                 QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
             }),
             Self::Number(n) => Some(float_to_i16_safe(*n)),
@@ -1480,22 +1479,17 @@ impl FieldEnum60 {
     pub fn quantity(&self) -> i16 {
         match self {
             Self::Number(n) => float_to_i16_safe(*n),
-            Self::QuantitativeValue(q) => q
-                .value
-                .first()
-                .map(|q| match q {
-                    QuantitativeValueValueFieldEnum::BooleanEnumOrText(t) => {
-                        t.parse().ok().unwrap_or_default()
-                    }
-                    QuantitativeValueValueFieldEnum::Number(n) => float_to_i16_safe(*n),
-                    QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
-                    QuantitativeValueValueFieldEnum::StructuredValue(v) => v
-                        .name
-                        .first()
-                        .map(|n| n.parse().ok().unwrap_or_default())
-                        .unwrap_or_default(),
-                })
-                .unwrap_or_default(),
+            Self::QuantitativeValue(q) => q.value.first().map_or_default(|q| match q {
+                QuantitativeValueValueFieldEnum::BooleanEnumOrText(t) => {
+                    t.parse().ok().unwrap_or_default()
+                }
+                QuantitativeValueValueFieldEnum::Number(n) => float_to_i16_safe(*n),
+                QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
+                QuantitativeValueValueFieldEnum::StructuredValue(v) => v
+                    .name
+                    .first()
+                    .map_or_default(|n| n.parse().ok().unwrap_or_default()),
+            }),
             Self::Text(s) => s.parse::<i16>().unwrap_or_default(),
         }
     }
@@ -1883,20 +1877,18 @@ impl RecipeRecipeInstructionsFieldEnum {
             CreativeWork {
                 r#type: AtType::HowToStep.to_opt(),
                 text: vec![text.into()],
-                image: image
-                    .map(|u| {
-                        vec![CreativeWorkImageFieldEnum::ImageObject(
-                            ImageObject {
-                                r#type: AtType::ImageObject.to_opt(),
-                                url: vec![u.into()],
-                                ..Default::default()
-                            }
-                            .into(),
-                        )]
-                    })
-                    .unwrap_or_default(),
-                name: name.map(|n| vec![n.into()]).unwrap_or_default(),
-                url: url.map(|u| vec![u.into()]).unwrap_or_default(),
+                image: image.map_or_default(|u| {
+                    vec![CreativeWorkImageFieldEnum::ImageObject(
+                        ImageObject {
+                            r#type: AtType::ImageObject.to_opt(),
+                            url: vec![u.into()],
+                            ..Default::default()
+                        }
+                        .into(),
+                    )]
+                }),
+                name: name.map_or_default(|n| vec![n.into()]),
+                url: url.map_or_default(|u| vec![u.into()]),
                 ..Default::default()
             }
             .into(),

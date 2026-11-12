@@ -173,7 +173,7 @@ pub async fn export_data_handler(
                 "{}://{}{}",
                 u.scheme_str().unwrap_or_default(),
                 u.host().unwrap_or_default(),
-                u.port().map(|p| format!(":{p}")).unwrap_or_default()
+                u.port().map_or_default(|p| format!(":{p}"))
             )
         },
     );

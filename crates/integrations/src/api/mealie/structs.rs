@@ -120,50 +120,26 @@ pub struct MealieNutrition {
 impl From<MealieNutrition> for NutritionInformation {
     fn from(n: MealieNutrition) -> Self {
         Self {
-            calories: n.calories.map(|s| vec![Energy::new(s)]).unwrap_or_default(),
+            calories: n.calories.map_or_default(|s| vec![Energy::new(s)]),
             carbohydrate_content: n
                 .carbohydrate_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
-            cholesterol_content: n
-                .cholesterol_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![Mass::new(s)]),
+            cholesterol_content: n.cholesterol_content.map_or_default(|s| vec![Mass::new(s)]),
             context: at_context(),
-            fat_content: n
-                .fat_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
-            fiber_content: n
-                .fibre_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
-            protein_content: n
-                .protein_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
+            fat_content: n.fat_content.map_or_default(|s| vec![Mass::new(s)]),
+            fiber_content: n.fibre_content.map_or_default(|s| vec![Mass::new(s)]),
+            protein_content: n.protein_content.map_or_default(|s| vec![Mass::new(s)]),
             saturated_fat_content: n
                 .saturated_fat_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![Mass::new(s)]),
             serving_size: vec![],
-            sodium_content: n
-                .sodium_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
-            sugar_content: n
-                .sugar_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
+            sodium_content: n.sodium_content.map_or_default(|s| vec![Mass::new(s)]),
+            sugar_content: n.sugar_content.map_or_default(|s| vec![Mass::new(s)]),
             r#type: AtType::NutritionInformation.to_opt(),
-            trans_fat_content: n
-                .trans_fat_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
+            trans_fat_content: n.trans_fat_content.map_or_default(|s| vec![Mass::new(s)]),
             unsaturated_fat_content: n
                 .unsaturated_fat_content
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![Mass::new(s)]),
         }
     }
 }

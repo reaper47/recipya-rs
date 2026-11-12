@@ -27,11 +27,7 @@ pub(super) fn add_tool(tool: Option<&ToolRecipe>, messages: &Messages) -> Markup
                         }
                     }
                     input type="text" name="tool" placeholder=(messages.add_tool_input_placeholder()) class="input input-bordered input-sm w-full"
-                        value=(
-                            tool
-                                .map(|t| format!("{} {}", t.quantity, t.name))
-                                .unwrap_or_default()
-                        )
+                        value=(tool.map_or_default(|t| format!("{} {}", t.quantity, t.name)))
                         _="on keydown if event.key is 'Enter' halt the event then call addItem(event)";
                 }
                 div class="ml-2 flex gap-2" {

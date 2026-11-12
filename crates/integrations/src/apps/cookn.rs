@@ -83,12 +83,11 @@ impl From<RecipeComponents<'_>> for Recipe {
             context: at_context(),
             author: r
                 .author
-                .map(|s| vec![RecipeAuthorFieldEnum::new_person(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(s)]),
             description: r
                 .description
                 .filter(|s| !s.trim().is_empty())
-                .map(|s| {
+                .map_or_default(|s| {
                     vec![RecipeDescriptionFieldEnum::Text(
                         s.replace("Â", "")
                             .replace("’", "'")
@@ -96,23 +95,19 @@ impl From<RecipeComponents<'_>> for Recipe {
                             .trim()
                             .into(),
                     )]
-                })
-                .unwrap_or_default(),
+                }),
             comment: comments,
             cook_time: r
                 .cook_time
-                .map(|s| vec![DurationOrText::Text(s.into())])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s.into())]),
             image: r
                 .image
-                .map(|s| vec![RecipeImageFieldEnum::URL(s.to_string())])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeImageFieldEnum::URL(s.to_string())]),
             name: vec![r.title.into()],
             prep_time: r
                 .prep_time
                 .map(|s| s.split(',').next().unwrap_or_default())
-                .map(|s| vec![DurationOrText::Text(s.into())])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s.into())]),
             recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions,
             recipe_yield: [r.servings, r.r#yield]
@@ -317,8 +312,7 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
     let txt = |sel: &str| {
         doc.select(&Selector::parse(sel).unwrap())
             .next()
-            .map(|el| el.text().collect::<String>())
-            .unwrap_or_default()
+            .map_or_default(|el| el.text().collect::<String>())
     };
 
     let summary = txt("span[itemprop='summary']");
@@ -395,7 +389,7 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
         instructions: doc
             .select(&Selector::parse("div[itemprop='recipeInstructions']").unwrap())
             .next()
-            .map(|el| {
+            .map_or_default(|el| {
                 el.text()
                     .filter_map(|s| {
                         let s = s.trim();
@@ -418,8 +412,7 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
                         ))
                     })
                     .collect::<Vec<_>>()
-            })
-            .unwrap_or_default(),
+            }),
         cook_time: doc
             .select(&Selector::parse("time[itemprop='cookTime']").unwrap())
             .next()
@@ -435,8 +428,7 @@ fn parse_html<R: Read>(mut r: R) -> Result<Vec<Recipe>> {
         title: doc
             .select(&Selector::parse("title").unwrap())
             .next()
-            .map(|el| el.text().next().unwrap_or_default())
-            .unwrap_or_default(),
+            .map_or_default(|el| el.text().next().unwrap_or_default()),
         r#yield: doc
             .select(&Selector::parse("span[itemprop='recipeYield']").unwrap())
             .next()

@@ -261,15 +261,13 @@ impl TandoorRecipeClient {
             context: at_context(),
             nutrition: recipe
                 .nutrition
-                .map(|n| vec![NutritionInformation::from(n)])
-                .unwrap_or_default(),
+                .map_or_default(|n| vec![NutritionInformation::from(n)]),
             recipe_yield: match recipe.servings {
                 Some(servings) => vec![RecipeYieldFieldEnum::Text(servings.to_string())],
                 None => recipe
                     .servings_text
                     .filter(|text| !text.is_empty())
-                    .map(|text| vec![RecipeYieldFieldEnum::Text(text)])
-                    .unwrap_or_default(),
+                    .map_or_default(|text| vec![RecipeYieldFieldEnum::Text(text)]),
             },
             recipe_ingredient: recipe
                 .steps
@@ -280,23 +278,20 @@ impl TandoorRecipeClient {
                         .map(|ing| RecipeRecipeIngredientFieldEnum::Text(ing.to_string()))
                 })
                 .collect(),
-            cook_time: recipe
-                .waiting_time
-                .map(|num_minutes| {
-                    vec![DurationOrText::Text(
-                        iso8601::Duration::YMDHMS {
-                            hour: (num_minutes / 60).cast_unsigned(),
-                            minute: (num_minutes % 60).cast_unsigned(),
-                            second: 0,
-                            millisecond: 0,
-                            day: 0,
-                            month: 0,
-                            year: 0,
-                        }
-                        .to_string(),
-                    )]
-                })
-                .unwrap_or_default(),
+            cook_time: recipe.waiting_time.map_or_default(|num_minutes| {
+                vec![DurationOrText::Text(
+                    iso8601::Duration::YMDHMS {
+                        hour: (num_minutes / 60).cast_unsigned(),
+                        minute: (num_minutes % 60).cast_unsigned(),
+                        second: 0,
+                        millisecond: 0,
+                        day: 0,
+                        month: 0,
+                        year: 0,
+                    }
+                    .to_string(),
+                )]
+            }),
             recipe_instructions: recipe
                 .steps
                 .into_iter()
@@ -309,24 +304,21 @@ impl TandoorRecipeClient {
                     )
                 })
                 .collect(),
-            recipe_category: category.map(|c| vec![c.name.clone()]).unwrap_or_default(),
-            prep_time: recipe
-                .working_time
-                .map(|num_minutes| {
-                    vec![DurationOrText::Text(
-                        iso8601::Duration::YMDHMS {
-                            hour: (num_minutes / 60).cast_unsigned(),
-                            minute: (num_minutes % 60).cast_unsigned(),
-                            second: 0,
-                            millisecond: 0,
-                            day: 0,
-                            month: 0,
-                            year: 0,
-                        }
-                        .to_string(),
-                    )]
-                })
-                .unwrap_or_default(),
+            recipe_category: category.map_or_default(|c| vec![c.name.clone()]),
+            prep_time: recipe.working_time.map_or_default(|num_minutes| {
+                vec![DurationOrText::Text(
+                    iso8601::Duration::YMDHMS {
+                        hour: (num_minutes / 60).cast_unsigned(),
+                        minute: (num_minutes % 60).cast_unsigned(),
+                        second: 0,
+                        millisecond: 0,
+                        day: 0,
+                        month: 0,
+                        year: 0,
+                    }
+                    .to_string(),
+                )]
+            }),
             date_created: vec![recipe.created_at.to_string()],
             keywords: keywords
                 .iter()
@@ -334,21 +326,17 @@ impl TandoorRecipeClient {
                 .cloned()
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
-            aggregate_rating: recipe
-                .rating
-                .map(|r| {
-                    let rating = r.clamp(f64::from(f32::MIN), f64::from(f32::MAX)) as f32;
-                    vec![AggregateRating::new(rating, 1)]
-                })
-                .unwrap_or_default(),
+            aggregate_rating: recipe.rating.map_or_default(|r| {
+                let rating = r.clamp(f64::from(f32::MIN), f64::from(f32::MAX)) as f32;
+                vec![AggregateRating::new(rating, 1)]
+            }),
             author: Some(recipe.created_by.username)
                 .filter(|s| !s.is_empty())
-                .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(&s)]),
             image: if let Some(image) = recipe.image {
                 (self.fetch_recipe_image(image).await?).map_or_else(Vec::new, |s| {
                     vec![RecipeImageFieldEnum::URL(
-                        s.to_str().map(String::from).unwrap_or_default(),
+                        s.to_str().map_or_default(String::from),
                     )]
                 })
             } else {
@@ -356,9 +344,8 @@ impl TandoorRecipeClient {
             },
             description: recipe
                 .description
-                .map(|d| vec![RecipeDescriptionFieldEnum::Text(d)])
-                .unwrap_or_default(),
-            url: recipe.source_url.map(|u| vec![u]).unwrap_or_default(),
+                .map_or_default(|d| vec![RecipeDescriptionFieldEnum::Text(d)]),
+            url: recipe.source_url.map_or_default(|u| vec![u]),
             name: vec![recipe.name],
             ..Default::default()
         })

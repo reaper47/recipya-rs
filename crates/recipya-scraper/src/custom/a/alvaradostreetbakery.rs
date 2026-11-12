@@ -54,11 +54,9 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             })
             .unwrap_or_default(),
         image: extract_attr(root, "meta[property='og:image:secure_url']", "content")?
-            .map(|s| vec![RecipeImageFieldEnum::URL(s.into())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeImageFieldEnum::URL(s.into())]),
         name: extract_attr(root, "meta[property='og:title']", "content")?
-            .map(|s| vec![s.into()])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s.into()]),
         prep_time: extract_meta(meta.as_slice(), "min")
             .into_iter()
             .map(DurationOrText::Text)
@@ -81,14 +79,13 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                     ancestor = node.parent();
                 }
             })
-            .map(|ol| {
+            .map_or_default(|ol| {
                 ol.select(&li_sel)
                     .map(|li| {
                         RecipeRecipeInstructionsFieldEnum::Text(li.text().collect::<String>())
                     })
                     .collect::<Vec<_>>()
-            })
-            .unwrap_or_default(),
+            }),
         recipe_yield: extract_meta(meta.as_slice(), "serving")
             .into_iter()
             .map(RecipeRecipeYieldFieldEnum::Text)

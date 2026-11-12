@@ -255,8 +255,7 @@ impl FromStr for NutritionComponents<'_> {
                         s != "0g" && s != "0mg"
                     })
                     .copied()
-                    .map(|s| s.trim().to_string())
-                    .unwrap_or_default()
+                    .map_or_default(|s| s.trim().to_string())
             })
         };
 
@@ -907,8 +906,7 @@ where
                     .select(&sel_name)
                     .next()
                     .map(|t| t.text().collect::<String>())
-                    .map(Cow::Owned)
-                    .unwrap_or_default(),
+                    .map_or_default(Cow::Owned),
                 images: recipe_box
                     .select(&sel_img)
                     .map(|el| el.attr("src").unwrap_or_default())

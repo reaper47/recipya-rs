@@ -205,8 +205,7 @@ where
             context: at_context(),
             aggregate_rating: Some(recipe.recipe_rating.to_int())
                 .filter(|r| r > &0)
-                .map(|r| vec![AggregateRating::new(f32::from(r), 1)])
-                .unwrap_or_default(),
+                .map_or_default(|r| vec![AggregateRating::new(f32::from(r), 1)]),
             author: if recipe.recipe_from_name.is_empty() {
                 vec![]
             } else {

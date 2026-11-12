@@ -21,12 +21,10 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         author: extract_author(root, "a[itemprop='author']").unwrap_or_default(),
         date_published: extract_attr(root, "meta[itemprop='datePublished']", "content")
             .unwrap_or_default()
-            .map(|s| vec![s.to_string()])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s.to_string()]),
         image: extract_attr(root, "img[itemprop='image']", "src")
             .unwrap_or_default()
-            .map(|s| vec![RecipeImageFieldEnum::URL(s.into())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeImageFieldEnum::URL(s.into())]),
         keywords: root
             .select(&Selector::parse(".tags a[rel='tag']")?)
             .filter_map(|el| {

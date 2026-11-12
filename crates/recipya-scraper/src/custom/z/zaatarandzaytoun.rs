@@ -43,8 +43,7 @@ fn extract_rating(content: &ElementRef) -> Result<Vec<AggregateRating>> {
         &content
             .select(&Selector::parse(".wprm-recipe-rating-count")?)
             .next()
-            .map(|el| el.text().collect::<String>())
-            .unwrap_or_default(),
+            .map_or_default(|el| el.text().collect::<String>()),
     )
     .unwrap_or(0);
 

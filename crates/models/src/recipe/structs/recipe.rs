@@ -213,70 +213,51 @@ impl From<&RecipeDetails> for schema_org::Recipe {
         Self {
             r#type: AtType::Recipe.to_opt(),
             context: at_context(),
-            nutrition: value
-                .nutrition
-                .clone()
-                .per_100g
-                .map(|n| {
-                    vec![NutritionInformation {
-                        calories: n
-                            .calories_kcal
-                            .map(|c| vec![Energy::new(c.to_string())])
-                            .unwrap_or_default(),
-                        carbohydrate_content: n
-                            .total_carbohydrates
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        cholesterol_content: n
-                            .cholesterol_mg
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        context: at_context(),
-                        fat_content: n
-                            .total_fat_g
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        fiber_content: n
-                            .fiber_g
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        protein_content: n
-                            .protein_g
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        saturated_fat_content: n
-                            .saturated_fat_g
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        serving_size: vec![],
-                        sodium_content: n
-                            .sodium_mg
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        sugar_content: n
-                            .sugars_g
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        r#type: AtType::NutritionInformation.to_opt(),
-                        trans_fat_content: n
-                            .trans_fat_g
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                        unsaturated_fat_content: n
-                            .unsaturated_fat_g
-                            .map(|n| vec![Mass::new(n.to_string())])
-                            .unwrap_or_default(),
-                    }]
-                })
-                .unwrap_or_default(),
+            nutrition: value.nutrition.clone().per_100g.map_or_default(|n| {
+                vec![NutritionInformation {
+                    calories: n
+                        .calories_kcal
+                        .map_or_default(|c| vec![Energy::new(c.to_string())]),
+                    carbohydrate_content: n
+                        .total_carbohydrates
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    cholesterol_content: n
+                        .cholesterol_mg
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    context: at_context(),
+                    fat_content: n
+                        .total_fat_g
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    fiber_content: n.fiber_g.map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    protein_content: n
+                        .protein_g
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    saturated_fat_content: n
+                        .saturated_fat_g
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    serving_size: vec![],
+                    sodium_content: n
+                        .sodium_mg
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    sugar_content: n
+                        .sugars_g
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    r#type: AtType::NutritionInformation.to_opt(),
+                    trans_fat_content: n
+                        .trans_fat_g
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                    unsaturated_fat_content: n
+                        .unsaturated_fat_g
+                        .map_or_default(|n| vec![Mass::new(n.to_string())]),
+                }]
+            }),
             recipe_yield: vec![RecipeRecipeYieldFieldEnum::new_quantitative_value(
                 f64::from(value.recipe.r#yield.into_inner()),
             )],
             recipe_cuisine: value
                 .cuisine
                 .clone()
-                .map(|cuisine| vec![cuisine])
-                .unwrap_or_default(),
+                .map_or_default(|cuisine| vec![cuisine]),
             recipe_ingredient: value.ingredients.clone().into(),
             cook_time: vec![DurationOrText::Text(format!(
                 "PT{}S",
@@ -354,19 +335,16 @@ impl From<&RecipeDetails> for schema_org::Recipe {
                     RecipeVideoFieldEnum::VideoObject(Box::new(VideoObject {
                         r#type: AtType::VideoObject.to_opt(),
                         context: at_context(),
-                        duration: video
-                            .duration
-                            .map(|d| {
-                                vec![VideoObjectDurationFieldEnum::Duration(Duration {
-                                    context: at_context(),
-                                    name: vec![d.to_string()],
-                                    r#type: AtType::Duration.to_opt(),
-                                    ..Default::default()
-                                })]
-                            })
-                            .unwrap_or_default(),
-                        content_url: video.content_url.map(|u| vec![u]).unwrap_or_default(),
-                        embed_url: video.embed_url.map(|u| vec![u]).unwrap_or_default(),
+                        duration: video.duration.map_or_default(|d| {
+                            vec![VideoObjectDurationFieldEnum::Duration(Duration {
+                                context: at_context(),
+                                name: vec![d.to_string()],
+                                r#type: AtType::Duration.to_opt(),
+                                ..Default::default()
+                            })]
+                        }),
+                        content_url: video.content_url.map_or_default(|u| vec![u]),
+                        embed_url: video.embed_url.map_or_default(|u| vec![u]),
                         date_created: vec![video.created_at.to_string()],
                         url: vec![video.video.to_string()],
                         ..Default::default()
@@ -382,8 +360,7 @@ impl From<&RecipeDetails> for schema_org::Recipe {
                 .recipe
                 .description
                 .clone()
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s)]),
             url: {
                 let s = value.recipe.source.clone().into_string();
                 if s.is_empty() { vec![] } else { vec![s] }
@@ -617,8 +594,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
         let nutrition = schema
             .nutrition
             .first()
-            .map(NutritionDetailsForCreate::from)
-            .unwrap_or_default();
+            .map_or_default(NutritionDetailsForCreate::from);
 
         Self {
             name: schema.name.first().cloned().unwrap_or_default(),
@@ -632,11 +608,9 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
             r#yield: schema.recipe_yield.first().map_or_else(
                 || {
                     RecipeYield::from(
-                        nutrition
-                            .per_serving
-                            .as_ref()
-                            .map(|v| extract_number::<i16>(v.serving_size.as_ref()).ok())
-                            .unwrap_or_default(),
+                        nutrition.per_serving.as_ref().map_or_default(|v| {
+                            extract_number::<i16>(v.serving_size.as_ref()).ok()
+                        }),
                     )
                 },
                 |v| RecipeYield::from(v.to_i16()),
@@ -647,8 +621,7 @@ impl From<&schema_org::Recipe> for RecipeForCreate {
                 schema
                     .aggregate_rating
                     .first()
-                    .map(AggregateRating::normalize_over_ten)
-                    .unwrap_or_default(),
+                    .map_or_default(AggregateRating::normalize_over_ten),
             ),
             videos: vec![],
             category: schema.recipe_category.first().map_or_else(

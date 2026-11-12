@@ -76,19 +76,15 @@ impl QuantitativeValue {
 
     /// Gets the numerical value.
     pub fn to_number(&self) -> i16 {
-        self.value
-            .first()
-            .map(|v| match v {
-                FieldEnum64::BooleanEnumOrText(s) => s.parse().ok().unwrap_or_default(),
-                FieldEnum64::Number(n) => float_to_i16_safe(*n),
-                FieldEnum64::StructuredValue(v) => v
-                    .name
-                    .first()
-                    .map(|v| v.parse::<i16>().unwrap_or_default())
-                    .unwrap_or_default(),
-                FieldEnum64::QuantitativeValue(_) => 0,
-            })
-            .unwrap_or_default()
+        self.value.first().map_or_default(|v| match v {
+            FieldEnum64::BooleanEnumOrText(s) => s.parse().ok().unwrap_or_default(),
+            FieldEnum64::Number(n) => float_to_i16_safe(*n),
+            FieldEnum64::StructuredValue(v) => v
+                .name
+                .first()
+                .map_or_default(|v| v.parse::<i16>().unwrap_or_default()),
+            FieldEnum64::QuantitativeValue(_) => 0,
+        })
     }
 }
 

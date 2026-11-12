@@ -26,8 +26,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         context: at_context(),
         author: optional_text(root, "span[itemprop='author'] span")
             .unwrap_or_default()
-            .map(|s| vec![RecipeAuthorFieldEnum::new_person(s.as_ref())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(s.as_ref())]),
         cook_time: extract_duration(&content, "span[itemprop='cookTime']", "content"),
         description: extract_description(root, "div[itemprop='description']").unwrap_or_default(),
         image: extract_attr(&content, "img[itemprop='image']", "src")

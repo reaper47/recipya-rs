@@ -418,8 +418,7 @@ mod tests_language {
             .await?
             .iter()
             .find(|l| &l.locale == "fr-CA")
-            .map(|l| l.id)
-            .unwrap_or_default();
+            .map_or_default(|l| l.id);
 
         let res = server
             .post(BASE_URI)

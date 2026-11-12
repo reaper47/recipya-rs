@@ -337,50 +337,41 @@ impl MealieRecipeClient {
 
         let num_comments = recipe.comments.iter().len();
 
-        let mut instructions = recipe
-            .recipe_instructions
-            .map(|instructions| {
-                instructions
-                    .into_iter()
-                    .map(|ins| match ins.summary {
-                        Some(summary) => RecipeRecipeInstructionsFieldEnum::new_section(
-                            &summary,
-                            ins.text.lines().collect(),
-                        ),
-                        None => RecipeRecipeInstructionsFieldEnum::Text(ins.text),
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
-
-        instructions.extend(
-            recipe
-                .notes
-                .map(|notes| {
-                    notes
-                        .into_iter()
-                        .map(|note| {
-                            if note.title.is_empty() {
-                                RecipeRecipeInstructionsFieldEnum::Text(note.text)
-                            } else {
-                                RecipeRecipeInstructionsFieldEnum::new_section(
-                                    &note.title,
-                                    note.text.lines().collect(),
-                                )
-                            }
-                        })
-                        .collect::<Vec<_>>()
+        let mut instructions = recipe.recipe_instructions.map_or_default(|instructions| {
+            instructions
+                .into_iter()
+                .map(|ins| match ins.summary {
+                    Some(summary) => RecipeRecipeInstructionsFieldEnum::new_section(
+                        &summary,
+                        ins.text.lines().collect(),
+                    ),
+                    None => RecipeRecipeInstructionsFieldEnum::Text(ins.text),
                 })
-                .unwrap_or_default(),
-        );
+                .collect::<Vec<_>>()
+        });
+
+        instructions.extend(recipe.notes.map_or_default(|notes| {
+            notes
+                .into_iter()
+                .map(|note| {
+                    if note.title.is_empty() {
+                        RecipeRecipeInstructionsFieldEnum::Text(note.text)
+                    } else {
+                        RecipeRecipeInstructionsFieldEnum::new_section(
+                            &note.title,
+                            note.text.lines().collect(),
+                        )
+                    }
+                })
+                .collect::<Vec<_>>()
+        }));
 
         Ok(Recipe {
             r#type: AtType::Recipe.to_opt(),
             context: at_context(),
             nutrition: recipe
                 .nutrition
-                .map(|n| vec![NutritionInformation::from(n)])
-                .unwrap_or_default(),
+                .map_or_default(|n| vec![NutritionInformation::from(n)]),
             recipe_yield: match recipe_yield.trim() {
                 "" => vec![],
                 s => vec![RecipeYieldFieldEnum::Text(s.to_string())],
@@ -392,8 +383,7 @@ impl MealieRecipeClient {
                 .collect(),
             cook_time: recipe
                 .cook_time
-                .map(|s| vec![DurationOrText::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s)]),
             recipe_instructions: instructions,
             recipe_category,
             tool: recipe
@@ -403,81 +393,65 @@ impl MealieRecipeClient {
                 .collect(),
             prep_time: recipe
                 .prep_time
-                .map(|s| vec![DurationOrText::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s)]),
             total_time: recipe
                 .total_time
-                .map(|s| vec![DurationOrText::Text(s)])
-                .unwrap_or_default(),
-            perform_time: recipe
-                .perform_time
-                .map(|s| {
-                    iso8601::datetime(&s).map_or_else(
-                        |_| vec![],
-                        |d| {
-                            vec![Duration {
-                                name: vec![d.to_string()],
-                                ..Default::default()
-                            }]
-                        },
-                    )
-                })
-                .unwrap_or_default(),
-            comment: recipe
-                .comments
-                .map(|comments| {
-                    comments
-                        .into_iter()
-                        .map(|comment| Comment {
-                            r#type: AtType::Comment.to_opt(),
-                            context: at_context(),
-                            text: vec![comment.text],
-                            date_created: vec![comment.created_at],
-                            date_modified: vec![comment.updated_at],
-                            author: comment
-                                .user
-                                .author()
-                                .map(|s| vec![CommentAuthorFieldEnum::new_person(s)])
-                                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s)]),
+            perform_time: recipe.perform_time.map_or_default(|s| {
+                iso8601::datetime(&s).map_or_else(
+                    |_| vec![],
+                    |d| {
+                        vec![Duration {
+                            name: vec![d.to_string()],
                             ..Default::default()
-                        })
-                        .collect()
-                })
-                .unwrap_or_default(),
-            date_created: recipe.created_at.map(|s| vec![s]).unwrap_or_default(),
+                        }]
+                    },
+                )
+            }),
+            comment: recipe.comments.map_or_default(|comments| {
+                comments
+                    .into_iter()
+                    .map(|comment| Comment {
+                        r#type: AtType::Comment.to_opt(),
+                        context: at_context(),
+                        text: vec![comment.text],
+                        date_created: vec![comment.created_at],
+                        date_modified: vec![comment.updated_at],
+                        author: comment
+                            .user
+                            .author()
+                            .map_or_default(|s| vec![CommentAuthorFieldEnum::new_person(s)]),
+                        ..Default::default()
+                    })
+                    .collect()
+            }),
+            date_created: recipe.created_at.map_or_default(|s| vec![s]),
             comment_count: if num_comments > 0 {
                 vec![i32::try_from(num_comments).unwrap_or_default()]
             } else {
                 vec![]
             },
-            date_modified: recipe.updated_at.map(|s| vec![s]).unwrap_or_default(),
+            date_modified: recipe.updated_at.map_or_default(|s| vec![s]),
             keywords,
-            aggregate_rating: recipe
-                .rating
-                .map(|n| {
-                    n.as_f64()
-                        .map(|n| vec![AggregateRating::new(n as f32, 1)])
-                        .unwrap_or_default()
-                })
-                .unwrap_or_default(),
+            aggregate_rating: recipe.rating.map_or_default(|n| {
+                n.as_f64()
+                    .map_or_default(|n| vec![AggregateRating::new(n as f32, 1)])
+            }),
             author: user
                 .author()
-                .map(|s: &str| vec![RecipeAuthorFieldEnum::new_person(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s: &str| vec![RecipeAuthorFieldEnum::new_person(s)]),
             image: self
                 .fetch_recipe_image(recipe.id, recipe.image)
                 .await?
-                .map(|s| {
+                .map_or_default(|s| {
                     vec![RecipeImageFieldEnum::URL(
-                        s.to_str().map(String::from).unwrap_or_default(),
+                        s.to_str().map_or_default(String::from),
                     )]
-                })
-                .unwrap_or_default(),
+                }),
             description: recipe
                 .description
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
-                .unwrap_or_default(),
-            url: recipe.org_url.map(|u| vec![u]).unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s)]),
+            url: recipe.org_url.map_or_default(|u| vec![u]),
             name: match recipe.name {
                 Some(s) => vec![s],
                 None => vec![recipe.slug],
