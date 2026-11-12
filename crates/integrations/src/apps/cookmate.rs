@@ -81,22 +81,18 @@ impl From<List<'_>> for NutritionInformation {
             v.items
                 .iter()
                 .find(|i| i.starts_with(prefix))
-                .map(|i| i.strip_prefix(prefix))
-                .unwrap_or_default()
+                .map_or_default(|i| i.strip_prefix(prefix))
                 .filter(|s| s != &"0 g")
-                .map(|i| vec![Energy::new(i)])
-                .unwrap_or_default()
+                .map_or_default(|i| vec![Energy::new(i)])
         };
 
         let extract_to_mass = |prefix: &str| {
             v.items
                 .iter()
                 .find(|i| i.starts_with(prefix))
-                .map(|i| i.strip_prefix(prefix))
-                .unwrap_or_default()
+                .map_or_default(|i| i.strip_prefix(prefix))
                 .filter(|s| s != &"0 g")
-                .map(|i| vec![Mass::new(i)])
-                .unwrap_or_default()
+                .map_or_default(|i| vec![Mass::new(i)])
         };
 
         Self {
@@ -140,13 +136,11 @@ impl From<CookmateRecipe<'_>> for Recipe {
             .collect_vec();
         let num_comments = comments.len();
 
-        let mut keywords = categories
-            .map(|(_, b)| {
-                b.iter()
-                    .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_lowercase()))
-                    .collect_vec()
-            })
-            .unwrap_or_default();
+        let mut keywords = categories.map_or_default(|(_, b)| {
+            b.iter()
+                .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_lowercase()))
+                .collect_vec()
+        });
 
         keywords.extend_from_slice(
             &r.tags
@@ -224,9 +218,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                     vec![]
                 }
             },
-            recipe_category: categories
-                .map(|(a, _b)| vec![a.to_string()])
-                .unwrap_or_default(),
+            recipe_category: categories.map_or_default(|(a, _b)| vec![a.to_string()]),
             recipe_ingredient: r
                 .ingredient
                 .items
@@ -241,7 +233,7 @@ impl From<CookmateRecipe<'_>> for Recipe {
                 .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.to_string()))
                 .collect(),
             recipe_yield: to_yield(extract_number(&r.quantity).unwrap_or_default()),
-            url: url.map(|u| vec![u.to_string()]).unwrap_or_default(),
+            url: url.map_or_default(|u| vec![u.to_string()]),
             video: Some(
                 vec![r.video]
                     .into_iter()
@@ -328,8 +320,7 @@ where
     let txt = |sel: &str| {
         doc.select(&Selector::parse(sel).unwrap())
             .next()
-            .map(|el| el.text().collect::<String>())
-            .unwrap_or_default()
+            .map_or_default(|el| el.text().collect::<String>())
     };
 
     let list = |sel: &str| {
@@ -360,14 +351,13 @@ where
         imagepath: doc
             .select(&Selector::parse("img[itemprop='image']").unwrap())
             .next()
-            .map(|el| {
+            .map_or_default(|el| {
                 Cow::Borrowed(
                     el.attr("src")
                         .unwrap_or_default()
                         .trim_start_matches("img/"),
                 )
-            })
-            .unwrap_or_default(),
+            }),
         quantity: Cow::Borrowed(&txt("span[itemprop='recipeYield']")),
         nutrition: doc
             .select(&Selector::parse("span[itemprop='nutrition']").unwrap())
@@ -380,13 +370,12 @@ where
             .select(&Selector::parse("img.rating").unwrap())
             .next()
             .map(|el| el.attr("src").unwrap_or_default())
-            .map(|s| {
+            .map_or_default(|s| {
                 s.trim_start_matches("./rating_")
                     .trim_end_matches(".svg")
                     .parse::<i64>()
                     .unwrap_or_default()
-            })
-            .unwrap_or_default(),
+            }),
         comments: if notes.is_empty() { None } else { Some(notes) },
         source: Cow::Borrowed(&txt("span[itemprop='author']")),
         video: Cow::Borrowed(&txt("a[itemprop='video']")),

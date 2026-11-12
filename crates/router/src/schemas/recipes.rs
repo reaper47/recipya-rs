@@ -215,8 +215,7 @@ where
                     form.original_image_filename = field.file_name().map(|s| {
                         let stem = PathBuf::from(s)
                             .file_stem()
-                            .map(|s| s.to_string_lossy().into_owned())
-                            .unwrap_or_default();
+                            .map_or_default(|s| s.to_string_lossy().into_owned());
 
                         Uuid::parse_str(&stem).unwrap_or_default()
                     });

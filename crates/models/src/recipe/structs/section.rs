@@ -29,8 +29,7 @@ impl SectionComponents {
         {
             map.into_iter()
                 .next()
-                .map(|(_, values)| Self::new(values))
-                .unwrap_or_default()
+                .map_or_default(|(_, values)| Self::new(values))
         } else {
             Self::Grouped(
                 map.into_iter()
@@ -275,33 +274,25 @@ impl TryFrom<Vec<RecipeRecipeIngredientFieldEnum>> for SectionComponents {
                     });
                 }
                 RecipeRecipeIngredientFieldEnum::PropertyValue(prop) => {
-                    let value = prop
-                        .value
-                        .first()
-                        .map(|v| match v {
-                            PropertyValueValueFieldEnum::BooleanEnumOrText(s) => s.clone(),
-                            PropertyValueValueFieldEnum::Number(n) => n.to_string(),
-                            PropertyValueValueFieldEnum::StructuredValue(v) => {
-                                v.name.first().cloned().unwrap_or_default()
-                            }
-                            PropertyValueValueFieldEnum::QuantitativeValue(q) => q
-                                .value
-                                .first()
-                                .map(|v| match v {
-                                    schema_org::field::FieldEnum64::BooleanEnumOrText(s) => {
-                                        s.clone()
-                                    }
-                                    schema_org::field::FieldEnum64::Number(n) => n.to_string(),
-                                    schema_org::field::FieldEnum64::StructuredValue(v) => {
-                                        v.name.first().cloned().unwrap_or_default()
-                                    }
-                                    schema_org::field::FieldEnum64::QuantitativeValue(_) => {
-                                        String::new()
-                                    }
-                                })
-                                .unwrap_or_default(),
-                        })
-                        .unwrap_or_default();
+                    let value = prop.value.first().map_or_default(|v| match v {
+                        PropertyValueValueFieldEnum::BooleanEnumOrText(s) => s.clone(),
+                        PropertyValueValueFieldEnum::Number(n) => n.to_string(),
+                        PropertyValueValueFieldEnum::StructuredValue(v) => {
+                            v.name.first().cloned().unwrap_or_default()
+                        }
+                        PropertyValueValueFieldEnum::QuantitativeValue(q) => {
+                            q.value.first().map_or_default(|v| match v {
+                                schema_org::field::FieldEnum64::BooleanEnumOrText(s) => s.clone(),
+                                schema_org::field::FieldEnum64::Number(n) => n.to_string(),
+                                schema_org::field::FieldEnum64::StructuredValue(v) => {
+                                    v.name.first().cloned().unwrap_or_default()
+                                }
+                                schema_org::field::FieldEnum64::QuantitativeValue(_) => {
+                                    String::new()
+                                }
+                            })
+                        }
+                    });
 
                     let name = prop.name.into_iter().next().unwrap_or_default();
 

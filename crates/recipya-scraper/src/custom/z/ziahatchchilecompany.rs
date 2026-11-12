@@ -22,8 +22,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         date_published: root
             .select(&Selector::parse(".article__date time")?)
             .next()
-            .map(|e| vec![e.value().attr("datetime").unwrap_or_default().to_string()])
-            .unwrap_or_default(),
+            .map_or_default(|e| vec![e.value().attr("datetime").unwrap_or_default().to_string()]),
         description: extract_metadata_property(doc, "og:description")
             .unwrap_or_default()
             .into_iter()

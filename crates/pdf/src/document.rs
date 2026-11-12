@@ -17,13 +17,13 @@ use crate::{
 };
 
 /// Initial state of a document, before any content has been prepared.
-pub enum InitialState {}
+pub struct InitialState(pub !);
 
 /// State in which content is being prepared before drawing.
-pub enum PrepareState {}
+pub struct PrepareState(pub !);
 
 /// State in which prepared content is drawn to the page.
-pub enum DrawState {}
+pub struct DrawState(pub !);
 
 /// Marker trait for the states a document can be in.
 pub trait DocumentState {}

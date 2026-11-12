@@ -546,8 +546,7 @@ pub async fn shopping_lists_post_handler(
 fn get_view_mode_from_cookie(cookies: &Cookies) -> ViewMode {
     cookies
         .get(SHOPPING_VIEW_COOKIE_NAME)
-        .map(|s| ViewMode::from_str(s.value()).unwrap_or_default())
-        .unwrap_or_default()
+        .map_or_default(|s| ViewMode::from_str(s.value()).unwrap_or_default())
 }
 
 /// Handles POST requests to add an item to a shopping list.

@@ -50,16 +50,13 @@ pub async fn reports_handler(
             is_hx_request,
             reports: Some(ReportsData {
                 reports: reports.clone(),
-                selected: params
-                    .view
-                    .map(|v| {
-                        if &v == "latest" {
-                            reports.into_iter().next()
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap_or_default(),
+                selected: params.view.map_or_default(|v| {
+                    if &v == "latest" {
+                        reports.into_iter().next()
+                    } else {
+                        None
+                    }
+                }),
                 page,
             }),
             ..Default::default()

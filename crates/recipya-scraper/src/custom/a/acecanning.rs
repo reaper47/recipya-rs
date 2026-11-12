@@ -67,8 +67,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         context: at_context(),
         image: extract_attr(content, "img", "src")
             .unwrap_or_default()
-            .map(|v| vec![RecipeImageFieldEnum::URL(v.into())])
-            .unwrap_or_default(),
+            .map_or_default(|v| vec![RecipeImageFieldEnum::URL(v.into())]),
         name: required_text_list(content, "h3")?,
         recipe_ingredient: ingredients
             .into_iter()

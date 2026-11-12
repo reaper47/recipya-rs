@@ -63,8 +63,7 @@ where
                 file.enclosed_name()
                     .as_deref()
                     .and_then(Path::file_name)
-                    .map(|s| s.to_string_lossy().into_owned())
-                    .unwrap_or_default(),
+                    .map_or_default(|s| s.to_string_lossy().into_owned()),
             );
             let mut dest = File::create(&dest_path)?;
             copy(&mut file, &mut dest)?;

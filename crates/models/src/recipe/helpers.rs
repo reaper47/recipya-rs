@@ -477,8 +477,7 @@ pub async fn insert_nutrition(
                 serving_size: nutrition
                     .per_serving
                     .as_ref()
-                    .map(|n| n.serving_size.clone())
-                    .unwrap_or_default(),
+                    .map_or_default(|n| n.serving_size.clone()),
             })
             .execute(conn)
             .await?;

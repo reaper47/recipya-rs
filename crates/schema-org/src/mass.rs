@@ -18,13 +18,11 @@ impl Mass {
     where
         T: FromStr + Default + Sum,
     {
-        Some(self.as_ref())
-            .map(|s| {
-                s.split(' ')
-                    .map(|s| s.parse::<T>().unwrap_or_default())
-                    .sum()
-            })
-            .unwrap_or_default()
+        Some(self.as_ref()).map_or_default(|s| {
+            s.split(' ')
+                .map(|s| s.parse::<T>().unwrap_or_default())
+                .sum()
+        })
     }
 }
 

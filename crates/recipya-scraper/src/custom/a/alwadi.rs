@@ -43,8 +43,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .collect(),
         image: extract_attr(root, "meta[property='og:image']", "content")
             .unwrap_or_default()
-            .map(|s| vec![RecipeImageFieldEnum::URL(s.into())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeImageFieldEnum::URL(s.into())]),
         recipe_category: extract_vec_string(content, ".category > a"),
         recipe_yield,
         recipe_ingredient: content

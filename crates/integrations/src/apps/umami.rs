@@ -126,18 +126,15 @@ where
                     .next()
                     .is_some_and(|s| s.trim_start().starts_with("Ingredient"))
             }) {
-                Some(el) => el
-                    .next_sibling()
-                    .map(|node| {
-                        let el = ElementRef::wrap(node).unwrap();
-                        el.select(&sel_span)
-                            .map(|span| {
-                                let text = span.text().collect::<String>();
-                                Ingredient::Line(Cow::Owned(text))
-                            })
-                            .collect_vec()
-                    })
-                    .unwrap_or_default(),
+                Some(el) => el.next_sibling().map_or_default(|node| {
+                    let el = ElementRef::wrap(node).unwrap();
+                    el.select(&sel_span)
+                        .map(|span| {
+                            let text = span.text().collect::<String>();
+                            Ingredient::Line(Cow::Owned(text))
+                        })
+                        .collect_vec()
+                }),
                 None => {
                     return Err(Error::Parse("Ingredients not found".to_string()));
                 }
@@ -147,18 +144,15 @@ where
                     .next()
                     .is_some_and(|s| s.trim_start().starts_with("Directions"))
             }) {
-                Some(el) => el
-                    .next_sibling()
-                    .map(|node| {
-                        let el = ElementRef::wrap(node).unwrap();
-                        el.select(&sel_span)
-                            .map(|span| {
-                                let text = span.text().collect::<String>();
-                                Instruction::Line(Cow::Owned(text))
-                            })
-                            .collect_vec()
-                    })
-                    .unwrap_or_default(),
+                Some(el) => el.next_sibling().map_or_default(|node| {
+                    let el = ElementRef::wrap(node).unwrap();
+                    el.select(&sel_span)
+                        .map(|span| {
+                            let text = span.text().collect::<String>();
+                            Instruction::Line(Cow::Owned(text))
+                        })
+                        .collect_vec()
+                }),
                 None => {
                     return Err(Error::Parse("Ingredients not found".to_string()));
                 }

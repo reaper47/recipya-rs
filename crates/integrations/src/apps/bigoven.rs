@@ -75,7 +75,7 @@ impl Display for Ingredient<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = format!(
             "{} {} {}",
-            self.quantity.map(ToString::to_string).unwrap_or_default(),
+            self.quantity.map_or_default(ToString::to_string),
             self.measure.unwrap_or_default(),
             self.name
         )
@@ -102,9 +102,7 @@ impl From<RecipeComponents<'_>> for BigOvenRecipe {
             active_minutes: r.active_minutes,
             total_minutes: r.total_minutes,
             category: items.map(|(a, _b)| a.to_string()),
-            keywords: items
-                .map(|(_a, b)| b.iter().map(ToString::to_string).collect())
-                .unwrap_or_default(),
+            keywords: items.map_or_default(|(_a, b)| b.iter().map(ToString::to_string).collect()),
         }
     }
 }
@@ -125,7 +123,7 @@ fn transform_ingredient_types<'a>(
                 IngredientType::Line(ing) => {
                     let s = format!(
                         "{} {} {}",
-                        ing.quantity.map(ToString::to_string).unwrap_or_default(),
+                        ing.quantity.map_or_default(ToString::to_string),
                         ing.measure.unwrap_or_default(),
                         ing.name
                     )
@@ -188,7 +186,7 @@ fn transform_ingredient_types<'a>(
             .map(|ing| {
                 let s = format!(
                     "{} {} {}",
-                    ing.quantity.map(ToString::to_string).unwrap_or_default(),
+                    ing.quantity.map_or_default(ToString::to_string),
                     ing.measure.unwrap_or_default(),
                     ing.name
                 )

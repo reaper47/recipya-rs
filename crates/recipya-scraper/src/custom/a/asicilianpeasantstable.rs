@@ -51,7 +51,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .map(|s| s.text().collect::<Vec<_>>().join(" "))
             .into_iter()
             .collect::<Vec<_>>(),
-        recipe_category: keywords.pop().map(|s| vec![s]).unwrap_or_default(),
+        recipe_category: keywords.pop().map_or_default(|s| vec![s]),
         keywords: keywords
             .into_iter()
             .map(RecipeKeywordsFieldEnum::TextOrURL)
@@ -111,8 +111,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             entry_content
                 .select(&p_sel)
                 .find(|el| el.text().any(|t| t.contains("servings")))
-                .map(|el| el.text().collect::<Vec<_>>().join(" "))
-                .unwrap_or_default()
+                .map_or_default(|el| el.text().collect::<Vec<_>>().join(" "))
                 .trim(),
         )
         .map_or_else(

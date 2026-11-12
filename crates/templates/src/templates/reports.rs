@@ -40,7 +40,7 @@ fn render_index(data: &ReportsData, messages: &Messages) -> Markup {
                 hx-trigger="refreshReports from:body"
                 hx-target="#report-list-container"
                 hx-include="#selected-report-id" {
-                input #selected-report-id type="hidden" name="selected" value=(data.selected.as_ref().map(|r| r.id).unwrap_or_default());
+                input #selected-report-id type="hidden" name="selected" value=(data.selected.as_ref().map_or_default(|r| r.id));
                 div #report-list-container {
                     div class="md:hidden divider m-0" {}
                     (render_reports_list(data, messages))

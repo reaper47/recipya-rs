@@ -23,29 +23,25 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         context: at_context(),
         author: optional_text(root, "span[itemprop='author'] span[itemprop='name']")
             .unwrap_or_default()
-            .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(&s)]),
         date_published: extract_attr(root, "abbr[itemprop='datePublished']", "title")
             .unwrap_or_default()
-            .map(|s| vec![s.into()])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s.into()]),
         description: root
             .select(&Selector::parse(
                 "div[itemprop='description articleBody'] div.MsoNormal",
             )?)
             .next()
             .map(|el| el.text().collect::<String>())
-            .map(|s| vec![RecipeDescriptionFieldEnum::Text(s.trim().into())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s.trim().into())]),
         image: extract_attr(root, "meta[itemprop='image_url']", "content")
             .unwrap_or_default()
-            .map(|s| vec![RecipeImageFieldEnum::URL(s.into())])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeImageFieldEnum::URL(s.into())]),
         name,
         recipe_ingredient: root
             .select(&Selector::parse("div.MsoNormal")?)
             .find(|el| el.text().any(|t| t.contains(&title)))
-            .map(|node| {
+            .map_or_default(|node| {
                 node.next_siblings()
                     .take_while(|n| n.value().as_element().is_none_or(|el| el.name() != "ul"))
                     .filter_map(|node| {
@@ -64,8 +60,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                         })
                     })
                     .collect::<Vec<_>>()
-            })
-            .unwrap_or_default(),
+            }),
         recipe_instructions: root
             .select(&Selector::parse("div > ul:first-of-type > li")?)
             .map(|n| {

@@ -64,7 +64,7 @@ fn render_lists_index(data: &Data, messages: &Messages) -> Markup {
         div #shopping-lists-index class="flex flex-col-reverse md:flex-row h-full" {
             aside class="relative max-h-full text-center pt-1 pl-2" {
                 input #selected-shopping-list-id type="hidden" name="selected"
-                      value=(shopping.selected_shopping_list.as_ref().map(|r| r.id).unwrap_or_default());
+                      value=(shopping.selected_shopping_list.as_ref().map_or_default(|r| r.id));
                 div #shopping-list-container .hidden.md:block {
                     (render_shopping_lists_list(shopping, true, messages))
                 }
@@ -586,20 +586,15 @@ pub fn shopping_list_item<T: AsRef<str>>(
     item: Option<&ShoppingListItemDetails>,
     messages: &Messages,
 ) -> Markup {
-    let ingredient = item
-        .as_ref()
-        .map(|i| i.ingredient.as_str())
-        .unwrap_or_default();
+    let ingredient = item.as_ref().map_or_default(|i| i.ingredient.as_str());
 
     let quantity = item
         .as_ref()
-        .map(|i| i.quantity.as_deref().unwrap_or_default())
-        .unwrap_or_default();
+        .map_or_default(|i| i.quantity.as_deref().unwrap_or_default());
 
     let notes = item
         .as_ref()
-        .map(|i| i.notes.as_deref().unwrap_or_default())
-        .unwrap_or_default();
+        .map_or_default(|i| i.notes.as_deref().unwrap_or_default());
 
     let label = html! {
         div class="grid gap-1 min-w-0" {
@@ -829,8 +824,7 @@ pub fn render_view_shopping_list_details<T: AsRef<str>>(
             shopping
                 .selected_shopping_list
                 .as_ref()
-                .map(|l| render_shopping_list_view_view(l, data.is_hx_request, messages))
-                .unwrap_or_default()
+                .map_or_default(|l| render_shopping_list_view_view(l, data.is_hx_request, messages))
         },
     );
 

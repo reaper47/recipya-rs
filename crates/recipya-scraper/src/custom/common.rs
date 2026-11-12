@@ -44,7 +44,7 @@ pub fn extract_ingredients(content: &ElementRef) -> Result<Vec<RecipeRecipeIngre
     Ok(content
         .select(&ingredients_container_sel)
         .next()
-        .map(|container| {
+        .map_or_default(|container| {
             let groups = container.select(&ingredient_group_sel).collect::<Vec<_>>();
 
             if groups.is_empty() {
@@ -59,8 +59,7 @@ pub fn extract_ingredients(content: &ElementRef) -> Result<Vec<RecipeRecipeIngre
                     .flat_map(|group| parse_ingredient_group(group, &h4_sel, &ingredients_li_sel))
                     .collect()
             }
-        })
-        .unwrap_or_default())
+        }))
 }
 
 fn parse_ingredient_group(
@@ -237,8 +236,7 @@ pub fn extract_text_from_elements(
 pub fn extract_vec_string(fragment: &ElementRef, css_selector: &str) -> Vec<String> {
     required_text(fragment, css_selector)
         .ok()
-        .map(|s| vec![s.trim().into()])
-        .unwrap_or_default()
+        .map_or_default(|s| vec![s.trim().into()])
 }
 
 /// Extracts a duration from a meta tag.
@@ -249,8 +247,7 @@ pub fn extract_duration(
 ) -> Vec<DurationOrText> {
     extract_attr(fragment, css_selector, attr)
         .unwrap_or_default()
-        .map(|s| vec![DurationOrText::Text(s.into())])
-        .unwrap_or_default()
+        .map_or_default(|s| vec![DurationOrText::Text(s.into())])
 }
 
 /// Extracts the ingredients from a list of elements.

@@ -54,27 +54,23 @@ impl From<RecipeComponents<'_>> for Recipe {
         let rating = r
             .rating
             .and_then(|r| r.trim().split_once(' '))
-            .map(|(numerator, denominator)| {
+            .map_or_default(|(numerator, denominator)| {
                 let numerator: f32 = numerator.parse().unwrap_or_default();
                 let denominator: f32 = denominator.parse().unwrap_or_default();
                 numerator / denominator
-            })
-            .unwrap_or_default();
+            });
 
         let prep_secs = parse_time(r.prep_time);
         let total_secs = r.total_time.map_or(0, parse_time);
         let cook_secs = total_secs.saturating_sub(prep_secs);
 
-        let source = r
-            .source
-            .map(|s| {
-                let mut s = s.trim_end_matches('\"').to_string();
-                if !s.starts_with("Exported from") {
-                    s.push_str(" [Exported from MasterCook]");
-                }
-                s
-            })
-            .unwrap_or_default();
+        let source = r.source.map_or_default(|s| {
+            let mut s = s.trim_end_matches('\"').to_string();
+            if !s.starts_with("Exported from") {
+                s.push_str(" [Exported from MasterCook]");
+            }
+            s
+        });
 
         let mut instructions = r
             .instructions
@@ -335,49 +331,40 @@ impl From<MastercookRecipe> for Recipe {
             .source
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
-            .map(|s| {
+            .map_or_default(|s| {
                 if s.is_empty() {
                     "Exported from MasterCook".into()
                 } else {
                     format!("{s} [Exported from MasterCook]")
                 }
-            })
-            .unwrap_or_default();
+            });
 
-        let nutrition = r
-            .nutrition
-            .map(|s| {
-                s.trim_start_matches("Per Serving (excluding unknown items): ")
-                    .to_string()
-            })
-            .unwrap_or_default();
+        let nutrition = r.nutrition.map_or_default(|s| {
+            s.trim_start_matches("Per Serving (excluding unknown items): ")
+                .to_string()
+        });
 
         Self {
             r#type: AtType::Recipe.to_opt(),
             context: at_context(),
-            aggregate_rating: r
-                .ratings
-                .map(|r| {
-                    let numerator: f32 = r.rating.name.parse().unwrap_or_default();
-                    let denominator: f32 = r.rating.value.parse().unwrap_or_default();
+            aggregate_rating: r.ratings.map_or_default(|r| {
+                let numerator: f32 = r.rating.name.parse().unwrap_or_default();
+                let denominator: f32 = r.rating.value.parse().unwrap_or_default();
 
-                    vec![AggregateRating {
-                        r#type: AtType::AggregateRating.to_opt(),
-                        rating_value: Some(AggregateRatingRatingValueFieldEnum::Number(
-                            numerator / denominator,
-                        ))
-                        .map(|v| vec![v])
-                        .unwrap_or_default(),
-                        ..Default::default()
-                    }]
-                })
-                .unwrap_or_default(),
+                vec![AggregateRating {
+                    r#type: AtType::AggregateRating.to_opt(),
+                    rating_value: Some(AggregateRatingRatingValueFieldEnum::Number(
+                        numerator / denominator,
+                    ))
+                    .map_or_default(|v| vec![v]),
+                    ..Default::default()
+                }]
+            }),
             author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
             cook_time: seconds_to_duration(cook_secs),
             description: r
                 .description
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s.trim().into())])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s.trim().into())]),
             is_based_on: match url::Url::parse(&source) {
                 Ok(_) => vec![RecipeIsBasedOnFieldEnum::URL(source)],
                 Err(_) => vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(

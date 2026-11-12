@@ -28,8 +28,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         author: extract_author(root, ".recepiescovercard-module__V__cIq__schefDetails > p")
             .unwrap_or_default(),
         cook_time: get_metadata_box(root, "img[alt='Cooking Time']")
-            .map(|s| vec![DurationOrText::Text(s)])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![DurationOrText::Text(s)]),
         description: extract_description(root, ".recepiescovercard-module__V__cIq__disc")
             .unwrap_or_default(),
         image: extract_metadata_property(doc, "og:image")
@@ -39,14 +38,10 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .collect(),
         name: required_text(root, ".recepiescovercard-module__V__cIq__title")
             .ok()
-            .map(|s| vec![s])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s]),
         prep_time: get_metadata_box(root, "img[alt='Preparation Time']")
-            .map(|s| vec![DurationOrText::Text(s)])
-            .unwrap_or_default(),
-        recipe_category: get_metadata_box(root, "img[alt='Meal Type']")
-            .map(|s| vec![s])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![DurationOrText::Text(s)]),
+        recipe_category: get_metadata_box(root, "img[alt='Meal Type']").map_or_default(|s| vec![s]),
         recipe_ingredient: root
             .select(&ingredients_container_sel)
             .next()
