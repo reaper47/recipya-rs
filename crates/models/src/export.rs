@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    io::{Seek, SeekFrom, Write},
+    io::{BufWriter, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
 
@@ -10,7 +10,7 @@ use tokio::task::spawn_blocking;
 use tracing::{error, warn};
 use zip::{CompressionMethod, ZipWriter, write::FileOptions};
 
-use crate::{Error, RecipeDetails, Result};
+use crate::{Error, RecipeDetails, Result, shopping::ShoppingListDetails};
 
 /// Represents the type of export to perform.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -32,11 +32,41 @@ impl ExportType {
             Self::Text => "txt",
         }
     }
+
+    /// Exports the shopping list in this format to a temporary file.
+    pub fn export_shopping_list(
+        &self,
+        list: &ShoppingListDetails,
+        options: &ExportOptions,
+    ) -> Result<BufWriter<NamedTempFile>> {
+        let file = NamedTempFile::new()?;
+
+        let mut writer = std::io::BufWriter::new(file);
+        match self {
+            Self::Markdown => list.write_markdown(&mut writer)?,
+            Self::Text => list.write_text(&mut writer)?,
+            Self::Pdf => list.write_pdf(&mut writer, options)?,
+            Self::Json => unimplemented!(),
+        }
+
+        writer.flush()?;
+        Ok(writer)
+    }
 }
 
 /// Represents export options.
 pub struct ExportOptions {
     pub paper_size: (f32, f32),
+}
+
+impl Default for ExportOptions {
+    fn default() -> Self {
+        const LETTER_SIZE: (f32, f32) = (8.5039 * 72.0, 10.9843 * 72.0);
+
+        Self {
+            paper_size: LETTER_SIZE,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -80,15 +110,22 @@ pub struct ExportData {
     r#type: ExportType,
     recipes: Vec<RecipeDetails>,
     images_dir: PathBuf,
+    options: ExportOptions,
 }
 
 impl ExportData {
     /// Creates a new `ExportData` instance.
-    pub fn new(r#type: ExportType, recipes: Vec<RecipeDetails>, images_dir: &Path) -> Self {
+    pub fn new(
+        r#type: ExportType,
+        recipes: Vec<RecipeDetails>,
+        images_dir: &Path,
+        options: ExportOptions,
+    ) -> Self {
         Self {
             r#type,
             recipes,
             images_dir: images_dir.to_path_buf(),
+            options,
         }
     }
 
@@ -103,9 +140,11 @@ impl ExportData {
                 .compression_method(CompressionMethod::Deflated)
                 .compression_level(Some(1));
 
-            let manifest: Manifest = Manifest::from(self.recipes.as_slice());
-            zip.start_file("manifest.json", options)?;
-            serde_json::to_writer_pretty(&mut zip, &manifest)?;
+            if !self.is_archive_flat() {
+                let manifest: Manifest = Manifest::from(self.recipes.as_slice());
+                zip.start_file("manifest.json", options)?;
+                serde_json::to_writer_pretty(&mut zip, &manifest)?;
+            }
 
             let base_url = std::env::var("RECIPYA_BASE_URL").unwrap_or_default();
 
@@ -114,43 +153,35 @@ impl ExportData {
                 images_dir,
                 r#type,
                 ..
-            } = self;
+            } = &self;
 
-            for (idx, recipe) in recipes.into_iter().enumerate() {
+            for (idx, recipe) in recipes.iter().enumerate() {
                 let recipe_id = recipe.recipe.id;
 
-                if let Err(err) = Self::add_images(&mut zip, &recipe, idx, options, &images_dir) {
+                if !self.is_archive_flat()
+                    && let Err(err) = Self::add_images(&mut zip, recipe, idx, options, images_dir)
+                {
                     error!(?recipe_id, ?err, "Failed to add images for recipe");
                 }
 
-                let serialized: Vec<u8> = match r#type {
-                    ExportType::Json => serde_json::to_vec_pretty(&schema_org::Recipe::from(
-                        recipe,
-                    ))
-                    .inspect_err(|err| {
-                        error!(?recipe_id, ?err, "Failed to serialize recipe");
-                    })?,
-                    ExportType::Markdown => match recipe.to_markdown(&base_url) {
-                        Ok(serialized) => serialized.into_bytes(),
-                        Err(err) => {
-                            warn!("Failed to write recipe '{recipe_id}' as markdown: {err}");
-                            continue;
-                        }
-                    },
-                    ExportType::Pdf => todo!(),
-                    ExportType::Text => match recipe.to_text(&base_url) {
-                        Ok(serialized) => serialized.into_bytes(),
-                        Err(err) => {
-                            warn!("Failed to write recipe '{recipe_id}' as text: {err}");
-                            continue;
-                        }
-                    },
+                let Ok(serialized) = self.serialize_recipe(recipe, &base_url).inspect_err(
+                    |err| warn!(%recipe_id, ?r#type, %err, "Failed to export recipe, skipping"),
+                ) else {
+                    continue;
                 };
 
-                zip.start_file(
-                    format!("{}/recipe.{}", idx + 1, r#type.extension()),
-                    options,
-                )?;
+                if self.is_archive_flat() {
+                    zip.start_file(
+                        format!("{}.{}", recipe.recipe.name, r#type.extension()),
+                        options,
+                    )?;
+                } else {
+                    zip.start_file(
+                        format!("{}/recipe.{}", idx + 1, r#type.extension()),
+                        options,
+                    )?;
+                }
+
                 zip.write_all(serialized.as_slice())?;
             }
 
@@ -188,5 +219,18 @@ impl ExportData {
             }
         }
         Ok(())
+    }
+
+    fn is_archive_flat(&self) -> bool {
+        self.r#type == ExportType::Pdf
+    }
+
+    fn serialize_recipe(&self, recipe: &RecipeDetails, base_url: &str) -> Result<Vec<u8>> {
+        Ok(match self.r#type {
+            ExportType::Json => serde_json::to_vec_pretty(&schema_org::Recipe::from(recipe))?,
+            ExportType::Markdown => recipe.to_markdown(base_url)?.into_bytes(),
+            ExportType::Pdf => recipe.to_pdf(&self.options)?,
+            ExportType::Text => recipe.to_text(base_url)?.into_bytes(),
+        })
     }
 }

@@ -7,7 +7,7 @@ use tempfile::TempDir;
 
 use models::{
     Recipe, RecipeDetails,
-    export::{ExportData, ExportType},
+    export::{ExportData, ExportOptions, ExportType},
     recipe::structs::{
         media::Video,
         nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
@@ -25,7 +25,15 @@ use crate::common::RUNTIME;
 fn main() {
     let dir = TempDir::new().unwrap();
     let path = RUNTIME
-        .block_on(ExportData::new(ExportType::Json, recipes(3), dir.path()).export())
+        .block_on(
+            ExportData::new(
+                ExportType::Json,
+                recipes(3),
+                dir.path(),
+                ExportOptions::default(),
+            )
+            .export(),
+        )
         .unwrap();
     assert!(path.exists());
 
@@ -61,7 +69,14 @@ fn run(bencher: Bencher, r#type: &ExportType, n: usize) {
 
     bencher
         .counter(ItemsCount::new(n))
-        .with_inputs(|| ExportData::new(r#type.clone(), base.clone(), images.path()))
+        .with_inputs(|| {
+            ExportData::new(
+                r#type.clone(),
+                base.clone(),
+                images.path(),
+                ExportOptions::default(),
+            )
+        })
         .bench_values(|data| RUNTIME.block_on(data.export()));
 }
 
@@ -97,7 +112,14 @@ fn export_with_images(bencher: Bencher, image_bytes: usize) {
 
     bencher
         .counter(ItemsCount::new(base.len()))
-        .with_inputs(|| ExportData::new(ExportType::Json, base.clone(), images.path()))
+        .with_inputs(|| {
+            ExportData::new(
+                ExportType::Json,
+                base.clone(),
+                images.path(),
+                ExportOptions::default(),
+            )
+        })
         .bench_values(|data| RUNTIME.block_on(data.export()));
 }
 
@@ -106,7 +128,14 @@ fn export_empty(bencher: Bencher) {
     let images = TempDir::new().unwrap();
 
     bencher
-        .with_inputs(|| ExportData::new(ExportType::Json, Vec::new(), images.path()))
+        .with_inputs(|| {
+            ExportData::new(
+                ExportType::Json,
+                Vec::new(),
+                images.path(),
+                ExportOptions::default(),
+            )
+        })
         .bench_values(|data| RUNTIME.block_on(data.export()));
 }
 

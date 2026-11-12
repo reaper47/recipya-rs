@@ -1,3 +1,6 @@
+mod commands;
+mod fonts;
+
 pub mod components;
-pub mod fonts;
+pub mod document;
 pub mod math;
