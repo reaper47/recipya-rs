@@ -442,7 +442,7 @@ mod tests_login {
         LoginForm {
             email: test_user_email(),
             password: test_user_password(),
-            remember_me: None,
+            remember_me: false,
         }
     }
 
@@ -556,7 +556,7 @@ mod tests_login {
             .form(&LoginForm {
                 email: test_user_email(),
                 password: test_user_password(),
-                remember_me: Some(true),
+                remember_me: true,
             })
             .await;
 
@@ -613,7 +613,7 @@ mod tests_login {
             .form(&LoginForm {
                 email: test_user_email(),
                 password: test_user_password(),
-                remember_me: Some(true),
+                remember_me: true,
             })
             .await;
 
@@ -758,7 +758,7 @@ mod tests_register {
             .form(&LoginForm {
                 email: form.email.clone(),
                 password: form.password.clone(),
-                remember_me: Some(false),
+                remember_me: false,
             })
             .await;
         let res = server.post(BASE_URI).form(&form).await;

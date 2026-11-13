@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use validator::Validate;
 
 use auth::types::{Email, Password};
@@ -30,14 +30,8 @@ pub struct ForgotPasswordResetForm {
 pub struct LoginForm {
     pub email: Email,
     pub password: Password,
-    pub remember_me: Option<bool>,
-}
-
-impl LoginForm {
-    /// Returns whether the user has opted to be remembered across sessions.
-    pub fn is_remember_me(&self) -> bool {
-        self.remember_me.unwrap_or(false)
-    }
+    #[serde(default, rename = "remember-me", deserialize_with = "checkbox")]
+    pub remember_me: bool,
 }
 
 #[derive(Validate, Deserialize, Serialize)]
@@ -57,4 +51,12 @@ impl RegisterForm {
             password_clear: self.password.clone(),
         }
     }
+}
+
+fn checkbox<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Option::<String>::deserialize(deserializer)?;
+    Ok(matches!(value.as_deref(), Some("on" | "true" | "1")))
 }

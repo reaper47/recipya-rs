@@ -109,7 +109,6 @@ pub fn parse_args() -> std::result::Result<Args, lexopt::Error> {
                 }
             },
             _ => {
-                dbg!(&arg);
                 return Err(arg.unexpected());
             }
         }
