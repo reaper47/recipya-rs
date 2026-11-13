@@ -1,4 +1,4 @@
-use time::Duration;
+use time::{Duration, OffsetDateTime};
 use tower_cookies::{Cookie, Cookies, cookie::SameSite};
 
 pub use super::Result;
@@ -24,7 +24,7 @@ pub fn set_auth_cookies(
 fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production: bool) {
     let mut cookie = Cookie::new(AUTH_TOKEN, token_value);
     cookie.set_http_only(true);
-    cookie.set_same_site(SameSite::Strict);
+    cookie.set_same_site(SameSite::Lax);
     cookie.set_path("/");
     cookie.set_max_age(Duration::minutes(15));
 
@@ -43,11 +43,14 @@ fn set_refresh_token_cookie(
 ) {
     let mut cookie = Cookie::new(REFRESH_TOKEN, token_value);
     cookie.set_http_only(true);
-    cookie.set_same_site(SameSite::Strict);
+    cookie.set_same_site(SameSite::Lax);
     cookie.set_path("/");
 
     if remember_me {
-        cookie.set_max_age(Duration::days(30));
+        const ONE_MONTH: Duration = Duration::days(30);
+        let expires = OffsetDateTime::now_utc() + ONE_MONTH;
+        cookie.set_expires(expires);
+        cookie.set_max_age(ONE_MONTH);
     }
 
     if is_production {

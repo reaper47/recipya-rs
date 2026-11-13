@@ -310,8 +310,8 @@ pub async fn login_handler(
     }
 }
 
-#[axum::debug_handler]
 /// Handles user login requests.
+#[allow(clippy::too_many_lines)]
 pub async fn login_post_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
@@ -395,9 +395,17 @@ pub async fn login_post_handler(
         }
     };
 
+    let remember_me = form.remember_me;
+
+    if user.is_remember_me != remember_me
+        && let Err(err) = User::update_remember_me(&state.mm, user.id, remember_me).await
+    {
+        error!(user = ?user.id, ?err, "Could not persist remember_me choice");
+    }
+
     let refresh_token_entry = match RefreshToken::new(
         &state.mm,
-        RefreshTokenForCreate::new(user.id, user.is_remember_me),
+        RefreshTokenForCreate::new(user.id, remember_me),
     )
     .await
     {
@@ -415,7 +423,7 @@ pub async fn login_post_handler(
         &cookies,
         access_token,
         refresh_token_entry.token,
-        form.is_remember_me(),
+        remember_me,
         state.config.read().await.states.production == ProductionState::On,
     );
 

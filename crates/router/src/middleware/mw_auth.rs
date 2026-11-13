@@ -8,20 +8,20 @@ use axum::http::request::Parts;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum_extra::extract::CookieJar;
-use config::{AutologinState, ProductionState};
-use email::{Email, Template};
-use models::tokens::{RefreshToken, RefreshTokenForCreate};
 use reqwest::{StatusCode, header};
 use serde_json::json;
+use tower_cookies::Cookies;
+use tracing::{Instrument, Span, error};
+use uuid::Uuid;
 
 use app::state::AppState;
 use auth::token::generate_access_token;
 use auth::token::http::{AUTH_TOKEN, REFRESH_TOKEN, clear_auth_cookies, set_auth_cookies};
 use auth::token::jwt::validate_token;
+use config::{AutologinState, ProductionState};
+use email::{Email, Template};
+use models::tokens::{RefreshToken, RefreshTokenForCreate};
 use models::user::User;
-use tower_cookies::Cookies;
-use tracing::{Instrument, Span, error};
-use uuid::Uuid;
 
 use crate::{Error, Result};
 
