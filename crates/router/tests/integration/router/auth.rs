@@ -592,7 +592,7 @@ mod tests_login {
             .form(&LoginForm {
                 email: Email::try_from("hello@example.com").unwrap(),
                 password: Password::try_from("123456789").unwrap(),
-                remember_me: None,
+                remember_me: false,
             })
             .await;
 

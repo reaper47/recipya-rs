@@ -310,8 +310,8 @@ pub async fn login_handler(
     }
 }
 
-#[axum::debug_handler]
 /// Handles user login requests.
+#[allow(clippy::too_many_lines)]
 pub async fn login_post_handler(
     RequestLanguage(messages): RequestLanguage<Messages>,
     State(state): State<AppState>,
