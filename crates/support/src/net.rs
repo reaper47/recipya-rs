@@ -6,32 +6,43 @@ use std::{
 
 use derive_more::From;
 use itertools::Itertools;
-use reqwest::{
+use tokio::net::lookup_host;
+use tracing::error;
+use url::{Host, Url};
+use wreq::{
     Response,
     dns::{Addrs, Resolve, Resolving},
     redirect::Policy,
 };
-use tokio::net::lookup_host;
-use tracing::error;
-use url::{Host, Url};
+use wreq_util::Emulation;
 
-use crate::impl_display_as_debug;
+use crate::{impl_display_as_debug, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
 
 /// Wrapper around an HTTP client that is safe against Server Side Request Forgery (SSRF) attacks.
 //
 // AI usage: Most of the solution has been proposed by Claude Sonnet 5.
-pub struct SsrfSafeClient(reqwest::Client);
+pub struct SsrfSafeClient(wreq::Client);
 
 impl SsrfSafeClient {
     /// Creates a new HTTP client that is safe against Server Side Request Forgery (SSRF) attacks.
     pub fn new() -> Result<Self> {
-        let client = reqwest::Client::builder()
+        let client = wreq::Client::builder()
+            .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
+            .emulation(Emulation::Chrome145)
             .dns_resolver(Arc::new(SSrfSafeResolver))
             .redirect(Policy::custom(|attempt| {
-                if attempt.previous().len() > 10 {
+                if attempt.previous.len() > 10 {
                     return attempt.error("stopped after 10 redirects");
                 }
-                match validate_ip(attempt.url()) {
+
+                let url = match Url::parse(&attempt.uri.to_string()) {
+                    Ok(url) => url,
+                    Err(err) => {
+                        return attempt.error(err.to_string());
+                    }
+                };
+
+                match validate_ip(&url) {
                     Ok(()) => attempt.follow(),
                     Err(err) => attempt.error(err),
                 }
@@ -45,7 +56,7 @@ impl SsrfSafeClient {
 
     /// Convenience method to make a GET request to a URI.
     pub async fn get(&self, url: Url) -> Result<Response> {
-        let res = self.0.get(url).send().await?;
+        let res = self.0.get(url.to_string()).send().await?;
         Ok(res)
     }
 }
@@ -53,7 +64,7 @@ impl SsrfSafeClient {
 struct SSrfSafeResolver;
 
 impl Resolve for SSrfSafeResolver {
-    fn resolve(&self, name: reqwest::dns::Name) -> Resolving {
+    fn resolve(&self, name: wreq::dns::Name) -> Resolving {
         Box::pin(async move {
             let addrs = lookup_host((name.as_str(), 0)).await?.collect_vec();
 
@@ -138,7 +149,7 @@ pub enum Error {
     SsrfValidation,
 
     #[from]
-    Reqwest(reqwest::Error),
+    Reqwest(wreq::Error),
 }
 
 impl_display_as_debug!(Error);
