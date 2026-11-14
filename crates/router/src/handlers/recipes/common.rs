@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use futures_util::{StreamExt, future::join_all, stream};
 use tracing::{Instrument, Span, error, info, warn};
+use url::Url;
 use uuid::Uuid;
 
 use app::message::ToastCtx;
@@ -20,8 +21,8 @@ use models::{
     time::FormattedTimes,
     user::User,
 };
-use support::fs::FsSupport;
 use support::states::AuthenticatedState;
+use support::{fs::FsSupport, net::validate_ip};
 
 use crate::{Error, Result};
 
@@ -151,15 +152,15 @@ async fn extract_images(
             async move {
                 let path = if image_ref.starts_with("http://") || image_ref.starts_with("https://")
                 {
+                    validate_ip(&Url::parse(&image_ref).ok()?).ok()?;
+
                     state
                         .scraper
-                        .fetch_and_upload_to_temp(image_ref.as_str())
+                        .fetch_and_upload_to_temp(&image_ref)
                         .await
                         .ok()?
                 } else {
-                    let normalized = image_ref
-                        .strip_prefix("file://")
-                        .unwrap_or(image_ref.as_str());
+                    let normalized = image_ref.strip_prefix("file://").unwrap_or(&image_ref);
                     let local_path = PathBuf::from(normalized);
 
                     if !local_path.exists() {
@@ -171,10 +172,7 @@ async fn extract_images(
                 };
 
                 let file_name = Uuid::new_v4();
-
                 fs_support.upload_image(&path, file_name, &state.data_dir.images.root);
-
-                let thumbnails_dir = state.data_dir.images.thumbnails.clone();
 
                 let res =
                     if fs_support.is_file_exists(file_name, &state.data_dir.images.root, ".webp") {
@@ -183,6 +181,7 @@ async fn extract_images(
                         None
                     };
 
+                let thumbnails_dir = state.data_dir.images.thumbnails.clone();
                 let fs_support = Arc::clone(&state.fs_support);
                 tokio::spawn(
                     async move {
@@ -226,7 +225,13 @@ async fn extract_videos(
         .collect::<Vec<_>>();
 
     let futures = urls.iter().map(|(url, _content_url, _embed_url)| {
-        state.scraper.fetch_and_upload_to_temp(url.as_str())
+        let url = (*url).clone();
+
+        async move {
+            let parsed_url = Url::parse(&url).ok()?;
+            validate_ip(&parsed_url).ok()?;
+            state.scraper.fetch_and_upload_to_temp(&url).await.ok()
+        }
     });
 
     let results = join_all(futures).await;
@@ -236,7 +241,7 @@ async fn extract_videos(
             let fs_support = fs_support.clone();
 
             async move {
-                let path = res.ok()?;
+                let path = res?;
                 let file_name = Uuid::new_v4();
 
                 fs_support

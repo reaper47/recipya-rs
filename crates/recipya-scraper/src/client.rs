@@ -3,12 +3,11 @@ use std::io::Read;
 use async_trait::async_trait;
 use axum::body::Bytes;
 use flate2::read::GzDecoder;
+use support::net::SsrfSafeClient;
 use tracing::error;
-use wreq::header::LOCATION;
-use wreq_util::Emulation;
+use url::Url;
 
-use support::time::DEFAULT_HTTP_CONNECTION_TIMEOUT;
-
+use crate::error::fetch_err;
 use crate::websites::Website;
 use crate::{ENABLE_JS, Error, FORBIDDEN, Result};
 
@@ -24,17 +23,13 @@ pub trait HttpClient {
 
 /// A wrapper around `reqwest::Client` for making HTTP requests.
 pub struct AppHttpClient {
-    client: wreq::Client,
+    client: SsrfSafeClient,
 }
 
 impl Default for AppHttpClient {
     fn default() -> Self {
         Self {
-            client: wreq::Client::builder()
-                .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
-                .emulation(Emulation::Chrome145)
-                .build()
-                .expect("wreq client to be initialized"),
+            client: SsrfSafeClient::new().expect("wreq client to be initialized"),
         }
     }
 }
@@ -53,32 +48,51 @@ impl HttpClient for AppHttpClient {
             _ => url,
         };
 
-        let res = self.client.get(url).send().await?;
+        let parsed_url = Url::parse(url)?;
+        let res = self
+            .client
+            .get(parsed_url.clone())
+            .await
+            .map_err(fetch_err)?;
 
         if !res.status().is_success() {
             let status = res.status();
-            let bytes = res.bytes().await?;
+            let bytes = res.bytes().await.map_err(fetch_err)?;
             error!(?url, ?status, body = ?bytes, "Failed to scrape");
             return Err(Error::Fetch(format!("HTTP error: {status}")));
         }
 
-        let bytes_vec = res.bytes().await?.to_vec();
+        let bytes_vec = res.bytes().await.map_err(fetch_err)?.to_vec();
 
         let text = {
             let initial = String::from_utf8_lossy(&bytes_vec);
 
             if initial.contains(ENABLE_JS) || initial.contains(FORBIDDEN) {
-                let res = self.client.get(url).send().await?;
-                if res.status().is_redirection() {
-                    let location = res
-                        .headers()
-                        .get(LOCATION)
-                        .and_then(|v| v.to_str().ok())
-                        .unwrap_or("");
+                let res = self
+                    .client
+                    .get(parsed_url.clone())
+                    .await
+                    .map_err(fetch_err)?;
 
-                    self.client.get(location).send().await?.text().await?
+                if res.status().is_redirection() {
+                    let Some(location) = res
+                        .headers()
+                        .get("location")
+                        .and_then(|v| v.to_str().ok())
+                        .and_then(|s| parsed_url.join(s).ok())
+                    else {
+                        return Err(Error::InvalidUrl);
+                    };
+
+                    self.client
+                        .get(location)
+                        .await
+                        .map_err(fetch_err)?
+                        .text()
+                        .await
+                        .map_err(fetch_err)?
                 } else {
-                    res.text().await?
+                    res.text().await.map_err(fetch_err)?
                 }
             } else {
                 initial.into_owned()
@@ -97,8 +111,9 @@ impl HttpClient for AppHttpClient {
     }
 
     async fn get_bytes(&self, url: &str) -> Result<Bytes> {
-        let res = self.client.get(url).send().await?;
-        let body = res.bytes().await?;
+        let parsed_url = Url::parse(url)?;
+        let res = self.client.get(parsed_url).await.map_err(fetch_err)?;
+        let body = res.bytes().await.map_err(fetch_err)?;
         Ok(body)
     }
 }

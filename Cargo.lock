@@ -5061,8 +5061,6 @@ dependencies = [
  "tracing-test",
  "unicode-normalization",
  "url",
- "wreq",
- "wreq-util",
 ]
 
 [[package]]
@@ -6170,7 +6168,6 @@ dependencies = [
  "rapidfuzz",
  "rayon",
  "regex",
- "reqwest",
  "time",
  "tokio",
  "tracing",
@@ -6179,6 +6176,8 @@ dependencies = [
  "webp",
  "whatlang",
  "winnow 1.0.4",
+ "wreq",
+ "wreq-util",
 ]
 
 [[package]]
@@ -7735,15 +7734,15 @@ dependencies = [
 
 [[package]]
 name = "wreq-util"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "833a5528fd9346f1f61a351104878be96024b5905f39774fc66909502da3acd5"
+checksum = "636ad931b75aa030cc320899507ce8d5e44f1d9b3b44a81d2e1a225b0d4aad3b"
 dependencies = [
  "brotli",
  "flate2",
  "typed-builder",
  "wreq",
- "zstd 0.13.3",
+ "zstd 0.14.3",
 ]
 
 [[package]]
@@ -7992,15 +7991,6 @@ dependencies = [
 
 [[package]]
 name = "zstd"
-version = "0.13.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
-dependencies = [
- "zstd-safe 7.3.0",
-]
-
-[[package]]
-name = "zstd"
 version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db3ae9bf90af6e40197bef767eeefc46ad6397420fe873830bd85e5fbbfb3c70"
@@ -8015,15 +8005,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d2a5585e04f9eea4b2a3d1eca508c4dee9592a89ef6f450c11719da0726f4db"
 dependencies = [
  "libc",
- "zstd-sys",
-]
-
-[[package]]
-name = "zstd-safe"
-version = "7.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64d80649ab6db9d9f6f9c80a40becd948eda4714a0a5ac8c4d157a32231c7882"
-dependencies = [
  "zstd-sys",
 ]
 
