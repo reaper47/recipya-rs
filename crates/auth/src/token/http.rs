@@ -14,11 +14,18 @@ pub fn set_auth_cookies(
     cookies: &Cookies,
     access_token: String,
     refresh_token: String,
+    refresh_expires_at: OffsetDateTime,
     remember_me: bool,
     is_production: bool,
 ) {
     set_access_token_cookie(cookies, access_token, is_production);
-    set_refresh_token_cookie(cookies, refresh_token, remember_me, is_production);
+    set_refresh_token_cookie(
+        cookies,
+        refresh_token,
+        refresh_expires_at,
+        remember_me,
+        is_production,
+    );
 }
 
 fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production: bool) {
@@ -38,6 +45,7 @@ fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production
 fn set_refresh_token_cookie(
     cookies: &Cookies,
     token_value: String,
+    expires_at: OffsetDateTime,
     remember_me: bool,
     is_production: bool,
 ) {
@@ -47,10 +55,13 @@ fn set_refresh_token_cookie(
     cookie.set_path("/");
 
     if remember_me {
-        const ONE_MONTH: Duration = Duration::days(30);
-        let expires = OffsetDateTime::now_utc() + ONE_MONTH;
-        cookie.set_expires(expires);
-        cookie.set_max_age(ONE_MONTH);
+        let remaining_time = expires_at - OffsetDateTime::now_utc();
+        if remaining_time.is_positive() {
+            cookie.set_expires(expires_at);
+            cookie.set_max_age(remaining_time);
+        } else {
+            cookie.set_max_age(Duration::ZERO);
+        }
     }
 
     if is_production {

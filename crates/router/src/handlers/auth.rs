@@ -423,6 +423,7 @@ pub async fn login_post_handler(
         &cookies,
         access_token,
         refresh_token_entry.token,
+        refresh_token_entry.expires_at,
         remember_me,
         state.config.read().await.states.production == ProductionState::On,
     );

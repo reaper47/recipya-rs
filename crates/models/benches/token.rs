@@ -55,6 +55,7 @@ static SEEDED: LazyLock<Seeded> = LazyLock::new(|| {
                 user_id: user.id,
                 is_remember_me: false,
                 token: A_REFRESH_TOKEN.into(),
+                expires_at: OffsetDateTime::now_utc(),
             },
         )
         .await
@@ -206,9 +207,9 @@ mod find_by_token {
 #[divan::bench_group]
 mod new {
     use super::{
-        Bencher, EmailVerificationToken, EmailVerificationTokenForCreate, PasswordResetToken,
-        PasswordResetTokenForCreate, RUNTIME, RefreshToken, RefreshTokenForCreate, SEEDED,
-        in_one_day, unique_token,
+        Bencher, EmailVerificationToken, EmailVerificationTokenForCreate, OffsetDateTime,
+        PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
+        RefreshTokenForCreate, SEEDED, in_one_day, unique_token,
     };
 
     #[divan::bench]
@@ -248,6 +249,7 @@ mod new {
                 user_id: s.user.id,
                 token: unique_token(),
                 is_remember_me: false,
+                expires_at: OffsetDateTime::now_utc(),
             })
             .bench_values(|token| RUNTIME.block_on(RefreshToken::new(&s.state.mm, token)));
     }
@@ -257,7 +259,7 @@ mod new {
 mod delete {
     use super::{
         A_MISSING_TOKEN, Bencher, EmailVerificationToken, EmailVerificationTokenForCreate,
-        PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
+        OffsetDateTime, PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
         RefreshTokenForCreate, SEEDED, in_one_day, unique_token,
     };
 
@@ -320,6 +322,7 @@ mod delete {
                             user_id: s.user.id,
                             token: unique_token(),
                             is_remember_me: false,
+                            expires_at: OffsetDateTime::now_utc(),
                         },
                     ))
                     .unwrap()
@@ -340,8 +343,9 @@ mod delete {
 #[divan::bench_group]
 mod delete_all_for_user {
     use super::{
-        Bencher, PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
-        RefreshTokenForCreate, SEEDED, Uuid, in_one_day, insert_other_user, unique_token,
+        Bencher, OffsetDateTime, PasswordResetToken, PasswordResetTokenForCreate, RUNTIME,
+        RefreshToken, RefreshTokenForCreate, SEEDED, Uuid, in_one_day, insert_other_user,
+        unique_token,
     };
 
     #[divan::bench]
@@ -395,6 +399,7 @@ mod delete_all_for_user {
                                 user_id: user.id,
                                 token: unique_token(),
                                 is_remember_me: false,
+                                expires_at: OffsetDateTime::now_utc(),
                             },
                         )
                         .await

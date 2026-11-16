@@ -194,15 +194,33 @@ pub struct RefreshTokenForCreate {
     pub user_id: Uuid,
     pub is_remember_me: bool,
     pub token: String,
+    pub expires_at: OffsetDateTime,
 }
 
 impl RefreshTokenForCreate {
     /// Creates a refresh token for a user.
     pub fn new(user_id: Uuid, is_remember_me: bool) -> Self {
+        let ttl = if is_remember_me {
+            time::Duration::days(30)
+        } else {
+            time::Duration::ZERO
+        };
+
         Self {
             user_id,
             is_remember_me,
             token: generate_verification_token(),
+            expires_at: OffsetDateTime::now_utc() + ttl,
+        }
+    }
+
+    /// Creates a refresh token for a user with an expiry date.
+    pub fn with_expiry(user_id: Uuid, is_remember_me: bool, expires_at: OffsetDateTime) -> Self {
+        Self {
+            user_id,
+            is_remember_me,
+            token: generate_verification_token(),
+            expires_at,
         }
     }
 }

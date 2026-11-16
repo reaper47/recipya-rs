@@ -309,6 +309,7 @@ mod tests_refresh_token {
                 user_id: user.id,
                 is_remember_me: false,
                 token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc(),
             },
         )
         .await?;
@@ -318,6 +319,7 @@ mod tests_refresh_token {
                 user_id: user.id,
                 is_remember_me: false,
                 token: "test_token2".to_string(),
+                expires_at: OffsetDateTime::now_utc(),
             },
         )
         .await?;
@@ -341,6 +343,7 @@ mod tests_refresh_token {
                 user_id: user.id,
                 is_remember_me: false,
                 token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc(),
             },
         )
         .await?;
@@ -362,6 +365,7 @@ mod tests_refresh_token {
                 user_id: user.id,
                 is_remember_me: false,
                 token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc(),
             },
         )
         .await?;
@@ -394,6 +398,7 @@ mod tests_refresh_token {
                 user_id: user.id,
                 is_remember_me: false,
                 token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc(),
             },
         )
         .await?;
@@ -426,6 +431,7 @@ mod tests_refresh_token {
                 user_id: user.id,
                 is_remember_me: false,
                 token: "test_token".to_string(),
+                expires_at: OffsetDateTime::now_utc(),
             },
         )
         .await?;
@@ -434,6 +440,27 @@ mod tests_refresh_token {
 
         let got = RefreshToken::find_by_token(&state.mm, &created.token).await?;
         assert!(got.unwrap().is_used);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_with_expiry_ok() -> Result<()> {
+        let state = create_app_state(default_config()).await;
+        let user = insert_user(&state.mm).await?;
+        let now = OffsetDateTime::now_utc();
+        let expires_at =
+            (now + time::Duration::days(10)).replace_nanosecond(now.microsecond() * 1_000)?;
+        let created = RefreshToken::new(
+            &state.mm,
+            RefreshTokenForCreate::with_expiry(user.id, false, expires_at),
+        )
+        .await?;
+
+        let got = RefreshToken::find_by_token(&state.mm, &created.token)
+            .await?
+            .unwrap();
+
+        assert_eq!(got.expires_at, expires_at);
         Ok(())
     }
 }
