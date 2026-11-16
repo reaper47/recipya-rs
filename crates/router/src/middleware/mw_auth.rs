@@ -210,6 +210,7 @@ where
     User::get_user_by_id(&app_state.mm, user_id).await.ok()?
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn mw_refresh_token(
     State(state): State<AppState>,
     cookies: Cookies,
@@ -256,10 +257,10 @@ pub async fn mw_refresh_token(
         let user_id = refresh_token_entry.user_id;
 
         if refresh_token_entry.is_used {
-            error!("TOKEN REUSE DETECTED!");
-            error!(?token, "Token");
-            error!(?user_id, "User ID");
-            error!(used_at = ?refresh_token_entry.used_at, "Originally used at");
+            error!(
+                ?user_id,
+                "Refresh token already used. Continuing with fallback policy"
+            );
 
             if let Err(err) = RefreshToken::delete_all_for_user(&state.mm, user_id).await {
                 error!(?err, "Failed to delete all refresh tokens for user");
@@ -294,7 +295,11 @@ pub async fn mw_refresh_token(
 
         let new_refresh_token_entry = match RefreshToken::new(
             &state.mm,
-            RefreshTokenForCreate::new(user_id, refresh_token_entry.is_remember_me),
+            RefreshTokenForCreate::with_expiry(
+                user_id,
+                refresh_token_entry.is_remember_me,
+                refresh_token_entry.expires_at,
+            ),
         )
         .await
         {
@@ -319,6 +324,7 @@ pub async fn mw_refresh_token(
             &cookies,
             access_token,
             new_refresh_token_entry.token,
+            new_refresh_token_entry.expires_at,
             refresh_token_entry.is_remember_me,
             state.config.read().await.states.production == ProductionState::On,
         );
