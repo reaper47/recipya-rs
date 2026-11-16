@@ -14,7 +14,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use app::{message::ToastCtx, state::AppState};
-use config::{DemoState, ProductionState, States};
+use config::{DemoState, ProductionState};
 use l10n::Messages;
 use models::{
     Recipe,
@@ -114,10 +114,7 @@ pub async fn settings_handler(
         &Data {
             is_admin,
             is_authenticated: true,
-            states: States {
-                autologin: config.states.autologin,
-                ..Default::default()
-            },
+            states: config.states.clone(),
             is_hx_request,
             // TODO: Populate AboutData with good values.
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
