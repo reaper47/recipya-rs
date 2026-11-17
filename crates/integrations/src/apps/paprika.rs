@@ -4,19 +4,20 @@ use std::io::{Read, Write};
 use std::str::FromStr;
 
 use base64::Engine;
+use jiff::Span;
 use libpaprika::{Recipe, RecipeSet};
 use tracing::error;
 use url::Url;
 use uuid::Uuid;
 
-use schema_org::AggregateRating;
 use schema_org::field::{
     AggregateRatingRatingValueFieldEnum, RecipeDescriptionFieldEnum, RecipeImageFieldEnum,
     RecipeKeywordsFieldEnum, RecipeRecipeIngredientFieldEnum, RecipeRecipeInstructionsFieldEnum,
 };
+use schema_org::{AggregateRating, DurationOrText};
 
 use crate::Result;
-use crate::helpers::{ToRecipeSchema, seconds_to_duration, to_is_based_on, to_yield};
+use crate::helpers::{ToRecipeSchema, to_is_based_on, to_yield};
 
 /// Extracts the recipes from a paprikarecipes container.
 pub fn parse<R>(mut r: R) -> Result<Vec<schema_org::Recipe>>
@@ -62,8 +63,9 @@ impl ToRecipeSchema for Recipe {
         }))
         .collect();
 
-        let cook = humantime::parse_duration(&self.cook_time).unwrap_or_default();
-        let prep = humantime::parse_duration(&self.prep_time).unwrap_or_default();
+        let cook = self.cook_time.parse::<Span>().unwrap_or_default();
+        let prep = self.prep_time.parse::<Span>().unwrap_or_default();
+        let total = prep.checked_add(cook).unwrap_or_default();
 
         let url = Url::parse(&self.source_url)
             .ok()
@@ -117,7 +119,9 @@ impl ToRecipeSchema for Recipe {
                     ..Default::default()
                 }]
             },
-            cook_time: seconds_to_duration(i32::try_from(cook.as_secs()).unwrap_or_default()),
+            cook_time: Some(cook)
+                .filter(|d| !d.is_zero())
+                .map_or_default(|d| vec![DurationOrText::new_text(d.to_string())]),
             date_created: iso8601::Date::from_str(
                 self.created.split_whitespace().next().unwrap_or_default(),
             )
@@ -134,7 +138,9 @@ impl ToRecipeSchema for Recipe {
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
             name: vec![self.name.clone()],
-            prep_time: seconds_to_duration(i32::try_from(prep.as_secs()).unwrap_or_default()),
+            prep_time: Some(prep)
+                .filter(|d| !d.is_zero())
+                .map_or_default(|d| vec![DurationOrText::new_text(d.to_string())]),
             recipe_category: vec![category.unwrap_or_default()],
             recipe_ingredient: self
                 .ingredients
@@ -143,9 +149,9 @@ impl ToRecipeSchema for Recipe {
                 .collect(),
             recipe_instructions: instructions,
             recipe_yield: to_yield(self.servings.parse().unwrap_or(1)),
-            total_time: seconds_to_duration(
-                i32::try_from(prep.as_secs() + cook.as_secs()).unwrap_or_default(),
-            ),
+            total_time: Some(total)
+                .filter(|d| !d.is_zero())
+                .map_or_default(|d| vec![DurationOrText::new_text(d.to_string())]),
             url: vec![url],
             ..Default::default()
         }
@@ -154,6 +160,8 @@ impl ToRecipeSchema for Recipe {
 
 #[cfg(test)]
 mod tests {
+    use schema_org::DurationOrText;
+
     use super::*;
 
     type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -189,18 +197,16 @@ mod tests {
     }
 
     mod results {
-        use schema_org::DurationOrText;
-
         use super::*;
 
         pub fn example1() -> Vec<schema_org::Recipe> {
             vec![schema_org::Recipe {
-                cook_time: seconds_to_duration(3900),
+                cook_time: vec![DurationOrText::new_text("PT1H5M")],
                 date_created: vec!["2025-04-15".into()],
                 is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]"),
                 url: vec!["https://www.allrecipes.com/recipe/259353/black-eyed-pea-cornbread/".into()],
                 name: vec!["Black-Eyed Pea Cornbread".into()],
-                prep_time: seconds_to_duration(900),
+                prep_time: vec![DurationOrText::new_text("PT15M")],
                 recipe_category: vec!["Japanese".into()],
                 recipe_ingredient: vec![
                     RecipeRecipeIngredientFieldEnum::Text("cooking spray".into()),
@@ -228,10 +234,11 @@ mod tests {
                     RecipeRecipeInstructionsFieldEnum::new_section("Notes", vec!["Nothing special"])
                 ],
                 recipe_yield: to_yield(12),
-                total_time: vec![DurationOrText::Text("PT4800S".into())],
+                total_time: vec![DurationOrText::Text("PT1H20M".into())],
                 ..Default::default()
-            }, schema_org::Recipe {
-                cook_time: seconds_to_duration(2700),
+            },
+            schema_org::Recipe {
+                cook_time: vec![DurationOrText::new_text("PT45M")],
                 date_created: vec!["2025-04-15".into()],
                 description: vec![RecipeDescriptionFieldEnum::Text("A great recipe!".into())],
                 is_based_on: to_is_based_on("Allrecipes.com [Imported from Paprika]"),
@@ -242,7 +249,7 @@ mod tests {
                 ],
                 url: vec!["https://www.allrecipes.com/recipe/285611/loaded-mashed-potato-casserole/".into()],
                 name: vec!["Loaded Mashed Potato Casserole".into()],
-                prep_time: seconds_to_duration(1800),
+                prep_time: vec![DurationOrText::new_text("PT30M")],
                 recipe_category: vec!["Asian".into()],
                 recipe_ingredient: vec![
                     RecipeRecipeIngredientFieldEnum::Text("5 pounds potatoes, peeled and cubed".into()),
@@ -268,7 +275,7 @@ mod tests {
                     ]),
                 ],
                 recipe_yield: to_yield(16),
-                total_time: vec![DurationOrText::Text("PT4500S".into())],
+                total_time: vec![DurationOrText::Text("PT75M".into())],
                 ..Default::default()
             }]
         }

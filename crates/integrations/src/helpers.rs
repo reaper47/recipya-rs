@@ -5,6 +5,7 @@ use schema_org::field::{
 };
 use schema_org::{AtType, CreativeWork, DurationOrText, QuantitativeValue, Recipe, at_context};
 
+// TODO: Remove this function
 /// Converts seconds to a `DurationOrText` enum.
 pub fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
     format!("PT{secs}S")

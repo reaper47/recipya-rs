@@ -1,6 +1,7 @@
 use std::fmt::Write;
 
 use itertools::Itertools;
+use jiff::SignedDuration;
 use krilla::metadata::{DateTime, Metadata, PageLayout};
 use krilla::page::PageSettings;
 use pdf::math::FONT_SIZE_BODY_PT;
@@ -198,14 +199,14 @@ impl RecipeDetails {
 
         let metadata_start_y = doc.y();
         doc.push_metadata(vec![
-            (
-                "Prep:".to_string(),
-                humantime::format_duration(self.times.prep_seconds.into()).to_string(),
-            ),
-            (
-                "Cook:".to_string(),
-                humantime::format_duration(self.times.cook_seconds.into()).to_string(),
-            ),
+            ("Prep:".to_string(), {
+                let d = SignedDuration::from_secs(i64::from(self.times.prep_seconds));
+                format!("{d:#}")
+            }),
+            ("Cook:".to_string(), {
+                let d = SignedDuration::from_secs(i64::from(self.times.cook_seconds));
+                format!("{d:#}")
+            }),
             ("Yield:".to_string(), self.recipe.r#yield.to_string()),
         ]);
 

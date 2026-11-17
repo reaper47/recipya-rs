@@ -1,7 +1,7 @@
 use std::sync::Arc;
-use std::time::Duration;
 
 use fluent_static::Message;
+use jiff::SignedDuration;
 use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
 use models::recipe::structs::nutrition::{Nutrition, NutritionPerServingDetails};
@@ -1110,10 +1110,10 @@ fn render_instructions_list(instructions: &[Item], messages: &Messages) -> Marku
 }
 
 fn format_timer_label(seconds: i32, messages: &Messages) -> String {
-    let duration = Duration::from_secs(u64::from(seconds.unsigned_abs()));
+    let duration = SignedDuration::from_secs(i64::from(seconds));
 
     messages
-        .recipe_page_start_timer(humantime::format_duration(duration).to_string())
+        .recipe_page_start_timer(format!("{duration:#}"))
         .to_string()
 }
 

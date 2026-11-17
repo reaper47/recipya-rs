@@ -4,6 +4,8 @@ use std::str::FromStr;
 
 use iso8601::DateTime;
 use itertools::Itertools;
+use jiff::{Span, Unit};
+use num_traits::ToPrimitive;
 use serde::Deserialize;
 use tracing::error;
 use url::Url;
@@ -415,22 +417,8 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
     fn from(r: RecipeSageXMLRecipe) -> Self {
         let categories = r.labels.unwrap_or_default();
         let categories = categories.split_first();
-
-        let active_time_secs = match humantime::parse_duration(&r.active_time) {
-            Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
-            Err(err) => {
-                error!(?err, "Failed to parse prep time of a RecipeSage recipe");
-                15 * 60
-            }
-        };
-
-        let total_time_secs = match humantime::parse_duration(&r.total_time) {
-            Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
-            Err(err) => {
-                error!(?err, "Failed to total time of a RecipeSage recipe");
-                30 * 60
-            }
-        };
+        let active_time_secs = parse_secs(&r.active_time, "active time", 15 * 60);
+        let total_time_secs = parse_secs(&r.total_time, "total time", 30 * 60);
 
         let url = Url::parse(&r.url).ok();
 
@@ -490,6 +478,20 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
             recipe_yield: to_yield(extract_number(&r.r#yield).unwrap_or_default()),
             url: url.map_or_default(|u| vec![u.to_string()]),
             ..Default::default()
+        }
+    }
+}
+
+fn parse_secs(value: &str, field: &str, default_secs: i32) -> i32 {
+    match value.parse::<Span>() {
+        Ok(span) => span
+            .total(Unit::Second)
+            .ok()
+            .and_then(|secs| secs.round().to_i32())
+            .unwrap_or_default(),
+        Err(err) => {
+            error!(field, ?err, "Failed to time of a RecipeSage recipe");
+            default_secs
         }
     }
 }

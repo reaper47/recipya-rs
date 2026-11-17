@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use std::io::{BufRead, Read, Seek};
 use std::path::Path;
 
-use humantime::parse_duration;
 use itertools::Itertools;
+use jiff::Span;
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use tracing::error;
@@ -17,14 +17,14 @@ use schema_org::field::{
     RecipeVideoFieldEnum,
 };
 use schema_org::{
-    AggregateRating, AtType, Comment, Energy, Mass, NutritionInformation, Recipe, VideoObject,
-    at_context,
+    AggregateRating, AtType, Comment, DurationOrText, Energy, Mass, NutritionInformation, Recipe,
+    VideoObject, at_context,
 };
 use support::strings::extract_number;
 
 use super::helpers::{extract_archive_contents, update_recipe_image_paths};
 use crate::apps::helpers::Parsers;
-use crate::helpers::{seconds_to_duration, to_is_based_on, to_yield};
+use crate::helpers::{to_is_based_on, to_yield};
 use crate::{Error, Result};
 
 #[derive(Deserialize)]
@@ -178,17 +178,19 @@ impl From<CookmateRecipe<'_>> for Recipe {
             .into_iter()
             .filter(|c| *c > 0)
             .collect(),
-            cook_time: match parse_duration(&r.cooktime) {
-                Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
-                Err(err) => {
+            cook_time: r
+                .cooktime
+                .parse::<Span>()
+                .inspect_err(|err| {
                     error!(
                         cooktime = ?r.cooktime,
                         ?err,
                         "Failed to parse cook time of an AccuChef recipe",
                     );
-                    vec![]
-                }
-            },
+                })
+                .ok()
+                .filter(|d| !d.is_zero())
+                .map_or_default(|d| vec![DurationOrText::new_text(d.to_string())]),
             description: if r.description.is_empty() {
                 vec![]
             } else {
@@ -211,13 +213,19 @@ impl From<CookmateRecipe<'_>> for Recipe {
             } else {
                 vec![NutritionInformation::from(r.nutrition)]
             },
-            prep_time: match parse_duration(&r.preptime) {
-                Ok(d) => seconds_to_duration(i32::try_from(d.as_secs()).unwrap_or_default()),
-                Err(err) => {
-                    error!(preptime = ?r.preptime, ?err, "Failed to parse prep time of a CookMate XML recipe");
-                    vec![]
-                }
-            },
+            prep_time: r
+                .preptime
+                .parse::<Span>()
+                .inspect_err(|err| {
+                    error!(
+                        prep = ?r.preptime,
+                        ?err,
+                        "Failed to parse prep time of an AccuChef recipe",
+                    );
+                })
+                .ok()
+                .filter(|d| !d.is_zero())
+                .map_or_default(|d| vec![DurationOrText::new_text(d.to_string())]),
             recipe_category: categories.map_or_default(|(a, _b)| vec![a.to_string()]),
             recipe_ingredient: r
                 .ingredient
@@ -909,8 +917,8 @@ mod tests {
                             "Remove cake from the oven and let cool in pan on a wire rack for 10 minutes. Invert cake onto wire rack; remove pan and let cake cool completely before frosting. Enjoy!".into(),
                         ),
                     ],
-                    prep_time: vec![DurationOrText::Text("PT600S".into())],
-                    cook_time: vec![DurationOrText::Text("PT1800S".into())],
+                    prep_time: vec![DurationOrText::Text("PT10M".into())],
+                    cook_time: vec![DurationOrText::Text("PT30M".into())],
                     nutrition: vec![NutritionInformation {
                         calories: vec![Energy::new("209 kcal")],
                         carbohydrate_content: vec![Mass::new("29 g")],
@@ -1012,8 +1020,8 @@ mod tests {
                         ),
                     ],
                     recipe_category: vec!["Starter".into()],
-                    prep_time: vec![DurationOrText::Text("PT1200S".into())],
-                    cook_time: vec![DurationOrText::Text("PT1200S".into())],
+                    prep_time: vec![DurationOrText::Text("PT20M".into())],
+                    cook_time: vec![DurationOrText::Text("PT20M".into())],
                     nutrition: vec![NutritionInformation {
                         calories: vec![Energy::new("832 kcal")],
                         carbohydrate_content: vec![Mass::new("71 g")],
@@ -1076,8 +1084,8 @@ mod tests {
                 },
                 Recipe {
                     r#type: AtType::Recipe.to_opt(),
-                    prep_time: vec![DurationOrText::Text("PT900S".into())],
-                    cook_time: vec![DurationOrText::Text("PT900S".into())],
+                    prep_time: vec![DurationOrText::Text("PT15M".into())],
+                    cook_time: vec![DurationOrText::Text("PT15M".into())],
                     recipe_yield: to_yield(6),
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::Text("24 ounces dry fettuccine pasta".into()),

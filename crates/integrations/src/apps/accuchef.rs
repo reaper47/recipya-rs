@@ -1,7 +1,8 @@
 use std::io::{Cursor, Read, Seek};
 
-use humantime::parse_duration;
 use itertools::Itertools;
+use jiff::{Span, Unit};
+use num_traits::ToPrimitive;
 use scraper::{Html, Node, Selector};
 use tracing::{error, warn};
 use winnow::Result as WResult;
@@ -125,14 +126,14 @@ impl From<RecipeComponents<'_>> for AccuChefRecipe {
                     }
                     s.push('m');
 
-                    match parse_duration(&s) {
-                        Ok(d) => i32::try_from(d.as_secs())
-                            .inspect_err(|err| {
-                                error!(?d, ?err, "Failed to parse prep time of an AccuChef recipe");
-                            })
-                            .unwrap_or_default(),
+                    match s.parse::<Span>() {
+                        Ok(span) => span
+                            .total(Unit::Second)
+                            .ok()
+                            .and_then(|secs| secs.round().to_i32())
+                            .unwrap_or(15 * 60),
                         Err(err) => {
-                            error!(?err, "Failed to parse prep time of an AccuChef recipe");
+                            error!(?s, ?err, "Failed to parse prep time of an AccuChef recipe");
                             15 * 60
                         }
                     }
