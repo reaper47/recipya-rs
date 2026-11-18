@@ -21,7 +21,7 @@ mod tests_email_token {
             id: Uuid::new_v4(),
             user_id: Uuid::new_v4(),
             token: "test_token".to_string(),
-            expires_at: Timestamp::now() - SignedDuration::from_hours(1 * 24),
+            expires_at: Timestamp::now() - SignedDuration::from_hours(24),
             created_at: Timestamp::now(),
         };
 
@@ -35,7 +35,7 @@ mod tests_email_token {
         let token = EmailVerificationTokenForCreate {
             user_id: user.id,
             token: "test_token".to_string(),
-            expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+            expires_at: Timestamp::now() + SignedDuration::from_hours(24),
         };
 
         let got = EmailVerificationToken::new(&state.mm, token).await?;
@@ -62,7 +62,7 @@ mod tests_email_token {
             EmailVerificationTokenForCreate {
                 user_id: user.id,
                 token: "test_token".to_string(),
-                expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+                expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             },
         )
         .await?;
@@ -101,7 +101,7 @@ mod tests_email_token {
             EmailVerificationTokenForCreate {
                 user_id: user.id,
                 token: "test_token".to_string(),
-                expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+                expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             },
         )
         .await?;
@@ -146,7 +146,7 @@ mod tests_password_reset_token {
             id: Uuid::new_v4(),
             user_id: Uuid::new_v4(),
             token: "test_token".to_string(),
-            expires_at: Timestamp::now() - SignedDuration::from_hours(1 * 24),
+            expires_at: Timestamp::now() - SignedDuration::from_hours(24),
             created_at: Timestamp::now(),
         };
 
@@ -162,7 +162,7 @@ mod tests_password_reset_token {
             PasswordResetTokenForCreate {
                 user_id: user.id,
                 token: "test_token".to_string(),
-                expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+                expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             },
         )
         .await?;
@@ -171,7 +171,7 @@ mod tests_password_reset_token {
             PasswordResetTokenForCreate {
                 user_id: user.id,
                 token: "test_token2".to_string(),
-                expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+                expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             },
         )
         .await?;
@@ -194,7 +194,7 @@ mod tests_password_reset_token {
             PasswordResetTokenForCreate {
                 user_id: user.id,
                 token: "test_token".to_string(),
-                expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+                expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             },
         )
         .await?;
@@ -215,7 +215,7 @@ mod tests_password_reset_token {
             PasswordResetTokenForCreate {
                 user_id: user.id,
                 token: "test_token".to_string(),
-                expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+                expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             },
         )
         .await?;
@@ -256,7 +256,7 @@ mod tests_refresh_token {
             user_id: Uuid::new_v4(),
             is_remember_me: false,
             token: "test_token".to_string(),
-            expires_at: Timestamp::now() - SignedDuration::from_hours(1 * 24),
+            expires_at: Timestamp::now() - SignedDuration::from_hours(24),
             is_used: false,
             used_at: None,
             created_at: Timestamp::now(),
@@ -272,7 +272,7 @@ mod tests_refresh_token {
             user_id: Uuid::new_v4(),
             is_remember_me: false,
             token: "test_token".to_string(),
-            expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+            expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             is_used: false,
             used_at: None,
             created_at: Timestamp::now(),
@@ -288,7 +288,7 @@ mod tests_refresh_token {
             user_id: Uuid::new_v4(),
             is_remember_me: false,
             token: "test_token".to_string(),
-            expires_at: Timestamp::now() + SignedDuration::from_hours(1 * 24),
+            expires_at: Timestamp::now() + SignedDuration::from_hours(24),
             is_used: false,
             used_at: None,
             created_at: Timestamp::now(),
