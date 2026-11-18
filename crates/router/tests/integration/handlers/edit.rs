@@ -1,7 +1,7 @@
 use axum::http::HeaderValue;
 use axum_test::TestResponse;
+use jiff::ToSpan;
 use reqwest::Method;
-use time::Duration;
 use uuid::Uuid;
 
 use models::{
@@ -281,7 +281,7 @@ mod tests_put {
             rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: Uuid::new_v4(),
-                duration: Some(Duration::minutes(30)),
+                duration: Some(30.minutes()),
                 content_url: Some("https://www.youtube.com/watch?v=2".into()),
                 embed_url: Some("https://www.youtube.com/embed/embeded".into()),
             }],

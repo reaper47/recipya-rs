@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 
+use jiff::{Span, SpanRelativeTo};
 use repository::schema;
 
 use crate::{
@@ -40,34 +41,18 @@ impl Default for TimesForCreate {
 
 impl TimesForCreate {
     /// Creates a `TimesForCreate` from its individual components.
-    pub fn from_components(
-        prep: Option<iso8601::Duration>,
-        cook: Option<iso8601::Duration>,
-        total: Option<iso8601::Duration>,
-    ) -> Self {
-        let prep_seconds = prep.map_or_else(
-            || FIFTEEN_MINUTES_SEC.into(),
-            |d| {
-                let duration: std::time::Duration = d.into();
-                DurationSeconds::from(duration.as_secs())
-            },
-        );
+    pub fn from_components(prep: Option<Span>, cook: Option<Span>, total: Option<Span>) -> Self {
+        let prep_seconds = prep
+            .and_then(span_to_seconds)
+            .unwrap_or_else(|| FIFTEEN_MINUTES_SEC.into());
 
-        let cook_seconds = cook.map_or_else(
-            || THIRTY_MINUTES_SEC.into(),
-            |d| {
-                let duration: std::time::Duration = d.into();
-                DurationSeconds::from(duration.as_secs())
-            },
-        );
+        let cook_seconds = cook
+            .and_then(span_to_seconds)
+            .unwrap_or_else(|| THIRTY_MINUTES_SEC.into());
 
-        let total_seconds = total.map_or_else(
-            || (FIFTEEN_MINUTES_SEC + THIRTY_MINUTES_SEC).into(),
-            |d| {
-                let duration: std::time::Duration = d.into();
-                DurationSeconds::from(duration.as_secs())
-            },
-        );
+        let total_seconds = total
+            .and_then(span_to_seconds)
+            .unwrap_or_else(|| (FIFTEEN_MINUTES_SEC + THIRTY_MINUTES_SEC).into());
 
         let (prep_seconds, cook_seconds) = match total {
             Some(_) => {
@@ -87,6 +72,14 @@ impl TimesForCreate {
             cook_seconds,
         }
     }
+}
+
+fn span_to_seconds(span: Span) -> Option<DurationSeconds> {
+    let secs = span
+        .to_duration(SpanRelativeTo::days_are_24_hours())
+        .ok()?
+        .as_secs();
+    u64::try_from(secs).ok().map(DurationSeconds::from)
 }
 
 impl From<TimesForCreate> for Times {

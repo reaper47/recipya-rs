@@ -5,9 +5,9 @@ use axum::{
     response::IntoResponse,
 };
 use fluent_static::support::axum::RequestLanguage;
+use jiff::{Timestamp, tz::TimeZone};
 use l10n::Messages;
 use reqwest::StatusCode;
-use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 use uuid::Uuid;
 
@@ -102,7 +102,10 @@ pub async fn timeline_put_handler(
         comment: form.comment,
         rating: form.rating,
         image,
-        created_at: form.date.unwrap_or(PrimitiveDateTime::MIN),
+        created_at: form
+            .date
+            .and_then(|d| d.to_zoned_datetime(TimeZone::UTC).ok())
+            .map_or(Timestamp::MIN, |z| z.timestamp()),
     };
 
     let new_event = match RecipeTimeline::edit(&state.mm, user.id, &new_event_params).await {
@@ -166,9 +169,9 @@ pub async fn timeline_get_handler(
     let static_events = vec![Event {
         date: recipe
             .created_at
+            .to_zoned_datetime(TimeZone::UTC)
             .date()
-            .format(format_description!("[year]-[month]-[day]"))
-            .unwrap(),
+            .to_string(),
         title: "Recipe created".into(),
         ..Default::default()
     }];
@@ -198,7 +201,10 @@ pub async fn timeline_post_handler(
             comment: form.comment,
             rating: form.rating,
             image: upload_image(form.image, &Arc::clone(&state.fs_support), &state.data_dir),
-            created_at: form.date,
+            created_at: form
+                .date
+                .and_then(|d| d.to_zoned_datetime(TimeZone::UTC).ok())
+                .map(|z| z.timestamp()),
         },
     )
     .await

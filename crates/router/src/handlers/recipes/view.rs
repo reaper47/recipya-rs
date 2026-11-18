@@ -6,7 +6,7 @@ use axum::{
 };
 use axum_htmx::HxRequest;
 use fluent_static::support::axum::RequestLanguage;
-use iso8601::DateTime;
+use jiff::civil::DateTime;
 use tower_cookies::Cookies;
 use tracing::error;
 

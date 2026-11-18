@@ -1,4 +1,4 @@
-use time::Duration;
+use jiff::ToSpan;
 
 use models::{
     recipe::structs::{
@@ -35,7 +35,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
             rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: images.video,
-                duration: Some(Duration::minutes(7)),
+                duration: Some(7.minutes()),
                 content_url: Some("https://example.com/best-food.mp4".into()),
                 embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
             }],

@@ -1,6 +1,7 @@
 use diesel::dsl::count_star;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use jiff::tz::TimeZone;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -13,7 +14,6 @@ use repository::{ModelManager, schema};
 use crate::{
     Error, Recipe, Result,
     recipe::structs::recipe::{Category, Keyword},
-    types::Timezone,
 };
 
 /// Represents a user in the system.
@@ -374,11 +374,13 @@ impl User {
         Ok(())
     }
 
-    pub async fn update_timezone(&self, mm: &ModelManager, new_tz: &Timezone) -> Result<()> {
+    pub async fn update_timezone(&self, mm: &ModelManager, new_tz: &TimeZone) -> Result<()> {
         use schema::user_settings::dsl::{timezone, user_id, user_settings};
 
+        let name = new_tz.iana_name().unwrap_or("UTC");
+
         diesel::update(user_settings.filter(user_id.eq(self.id)))
-            .set(timezone.eq(new_tz.as_ref()))
+            .set(timezone.eq(name))
             .execute(&mut mm.pool.get().await?)
             .await?;
 

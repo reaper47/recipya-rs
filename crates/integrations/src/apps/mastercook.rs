@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 use std::io::{Read, Seek};
 
+use jiff::{Span, Unit};
+use num_traits::ToPrimitive;
 use support::strings::SplitFirstOwned;
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, line_ending, multispace0, multispace1, space0, space1};
@@ -436,7 +438,11 @@ fn parse_time(s: &str) -> i32 {
 
     let mut s = s.trim_end_matches('"').replacen(':', "h", 1);
     s.push('m');
-    i32::try_from(humantime::parse_duration(&s).unwrap_or_default().as_secs()).unwrap_or_default()
+    s.parse::<Span>()
+        .ok()
+        .and_then(|span| span.total(Unit::Second).ok())
+        .and_then(|secs| secs.to_i32())
+        .unwrap_or_default()
 }
 
 fn parse_nutrition_schema(s: &[&str]) -> Vec<NutritionInformation> {

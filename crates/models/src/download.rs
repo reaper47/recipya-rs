@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use time::PrimitiveDateTime;
+use jiff::Timestamp;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -24,7 +24,8 @@ pub struct Download {
     /// The path of the file associated with the download item.
     pub file_path: String,
     /// The timestamp when the download item was created.
-    pub created_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
 }
 
 /// Represents a download item for creation.

@@ -3,7 +3,8 @@ mod common;
 use std::sync::LazyLock;
 
 use divan::{Bencher, black_box};
-use time::OffsetDateTime;
+use jiff::Timestamp;
+use jiff::ToSpan;
 use uuid::Uuid;
 
 use models::tokens::{
@@ -55,7 +56,7 @@ static SEEDED: LazyLock<Seeded> = LazyLock::new(|| {
                 user_id: user.id,
                 is_remember_me: false,
                 token: A_REFRESH_TOKEN.into(),
-                expires_at: OffsetDateTime::now_utc(),
+                expires_at: Timestamp::now(),
             },
         )
         .await
@@ -65,8 +66,8 @@ static SEEDED: LazyLock<Seeded> = LazyLock::new(|| {
     })
 });
 
-fn in_one_day() -> OffsetDateTime {
-    OffsetDateTime::now_utc() + time::Duration::days(1)
+fn in_one_day() -> Timestamp {
+    Timestamp::now() + 1.days()
 }
 
 fn unique_token() -> String {
@@ -104,7 +105,7 @@ fn main() {
 #[divan::bench_group]
 mod expiry {
     use super::{
-        Bencher, EmailVerificationToken, OffsetDateTime, PasswordResetToken, RefreshToken, Uuid,
+        Bencher, EmailVerificationToken, PasswordResetToken, RefreshToken, Timestamp, ToSpan, Uuid,
         black_box, in_one_day,
     };
 
@@ -114,8 +115,8 @@ mod expiry {
             id: Uuid::new_v4(),
             user_id: Uuid::new_v4(),
             token: "token".into(),
-            expires_at: OffsetDateTime::now_utc() - time::Duration::days(1),
-            created_at: OffsetDateTime::now_utc(),
+            expires_at: Timestamp::now() - 1.days(),
+            created_at: Timestamp::now(),
         };
 
         bencher.bench_local(|| black_box(&token).is_expired());
@@ -127,8 +128,8 @@ mod expiry {
             id: Uuid::new_v4(),
             user_id: Uuid::new_v4(),
             token: "token".into(),
-            expires_at: OffsetDateTime::now_utc() - time::Duration::days(1),
-            created_at: OffsetDateTime::now_utc(),
+            expires_at: Timestamp::now() - 1.days(),
+            created_at: Timestamp::now(),
         };
 
         bencher.bench_local(|| black_box(&token).is_expired());
@@ -141,11 +142,11 @@ mod expiry {
             user_id: Uuid::new_v4(),
             token: "token".into(),
             expires_at: if expired {
-                OffsetDateTime::now_utc() - time::Duration::days(1)
+                Timestamp::now() - 1.days()
             } else {
                 in_one_day()
             },
-            created_at: OffsetDateTime::now_utc(),
+            created_at: Timestamp::now(),
             is_remember_me: false,
             is_used: false,
             used_at: None,
@@ -161,11 +162,11 @@ mod expiry {
             user_id: Uuid::new_v4(),
             token: "token".into(),
             expires_at: if expired {
-                OffsetDateTime::now_utc() - time::Duration::days(1)
+                Timestamp::now() - 1.days()
             } else {
                 in_one_day()
             },
-            created_at: OffsetDateTime::now_utc(),
+            created_at: Timestamp::now(),
             is_remember_me: false,
             is_used: false,
             used_at: None,
@@ -207,9 +208,9 @@ mod find_by_token {
 #[divan::bench_group]
 mod new {
     use super::{
-        Bencher, EmailVerificationToken, EmailVerificationTokenForCreate, OffsetDateTime,
-        PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
-        RefreshTokenForCreate, SEEDED, in_one_day, unique_token,
+        Bencher, EmailVerificationToken, EmailVerificationTokenForCreate, PasswordResetToken,
+        PasswordResetTokenForCreate, RUNTIME, RefreshToken, RefreshTokenForCreate, SEEDED,
+        Timestamp, in_one_day, unique_token,
     };
 
     #[divan::bench]
@@ -249,7 +250,7 @@ mod new {
                 user_id: s.user.id,
                 token: unique_token(),
                 is_remember_me: false,
-                expires_at: OffsetDateTime::now_utc(),
+                expires_at: Timestamp::now(),
             })
             .bench_values(|token| RUNTIME.block_on(RefreshToken::new(&s.state.mm, token)));
     }
@@ -259,8 +260,8 @@ mod new {
 mod delete {
     use super::{
         A_MISSING_TOKEN, Bencher, EmailVerificationToken, EmailVerificationTokenForCreate,
-        OffsetDateTime, PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
-        RefreshTokenForCreate, SEEDED, in_one_day, unique_token,
+        PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
+        RefreshTokenForCreate, SEEDED, Timestamp, in_one_day, unique_token,
     };
 
     #[divan::bench]
@@ -322,7 +323,7 @@ mod delete {
                             user_id: s.user.id,
                             token: unique_token(),
                             is_remember_me: false,
-                            expires_at: OffsetDateTime::now_utc(),
+                            expires_at: Timestamp::now(),
                         },
                     ))
                     .unwrap()
@@ -343,8 +344,8 @@ mod delete {
 #[divan::bench_group]
 mod delete_all_for_user {
     use super::{
-        Bencher, OffsetDateTime, PasswordResetToken, PasswordResetTokenForCreate, RUNTIME,
-        RefreshToken, RefreshTokenForCreate, SEEDED, Uuid, in_one_day, insert_other_user,
+        Bencher, PasswordResetToken, PasswordResetTokenForCreate, RUNTIME, RefreshToken,
+        RefreshTokenForCreate, SEEDED, Timestamp, Uuid, in_one_day, insert_other_user,
         unique_token,
     };
 
@@ -399,7 +400,7 @@ mod delete_all_for_user {
                                 user_id: user.id,
                                 token: unique_token(),
                                 is_remember_me: false,
-                                expires_at: OffsetDateTime::now_utc(),
+                                expires_at: Timestamp::now(),
                             },
                         )
                         .await

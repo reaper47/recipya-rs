@@ -1,6 +1,7 @@
 use std::{marker::PhantomData, path::PathBuf};
 
 use async_trait::async_trait;
+use jiff::Span;
 use reqwest::Client;
 use tracing::{error, info};
 
@@ -280,16 +281,10 @@ impl TandoorRecipeClient {
                 .collect(),
             cook_time: recipe.waiting_time.map_or_default(|num_minutes| {
                 vec![DurationOrText::Text(
-                    iso8601::Duration::YMDHMS {
-                        hour: (num_minutes / 60).cast_unsigned(),
-                        minute: (num_minutes % 60).cast_unsigned(),
-                        second: 0,
-                        millisecond: 0,
-                        day: 0,
-                        month: 0,
-                        year: 0,
-                    }
-                    .to_string(),
+                    Span::new()
+                        .hours(num_minutes / 60)
+                        .minutes(num_minutes % 60)
+                        .to_string(),
                 )]
             }),
             recipe_instructions: recipe
@@ -307,16 +302,10 @@ impl TandoorRecipeClient {
             recipe_category: category.map_or_default(|c| vec![c.name.clone()]),
             prep_time: recipe.working_time.map_or_default(|num_minutes| {
                 vec![DurationOrText::Text(
-                    iso8601::Duration::YMDHMS {
-                        hour: (num_minutes / 60).cast_unsigned(),
-                        minute: (num_minutes % 60).cast_unsigned(),
-                        second: 0,
-                        millisecond: 0,
-                        day: 0,
-                        month: 0,
-                        year: 0,
-                    }
-                    .to_string(),
+                    Span::new()
+                        .hours(num_minutes / 60)
+                        .minutes(num_minutes % 60)
+                        .to_string(),
                 )]
             }),
             date_created: vec![recipe.created_at.to_string()],

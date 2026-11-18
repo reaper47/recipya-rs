@@ -52,6 +52,7 @@ pub struct SectionItem {
 pub struct Item {
     pub id: Option<i64>,
     pub text: String,
+    // TODO Jiff: check if can use Duration
     pub duration_seconds: Option<i32>,
 }
 

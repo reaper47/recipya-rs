@@ -1,6 +1,6 @@
 use std::fmt;
 
-use iso8601::DateTime;
+use jiff::civil::DateTime;
 use schema_org::{Energy, Mass, NutritionInformation};
 use serde::{Deserialize, Serialize};
 

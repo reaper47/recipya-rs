@@ -16,8 +16,8 @@ build = "build.rs"
 [dependencies]
 config.workspace = true
 fluent-static.workspace = true
-humantime.workspace = true
 integrations.workspace = true
+jiff.workspace = true
 l10n.workspace = true
 markdown = "1.0.0"
 math.workspace = true
@@ -27,7 +27,6 @@ nutrition.workspace = true
 serde_json.workspace = true
 strum.workspace = true
 support.workspace = true
-time.workspace = true
 url.workspace = true
 uuid.workspace = true
 

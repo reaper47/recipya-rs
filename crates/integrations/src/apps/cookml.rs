@@ -1,11 +1,10 @@
 use std::borrow::Cow;
 use std::fmt::Display;
 use std::io::{Cursor, Read};
-use std::str::FromStr;
 
-use iso8601::{DateTime, Duration};
 use serde::Deserialize;
 use url::Url;
+use jiff::{civil::DateTime, Span};
 
 use schema_org::field::{
     AggregateRatingRatingValueFieldEnum, ItemListItemListElementFieldEnum, RecipeAuthorFieldEnum,
@@ -252,10 +251,30 @@ struct MRecipe<'a> {
 impl From<CookmlRecipe<'_>> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: CookmlRecipe) -> Self {
-        let created_date = DateTime::from_str(&r.head.createdate.unwrap_or_default()).ok();
-        let changed_date = DateTime::from_str(&r.head.changedate.unwrap_or_default()).ok();
-        let prep_time = Duration::from_str(&r.head.timeprepqty.unwrap_or_default()).ok();
-        let cook_time = Duration::from_str(&r.head.timecookqty.unwrap_or_default()).ok();
+        let created_date = r
+                .head
+                .createdate
+                .as_deref()
+                .and_then(|s| s.parse::<DateTime>().ok());
+
+            let changed_date = r
+                .head
+                .changedate
+                .as_deref()
+                .and_then(|s| s.parse::<DateTime>().ok());
+
+            let prep_time = r
+                .head
+                .timeprepqty
+                .as_deref()
+                .and_then(|s| s.parse::<Span>().ok());
+
+            let cook_time = r
+                .head
+                .timecookqty
+                .as_deref()
+                .and_then(|s| s.parse::<Span>().ok());
+
         let quality = extract_number(&r.head.quality.unwrap_or_default()).ok();
         let hints = r.head.hint.unwrap_or_default();
         let (category, keywords) = hints.split_first_owned();
@@ -294,8 +313,8 @@ impl From<CookmlRecipe<'_>> for Recipe {
             }),
             author: r.head.createuser.map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(&s)]),
             cook_time: cook_time.map_or_default(|c| vec![DurationOrText::Text(c.to_string())]),
-            date_created: created_date.map_or_default(|d| vec![d.date.to_string()]),
-            date_modified: changed_date.map_or_default(|d| vec![d.date.to_string()]),
+            date_created: created_date.map_or_default(|d| vec![d.date().to_string()]),
+            date_modified: changed_date.map_or_default(|d| vec![d.date().to_string()]),
             estimated_cost: r
                 .head
                 .costs

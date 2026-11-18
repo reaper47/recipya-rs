@@ -3,6 +3,7 @@ mod common;
 use std::{fs, path::Path};
 
 use divan::{Bencher, black_box, counter::ItemsCount};
+use jiff::{Timestamp, ToSpan};
 use tempfile::TempDir;
 
 use models::{
@@ -18,7 +19,6 @@ use models::{
     types::{DurationSeconds, Rating, RecipeYield, Source},
 };
 use test_fixtures::RecipeImages;
-use time::Duration;
 
 use crate::common::RUNTIME;
 
@@ -163,8 +163,8 @@ fn a_complete_recipe_details() -> RecipeDetails {
             ),
             is_favourite: false,
             rating: Rating::from(4),
-            created_at: time::macros::datetime!(2023-01-01 00:00),
-            updated_at: time::macros::datetime!(2023-01-01 00:00),
+            created_at: Timestamp::constant(1_672_531_200, 0),
+            updated_at: Timestamp::constant(1_672_531_200, 0),
             user_id: uuid::Uuid::nil(),
         },
         additional_images: vec![images.additional],
@@ -254,10 +254,10 @@ fn a_complete_recipe_details() -> RecipeDetails {
         ],
         videos: vec![Video {
             video: images.video,
-            duration: Some(Duration::minutes(7)),
+            duration: Some(7.minutes()),
             content_url: Some("https://example.com/best-food.mp4".into()),
             embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
-            created_at: time::macros::datetime!(2023-01-01 00:00),
+            created_at: Timestamp::constant(1_672_531_200, 0),
         }],
     }
 }

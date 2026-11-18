@@ -1,6 +1,6 @@
+use jiff::tz::TimeZone;
 use maud::{Markup, PreEscaped, html};
 use models::types::Rating;
-use time::macros::format_description;
 
 use l10n::Messages;
 use models::recipe::timeline::RecipeTimeline;
@@ -25,9 +25,9 @@ impl From<RecipeTimeline> for Event {
             id: value.id,
             date: value
                 .created_at
+                .to_zoned_datetime(TimeZone::UTC)
                 .date()
-                .format(format_description!("[year]-[month]-[day]"))
-                .expect("valid date format"),
+                .to_string(),
             title: value.title,
             image: value
                 .image
@@ -222,10 +222,9 @@ pub fn render_edit(
     let event_id = event.id;
     let local_time = event
         .created_at
-        .format(format_description!(
-            "[year]-[month]-[day]T[hour]:[minute]:[second]"
-        ))
-        .unwrap();
+        .to_zoned_datetime(TimeZone::UTC)
+        .strftime("%Y-%m-%dT%H:%M:%S")
+        .to_string();
     let timeline_id = format!("timeline-event-{event_id}");
     let form_id = format!("{timeline_id}-edit");
     let date_id = format!("event-date-{event_id}");

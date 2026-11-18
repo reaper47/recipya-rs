@@ -1,5 +1,5 @@
-use time::{Duration, OffsetDateTime};
-use tower_cookies::{Cookie, Cookies, cookie::SameSite};
+use jiff::Timestamp;
+use tower_cookies::{Cookie, Cookies, cookie::SameSite, cookie::time::SignedDuration};
 
 pub use super::Result;
 
@@ -14,7 +14,7 @@ pub fn set_auth_cookies(
     cookies: &Cookies,
     access_token: String,
     refresh_token: String,
-    refresh_expires_at: OffsetDateTime,
+    refresh_expires_at: Timestamp,
     remember_me: bool,
     is_production: bool,
 ) {
@@ -33,7 +33,7 @@ fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production
     cookie.set_http_only(true);
     cookie.set_same_site(SameSite::Lax);
     cookie.set_path("/");
-    cookie.set_max_age(Duration::minutes(15));
+    cookie.set_max_age(SignedDuration::minutes(15));
 
     if is_production {
         cookie.set_secure(true);
@@ -45,7 +45,7 @@ fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production
 fn set_refresh_token_cookie(
     cookies: &Cookies,
     token_value: String,
-    expires_at: OffsetDateTime,
+    expires_at: Timestamp,
     remember_me: bool,
     is_production: bool,
 ) {
@@ -55,13 +55,8 @@ fn set_refresh_token_cookie(
     cookie.set_path("/");
 
     if remember_me {
-        let remaining_time = expires_at - OffsetDateTime::now_utc();
-        if remaining_time.is_positive() {
-            cookie.set_expires(expires_at);
-            cookie.set_max_age(remaining_time);
-        } else {
-            cookie.set_max_age(Duration::ZERO);
-        }
+        let remaining_time = expires_at.duration_since(Timestamp::now());
+        cookie.set_max_age(SignedDuration::seconds(remaining_time.as_secs().max(0)));
     }
 
     if is_production {

@@ -2,7 +2,7 @@ use std::assert_matches;
 
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
-use time::{Duration, OffsetDateTime};
+use jiff::Timestamp;
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -606,18 +606,21 @@ mod tests_share {
         pretty_assertions::assert_eq!(got.list_id, want.list_id);
         pretty_assertions::assert_eq!(got.click_count, want.click_count);
 
-        let diff = (got.created_at - want.created_at).whole_nanoseconds();
+        let diff = got.created_at.duration_since(want.created_at).as_nanos();
         assert!(diff.abs() <= 1000, "Created at");
 
-        let diff = (got.expires_at - want.expires_at).whole_nanoseconds();
+        let diff = got.expires_at.duration_since(want.expires_at).as_nanos();
         assert!(diff.abs() <= 1000, "Expires at");
 
-        let diff = (got.last_accessed - want.last_accessed).whole_nanoseconds();
+        let diff = got
+            .last_accessed
+            .duration_since(want.last_accessed)
+            .as_nanos();
         assert!(diff.abs() <= 1000, "Last accessed at");
     }
 
     mod tests_new {
-        use time::PrimitiveDateTime;
+        use jiff::SignedDuration;
 
         use super::*;
 
@@ -652,10 +655,7 @@ mod tests_share {
             let user_id = add_user(&state.mm).await?.id;
             insert_recipe(&state, user_id).await?;
             let list_id = ShoppingList::create(&state.mm, &a_list_name(), user_id).await?;
-            let expires_at = {
-                let dt = OffsetDateTime::now_utc() + Duration::days(14);
-                PrimitiveDateTime::new(dt.date(), dt.time())
-            };
+            let expires_at = Timestamp::now() + SignedDuration::from_hours(14 * 24);
 
             let got = ShareShoppingList::new(&state.mm, list_id, user_id, Some(expires_at)).await?;
 
@@ -724,8 +724,6 @@ mod tests_share {
 }
 
 mod tests_write {
-    use time::PrimitiveDateTime;
-
     use super::*;
 
     fn a_recipe() -> ShoppingListRecipeDetails {
@@ -743,21 +741,19 @@ mod tests_write {
     }
 
     fn a_list_with_no_items() -> ShoppingListDetails {
-        let now = OffsetDateTime::now_utc();
-        let primitive = PrimitiveDateTime::new(now.date(), now.time());
+        let now = Timestamp::now();
 
         ShoppingListDetails {
             id: Uuid::new_v4(),
             name: "Main Shopping List".into(),
             items: vec![],
-            created_at: primitive,
-            updated_at: primitive,
+            created_at: now,
+            updated_at: now,
         }
     }
 
     fn a_list_with_items_no_labels() -> ShoppingListDetails {
-        let now = OffsetDateTime::now_utc();
-        let primitive = PrimitiveDateTime::new(now.date(), now.time());
+        let now = Timestamp::now();
 
         ShoppingListDetails {
             id: Uuid::new_v4(),
@@ -773,8 +769,8 @@ mod tests_write {
                     position: 1,
                     recipe: None,
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
                 ShoppingListItemDetails {
                     id: 2,
@@ -786,8 +782,8 @@ mod tests_write {
                     position: 2,
                     recipe: Some(a_recipe()),
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
                 ShoppingListItemDetails {
                     id: 3,
@@ -799,18 +795,17 @@ mod tests_write {
                     position: 3,
                     recipe: Some(a_recipe()),
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
             ],
-            created_at: primitive,
-            updated_at: primitive,
+            created_at: now,
+            updated_at: now,
         }
     }
 
     fn a_list_with_mix_labels() -> ShoppingListDetails {
-        let now = OffsetDateTime::now_utc();
-        let primitive = PrimitiveDateTime::new(now.date(), now.time());
+        let now = Timestamp::now();
 
         ShoppingListDetails {
             id: Uuid::new_v4(),
@@ -826,8 +821,8 @@ mod tests_write {
                     position: 1,
                     recipe: None,
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
                 ShoppingListItemDetails {
                     id: 2,
@@ -839,8 +834,8 @@ mod tests_write {
                     position: 2,
                     recipe: Some(other_recipe()),
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
                 ShoppingListItemDetails {
                     id: 3,
@@ -852,8 +847,8 @@ mod tests_write {
                     position: 3,
                     recipe: None,
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
                 ShoppingListItemDetails {
                     id: 3,
@@ -865,8 +860,8 @@ mod tests_write {
                     position: 3,
                     recipe: None,
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
                 ShoppingListItemDetails {
                     id: 3,
@@ -878,12 +873,12 @@ mod tests_write {
                     position: 5,
                     recipe: Some(a_recipe()),
                     is_checked: false,
-                    created_at: primitive,
-                    updated_at: primitive,
+                    created_at: now,
+                    updated_at: now,
                 },
             ],
-            created_at: primitive,
-            updated_at: primitive,
+            created_at: now,
+            updated_at: now,
         }
     }
 

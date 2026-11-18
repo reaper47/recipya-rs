@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use time::OffsetDateTime;
+use jiff::Timestamp;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -36,7 +36,8 @@ pub struct Report {
     pub items_failed: i32,
     pub user_id: Uuid,
     pub total_exec_time_ms: i64,
-    pub created_at: OffsetDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
 }
 
 impl Report {

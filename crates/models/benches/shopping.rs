@@ -3,7 +3,6 @@ mod common;
 use std::sync::LazyLock;
 
 use divan::{Bencher, black_box, counter::ItemsCount};
-use time::{OffsetDateTime, PrimitiveDateTime};
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -456,14 +455,15 @@ mod share {
 
 #[divan::bench_group]
 mod write {
+    use jiff::Timestamp;
+
     use super::{
-        Bencher, ItemsCount, OffsetDateTime, PrimitiveDateTime, ShoppingListDetails,
-        ShoppingListItemDetails, ShoppingListRecipeDetails, Uuid, black_box,
+        Bencher, ItemsCount, ShoppingListDetails, ShoppingListItemDetails,
+        ShoppingListRecipeDetails, Uuid, black_box,
     };
 
     fn build_list(n: usize) -> ShoppingListDetails {
-        let now = OffsetDateTime::now_utc();
-        let ts = PrimitiveDateTime::new(now.date(), now.time());
+        let now = Timestamp::now();
         let items = (0..n)
             .map(|i| ShoppingListItemDetails {
                 id: i64::try_from(i).unwrap(),
@@ -478,8 +478,8 @@ mod write {
                     name: "Grandma's slow-cooker chicken".into(),
                 }),
                 is_checked: false,
-                created_at: ts,
-                updated_at: ts,
+                created_at: now,
+                updated_at: now,
             })
             .collect();
 
@@ -487,8 +487,8 @@ mod write {
             id: Uuid::new_v4(),
             name: "Main Shopping List".into(),
             items,
-            created_at: ts,
-            updated_at: ts,
+            created_at: now,
+            updated_at: now,
         }
     }
 

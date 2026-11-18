@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use std::path::PathBuf;
 
 use async_trait::async_trait;
+use jiff::Span;
 use reqwest::Client;
 use support::states::{AuthenticatedState, UnauthenticatedState};
 use tracing::{error, info};
@@ -398,15 +399,12 @@ impl MealieRecipeClient {
                 .total_time
                 .map_or_default(|s| vec![DurationOrText::Text(s)]),
             perform_time: recipe.perform_time.map_or_default(|s| {
-                iso8601::datetime(&s).map_or_else(
-                    |_| vec![],
-                    |d| {
-                        vec![Duration {
-                            name: vec![d.to_string()],
-                            ..Default::default()
-                        }]
-                    },
-                )
+                s.parse::<Span>().map_or_default(|d| {
+                    vec![Duration {
+                        name: vec![d.to_string()],
+                        ..Default::default()
+                    }]
+                })
             }),
             comment: recipe.comments.map_or_default(|comments| {
                 comments

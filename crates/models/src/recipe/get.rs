@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use ingredient::{Ingredient, IngredientParser};
 use itertools::Itertools;
-use time::Duration;
+use jiff::Span;
 use tracing::error;
 use url::Url;
 use uuid::Uuid;
@@ -497,12 +497,22 @@ pub async fn fetch_recipe_details(
         .load::<VideoRecipe>(conn)
         .await?
         .into_iter()
-        .map(|v| Video {
+        .map(|v: VideoRecipe| Video {
             video: v.video,
-            duration: v.duration.map(|d| {
-                let ms = Duration::milliseconds(d.microseconds / 1000);
-                let days = Duration::days(i64::from(d.days));
-                ms + days
+            duration: v.duration.and_then(|d| {
+                let total_secs = d.microseconds / 1_000_000;
+
+                Span::new()
+                    .try_days(d.days)
+                    .ok()?
+                    .try_hours(total_secs / 3600)
+                    .ok()?
+                    .try_minutes((total_secs % 3600) / 60)
+                    .ok()?
+                    .try_seconds(total_secs % 60)
+                    .ok()?
+                    .try_microseconds(d.microseconds % 1_000_000)
+                    .ok()
             }),
             content_url: v.content_url,
             embed_url: v.embed_url,

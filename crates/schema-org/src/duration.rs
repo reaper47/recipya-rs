@@ -1,3 +1,4 @@
+use jiff::Span;
 use serde::{Deserialize, Serialize};
 
 use crate::field::DurationDescriptionFieldEnum;
@@ -6,11 +7,11 @@ use crate::{AtType, at_context};
 
 /// Converts a value to an ISO 8601 duration string representation.
 pub trait ToIso8601 {
-    fn to_is8601_duration(&self) -> Option<iso8601::Duration>;
+    fn to_is8601_duration(&self) -> Option<Span>;
 }
 
 impl ToIso8601 for Vec<DurationOrText> {
-    fn to_is8601_duration(&self) -> Option<iso8601::Duration> {
+    fn to_is8601_duration(&self) -> Option<Span> {
         self.first().map_or_default(DurationOrText::to_iso8601)
     }
 }
@@ -39,11 +40,11 @@ impl DurationOrText {
         Self::Text(s.into())
     }
 
-    /// Converts the `DurationOrText` to iso8601.
-    pub fn to_iso8601(&self) -> Option<iso8601::Duration> {
+    /// Converts the `DurationOrText` to a [`Span`].
+    pub fn to_iso8601(&self) -> Option<Span> {
         match self {
-            Self::Duration(d) => d.name.first().map_or_default(|d| iso8601::duration(d).ok()),
-            Self::Text(s) => iso8601::duration(s).ok(),
+            Self::Duration(d) => d.name.first().and_then(|s| s.parse().ok()),
+            Self::Text(s) => s.parse().ok(),
         }
     }
 }
@@ -71,8 +72,8 @@ pub struct Duration {
     pub r#type: Option<String>,
 }
 
-impl From<iso8601::Duration> for Duration {
-    fn from(value: iso8601::Duration) -> Self {
+impl From<Span> for Duration {
+    fn from(value: Span) -> Self {
         Self {
             r#type: AtType::Duration.to_opt(),
             context: at_context(),
@@ -82,8 +83,8 @@ impl From<iso8601::Duration> for Duration {
     }
 }
 
-impl From<iso8601::Duration> for DurationOrText {
-    fn from(value: iso8601::Duration) -> Self {
+impl From<Span> for DurationOrText {
+    fn from(value: Span) -> Self {
         Self::new_text(value.to_string())
     }
 }
@@ -108,6 +109,18 @@ mod tests {
 
         let got = d.to_iso8601();
 
-        assert_eq!(got, iso8601::duration(s).ok());
+        assert_eq!(
+            got.map(Span::fieldwise),
+            Some(
+                Span::new()
+                    .years(1)
+                    .months(2)
+                    .days(3)
+                    .hours(4)
+                    .minutes(5)
+                    .seconds(6)
+                    .fieldwise()
+            ),
+        );
     }
 }

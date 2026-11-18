@@ -2,7 +2,7 @@ use std::assert_matches;
 
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use time::PrimitiveDateTime;
+use jiff::Timestamp;
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -195,7 +195,7 @@ fn recipe_for_create_to_recipe_with_data(
                 created_at: got
                     .videos
                     .get(idx)
-                    .map_or_else(|| PrimitiveDateTime::MIN, |v| v.created_at),
+                    .map_or_else(|| Timestamp::MIN, |v| v.created_at),
             })
             .collect::<Vec<_>>(),
     }

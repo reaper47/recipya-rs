@@ -13,12 +13,12 @@ use futures_util::future::join_all;
 use image::codecs::webp::WebPEncoder;
 use image::imageops::FilterType;
 use image::{DynamicImage, ExtendedColorType, GenericImageView, ImageEncoder, ImageReader};
+use jiff::Span;
 use regex::Regex;
-use time::Duration;
 use tokio::process::Command;
 use tokio::task;
 use tokio::time::Instant;
-use tracing::{Instrument, Span, error, info, warn};
+use tracing::{Instrument, error, info, warn};
 use uuid::Uuid;
 use webp::Encoder;
 
@@ -32,7 +32,7 @@ pub trait FsSupport: Send + Sync {
     fn convert_image(&self, input_path: &Path, file_name: String, output_dir: &Path) -> Result<()>;
 
     /// Calculates the duration of video in seconds.
-    async fn calc_video_duration(&self, input_file: &str) -> Result<Duration>;
+    async fn calc_video_duration(&self, input_file: &str) -> Result<Span>;
 
     /// Converts a video to `WebM` using ffmpeg.
     async fn convert_videos(&self, input_paths: Vec<PathBuf>, output_dir: &Path) -> Result<()>;
@@ -95,7 +95,7 @@ impl FsSupport for AppFs {
         Ok(())
     }
 
-    async fn calc_video_duration(&self, input_file: &str) -> Result<Duration> {
+    async fn calc_video_duration(&self, input_file: &str) -> Result<Span> {
         if !is_ffmpeg_installed() {
             return Err(Error::SoftwareNotInstalled);
         }
@@ -124,9 +124,7 @@ impl FsSupport for AppFs {
             let minutes: u32 = caps[2].parse().map_err(|_| Error::Calculate)?;
             let seconds: u32 = caps[3].parse().map_err(|_| Error::Calculate)?;
 
-            Ok(Duration::seconds(i64::from(
-                hours * 3600 + minutes * 60 + seconds,
-            )))
+            Ok(Span::new().hours(hours).minutes(minutes).seconds(seconds))
         } else {
             Err(Error::Calculate)
         }
@@ -188,7 +186,7 @@ impl FsSupport for AppFs {
                         }
                     }
                 }
-                .instrument(Span::current()),
+                .instrument(tracing::Span::current()),
             )
         });
 
@@ -327,8 +325,8 @@ impl FsSupport for MockFs {
         Ok(())
     }
 
-    async fn calc_video_duration(&self, _input_file: &str) -> Result<Duration> {
-        Ok(Duration::seconds(60))
+    async fn calc_video_duration(&self, _input_file: &str) -> Result<Span> {
+        Ok(Span::new().seconds(60))
     }
 
     async fn convert_videos(&self, _input_paths: Vec<PathBuf>, _output_dir: &Path) -> Result<()> {

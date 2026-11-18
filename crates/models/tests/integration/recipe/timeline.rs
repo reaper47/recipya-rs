@@ -1,4 +1,4 @@
-use time::{PrimitiveDateTime, macros::format_description};
+use jiff::{civil::DateTime, tz::TimeZone};
 use uuid::Uuid;
 
 use models::{
@@ -55,10 +55,12 @@ mod tests_all {
                 comment: Some("A comment".into()),
                 rating: Rating::from(5),
                 image: Some(image),
-                created_at: Some(PrimitiveDateTime::parse(
-                    "2025-01-22 02:32:28",
-                    format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
-                )?),
+                created_at: Some(
+                    "2025-01-22 02:32:28"
+                        .parse::<DateTime>()?
+                        .to_zoned_datetime(TimeZone::UTC)?
+                        .timestamp(),
+                ),
             },
         )
         .await?;
@@ -92,10 +94,12 @@ mod tests_edit {
             comment: Some("hello".into()),
             rating: Rating::from(4),
             image: None,
-            created_at: Some(PrimitiveDateTime::parse(
-                "2025-01-22 02:32:28",
-                format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
-            )?),
+            created_at: Some(
+                "2025-01-22 02:32:28"
+                    .parse::<DateTime>()?
+                    .to_zoned_datetime(TimeZone::UTC)?
+                    .timestamp(),
+            ),
         };
         let timeline_id =
             RecipeTimeline::create(&state.mm, recipe_id, user.id, &timeline_c).await?;
@@ -146,10 +150,12 @@ mod tests_edit {
             comment: Some("hello".into()),
             rating: Rating::from(4),
             image: None,
-            created_at: Some(PrimitiveDateTime::parse(
-                "2025-01-22 02:32:28",
-                format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
-            )?),
+            created_at: Some(
+                "2025-01-22 02:32:28"
+                    .parse::<DateTime>()?
+                    .to_zoned_datetime(TimeZone::UTC)?
+                    .timestamp(),
+            ),
         };
         let image = Uuid::new_v4();
         let timeline_id =
@@ -162,10 +168,10 @@ mod tests_edit {
             comment: Some("bye".into()),
             rating: Rating::from(1),
             image: Some(image),
-            created_at: PrimitiveDateTime::parse(
-                "2025-01-30 02:32:28",
-                format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
-            )?,
+            created_at: "2025-01-30 02:32:28"
+                .parse::<DateTime>()?
+                .to_zoned_datetime(TimeZone::UTC)?
+                .timestamp(),
         };
 
         RecipeTimeline::edit(&state.mm, user.id, &new_timeline).await?;

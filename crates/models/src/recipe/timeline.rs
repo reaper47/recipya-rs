@@ -1,6 +1,7 @@
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use time::PrimitiveDateTime;
+use jiff::Timestamp;
+use jiff_diesel::ToDiesel;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -25,7 +26,8 @@ pub struct RecipeTimeline {
     #[diesel(deserialize_as = Option<i16>)]
     pub rating: Rating,
     pub image: Option<Uuid>,
-    pub created_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
 }
 
 impl Default for RecipeTimeline {
@@ -38,7 +40,7 @@ impl Default for RecipeTimeline {
             comment: None,
             rating: Rating::from(0),
             image: None,
-            created_at: PrimitiveDateTime::MIN,
+            created_at: Timestamp::MIN,
         }
     }
 }
@@ -50,7 +52,7 @@ struct RecipeTimelinePatch<'a> {
     comment: Option<&'a str>,
     rating: Rating,
     image: Option<Uuid>,
-    created_at: Option<PrimitiveDateTime>,
+    created_at: Option<jiff_diesel::Timestamp>,
 }
 
 /// The minimal struct for creating a new timeline into the database.
@@ -60,7 +62,7 @@ pub struct RecipeTimelineForCreate {
     pub comment: Option<String>,
     pub rating: Rating,
     pub image: Option<Uuid>,
-    pub created_at: Option<PrimitiveDateTime>,
+    pub created_at: Option<Timestamp>,
 }
 
 #[derive(Insertable)]
@@ -72,7 +74,7 @@ struct TimelineForInsert<'a> {
     comment: Option<&'a str>,
     rating: Rating,
     image: Option<Uuid>,
-    created_at: Option<PrimitiveDateTime>,
+    created_at: Option<jiff_diesel::Timestamp>,
 }
 
 impl RecipeTimeline {
@@ -98,14 +100,14 @@ impl RecipeTimeline {
         timeline_c: &RecipeTimelineForCreate,
     ) -> Result<i64> {
         let timeline_id: i64 = diesel::insert_into(schema::recipe_timelines::table)
-            .values(&TimelineForInsert {
+            .values(TimelineForInsert {
                 recipe_id,
                 user_id,
                 title: timeline_c.title.as_str(),
                 comment: timeline_c.comment.as_deref(),
                 rating: timeline_c.rating,
                 image: timeline_c.image,
-                created_at: timeline_c.created_at,
+                created_at: timeline_c.created_at.map(ToDiesel::to_diesel),
             })
             .returning(schema::recipe_timelines::id)
             .get_result(&mut mm.pool.get().await?)
@@ -116,21 +118,19 @@ impl RecipeTimeline {
 
     /// Updates the fields of an existing timeline.
     pub async fn edit(mm: &ModelManager, user_id: Uuid, new_timeline: &Self) -> Result<Self> {
-        let patch = RecipeTimelinePatch {
-            title: Some(&new_timeline.title),
-            comment: new_timeline.comment.as_deref(),
-            rating: new_timeline.rating,
-            image: new_timeline.image,
-            created_at: (new_timeline.created_at != PrimitiveDateTime::MIN)
-                .then_some(new_timeline.created_at),
-        };
-
         let result = diesel::update(
             schema::recipe_timelines::table
                 .filter(schema::recipe_timelines::id.eq(new_timeline.id))
                 .filter(schema::recipe_timelines::user_id.eq(user_id)),
         )
-        .set(&patch)
+        .set(RecipeTimelinePatch {
+            title: Some(&new_timeline.title),
+            comment: new_timeline.comment.as_deref(),
+            rating: new_timeline.rating,
+            image: new_timeline.image,
+            created_at: (new_timeline.created_at != Timestamp::MIN)
+                .then_some(new_timeline.created_at.to_diesel()),
+        })
         .get_result::<Self>(&mut mm.pool.get().await?)
         .await?;
 

@@ -1,8 +1,11 @@
 use std::fmt::Write;
 
 use itertools::Itertools;
+use jiff::tz::TimeZone;
+use jiff::{SignedDuration, Timestamp};
 use krilla::metadata::{DateTime, Metadata, PageLayout};
 use krilla::page::PageSettings;
+use num_traits::ToPrimitive;
 use pdf::math::FONT_SIZE_BODY_PT;
 use tracing::error;
 
@@ -198,14 +201,14 @@ impl RecipeDetails {
 
         let metadata_start_y = doc.y();
         doc.push_metadata(vec![
-            (
-                "Prep:".to_string(),
-                humantime::format_duration(self.times.prep_seconds.into()).to_string(),
-            ),
-            (
-                "Cook:".to_string(),
-                humantime::format_duration(self.times.cook_seconds.into()).to_string(),
-            ),
+            ("Prep:".to_string(), {
+                let d = SignedDuration::from_secs(i64::from(self.times.prep_seconds));
+                format!("{d:#}")
+            }),
+            ("Cook:".to_string(), {
+                let d = SignedDuration::from_secs(i64::from(self.times.cook_seconds));
+                format!("{d:#}")
+            }),
             ("Yield:".to_string(), self.recipe.r#yield.to_string()),
         ]);
 
@@ -277,13 +280,14 @@ impl RecipeDetails {
             Metadata::new()
                 .title(self.recipe.name.clone())
                 .creation_date({
-                    let now = time::UtcDateTime::now();
+                    let now = Timestamp::now().to_zoned_datetime(TimeZone::UTC);
+
                     DateTime::new(u16::try_from(now.year()).unwrap_or_default())
-                        .day(now.day())
-                        .month(now.month() as u8)
-                        .hour(now.hour())
-                        .minute(now.minute())
-                        .second(now.second())
+                        .day(now.day().to_u8().unwrap_or(1))
+                        .month(now.month().to_u8().unwrap_or(1))
+                        .hour(now.hour().to_u8().unwrap_or_default())
+                        .minute(now.minute().to_u8().unwrap_or_default())
+                        .second(now.second().to_u8().unwrap_or_default())
                 })
                 .creator("Recipya".into())
                 .description(format!("PDF export of the {}", self.recipe.name))

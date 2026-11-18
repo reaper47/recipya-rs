@@ -5,8 +5,8 @@ use diesel::{
     sql_types::{BigInt, Float8, Text},
 };
 use diesel_async::RunQueryDsl;
-use time::Date;
 
+use jiff::civil::Date;
 use repository::{ModelManager, schema};
 
 use crate::Result;
@@ -21,7 +21,9 @@ pub struct NutritionSource {
     pub description: String,
     pub url: String,
     pub country: String,
+    #[diesel(deserialize_as = jiff_diesel::Date)]
     pub created_on: Date,
+    #[diesel(deserialize_as = jiff_diesel::NullableDate)]
     pub updated_on: Option<Date>,
 }
 
@@ -164,7 +166,6 @@ impl NutritionSource {
 mod tests {
     use test_db::default_config;
     use test_harness::create_app_state;
-    use time::OffsetDateTime;
 
     use super::*;
 
@@ -226,7 +227,7 @@ mod tests {
         }
 
         mod tests_is_current_data_old {
-            use time::Duration;
+            use jiff::{Timestamp, ToSpan, tz::TimeZone};
 
             use super::*;
 
@@ -237,7 +238,7 @@ mod tests {
                 let is_old = NutritionSource::is_current_data_old(
                     &state.mm,
                     usda_fdc_source_name(),
-                    OffsetDateTime::now_utc().date(),
+                    Timestamp::now().to_zoned_datetime(TimeZone::UTC).date(),
                 )
                 .await?;
 
@@ -256,7 +257,7 @@ mod tests {
                 let is_old = NutritionSource::is_current_data_old(
                     &state.mm,
                     usda_fdc_source_name(),
-                    OffsetDateTime::now_utc().date(),
+                    Timestamp::now().to_zoned_datetime(TimeZone::UTC).date(),
                 )
                 .await?;
 
@@ -275,7 +276,7 @@ mod tests {
                 let is_old = NutritionSource::is_current_data_old(
                     &state.mm,
                     usda_fdc_source_name(),
-                    OffsetDateTime::now_utc().date() + Duration::weeks(6),
+                    Timestamp::now().to_zoned_datetime(TimeZone::UTC).date() + 6.weeks(),
                 )
                 .await?;
 

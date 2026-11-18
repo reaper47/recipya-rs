@@ -4,7 +4,7 @@ use axum::{
     response::IntoResponse,
 };
 use fluent_static::support::axum::RequestLanguage;
-use time::{PrimitiveDateTime, macros::format_description};
+use jiff::{Timestamp, civil::DateTime, tz::TimeZone};
 use tracing::error;
 
 use app::{message::ToastCtx, state::AppState};
@@ -22,29 +22,13 @@ pub async fn share_recipe_post_handler(
     State(state): State<AppState>,
     Form(form): Form<ShareRecipeForm>,
 ) -> impl IntoResponse {
-    let expires_at: Option<PrimitiveDateTime> = form.datetime.and_then(|dt| {
-        PrimitiveDateTime::parse(
-            dt.as_str(),
-            format_description!("[year]-[month]-[day]T[hour]:[minute]"),
-        )
-        .or_else(|_| {
-            PrimitiveDateTime::parse(
-                dt.as_str(),
-                format_description!(
-                    "[year]-[month]-[day] [hour]:[minute]:[second].[subsecond digits:1+]"
-                ),
-            )
-        })
-        .or_else(|_| {
-            PrimitiveDateTime::parse(
-                dt.as_str(),
-                format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
-            )
-        })
-        .inspect_err(|err| {
-            error!(?dt, ?err, "Invalid datetime");
-        })
-        .ok()
+    let expires_at: Option<Timestamp> = form.datetime.and_then(|dt| {
+        dt.trim()
+            .parse::<DateTime>()
+            .and_then(|civil| civil.to_zoned_datetime(TimeZone::UTC))
+            .map(|zoned| zoned.timestamp())
+            .inspect_err(|err| error!(?dt, ?err, "Invalid datetime"))
+            .ok()
     });
 
     match ShareRecipe::new(&state.mm, recipe_id, user.id, expires_at).await {

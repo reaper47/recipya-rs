@@ -53,6 +53,12 @@ impl From<DurationSeconds> for i32 {
     }
 }
 
+impl From<DurationSeconds> for i64 {
+    fn from(val: DurationSeconds) -> Self {
+        Self::from(val.0)
+    }
+}
+
 impl From<DurationSeconds> for std::time::Duration {
     fn from(value: DurationSeconds) -> Self {
         Self::from_secs(u64::from(value.0))
