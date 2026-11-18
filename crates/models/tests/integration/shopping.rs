@@ -2,7 +2,7 @@ use std::assert_matches;
 
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
-use jiff::{Timestamp, ToSpan};
+use jiff::Timestamp;
 use uuid::Uuid;
 
 use app::state::AppState;

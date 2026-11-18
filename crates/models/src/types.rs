@@ -3,7 +3,6 @@ mod non_empty;
 mod rating;
 mod recipe_yield;
 mod source;
-mod timezone;
 
 pub use duration::{DurationSeconds, FIFTEEN_MINUTES_SEC, THIRTY_MINUTES_SEC};
 pub use non_empty::NonEmptyVec;
