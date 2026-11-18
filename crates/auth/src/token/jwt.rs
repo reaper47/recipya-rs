@@ -35,14 +35,14 @@ pub(crate) fn generate_token(
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(auth_config().jwt_secret.as_ref()),
+        &EncodingKey::from_secret(auth_config().jwt_secret.as_ref())?,
     )
 }
 
 pub fn validate_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     decode(
         token,
-        &DecodingKey::from_secret(auth_config().jwt_secret.as_ref()),
+        &DecodingKey::from_secret(auth_config().jwt_secret.as_ref())?,
         &Validation::default(),
     )
     .map(|data| data.claims)
