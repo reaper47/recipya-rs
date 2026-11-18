@@ -10,9 +10,9 @@ use diesel::{
     sql_types::{BigInt, Float8, Nullable, Text},
 };
 use diesel_async::{AsyncConnection as _, AsyncPgConnection, RunQueryDsl};
+use jiff::civil::Date;
 use reqwest::Client;
 use scraper::{Html, Selector};
-use time::{Date, macros::format_description};
 use tracing::error;
 use zip::ZipArchive;
 
@@ -94,12 +94,9 @@ impl FdcFetcher for FdcClient<'_> {
                 .ok_or(Error::InvalidCssSelector)
                 .inspect_err(|_| error!("Failed to parse foundation food release date"))?;
 
-            let release_date = Date::parse(
-                &format!("01/{month_year_date}"),
-                format_description!("[day]/[month]/[year]"),
-            )
-            .inspect_err(|_| error!("Failed to parse foundation food release date"))
-            .unwrap_or(Date::MIN);
+            let release_date = Date::strptime("%d/%m/%Y", format!("01/{month_year_date}"))
+                .inspect_err(|_| error!("Failed to parse foundation food release date"))
+                .unwrap_or(Date::MIN);
 
             let json_url = document
                 .select(

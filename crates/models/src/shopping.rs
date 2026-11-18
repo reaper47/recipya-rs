@@ -3,12 +3,14 @@ use std::{collections::HashMap, io::Write, path::PathBuf};
 use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
+use jiff::{Timestamp, tz::TimeZone};
+use jiff_diesel::ToDiesel;
 use krilla::{
     metadata::{DateTime, Metadata, PageLayout},
     page::PageSettings,
 };
+use num_traits::ToPrimitive;
 use tempfile::env::temp_dir;
-use time::{PrimitiveDateTime, macros::format_description};
 use tracing::error;
 use uuid::Uuid;
 
@@ -45,8 +47,10 @@ pub struct ShoppingList {
     pub name: String,
     pub num_items: i64,
     pub user_id: Uuid,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub updated_at: Timestamp,
 }
 
 #[derive(Associations, Insertable)]
@@ -86,8 +90,10 @@ pub struct ShoppingListItem {
     pub shopping_list_label_id: i64,
     pub position: i32,
     pub is_checked: bool,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub updated_at: Timestamp,
 }
 
 /// Represents a shopping list item for creation.
@@ -163,8 +169,8 @@ pub struct ShoppingListDetails {
     pub id: Uuid,
     pub name: String,
     pub items: Vec<ShoppingListItemDetails>,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 impl ShoppingListDetails {
@@ -293,11 +299,7 @@ impl ShoppingListDetails {
         );
         doc.push_header(
             Some("Recipya shopping list".into()),
-            Some(
-                self.updated_at
-                    .format(&format_description!("[year]-[month]-[day]"))
-                    .unwrap(),
-            ),
+            Some(self.updated_at.strftime("%Y-%m-%d").to_string()),
         );
         doc.push_title(&self.name.clone());
 
@@ -369,13 +371,14 @@ impl ShoppingListDetails {
             Metadata::new()
                 .title(format!("Shopping List - {}", self.name))
                 .creation_date({
-                    let now = time::UtcDateTime::now();
+                    let now = Timestamp::now().to_zoned_datetime(TimeZone::UTC);
+
                     DateTime::new(u16::try_from(now.year()).unwrap_or_default())
-                        .day(now.day())
-                        .month(now.month() as u8)
-                        .hour(now.hour())
-                        .minute(now.minute())
-                        .second(now.second())
+                        .day(now.day().to_u8().unwrap_or(1))
+                        .month(now.month().to_u8().unwrap_or(1))
+                        .hour(now.hour().to_u8().unwrap_or_default())
+                        .minute(now.minute().to_u8().unwrap_or_default())
+                        .second(now.second().to_u8().unwrap_or_default())
                 })
                 .creator("Recipya".into())
                 .description(format!("PDF export of the '{}' shopping list", self.name))
@@ -420,8 +423,8 @@ pub struct ShoppingListItemDetails {
     pub position: i32,
     pub recipe: Option<ShoppingListRecipeDetails>,
     pub is_checked: bool,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 /// Represents a shared recipe
@@ -435,9 +438,12 @@ pub struct ShareShoppingList {
     pub link: Uuid,
     pub user_id: Uuid,
     pub list_id: Uuid,
-    pub created_at: PrimitiveDateTime,
-    pub expires_at: PrimitiveDateTime,
-    pub last_accessed: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub last_accessed: Timestamp,
     pub click_count: i32,
 }
 
@@ -447,7 +453,7 @@ pub struct ShareShoppingList {
 pub(crate) struct ShareShoppingListForInsert {
     pub user_id: Uuid,
     pub list_id: Uuid,
-    pub expires_at: Option<PrimitiveDateTime>,
+    pub expires_at: Option<jiff_diesel::Timestamp>,
 }
 
 /// Represents a recipe with its details for a shopping list item.
@@ -1105,13 +1111,13 @@ impl ShareShoppingList {
         mm: &ModelManager,
         list_id: Uuid,
         user_id: Uuid,
-        expires_at: Option<PrimitiveDateTime>,
+        expires_at: Option<Timestamp>,
     ) -> Result<Self> {
         diesel::insert_into(schema::shares_shopping_lists::table)
             .values(&ShareShoppingListForInsert {
                 user_id,
                 list_id,
-                expires_at,
+                expires_at: expires_at.map(ToDiesel::to_diesel),
             })
             .on_conflict((
                 schema::shares_shopping_lists::user_id,

@@ -4,10 +4,10 @@ use axum_htmx::{HX_PROMPT, HX_REDIRECT, HX_TRIGGER};
 use axum_test::{TestResponse, TestServer};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use jiff::Timestamp;
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::header::CONTENT_TYPE;
 use reqwest::{Method, StatusCode};
-use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 use tower_cookies::Cookie;
 use uuid::Uuid;
 
@@ -350,6 +350,8 @@ mod tests_list {
 }
 
 mod tests_list_share {
+    use jiff::SignedDuration;
+
     use super::*;
 
     fn base_uri(list_id: Uuid) -> String {
@@ -409,10 +411,7 @@ mod tests_list_share {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-        let expires_at = {
-            let dt = OffsetDateTime::now_utc() + Duration::days(31);
-            PrimitiveDateTime::new(dt.date(), dt.time())
-        };
+        let expires_at = Timestamp::now() + SignedDuration::from_hours(31 * 24);
 
         let res = server
             .post(&base_uri(list_id))
@@ -442,10 +441,7 @@ mod tests_list_share {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-        let now = {
-            let dt = OffsetDateTime::now_utc();
-            PrimitiveDateTime::new(dt.date(), dt.time())
-        };
+        let now = Timestamp::now();
 
         let res = server
             .post(&base_uri(list_id))
@@ -454,7 +450,7 @@ mod tests_list_share {
 
         res.assert_status_ok();
         let share = get_first_shared(state, list_id, user_id).await;
-        pretty_assertions::assert_eq!(((share.expires_at - now).whole_hours() + 1) / 24, 7);
+        pretty_assertions::assert_eq!(((share.expires_at - now).as_hours() + 1) / 24, 7);
         Ok(())
     }
 
@@ -464,10 +460,7 @@ mod tests_list_share {
         let (server, state) = build_server_logged_in(default_config()).await?;
         let user_id = User::all(&state.mm).await?[0].id;
         let list_id = ShoppingList::create(&state.mm, "Test", user_id).await?;
-        let expires_at = {
-            let dt = OffsetDateTime::now_utc() + Duration::days(31);
-            PrimitiveDateTime::new(dt.date(), dt.time())
-        };
+        let expires_at = Timestamp::now() + SignedDuration::from_hours(31 * 24);
         let _ = server
             .post(&base_uri(list_id))
             .form(&ShareRecipeForm::new(Some(expires_at.to_string())))

@@ -28,12 +28,13 @@ futures.workspace = true
 indexmap.workspace = true
 infer.workspace = true
 ingredient = "0.3.0"
-iso8601.workspace = true
 itertools.workspace = true
-jiff.workspace = true
+jiff = { workspace = true, features = ["serde"] }
+jiff-diesel.workspace = true
 krilla.workspace = true
 lru.workspace = true
 math.workspace = true
+num-traits.workspace = true
 nutrition.workspace = true
 paste = "1.0.15"
 pdf = { path = "../pdf" }
@@ -49,8 +50,6 @@ strum.workspace = true
 strum_macros.workspace = true
 support.workspace = true
 tempfile = "3.27.0"
-time.workspace = true
-time-tz.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 url.workspace = true

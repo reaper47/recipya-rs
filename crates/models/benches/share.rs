@@ -3,7 +3,6 @@ mod common;
 use std::sync::LazyLock;
 
 use divan::Bencher;
-use time::{Duration, OffsetDateTime, PrimitiveDateTime};
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -73,10 +72,9 @@ fn fresh_recipe() -> i64 {
 
 #[divan::bench_group]
 mod new {
-    use super::{
-        Bencher, Duration, OffsetDateTime, PrimitiveDateTime, RUNTIME, SEEDED, ShareRecipe,
-        fresh_recipe,
-    };
+    use jiff::{Timestamp, ToSpan};
+
+    use super::{Bencher, RUNTIME, SEEDED, ShareRecipe, fresh_recipe};
 
     #[divan::bench]
     fn default_expiration(bencher: Bencher) {
@@ -92,10 +90,7 @@ mod new {
         let s = &*SEEDED;
 
         bencher
-            .with_inputs(|| {
-                let dt = OffsetDateTime::now_utc() + Duration::weeks(2);
-                (fresh_recipe(), PrimitiveDateTime::new(dt.date(), dt.time()))
-            })
+            .with_inputs(|| (fresh_recipe(), Timestamp::now() + 2.weeks()))
             .bench_values(|(recipe_id, expires_at)| {
                 RUNTIME.block_on(ShareRecipe::new(
                     &s.state.mm,

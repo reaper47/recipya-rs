@@ -14,6 +14,6 @@ rust-version.workspace = true
 
 [dependencies]
 models.workspace = true
+jiff.workspace = true
 test-fixtures.workspace = true
-time.workspace = true
 uuid.workspace = true

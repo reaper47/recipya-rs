@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use itertools::Itertools;
+use jiff::tz::TimeZone;
+use jiff::{Timestamp, ZonedDateTime};
 use repository::extensions::pagination::Paginate;
-use time::OffsetDateTime;
-use time_tz::OffsetDateTimeExt;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -27,7 +27,7 @@ pub struct ViewReport {
     pub items: Items,
     pub user_id: Uuid,
     pub total_exec_time_ms: i64,
-    pub created_at: OffsetDateTime,
+    pub created_at: ZonedDateTime,
 }
 
 impl Default for ViewReport {
@@ -39,7 +39,7 @@ impl Default for ViewReport {
             items: Items::default(),
             user_id: Uuid::nil(),
             total_exec_time_ms: 0,
-            created_at: OffsetDateTime::UNIX_EPOCH,
+            created_at: Timestamp::UNIX_EPOCH.to_zoned_datetime(TimeZone::UTC),
         }
     }
 }
@@ -134,7 +134,7 @@ impl ViewReport {
                     },
                     user_id,
                     total_exec_time_ms: r.report.total_exec_time_ms,
-                    created_at: r.report.created_at.to_timezone(tz),
+                    created_at: r.report.created_at.to_zoned_datetime(tz.clone()),
                 }
             })
             .collect::<Vec<_>>();
@@ -144,6 +144,8 @@ impl ViewReport {
 
     /// Fetch a report by its ID.
     pub async fn fetch(mm: &ModelManager, report_id: i64, user_id: Uuid) -> Result<Self> {
+        let tz = UserSettingDetails::get(mm, user_id).await?.timezone;
+
         let mut conn = mm.pool.get().await?;
 
         let r = schema::reports::table
@@ -197,7 +199,7 @@ impl ViewReport {
             },
             user_id,
             total_exec_time_ms: r.report.total_exec_time_ms,
-            created_at: r.report.created_at,
+            created_at: r.report.created_at.to_zoned_datetime(tz.clone()),
         })
     }
 

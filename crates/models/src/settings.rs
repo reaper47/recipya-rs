@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use diesel::{Identifiable, Queryable, Selectable, SelectableHelper};
 use diesel_async::RunQueryDsl;
-use time_tz::{TimeZone, Tz, timezones};
+use jiff::tz::TimeZone;
 use uuid::Uuid;
 
 use math::cooking::units::system::MeasurementSystem;
@@ -49,7 +49,7 @@ pub struct UserSettingDetails {
     pub selected_locale: String,
     pub paper_size_id: i16,
     pub paper_sizes: PaperSizes,
-    pub timezone: &'static Tz,
+    pub timezone: TimeZone,
 }
 
 impl Default for UserSettingDetails {
@@ -67,7 +67,7 @@ impl Default for UserSettingDetails {
             selected_locale: "en-CA".into(),
             paper_size_id: 0,
             paper_sizes: PaperSizes::default(),
-            timezone: timezones::db::UTC,
+            timezone: TimeZone::UTC,
         }
     }
 }
@@ -120,12 +120,14 @@ impl UserSettingDetails {
             selected_locale: selected_i18n_code,
             paper_size_id: settings.paper_size_id,
             paper_sizes: PaperSize::get_all(mm).await?,
-            timezone: timezones::get_by_name(&settings.timezone).unwrap_or(timezones::db::UTC),
+            timezone: TimeZone::get(&settings.timezone).unwrap_or(TimeZone::UTC),
         })
     }
 
     /// Returns the timezone name without the "Etc/" prefix.
     pub fn tz_name(&self) -> String {
-        self.timezone.name().trim_start_matches("Etc/").to_string()
+        self.timezone
+            .iana_name()
+            .map_or_default(|s| s.trim_start_matches("Etc/").to_string())
     }
 }

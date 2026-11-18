@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use diesel::prelude::*;
+use jiff::Timestamp;
 use serde_json::json;
-use time::PrimitiveDateTime;
 use tracing::error;
 use uuid::Uuid;
 use whatlang::Lang;
@@ -94,9 +94,11 @@ pub struct Recipe {
     #[diesel(deserialize_as = Option<i16>)]
     pub rating: Rating,
     /// The timestamp when the nutrition entry was created.
-    pub created_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
     /// The timestamp when the nutrition entry was last updated.
-    pub updated_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub updated_at: Timestamp,
     /// The foreign key linking the recipe to its creator.
     pub user_id: Uuid,
 }
@@ -115,8 +117,8 @@ impl Default for Recipe {
             source: Source::default(),
             is_favourite: false,
             rating: Rating::default(),
-            created_at: PrimitiveDateTime::MIN,
-            updated_at: PrimitiveDateTime::MIN,
+            created_at: Timestamp::MIN,
+            updated_at: Timestamp::MIN,
             user_id: Uuid::nil(),
         }
     }

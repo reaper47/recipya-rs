@@ -2,7 +2,7 @@ use std::default::Default;
 
 use axum::http::{Method, StatusCode};
 use axum_htmx::HX_REDIRECT;
-use time::OffsetDateTime;
+use jiff::Timestamp;
 
 use auth::token::{
     http::{AUTH_TOKEN, REFRESH_TOKEN},
@@ -564,7 +564,7 @@ mod tests_login {
         res.assert_header(HX_REDIRECT, "/recipes");
         let token = res.cookie(AUTH_TOKEN).value().to_string();
         let claims = validate_token(&token)?;
-        let now = usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
+        let now = usize::try_from(Timestamp::now().as_second()).unwrap_or_default();
         assert!(
             (claims.exp - now) >= 15 * 60,
             "expiration time should be 15 minutes"
@@ -607,6 +607,7 @@ mod tests_login {
     #[tokio::test]
     async fn test_post_login_remember_me_checked_ok() -> Result<()> {
         let (server, _) = build_server_anonymous(default_config()).await?;
+        let before = usize::try_from(jiff::Timestamp::now().as_second()).unwrap_or_default();
 
         let res = server
             .post(BASE_URI)
@@ -621,10 +622,9 @@ mod tests_login {
         res.assert_header(HX_REDIRECT, "/recipes");
         let token = res.cookie(AUTH_TOKEN).value().to_string();
         let claims = validate_token(&token)?;
-        let now = usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
         assert!(
-            (claims.exp - now) >= 15 * 60,
-            "expiration time should be 15 minutes"
+            claims.exp >= before + 15 * 60,
+            "expiration time should be at least 15 minutes from the request"
         );
         Ok(())
     }

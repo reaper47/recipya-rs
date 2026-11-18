@@ -1,4 +1,4 @@
-use iso8601::{DateTime, Duration};
+use jiff::{Span, civil::DateTime};
 use schema_org::{AtType, Energy, Mass, NutritionInformation, at_context};
 use serde::Deserialize;
 
@@ -18,9 +18,9 @@ pub struct Recipe {
     pub date_modified: Option<DateTime>,
     pub image_url: String,
     pub id: String,
-    pub prep_time: Duration,
-    pub cook_time: Duration,
-    pub total_time: Duration,
+    pub prep_time: Span,
+    pub cook_time: Span,
+    pub total_time: Span,
     pub description: String,
     pub url: String,
     pub image: Option<String>,

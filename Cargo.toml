@@ -38,9 +38,9 @@ futures-util = "0.3.32"
 indexmap = "2.13.0"
 infer = "0.22.0"
 integrations = { path = "./crates/integrations" }
-iso8601 = { version = "0.6.3", features = ["serde"] }
 itertools = "0.15.0"
 jiff = "1.0.0"
+jiff-diesel = { version = "1.0.0", features = ["postgres"] }
 jsonwebtoken = { version = "11.0.0", features = ["rust_crypto"] }
 krilla = "0.8.2"
 l10n = { path = "./crates/l10n" }
@@ -68,8 +68,6 @@ templates = { path = "./crates/templates" }
 test-db = { path = "./crates/test-db" }
 test-fixtures = { path = "./crates/test-fixtures" }
 test-harness = { path = "./crates/test-harness" }
-time = { version = "0.3.47", features = ["serde"] }
-time-tz = { version = "2.0.0", features = ["db"] }
 tracing-test = "0.2.6"
 tokio = { version = "1.54.0", features = ["fs", "process", "signal"] }
 tower-cookies = "0.11.0"

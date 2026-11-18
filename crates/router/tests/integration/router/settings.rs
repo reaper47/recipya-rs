@@ -460,7 +460,7 @@ mod tests_paper_size {
 }
 
 mod tests_timezone {
-    use models::types::Timezone;
+    use jiff::tz::TimeZone;
 
     use super::*;
 
@@ -479,7 +479,7 @@ mod tests_timezone {
         let res = server
             .post(BASE_URI)
             .form(&TzPayload {
-                tz: Timezone::try_from("America/Montreal").unwrap(),
+                tz: TimeZone::get("America/Montreal")?,
             })
             .await;
 

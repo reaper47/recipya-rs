@@ -2,7 +2,7 @@
 
 use std::sync::LazyLock;
 
-use time::{Date, Duration, PrimitiveDateTime, Time};
+use jiff::{ToSpan, civil::Date, tz::TimeZone};
 use tokio::runtime::Runtime;
 use uuid::Uuid;
 
@@ -58,7 +58,7 @@ pub fn a_complete_recipe_for_create() -> (RecipeForCreate, RecipeImages) {
             rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: images.video,
-                duration: Some(Duration::minutes(7)),
+                duration: Some(7.minutes()),
                 content_url: Some("https://example.com/best-food.mp4".into()),
                 embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
             }],
@@ -159,11 +159,8 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
     let images = recipe_c.images;
     let additional_images = images.last().iter().copied().copied().collect::<Vec<_>>();
 
-    let created_date =
-        Date::from_calendar_date(2012, time::Month::December, 31).expect("end of the world");
-    let updated_date =
-        Date::from_calendar_date(2022, time::Month::February, 24).expect("russia invaded Ukraine");
-
+    let created_date = Date::new(2012, 12, 31).expect("end of the world");
+    let updated_date = Date::new(2022, 2, 24).expect("russia invaded Ukraine");
     (
         RecipeDetails {
             recipe: Recipe {
@@ -178,8 +175,16 @@ pub fn a_complete_recipe() -> (RecipeDetails, RecipeImages) {
                 source: recipe_c.source,
                 is_favourite: false,
                 rating: Rating::default(),
-                created_at: PrimitiveDateTime::new(created_date, Time::MIDNIGHT),
-                updated_at: PrimitiveDateTime::new(updated_date, Time::MIDNIGHT),
+                created_at: created_date
+                    .at(0, 0, 0, 0)
+                    .to_zoned_datetime(TimeZone::UTC)
+                    .unwrap()
+                    .timestamp(),
+                updated_at: updated_date
+                    .at(0, 0, 0, 0)
+                    .to_zoned_datetime(TimeZone::UTC)
+                    .unwrap()
+                    .timestamp(),
                 user_id: Uuid::new_v4(),
             },
             additional_images,

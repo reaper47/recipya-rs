@@ -157,7 +157,7 @@ mod tests_view {
                         },
                         user_id: user.id,
                         total_exec_time_ms: 789,
-                        created_at: got[0].created_at,
+                        created_at: got[0].created_at.clone(),
                     },
                     ViewReport {
                         id: 2,
@@ -224,7 +224,7 @@ mod tests_view {
                         },
                         user_id: user.id,
                         total_exec_time_ms: 491,
-                        created_at: got[1].created_at,
+                        created_at: got[1].created_at.clone(),
                     },
                 ]
             );

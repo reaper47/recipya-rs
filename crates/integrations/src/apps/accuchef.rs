@@ -1113,7 +1113,7 @@ mod tests {
                         unsaturated_fat_content: vec![Mass::new("19 g")],
                         ..Default::default()
                     }],
-                    prep_time: vec![DurationOrText::Text("PT900S".into())],
+                    prep_time: vec![DurationOrText::Text("PT15M".into())],
                     recipe_ingredient: vec![
                         RecipeRecipeIngredientFieldEnum::Text("1 package Taco Seasoning".into()),
                         RecipeRecipeIngredientFieldEnum::Text("8 ounce Sour Cream".into()),

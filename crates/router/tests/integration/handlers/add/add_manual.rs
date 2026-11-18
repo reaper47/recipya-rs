@@ -1,8 +1,8 @@
 use axum::http::HeaderValue;
 use axum::http::Method;
 use axum_test::TestResponse;
+use jiff::ToSpan;
 use reqwest::StatusCode;
-use time::Duration;
 use uuid::Uuid;
 
 use models::recipe::structs::{
@@ -17,6 +17,7 @@ use models::recipe::structs::{
     tool::{ToolForCreate, ToolRecipe},
 };
 use models::types::RecipeYield;
+use models::types::THIRTY_MINUTES_SEC;
 use models::types::{Rating, Source};
 use models::user::User;
 use models::{Recipe, RecipeDetails};
@@ -63,8 +64,6 @@ mod tests_get {
 }
 
 mod tests_post {
-    use models::types::THIRTY_MINUTES_SEC;
-
     use super::*;
 
     #[tokio::test]
@@ -268,7 +267,7 @@ mod tests_post {
             rating: Rating::from(4),
             videos: vec![VideoForCreate {
                 video: Uuid::new_v4(),
-                duration: Some(Duration::hours(1)),
+                duration: Some(1.hour()),
                 content_url: Some("https://www.youtube.com/watch?v=1".into()),
                 embed_url: Some("https://www.youtube.com/embed/embed".into()),
             }],

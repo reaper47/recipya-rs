@@ -1,5 +1,5 @@
 use std::assert_matches;
-use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -16,6 +16,8 @@ use test_harness::create_app_state;
 use crate::{Result, recipe::utils::a_complete_recipe_for_create};
 
 mod test_new {
+    use jiff::{SignedDuration, Timestamp};
+
     use super::*;
 
     async fn add_user(mm: &ModelManager) -> Result<User> {
@@ -60,10 +62,7 @@ mod test_new {
         let state = create_app_state(default_config()).await;
         let user_id = add_user(&state.mm).await?.id;
         let recipe_id = insert_recipe(&state, user_id).await?;
-        let expires_at = {
-            let dt = OffsetDateTime::now_utc() + Duration::days(14);
-            PrimitiveDateTime::new(dt.date(), dt.time())
-        };
+        let expires_at = Timestamp::now() + SignedDuration::from_hours(14 * 24);
 
         let got = ShareRecipe::new(&state.mm, recipe_id, user_id, Some(expires_at)).await?;
 
@@ -103,13 +102,16 @@ mod test_new {
         pretty_assertions::assert_eq!(got.recipe_id, want.recipe_id);
         pretty_assertions::assert_eq!(got.click_count, want.click_count);
 
-        let diff = (got.created_at - want.created_at).whole_nanoseconds();
+        let diff = got.created_at.duration_since(want.created_at).as_nanos();
         assert!(diff.abs() <= 1000, "Created at");
 
-        let diff = (got.expires_at - want.expires_at).whole_nanoseconds();
+        let diff = got.expires_at.duration_since(want.expires_at).as_nanos();
         assert!(diff.abs() <= 1000, "Expires at");
 
-        let diff = (got.last_accessed - want.last_accessed).whole_nanoseconds();
+        let diff = got
+            .last_accessed
+            .duration_since(want.last_accessed)
+            .as_nanos();
         assert!(diff.abs() <= 1000, "Last accessed at");
     }
 }

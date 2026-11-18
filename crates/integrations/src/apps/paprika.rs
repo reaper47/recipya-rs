@@ -1,10 +1,10 @@
 use std::env::temp_dir;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::str::FromStr;
 
 use base64::Engine;
 use jiff::Span;
+use jiff::civil::Date;
 use libpaprika::{Recipe, RecipeSet};
 use tracing::error;
 use url::Url;
@@ -122,10 +122,12 @@ impl ToRecipeSchema for Recipe {
             cook_time: Some(cook)
                 .filter(|d| !d.is_zero())
                 .map_or_default(|d| vec![DurationOrText::new_text(d.to_string())]),
-            date_created: iso8601::Date::from_str(
-                self.created.split_whitespace().next().unwrap_or_default(),
-            )
-            .map_or_else(|_| vec![], |d| vec![d.to_string()]),
+            date_created: self
+                .created
+                .split_whitespace()
+                .next()
+                .and_then(|s| s.parse::<Date>().ok())
+                .map_or_else(Vec::new, |d| vec![d.to_string()]),
             description: if self.description.is_empty() {
                 vec![]
             } else {

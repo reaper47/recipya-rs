@@ -11,12 +11,11 @@ use axum_extra::extract::Query as QueryExtra;
 use axum_htmx::{HX_TRIGGER, HxPrompt, HxRequest};
 use fluent_static::support::axum::RequestLanguage;
 use itertools::izip;
+use jiff::{Timestamp, civil::DateTime, tz::TimeZone};
 use mime_guess::mime::TEXT_PLAIN_UTF_8;
 use reqwest::StatusCode;
 use reqwest::header::CONTENT_TYPE;
 use serde_json::json;
-use time::PrimitiveDateTime;
-use time::macros::format_description;
 use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
 use tracing::error;
@@ -384,27 +383,15 @@ pub async fn shopping_list_share_post_handler(
     Path(list_id): Path<Uuid>,
     Form(form): Form<ShareRecipeForm>,
 ) -> impl IntoResponse {
-    let expires_at: Option<PrimitiveDateTime> = form.datetime.and_then(|dt| {
-        PrimitiveDateTime::parse(
-            dt.as_str(),
-            format_description!("[year]-[month]-[day]T[hour]:[minute]"),
-        )
-        .or_else(|_| {
-            PrimitiveDateTime::parse(
-                dt.as_str(),
-                format_description!("[year]-[month]-[day] [hour]:[minute]:[second].[subsecond]"),
-            )
-        })
-        .or_else(|_| {
-            PrimitiveDateTime::parse(
-                dt.as_str(),
-                format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
-            )
-        })
-        .inspect_err(|err| {
-            error!(?dt, ?err, "Invalid datetime");
-        })
-        .ok()
+    let expires_at: Option<Timestamp> = form.datetime.and_then(|dt| {
+        dt.trim()
+            .parse::<DateTime>()
+            .and_then(|civil| civil.to_zoned_datetime(TimeZone::UTC))
+            .map(|zoned| zoned.timestamp())
+            .inspect_err(|err| {
+                error!(?dt, ?err, "Invalid datetime");
+            })
+            .ok()
     });
 
     match ShareShoppingList::new(&state.mm, list_id, user.id, expires_at).await {

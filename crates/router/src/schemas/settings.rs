@@ -1,6 +1,7 @@
+use jiff::tz::TimeZone;
 use serde::{Deserialize, Serialize};
 
-use models::{export::ExportType, types::Timezone};
+use models::export::ExportType;
 
 /// Represents the payload for setting paper sizes.
 #[derive(Deserialize, Serialize)]
@@ -18,7 +19,27 @@ pub struct ThemePayload {
 /// Represents the payload for setting a timezone.
 #[derive(Deserialize, Serialize)]
 pub struct TzPayload {
-    pub tz: Timezone,
+    #[serde(with = "tz_name")]
+    pub tz: TimeZone,
+}
+
+// AI usage:
+// I asked Claude Sonnet 5.5 to implement a serialize and deserialize function for TimeZone.
+mod tz_name {
+    use jiff::tz::TimeZone;
+    use serde::{Deserialize, Deserializer, Serializer, de::Error as _, ser::Error as _};
+
+    pub fn serialize<S: Serializer>(tz: &TimeZone, serializer: S) -> Result<S::Ok, S::Error> {
+        let name = tz
+            .iana_name()
+            .ok_or_else(|| S::Error::custom("time zone has no IANA name"))?;
+        serializer.serialize_str(name)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<TimeZone, D::Error> {
+        let name = String::deserialize(deserializer)?;
+        TimeZone::get(&name).map_err(D::Error::custom)
+    }
 }
 
 /// Represents the payload for exporting data.

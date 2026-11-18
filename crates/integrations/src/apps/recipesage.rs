@@ -1,10 +1,9 @@
 use std::borrow::Cow;
 use std::io::{BufRead, Read, Seek};
-use std::str::FromStr;
 
-use iso8601::DateTime;
 use itertools::Itertools;
-use jiff::{Span, Unit};
+use jiff::civil::DateTime;
+use jiff::{Span, Timestamp, Unit};
 use num_traits::ToPrimitive;
 use serde::Deserialize;
 use tracing::error;
@@ -439,12 +438,20 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
                 }]
             },
             cook_time: seconds_to_duration(total_time_secs - active_time_secs),
-            date_created: DateTime::from_str(&r.created_at)
-                .ok()
-                .map_or_default(|d| vec![d.to_string()]),
-            date_modified: DateTime::from_str(&r.updated_at)
-                .ok()
-                .map_or_default(|d| vec![d.to_string()]),
+            date_created: r
+                .created_at
+                .parse::<DateTime>()
+                .map(|d| d.to_string())
+                .or_else(|_| r.created_at.parse::<Timestamp>().map(|t| t.to_string()))
+                .into_iter()
+                .collect(),
+            date_modified: r
+                .updated_at
+                .parse::<DateTime>()
+                .map(|d| d.to_string())
+                .or_else(|_| r.updated_at.parse::<Timestamp>().map(|t| t.to_string()))
+                .into_iter()
+                .collect(),
             description: if r.description.is_empty() {
                 vec![]
             } else {

@@ -62,7 +62,7 @@ impl Recipe {
             .await?
             .transaction::<_, Error, _>(async |conn| {
                 diesel::update(schema::recipes::table.filter(schema::recipes::id.eq(recipe_id)))
-                    .set(&recipe)
+                    .set(recipe)
                     .execute(conn)
                     .await?;
 
