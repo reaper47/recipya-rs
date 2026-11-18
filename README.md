@@ -11,7 +11,7 @@
         <img src="https://img.shields.io/github/v/release/reaper47/recipya-rs?style=flat&sort=semver">
     </a>
     <a href="https://github.com/reaper47/recipya-rs/actions/new" rel="noopener noreferrer">
-        <img src="https://img.shields.io/github/actions/workflow/status/serde-rs/serde/ci.yml?branch=master">
+        <img src="https://img.shields.io/github/actions/workflow/status/reaper47/recipya-rs/rust.yml?branch=main">
     </a>
     <a href="https://github.com/reaper47/recipya-rs/issues" rel="noopener noreferrer">
         <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" >
