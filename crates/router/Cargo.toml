@@ -42,7 +42,7 @@ rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
-rust-embed = { version = "8.12.0", features = ["axum-ex"] }
+rust-embed = { version = "8.14.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true

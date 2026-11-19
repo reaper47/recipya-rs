@@ -2,6 +2,7 @@ use diesel::pg::Pg;
 use diesel::query_builder::{AstPass, Query, QueryFragment};
 use diesel::sql_types::BigInt;
 use diesel::{QueryId, QueryResult};
+use diesel_async::{AsyncPgConnection, RunQueryDsl};
 
 pub trait Paginate: Sized {
     fn paginate(self, page: i64, results_per_page: i64) -> Paginated<Self>;
@@ -36,6 +37,8 @@ impl<T> Paginated<T> {
         }
     }
 }
+
+impl<T> RunQueryDsl<AsyncPgConnection> for Paginated<T> {}
 
 impl<T: Query> Query for Paginated<T> {
     type SqlType = T::SqlType;
