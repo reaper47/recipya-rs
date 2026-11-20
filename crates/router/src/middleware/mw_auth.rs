@@ -18,7 +18,7 @@ use app::state::AppState;
 use auth::token::generate_access_token;
 use auth::token::http::{AUTH_TOKEN, REFRESH_TOKEN, clear_auth_cookies, set_auth_cookies};
 use auth::token::jwt::validate_token;
-use config::{AutologinState, ProductionState};
+use config::AutologinState;
 use email::{Email, Template};
 use models::tokens::{RefreshToken, RefreshTokenForCreate};
 use models::user::User;
@@ -326,7 +326,7 @@ pub async fn mw_refresh_token(
             new_refresh_token_entry.token,
             new_refresh_token_entry.expires_at,
             refresh_token_entry.is_remember_me,
-            state.config.read().await.states.production == ProductionState::On,
+            state.config.read().await.is_env_prod(),
         );
 
         req.extensions_mut()

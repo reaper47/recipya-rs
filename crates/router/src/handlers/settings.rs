@@ -14,7 +14,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use app::{message::ToastCtx, state::AppState};
-use config::{DemoState, ProductionState};
+use config::DemoState;
 use l10n::Messages;
 use models::{
     Recipe,
@@ -271,11 +271,7 @@ pub async fn language_post_handler(
 
     match user.update_language(&state.mm, form.locale).await {
         Ok(locale) => {
-            set_language_cookie(
-                &cookies,
-                &locale,
-                state.config.read().await.states.production == ProductionState::On,
-            );
+            set_language_cookie(&cookies, &locale, state.config.read().await.is_env_prod());
 
             (
                 StatusCode::NO_CONTENT,

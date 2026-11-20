@@ -612,13 +612,13 @@ fn settings_server(data: &Data, config: &SettingsForView, messages: &Messages) -
                                     (
                                         messages.server_configuration_table_autologin(),
                                         messages.server_configuration_table_autologin_description(),
-                                        "RECIPYA_IS_AUTOLOGIN",
+                                        "RECIPYA_AUTOLOGIN",
                                         data.states.autologin.into(),
                                     ),
                                     (
                                         messages.server_configuration_table_allow_signups(),
                                         messages.server_configuration_table_allow_signups_description(),
-                                        "RECIPYA_IS_ALLOW_SIGNUPS",
+                                        "RECIPYA_ALLOW_SIGNUPS",
                                         data.states.signups.into(),
                                     ),
                                     (

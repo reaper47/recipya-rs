@@ -18,7 +18,7 @@ use auth::token::{
     http::{clear_auth_cookies, set_auth_cookies},
 };
 use auth::types::Email as EmailType;
-use config::{AutologinState, DemoState, ProductionState, SignupsState};
+use config::{AutologinState, DemoState, SignupsState};
 use email::{Data, Email, Template};
 use l10n::Messages;
 use models::tokens::{
@@ -425,7 +425,7 @@ pub async fn login_post_handler(
         refresh_token_entry.token,
         refresh_token_entry.expires_at,
         remember_me,
-        state.config.read().await.states.production == ProductionState::On,
+        state.config.read().await.is_env_prod(),
     );
 
     (StatusCode::SEE_OTHER, [("HX-Redirect", "/recipes")]).into_response()
