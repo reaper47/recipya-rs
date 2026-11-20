@@ -49,7 +49,6 @@ impl From<&AppEnvState> for &str {
 impl From<&str> for AppEnvState {
     fn from(value: &str) -> Self {
         match value.to_lowercase().as_str() {
-            DEV => Self::Dev,
             TEST => Self::Test,
             PROD => Self::Prod,
             _ => Self::Dev,
