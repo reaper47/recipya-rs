@@ -81,7 +81,7 @@ mod tests {
         let mut config = Config::default();
         config.states.app_env = AppEnvState::Dev;
 
-        assert!(!config.is_env_prod())
+        assert!(!config.is_env_prod());
     }
 
     #[test]
@@ -89,7 +89,7 @@ mod tests {
         let mut config = Config::default();
         config.states.app_env = AppEnvState::Test;
 
-        assert!(!config.is_env_prod())
+        assert!(!config.is_env_prod());
     }
 
     #[test]
@@ -97,6 +97,6 @@ mod tests {
         let mut config = Config::default();
         config.states.app_env = AppEnvState::Prod;
 
-        assert!(config.is_env_prod())
+        assert!(config.is_env_prod());
     }
 }
