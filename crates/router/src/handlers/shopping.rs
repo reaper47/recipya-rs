@@ -23,7 +23,7 @@ use uuid::Uuid;
 
 use app::message::ToastCtx;
 use app::state::AppState;
-use config::{ProductionState, States};
+use config::States;
 use l10n::Messages;
 use models::Recipe;
 use models::data::{Data, ShoppingData};
@@ -347,7 +347,7 @@ pub async fn shopping_list_view_handler(
     set_shopping_view_cookie(
         &cookies,
         params.mode.to_string(),
-        state.config.read().await.states.production == ProductionState::On,
+        state.config.read().await.is_env_prod(),
     );
 
     match params.mode {
