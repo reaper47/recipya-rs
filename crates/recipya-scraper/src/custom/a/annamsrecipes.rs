@@ -32,54 +32,45 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         context: at_context(),
         date_published: extract_attr(root, "meta[property='article:published_time']", "content")
             .unwrap_or_default()
-            .map(|s| vec![s.into()])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s.into()]),
         date_modified: extract_attr(root, "meta[property='article:modified_time']", "content")
             .unwrap_or_default()
-            .map(|s| vec![s.into()])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s.into()]),
         description: extract_attr(root, "meta[property='og:description']", "content")
             .unwrap_or_default()
-            .map(|s| {
+            .map_or_default(|s| {
                 vec![RecipeDescriptionFieldEnum::Text(
                     String::from_utf8_lossy(s.as_bytes()).to_string(),
                 )]
-            })
-            .unwrap_or_default(),
+            }),
         image: extract_attr(root, "meta[property='og:image']", "content")
             .unwrap_or_default()
-            .map(|s| vec![RecipeImageFieldEnum::URL(s.into())])
-            .unwrap_or_default(),
-        recipe_ingredient: ingredients_start
-            .map(|start_node| {
-                start_node
-                    .next_siblings()
-                    .filter_map(|node| {
-                        node.value()
-                            .as_element()
-                            .map(|_| ElementRef::wrap(node).unwrap())
-                    })
-                    .take_while(|el| !el.text().any(|t| t.contains("Method:")))
-                    .map(|el| RecipeRecipeIngredientFieldEnum::Text(sanitize_text(&el)))
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default(),
-        recipe_instructions: instructions_start
-            .map(|start_node| {
-                start_node
-                    .next_siblings()
-                    .filter_map(ElementRef::wrap)
-                    .take_while(|el| !el.text().any(|t| t.contains("Note:")))
-                    .map(|el| sanitize_text(&el))
-                    .filter(|s| !s.is_empty())
-                    .map(RecipeRecipeInstructionsFieldEnum::Text)
-                    .collect()
-            })
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeImageFieldEnum::URL(s.into())]),
+        recipe_ingredient: ingredients_start.map_or_default(|start_node| {
+            start_node
+                .next_siblings()
+                .filter_map(|node| {
+                    node.value()
+                        .as_element()
+                        .map(|_| ElementRef::wrap(node).unwrap())
+                })
+                .take_while(|el| !el.text().any(|t| t.contains("Method:")))
+                .map(|el| RecipeRecipeIngredientFieldEnum::Text(sanitize_text(&el)))
+                .collect::<Vec<_>>()
+        }),
+        recipe_instructions: instructions_start.map_or_default(|start_node| {
+            start_node
+                .next_siblings()
+                .filter_map(ElementRef::wrap)
+                .take_while(|el| !el.text().any(|t| t.contains("Note:")))
+                .map(|el| sanitize_text(&el))
+                .filter(|s| !s.is_empty())
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect()
+        }),
         name: extract_attr(root, "meta[property='og:title']", "content")
             .unwrap_or_default()
-            .map(|s| vec![s.into()])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![s.into()]),
         url: vec![url.to_string()],
         ..Default::default()
     })

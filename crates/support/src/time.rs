@@ -1,4 +1,4 @@
-use time::{Duration, OffsetDateTime};
+use jiff::{SignedDuration, Timestamp};
 use winnow::Result as WResult;
 use winnow::ascii::{digit1, space0};
 use winnow::combinator::{alt, delimited, opt, preceded, terminated};
@@ -7,31 +7,24 @@ use winnow::token::{literal, take_till};
 
 use crate::impl_display_as_debug;
 
-pub use time::format_description::well_known::Rfc3339;
-
 /// The default connection timeout for HTTP requests, in seconds.
 pub const DEFAULT_HTTP_CONNECTION_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
 
-/// Formats a given `OffsetDateTime` into a string in RFC3339 format.
-///
-/// # Panics
-///
-/// Panics if the datetime cannot be formatted as RFC3339. This should never
-/// happen in practice as all valid `OffsetDateTime` values can be represented
-/// in RFC3339 format.
-pub fn format_time(time: OffsetDateTime) -> String {
-    time.format(&Rfc3339).unwrap()
+/// Formats a given `Timestamp` into a string in RFC3339 format.
+pub fn format_time(time: Timestamp) -> String {
+    time.to_string()
 }
 
-/// Returns the current UTC time plus the given number of seconds as a formatted string.
-pub fn now_utc_plus_sec_str(sec: f64) -> usize {
-    usize::try_from((OffsetDateTime::now_utc() + Duration::seconds_f64(sec)).unix_timestamp())
-        .unwrap_or_default()
+/// Returns the current UTC time plus the given number of seconds in a UNIX .
+pub fn now_utc_plus_sec_str(sec: f64) -> i64 {
+    (Timestamp::now() + SignedDuration::from_secs_f64(sec)).as_second()
 }
 
 /// Parses a string into an `OffsetDateTime` in UTC.
-pub fn parse_utc(moment: &str) -> Result<OffsetDateTime> {
-    OffsetDateTime::parse(moment, &Rfc3339).map_err(|_| Error::FailToDateParse(moment.to_string()))
+pub fn parse_utc(moment: &str) -> Result<Timestamp> {
+    moment
+        .parse()
+        .map_err(|_| Error::FailToDateParse(moment.to_string()))
 }
 
 /// Extracts the hours and minutes from a duration, e.g. 2h30m.

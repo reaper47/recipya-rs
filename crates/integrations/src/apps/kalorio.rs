@@ -88,14 +88,13 @@ impl From<KalorioTextRecipe> for Recipe {
             author: vec![RecipeAuthorFieldEnum::new_person(&r.author)],
             is_based_on: r
                 .kalorio_version
-                .map(|s| vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeIsBasedOnFieldEnum::new_creative_work_text(&s)]),
             keywords: keywords
                 .into_iter()
                 .map(RecipeKeywordsFieldEnum::TextOrURL)
                 .collect(),
             name: vec![r.title],
-            recipe_category: category.map(|c| vec![c]).unwrap_or_default(),
+            recipe_category: category.map_or_default(|c| vec![c]),
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: Vec::default(),

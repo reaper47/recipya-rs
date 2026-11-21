@@ -1,92 +1,78 @@
-use krilla::{
-    geom::PathBuilder,
-    surface::Surface,
-    text::{Font, TextDirection},
-};
-
-use crate::math::measure_text_width_pt;
-
-/// Adds a page title to a PDF page.
-///
-/// # Panics
-///
-/// Panics if the font data is invalid or the font index is out of bounds.
-pub fn add_page_title(
-    title: &str,
-    font: (&Font, &[u8], f32),
-    surface: &mut Surface,
-    curr_y: f32,
-    page_width: f32,
-) {
-    let (font, font_data, font_size) = font;
-
-    let title_width = measure_text_width_pt(title, font, font_data, 0, font_size);
-
-    surface.draw_text(
-        krilla::geom::Point::from_xy((page_width - title_width) / 2.0, curr_y),
-        font.clone(),
-        font_size,
-        title,
-        false,
-        TextDirection::Auto,
-    );
-
-    let underline_offset = font_size * 0.10;
-    let underline_thickness = font_size * 0.06;
-    let underline_y = curr_y + underline_offset;
-
-    let underline = {
-        let mut pb = PathBuilder::new();
-        pb.move_to((page_width - title_width) / 2.0, underline_y);
-        pb.line_to(
-            ((page_width - title_width) / 2.0) + title_width,
-            underline_y,
-        );
-        pb.finish().unwrap()
-    };
-
-    surface.set_stroke(Some(krilla::paint::Stroke {
-        paint: krilla::color::rgb::Color::new(0, 0, 0).into(),
-        width: underline_thickness,
-        ..Default::default()
-    }));
-    surface.draw_path(&underline);
-    surface.set_stroke(None);
+/// How the current page number is displayed.
+#[derive(Clone)]
+pub enum PageNumberFormat {
+    /// The shortest way to write the current page number, i.e. "1/3"
+    Minimal,
+    /// Long way of writing the current page, i.e. "Page 1 of 3"
+    Long,
 }
 
-/// Adds the header to a PDF page.
-pub fn add_header(
-    left_text: Option<&str>,
-    right_text: Option<&str>,
-    surface: &mut Surface,
-    font: (&Font, &[u8], f32),
-    margin: f32,
-    page_width: f32,
-) {
-    let (font, font_data, font_size) = font;
-    let y = margin * 0.3333;
+/// A horizontal position within a region
+#[derive(Clone)]
+pub enum Position {
+    Left,
+    Centre,
+    Right,
+}
 
-    if let Some(s) = left_text {
-        surface.draw_text(
-            krilla::geom::Point::from_xy(y, y),
-            font.clone(),
-            font_size,
-            s,
-            false,
-            TextDirection::Auto,
-        );
+/// Configuration for a page footer.
+#[derive(Clone)]
+pub struct FooterOptions {
+    /// How the page number is written, e.g. "1/3" or "Page 1 of 3".
+    pub format: PageNumberFormat,
+    /// Where the page number appears in the footer.
+    pub page_numbering_position: Position,
+    /// Text shown at the left of the footer, if any.
+    pub left_text: Option<String>,
+    /// Text shown at the centre of the footer, if any.
+    pub centre_text: Option<String>,
+    /// Text shown at the right of the footer, if any.
+    pub right_text: Option<String>,
+}
+
+impl FooterOptions {
+    /// Creates footer options with the page number on the left.
+    pub const fn new_page_number_left(
+        format: PageNumberFormat,
+        centre_text: Option<String>,
+        right_text: Option<String>,
+    ) -> Self {
+        Self {
+            format,
+            page_numbering_position: Position::Left,
+            left_text: None,
+            centre_text,
+            right_text,
+        }
     }
 
-    if let Some(s) = right_text {
-        let text_width = measure_text_width_pt(s, font, font_data, 0, font_size);
+    /// Creates footer options with the page number in the centre.
+    pub const fn new_page_number_centre(
+        format: PageNumberFormat,
+        left_text: Option<String>,
+        right_text: Option<String>,
+    ) -> Self {
+        Self {
+            format,
+            page_numbering_position: Position::Centre,
+            left_text,
+            centre_text: None,
+            right_text,
+        }
+    }
 
-        surface.draw_text(
-            krilla::geom::Point::from_xy(page_width - margin.mul_add(0.3333, text_width), y),
-            font.clone(),
-            font_size,
-            s,
-            false,
-            TextDirection::Auto,
-        );
+    /// Creates footer options with the page number on the right.
+    pub const fn new_page_number_right(
+        format: PageNumberFormat,
+        left_text: Option<String>,
+        centre_text: Option<String>,
+    ) -> Self {
+        Self {
+            format,
+            page_numbering_position: Position::Right,
+            left_text,
+            centre_text,
+            right_text: None,
+        }
     }
 }

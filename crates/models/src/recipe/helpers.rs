@@ -477,8 +477,7 @@ pub async fn insert_nutrition(
                 serving_size: nutrition
                     .per_serving
                     .as_ref()
-                    .map(|n| n.serving_size.clone())
-                    .unwrap_or_default(),
+                    .map_or_default(|n| n.serving_size.clone()),
             })
             .execute(conn)
             .await?;
@@ -599,37 +598,19 @@ where
                         video: video.video,
                         recipe_id,
                         duration: video.duration.map(|duration| {
-                            let days = i32::try_from(duration.whole_days())
-                                .inspect_err(|err| {
-                                    error!(
-                                        days = duration.whole_days(),
-                                        ?err,
-                                        "Failed to cast num days",
-                                    );
-                                })
-                                .unwrap_or_default();
+                            let days = duration.get_days();
 
-                            PgInterval::new(
-                                i64::try_from(duration.whole_microseconds())
-                                    .inspect_err(|err| {
-                                        error!(
-                                            ms = duration.whole_microseconds(),
-                                            ?err,
-                                            "Failed to cast num microseconds",
-                                        );
-                                    })
-                                    .unwrap_or_default(),
-                                days,
-                                i32::try_from(duration.whole_weeks() * 100_000 / 434_524)
-                                    .inspect_err(|err| {
-                                        error!(
-                                            weeks = duration.whole_weeks(),
-                                            ?err,
-                                            "Failed to cast num weeks",
-                                        );
-                                    })
-                                    .unwrap_or_default(),
-                            )
+                            let total_microseconds = i64::from(duration.get_hours())
+                                * 3_600_000_000
+                                + duration.get_minutes() * 60_000_000
+                                + duration.get_seconds() * 1_000_000
+                                + duration.get_milliseconds() * 1_000
+                                + duration.get_microseconds();
+
+                            // (365 days / (12 months * 7 days/week)) = 4.34524
+                            let months_from_weeks = duration.get_weeks() * 100_000 / 434_524;
+
+                            PgInterval::new(total_microseconds, days, months_from_weeks)
                         }),
                         content_url: video.content_url.clone(),
                         embed_url: video.embed_url.clone(),

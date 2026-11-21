@@ -1,4 +1,5 @@
 use ingredient::IngredientParser;
+use jiff::ToSpan;
 use models::{
     Recipe, RecipeDetails,
     params::SearchParams,
@@ -15,7 +16,6 @@ use models::{
 };
 use test_db::default_config;
 use test_harness::{build_server_anonymous, create_app_state};
-use time::Duration;
 use uuid::Uuid;
 
 use crate::{Result, recipe::utils::a_complete_recipe_for_create};
@@ -268,7 +268,7 @@ async fn test_get_many_ok() -> Result<()> {
         ],
         videos: vec![Video {
             video: images1.video,
-            duration: Some(Duration::seconds(420)),
+            duration: Some(7.minutes()),
             content_url: Some("https://example.com/best-food.mp4".into()),
             embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
             created_at: got[0].videos[0].created_at,
@@ -346,7 +346,7 @@ async fn test_get_many_ok() -> Result<()> {
         tools: want_recipe1.tools.clone(),
         videos: vec![Video {
             video: images2.video,
-            duration: Some(Duration::seconds(420)),
+            duration: Some(7.minutes()),
             content_url: Some("https://example.com/best-food.mp4".into()),
             embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
             created_at: got[1].videos[0].created_at,

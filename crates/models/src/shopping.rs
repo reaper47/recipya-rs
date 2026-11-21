@@ -1,23 +1,23 @@
-use std::{collections::HashMap, io::Write, mem::take, path::PathBuf};
+use std::{collections::HashMap, io::Write, path::PathBuf};
 
 use diesel::{dsl::exists, prelude::*, sql_types::Text};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use indexmap::IndexMap;
+use jiff::{Timestamp, tz::TimeZone};
+use jiff_diesel::ToDiesel;
 use krilla::{
-    geom::{PathBuilder, Rect},
     metadata::{DateTime, Metadata, PageLayout},
     page::PageSettings,
-    text::{Font, TextDirection},
 };
-use tempfile::{NamedTempFile, env::temp_dir};
-use time::{PrimitiveDateTime, macros::format_description};
+use num_traits::ToPrimitive;
+use tempfile::env::temp_dir;
 use tracing::error;
 use uuid::Uuid;
 
 use pdf::{
-    components::{add_header, add_page_title},
-    fonts::{ROBOTO_LIGHT_FONT_BYTES, ROBOTO_REGULAR_FONT_BYTES, ROBOTO_SEMIBOLD_FONT_BYTES},
-    math::{measure_text_height, measure_text_width_pt},
+    components::{FooterOptions, PageNumberFormat},
+    document::{Document, InitialState, PageDimensions},
+    math::{FONT_SIZE_BODY_SMALL_PT, MARGIN_PT},
 };
 use repository::{ModelManager, schema};
 
@@ -27,8 +27,6 @@ use crate::{
     user::User,
 };
 
-const FONT_SIZE_BODY_PT: f32 = 11.0;
-const FONT_SIZE_TITLE_PT: f32 = 14.0;
 const ROW_STEP: f32 = 7.5 * 2.834_645_7;
 
 /// Sort order for listing shopping lists.
@@ -49,8 +47,10 @@ pub struct ShoppingList {
     pub name: String,
     pub num_items: i64,
     pub user_id: Uuid,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub updated_at: Timestamp,
 }
 
 #[derive(Associations, Insertable)]
@@ -90,8 +90,10 @@ pub struct ShoppingListItem {
     pub shopping_list_label_id: i64,
     pub position: i32,
     pub is_checked: bool,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub updated_at: Timestamp,
 }
 
 /// Represents a shopping list item for creation.
@@ -167,17 +169,8 @@ pub struct ShoppingListDetails {
     pub id: Uuid,
     pub name: String,
     pub items: Vec<ShoppingListItemDetails>,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
-}
-
-enum DrawCommand {
-    Header,
-    Title { text: String, y: f32 },
-    SectionLabel { text: String, y: f32 },
-    Checkbox { y: f32 },
-    ItemText { text: String, y: f32 },
-    NotesText { text: String, y: f32 },
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 impl ShoppingListDetails {
@@ -195,32 +188,18 @@ impl ShoppingListDetails {
     }
 
     /// Exports the shopping list to a file using the given writer.
-    pub fn export(&self, format: &ExportType, options: Option<ExportOptions>) -> Result<PathBuf> {
+    pub fn export(&self, format: &ExportType, options: &ExportOptions) -> Result<PathBuf> {
         if self.items.is_empty() {
             return Err(Error::EmptyInput);
         }
 
-        let file = NamedTempFile::new()?;
-
-        let mut writer = std::io::BufWriter::new(file);
-        match format {
-            ExportType::Markdown => self.write_markdown(&mut writer)?,
-            ExportType::Text => self.write_text(&mut writer)?,
-            ExportType::Pdf => self.write_pdf(&mut writer, options)?,
-            ExportType::Json => unimplemented!(),
-        }
-        {}
-
-        writer.flush()?;
-
+        let writer = format.export_shopping_list(self, options)?;
         let named = temp_dir().join(format!("{}.{}", self.name, format.extension()));
 
-        let temp_path = writer
+        writer
             .into_inner()
             .map_err(|err| Error::File(err.to_string()))?
-            .into_temp_path();
-
-        temp_path
+            .into_temp_path()
             .persist(&named)
             .map_err(|err| Error::File(err.to_string()))?;
 
@@ -306,59 +285,34 @@ impl ShoppingListDetails {
     /// Panics if the fonts are not available.
     ///
     #[allow(clippy::too_many_lines)]
-    pub fn write_pdf(&self, writer: &mut impl Write, options: Option<ExportOptions>) -> Result<()> {
+    pub fn write_pdf(&self, writer: &mut impl Write, options: &ExportOptions) -> Result<()> {
         if self.items.is_empty() {
             return Err(Error::EmptyInput);
         }
 
-        let (width, height) = options.map_or((612.0, 792.0), |o| o.paper_size);
-        let font_light = Font::new(ROBOTO_LIGHT_FONT_BYTES.into(), 0).unwrap();
-        let font_regular = Font::new(ROBOTO_REGULAR_FONT_BYTES.into(), 0).unwrap();
-        let font_semibold = Font::new(ROBOTO_SEMIBOLD_FONT_BYTES.into(), 0).unwrap();
-
-        let y_title = measure_text_height(FONT_SIZE_TITLE_PT, 1.25, 1) + 5.0;
-        let y_body_1_25 = measure_text_height(FONT_SIZE_BODY_PT, 1.25, 1);
-        let y_body_1_00 = measure_text_height(FONT_SIZE_BODY_PT, 1.0, 1);
-        let y_small_1_00 = measure_text_height(FONT_SIZE_BODY_PT - 2.0, 1.0, 1);
-        let y_small_0_50 = measure_text_height(FONT_SIZE_BODY_PT - 2.0, 0.50, 1);
-
         // Prepare the pages.
-        let mut pages: Vec<Vec<DrawCommand>> = Vec::new();
-        let mut current_page: Vec<DrawCommand> = Vec::new();
-        let mut curr_y = 72.0;
+        let (page_width, page_height) = options.paper_size;
 
-        let start_new_page = |current_page: &mut Vec<DrawCommand>,
-                              pages: &mut Vec<Vec<DrawCommand>>,
-                              curr_y: &mut f32| {
-            let finished = take(current_page);
-            pages.push(finished);
-            current_page.push(DrawCommand::Header);
-            *curr_y = 72.0;
-        };
-
-        current_page.push(DrawCommand::Header);
-        current_page.push(DrawCommand::Title {
-            text: self.name.clone(),
-            y: curr_y,
-        });
-        curr_y += y_title;
+        let mut doc = Document::<InitialState>::new(
+            PageDimensions::new(page_width, page_height),
+            FooterOptions::new_page_number_centre(PageNumberFormat::Long, None, None),
+        );
+        doc.push_header(
+            Some("Recipya shopping list".into()),
+            Some(self.updated_at.strftime("%Y-%m-%d").to_string()),
+        );
+        doc.push_title(&self.name.clone());
 
         for (idx, (&section, items)) in self.items_per_label().iter().enumerate() {
-            if ROW_STEP.mul_add(3.0, curr_y) >= (height - 72.0) {
-                start_new_page(&mut current_page, &mut pages, &mut curr_y);
+            if ROW_STEP.mul_add(3.0, doc.y()) >= (page_height - MARGIN_PT) {
+                doc.new_page();
             }
 
             if section != "No label" {
                 if idx > 0 {
-                    curr_y += 20.0;
+                    doc.increment_y(20.0);
                 }
-
-                current_page.push(DrawCommand::SectionLabel {
-                    text: section.into(),
-                    y: curr_y,
-                });
-
-                curr_y += y_body_1_25;
+                doc.push_label(section, None);
             }
 
             for item in items {
@@ -370,61 +324,61 @@ impl ShoppingListDetails {
                     1.0
                 };
 
-                if ROW_STEP.mul_add(num_rows, curr_y) >= (height - 72.0) {
-                    start_new_page(&mut current_page, &mut pages, &mut curr_y);
+                if ROW_STEP.mul_add(num_rows, doc.y()) >= (page_height - MARGIN_PT) {
+                    doc.new_page();
                 } else {
-                    curr_y += y_body_1_00;
+                    doc.increment_y(doc.line_metrics().body_tight);
                 }
 
-                current_page.push(DrawCommand::Checkbox { y: curr_y });
-                current_page.push(DrawCommand::ItemText {
-                    text: item.quantity.as_ref().map_or_else(
+                doc.push_checkbox_list(
+                    vec![item.quantity.as_ref().map_or_else(
                         || item.ingredient.clone(),
                         |q| format!("{} ({q})", item.ingredient),
-                    ),
-                    y: curr_y,
-                });
-                curr_y += y_body_1_00;
+                    )],
+                    2.0f32.mul_add(-MARGIN_PT, page_width),
+                );
 
-                if let Some(notes) = &item.notes {
-                    current_page.push(DrawCommand::NotesText {
-                        text: notes.clone(),
-                        y: curr_y + 2.5,
-                    });
-                    curr_y += y_small_1_00;
+                if let Some(notes) = item.notes.as_deref() {
+                    doc.push_text(
+                        &format!("    * {notes}"),
+                        doc.font().light(),
+                        FONT_SIZE_BODY_SMALL_PT,
+                        None,
+                    );
+                    doc.increment_y(doc.line_metrics().small);
                 }
 
                 if let Some(recipe) = &item.recipe {
                     if item.notes.is_some() {
-                        curr_y += y_small_0_50;
+                        doc.increment_y(doc.line_metrics().small_half);
                     }
-
-                    current_page.push(DrawCommand::NotesText {
-                        text: format!("For recipe: {}", recipe.name),
-                        y: curr_y + 2.5,
-                    });
-                    curr_y += y_small_1_00;
+                    doc.push_text(
+                        &format!("    * For recipe: {}", recipe.name),
+                        doc.font().light(),
+                        FONT_SIZE_BODY_SMALL_PT,
+                        None,
+                    );
+                    doc.increment_y(doc.line_metrics().small);
                 }
             }
         }
 
-        pages.push(current_page);
-        let num_pages = pages.len();
-
         // Render the pages
-        let mut doc = krilla::Document::new();
+        let doc = doc.finalise();
+        let mut krilla_doc = krilla::Document::new();
 
-        doc.set_metadata(
+        krilla_doc.set_metadata(
             Metadata::new()
                 .title(format!("Shopping List - {}", self.name))
                 .creation_date({
-                    let now = time::UtcDateTime::now();
+                    let now = Timestamp::now().to_zoned_datetime(TimeZone::UTC);
+
                     DateTime::new(u16::try_from(now.year()).unwrap_or_default())
-                        .day(now.day())
-                        .month(now.month() as u8)
-                        .hour(now.hour())
-                        .minute(now.minute())
-                        .second(now.second())
+                        .day(now.day().to_u8().unwrap_or(1))
+                        .month(now.month().to_u8().unwrap_or(1))
+                        .hour(now.hour().to_u8().unwrap_or_default())
+                        .minute(now.minute().to_u8().unwrap_or_default())
+                        .second(now.second().to_u8().unwrap_or_default())
                 })
                 .creator("Recipya".into())
                 .description(format!("PDF export of the '{}' shopping list", self.name))
@@ -432,100 +386,22 @@ impl ShoppingListDetails {
                 .language("en".into()),
         );
 
-        for (idx, commands) in pages.into_iter().enumerate() {
-            let page_num = idx + 1;
-            let mut page =
-                doc.start_page_with(PageSettings::from_wh(width, height).unwrap_or_default());
+        let pages = doc.pages();
+        for (idx, commands) in pages.iter().enumerate() {
+            let mut page = krilla_doc.start_page_with(
+                PageSettings::from_wh(page_width, page_height).unwrap_or_default(),
+            );
             let mut surface = page.surface();
 
             for cmd in commands {
-                match cmd {
-                    DrawCommand::Header => add_header(
-                        Some("Recipya shopping list"),
-                        Some(
-                            &self
-                                .updated_at
-                                .format(&format_description!("[year]-[month]-[day]"))
-                                .unwrap(),
-                        ),
-                        &mut surface,
-                        (
-                            &font_regular,
-                            ROBOTO_REGULAR_FONT_BYTES,
-                            FONT_SIZE_TITLE_PT / 2.0,
-                        ),
-                        72.0,
-                        width,
-                    ),
-                    DrawCommand::Title { text, y } => add_page_title(
-                        &text,
-                        (&font_regular, ROBOTO_REGULAR_FONT_BYTES, FONT_SIZE_TITLE_PT),
-                        &mut surface,
-                        y,
-                        width,
-                    ),
-                    DrawCommand::SectionLabel { text, y } => surface.draw_text(
-                        krilla::geom::Point::from_xy(72.0, y),
-                        font_semibold.clone(),
-                        FONT_SIZE_BODY_PT,
-                        &text,
-                        false,
-                        TextDirection::Auto,
-                    ),
-                    DrawCommand::Checkbox { y } => {
-                        surface.set_stroke(Some(krilla::paint::Stroke {
-                            paint: krilla::color::rgb::Color::new(0, 0, 0).into(),
-                            width: FONT_SIZE_BODY_PT * 0.06,
-                            ..Default::default()
-                        }));
-                        let mut path = PathBuilder::new();
-                        path.push_rect(
-                            Rect::from_ltrb(72.0, y - 8.0, 72.0 + 7.5, y - 0.5).unwrap(),
-                        );
-                        surface.draw_path(&path.finish().unwrap());
-                        surface.set_stroke(None);
-                    }
-                    DrawCommand::ItemText { text, y } => surface.draw_text(
-                        krilla::geom::Point::from_xy(72.0 + 12.5, y),
-                        font_regular.clone(),
-                        FONT_SIZE_BODY_PT,
-                        &text,
-                        false,
-                        TextDirection::Auto,
-                    ),
-                    DrawCommand::NotesText { text, y } => surface.draw_text(
-                        krilla::geom::Point::from_xy(72.0 + 12.5, y),
-                        font_light.clone(),
-                        FONT_SIZE_BODY_PT - 2.0,
-                        &format!("    * {text}"),
-                        false,
-                        TextDirection::Auto,
-                    ),
-                }
+                doc.draw(cmd, &mut surface, idx + 1);
             }
-
-            let footer_text = format!("Page {page_num} of {num_pages}");
-            let footer_width = measure_text_width_pt(
-                &footer_text,
-                &font_regular,
-                ROBOTO_REGULAR_FONT_BYTES,
-                0,
-                FONT_SIZE_BODY_PT - 3.0,
-            );
-            surface.draw_text(
-                krilla::geom::Point::from_xy((width - footer_width) / 2.0, height - 20.0),
-                font_regular.clone(),
-                FONT_SIZE_BODY_PT - 3.0,
-                &footer_text,
-                false,
-                TextDirection::Auto,
-            );
 
             surface.finish();
             page.finish();
         }
 
-        let bytes = doc
+        let bytes = krilla_doc
             .finish()
             .inspect_err(|err| error!(?err, "Failed to create shopping list PDF"))
             .unwrap_or_default();
@@ -547,8 +423,8 @@ pub struct ShoppingListItemDetails {
     pub position: i32,
     pub recipe: Option<ShoppingListRecipeDetails>,
     pub is_checked: bool,
-    pub created_at: PrimitiveDateTime,
-    pub updated_at: PrimitiveDateTime,
+    pub created_at: Timestamp,
+    pub updated_at: Timestamp,
 }
 
 /// Represents a shared recipe
@@ -562,9 +438,12 @@ pub struct ShareShoppingList {
     pub link: Uuid,
     pub user_id: Uuid,
     pub list_id: Uuid,
-    pub created_at: PrimitiveDateTime,
-    pub expires_at: PrimitiveDateTime,
-    pub last_accessed: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub last_accessed: Timestamp,
     pub click_count: i32,
 }
 
@@ -574,7 +453,7 @@ pub struct ShareShoppingList {
 pub(crate) struct ShareShoppingListForInsert {
     pub user_id: Uuid,
     pub list_id: Uuid,
-    pub expires_at: Option<PrimitiveDateTime>,
+    pub expires_at: Option<jiff_diesel::Timestamp>,
 }
 
 /// Represents a recipe with its details for a shopping list item.
@@ -1232,13 +1111,13 @@ impl ShareShoppingList {
         mm: &ModelManager,
         list_id: Uuid,
         user_id: Uuid,
-        expires_at: Option<PrimitiveDateTime>,
+        expires_at: Option<Timestamp>,
     ) -> Result<Self> {
         diesel::insert_into(schema::shares_shopping_lists::table)
             .values(&ShareShoppingListForInsert {
                 user_id,
                 list_id,
-                expires_at,
+                expires_at: expires_at.map(ToDiesel::to_diesel),
             })
             .on_conflict((
                 schema::shares_shopping_lists::user_id,

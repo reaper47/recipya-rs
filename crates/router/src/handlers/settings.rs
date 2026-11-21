@@ -7,14 +7,14 @@ use axum::{
 };
 use axum_htmx::{HX_TRIGGER, HxCurrentUrl, HxRequest};
 use fluent_static::support::axum::RequestLanguage;
-use iso8601::DateTime;
+use jiff::civil::DateTime;
 use serde_json::json;
 use tower_cookies::Cookies;
 use tracing::error;
 use uuid::Uuid;
 
 use app::{message::ToastCtx, state::AppState};
-use config::{DemoState, ProductionState, States};
+use config::DemoState;
 use l10n::Messages;
 use models::{
     Recipe,
@@ -33,7 +33,7 @@ use templates::settings::{EmailSettingsForView, SettingsForView};
 
 use crate::{
     Error,
-    handlers::recipes::common::fetch_categories_keywords,
+    handlers::{common::export_options, recipes::common::fetch_categories_keywords},
     middleware::mw_auth::RequireAuth,
     schemas::settings::{
         BoldIngredientsPayload, ExportDataPayload, LanguagePayload, NutritionSourcePayload,
@@ -114,10 +114,7 @@ pub async fn settings_handler(
         &Data {
             is_admin,
             is_authenticated: true,
-            states: States {
-                autologin: config.states.autologin,
-                ..Default::default()
-            },
+            states: config.states.clone(),
             is_hx_request,
             // TODO: Populate AboutData with good values.
             about: AboutData::new(false, false, DateTime::default(), DateTime::default()),
@@ -173,7 +170,7 @@ pub async fn export_data_handler(
                 "{}://{}{}",
                 u.scheme_str().unwrap_or_default(),
                 u.host().unwrap_or_default(),
-                u.port().map(|p| format!(":{p}")).unwrap_or_default()
+                u.port().map_or_default(|p| format!(":{p}"))
             )
         },
     );
@@ -212,10 +209,18 @@ pub async fn export_data_post_handler(
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     }
 
-    let file_path = match ExportData::new(payload.r#type, recipes, &state.data_dir.images.root)
-        .export()
+    let options = export_options(&state, user.id, &messages)
         .await
-    {
+        .unwrap_or_default();
+
+    let data = ExportData::new(
+        payload.r#type,
+        recipes,
+        &state.data_dir.images.root,
+        options,
+    );
+
+    let file_path = match data.export().await {
         Ok(file) => file,
         Err(err) => {
             error!(user = ?user.id, ?err, "Failed to export recipes");
@@ -266,11 +271,7 @@ pub async fn language_post_handler(
 
     match user.update_language(&state.mm, form.locale).await {
         Ok(locale) => {
-            set_language_cookie(
-                &cookies,
-                &locale,
-                state.config.read().await.states.production == ProductionState::On,
-            );
+            set_language_cookie(&cookies, &locale, state.config.read().await.is_env_prod());
 
             (
                 StatusCode::NO_CONTENT,

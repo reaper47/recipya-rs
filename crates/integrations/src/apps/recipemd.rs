@@ -61,23 +61,17 @@ where
             .split("\n\n")
             .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.replace('\n', " ")))
             .collect(),
-        recipe_yield: to_yield(i64::from(
-            recipe
-                .yields
-                .first()
-                .map(|amount| match amount.factor {
-                    Factor::Integer(n) => i16::try_from(n)
-                        .inspect_err(|err| error!(?n, ?err, "Failed to parse integer"))
-                        .unwrap_or_default(),
-                    Factor::Fraction(numerator, denominator) => {
-                        (numerator / denominator).cast_signed()
-                    }
-                    Factor::Float(n) => {
-                        n.round().clamp(f32::from(i16::MIN), f32::from(i16::MAX)) as i16
-                    }
-                })
-                .unwrap_or_default(),
-        )),
+        recipe_yield: to_yield(i64::from(recipe.yields.first().map_or_default(|amount| {
+            match amount.factor {
+                Factor::Integer(n) => i16::try_from(n)
+                    .inspect_err(|err| error!(?n, ?err, "Failed to parse integer"))
+                    .unwrap_or_default(),
+                Factor::Fraction(numerator, denominator) => (numerator / denominator).cast_signed(),
+                Factor::Float(n) => {
+                    n.round().clamp(f32::from(i16::MIN), f32::from(i16::MAX)) as i16
+                }
+            }
+        }))),
         ..Default::default()
     }])
 }
@@ -87,20 +81,17 @@ fn ingredients_to_string(ingredients: Vec<Ingredient>) -> Vec<String> {
 }
 
 fn ingredient_to_string(ingredient: Ingredient) -> String {
-    let amount = ingredient
-        .amount
-        .map(|amount| {
-            let factor = match amount.factor {
-                Factor::Integer(n) => f64::from(n),
-                Factor::Fraction(numerator, denominator) => {
-                    f64::from(numerator) / f64::from(denominator)
-                }
-                Factor::Float(n) => f64::from(n),
-            };
-            let unit = amount.unit.unwrap_or_default();
-            format!("{factor} {unit}").trim().to_string()
-        })
-        .unwrap_or_default();
+    let amount = ingredient.amount.map_or_default(|amount| {
+        let factor = match amount.factor {
+            Factor::Integer(n) => f64::from(n),
+            Factor::Fraction(numerator, denominator) => {
+                f64::from(numerator) / f64::from(denominator)
+            }
+            Factor::Float(n) => f64::from(n),
+        };
+        let unit = amount.unit.unwrap_or_default();
+        format!("{factor} {unit}").trim().to_string()
+    });
 
     let link = ingredient
         .link

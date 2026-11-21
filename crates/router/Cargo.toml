@@ -28,12 +28,11 @@ email.workspace = true
 fluent-static.workspace = true
 futures.workspace = true
 futures-util.workspace = true
-humantime.workspace = true
 indexmap.workspace = true
 infer.workspace = true
 integrations.workspace = true
-iso8601.workspace = true
 itertools.workspace = true
+jiff.workspace = true
 l10n.workspace = true
 math.workspace = true
 mime_guess = "2.0.5"
@@ -43,7 +42,7 @@ rand.workspace = true
 recipya-scraper.workspace = true
 repository.workspace = true
 reqwest.workspace = true
-rust-embed = { version = "8.12.0", features = ["axum-ex"] }
+rust-embed = { version = "8.14.0", features = ["axum-ex"] }
 schema-org = { path = "../schema-org", features = ["json-schema"] }
 serde.workspace = true
 serde_json.workspace = true
@@ -51,7 +50,6 @@ strum_macros.workspace = true
 support.workspace = true
 templates.workspace = true
 thiserror = "2.0.21"
-time.workspace = true
 tokio.workspace = true
 tokio-stream = { version = "0.1.19", features = ["sync"] }
 tokio-util = "0.7.20"
@@ -71,7 +69,6 @@ diesel-async.workspace = true
 image = "0.25.10"
 jsonwebtoken.workspace = true
 pretty_assertions.workspace = true
-time.workspace = true
 tokio.workspace = true
 tracing-test.workspace = true
 test-db.workspace = true

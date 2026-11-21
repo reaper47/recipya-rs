@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 use std::io::{BufRead, Read, Seek};
-use std::str::FromStr;
 
-use iso8601::DateTime;
 use itertools::Itertools;
+use jiff::civil::DateTime;
+use jiff::{Span, Timestamp, Unit};
+use num_traits::ToPrimitive;
 use serde::Deserialize;
 use tracing::error;
 use url::Url;
@@ -200,8 +201,7 @@ impl From<RecipeComponents<'_>> for RecipeSage {
                 .collect(),
             instructions,
             keywords: items
-                .map(|(_a, b)| b.to_vec())
-                .unwrap_or_default()
+                .map_or_default(|(_a, b)| b.to_vec())
                 .into_iter()
                 .map(str::trim)
                 .map(String::from)
@@ -255,8 +255,7 @@ impl From<RecipeSageXMLRecipe<'_>> for RecipeSage {
                 .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().replace('\n', " ")))
                 .collect(),
             keywords: items
-                .map(|(_a, b)| b.iter().map(|s| s.title.to_string()).collect())
-                .unwrap_or_default(),
+                .map_or_default(|(_a, b)| b.iter().map(|s| s.title.to_string()).collect()),
             source: if r.source.is_empty() {
                 Some(r.url.to_string()).filter(|s| !s.is_empty())
             } else {
@@ -299,7 +298,7 @@ impl From<Recipe> for RecipeSage {
                 .is_based_on
                 .into_iter()
                 .next()
-                .map(|s| match s {
+                .map_or_default(|s| match s {
                     RecipeIsBasedOnFieldEnum::CreativeWork(obj) => {
                         obj.is_based_on.into_iter().next().map(|s| match s {
                             CreativeWorkIsBasedOnFieldEnum::CreativeWork(_)
@@ -309,8 +308,7 @@ impl From<Recipe> for RecipeSage {
                     }
                     RecipeIsBasedOnFieldEnum::Product(_) => Some(String::new()),
                     RecipeIsBasedOnFieldEnum::URL(s) => s.into(),
-                })
-                .unwrap_or_default(),
+                }),
             notes: r
                 .comment
                 .into_iter()
@@ -322,30 +320,22 @@ impl From<Recipe> for RecipeSage {
                 .next(),
             nutrition: None,
             title: r.name.into_iter().next().unwrap_or_default(),
-            r#yield: r
-                .recipe_yield
-                .first()
-                .map(|v| match v {
-                    RecipeRecipeYieldFieldEnum::QuantitativeValue(v) => v
-                        .value
-                        .first()
-                        .map(|v| match v {
-                            QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => {
-                                s.parse::<i16>().ok().unwrap_or_default()
-                            }
-                            QuantitativeValueValueFieldEnum::Number(i) => {
-                                i.round().clamp(f64::from(i16::MIN), f64::from(i16::MAX)) as i16
-                            }
-                            QuantitativeValueValueFieldEnum::StructuredValue(_) => 0,
-                            QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
-                        })
-                        .unwrap_or_default(),
-                    RecipeRecipeYieldFieldEnum::Number(n) => float_to_i16_safe(*n),
-                    RecipeRecipeYieldFieldEnum::Text(s) => {
-                        s.parse::<i16>().ok().unwrap_or_default()
-                    }
-                })
-                .unwrap_or_default(),
+            r#yield: r.recipe_yield.first().map_or_default(|v| match v {
+                RecipeRecipeYieldFieldEnum::QuantitativeValue(v) => {
+                    v.value.first().map_or_default(|v| match v {
+                        QuantitativeValueValueFieldEnum::BooleanEnumOrText(s) => {
+                            s.parse::<i16>().ok().unwrap_or_default()
+                        }
+                        QuantitativeValueValueFieldEnum::Number(i) => {
+                            i.round().clamp(f64::from(i16::MIN), f64::from(i16::MAX)) as i16
+                        }
+                        QuantitativeValueValueFieldEnum::StructuredValue(_) => 0,
+                        QuantitativeValueValueFieldEnum::QuantitativeValue(q) => q.to_number(),
+                    })
+                }
+                RecipeRecipeYieldFieldEnum::Number(n) => float_to_i16_safe(*n),
+                RecipeRecipeYieldFieldEnum::Text(s) => s.parse::<i16>().ok().unwrap_or_default(),
+            }),
             keywords: r
                 .keywords
                 .into_iter()
@@ -386,8 +376,7 @@ impl From<RecipeSage> for Recipe {
                     text: vec![s],
                     ..Default::default()
                 })
-                .map(|c| vec![c])
-                .unwrap_or_default(),
+                .map_or_default(|c| vec![c]),
             image: r
                 .image
                 .map_or(Vec::new(), |s| vec![RecipeImageFieldEnum::URL(s)]),
@@ -409,14 +398,13 @@ impl From<RecipeSage> for Recipe {
                 .total_time
                 .filter(|s| s != ":\n")
                 .map_or(Vec::new(), |s| vec![DurationOrText::Text(s)]),
-            recipe_category: r.category.map(|s| vec![s]).unwrap_or_default(),
+            recipe_category: r.category.map_or_default(|s| vec![s]),
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
             recipe_yield: to_yield(i64::from(r.r#yield)),
             description: r
                 .description
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s)]),
             is_based_on: to_is_based_on(&r.source.unwrap_or_default()),
             url: r.url.map_or(Vec::new(), |s| vec![s]),
             ..Default::default()
@@ -428,22 +416,8 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
     fn from(r: RecipeSageXMLRecipe) -> Self {
         let categories = r.labels.unwrap_or_default();
         let categories = categories.split_first();
-
-        let active_time_secs = match humantime::parse_duration(&r.active_time) {
-            Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
-            Err(err) => {
-                error!(?err, "Failed to parse prep time of a RecipeSage recipe");
-                15 * 60
-            }
-        };
-
-        let total_time_secs = match humantime::parse_duration(&r.total_time) {
-            Ok(d) => i32::try_from(d.as_secs()).unwrap_or_default(),
-            Err(err) => {
-                error!(?err, "Failed to total time of a RecipeSage recipe");
-                30 * 60
-            }
-        };
+        let active_time_secs = parse_secs(&r.active_time, "active time", 15 * 60);
+        let total_time_secs = parse_secs(&r.total_time, "total time", 30 * 60);
 
         let url = Url::parse(&r.url).ok();
 
@@ -464,14 +438,20 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
                 }]
             },
             cook_time: seconds_to_duration(total_time_secs - active_time_secs),
-            date_created: DateTime::from_str(&r.created_at)
-                .ok()
-                .map(|d| vec![d.to_string()])
-                .unwrap_or_default(),
-            date_modified: DateTime::from_str(&r.updated_at)
-                .ok()
-                .map(|d| vec![d.to_string()])
-                .unwrap_or_default(),
+            date_created: r
+                .created_at
+                .parse::<DateTime>()
+                .map(|d| d.to_string())
+                .or_else(|_| r.created_at.parse::<Timestamp>().map(|t| t.to_string()))
+                .into_iter()
+                .collect(),
+            date_modified: r
+                .updated_at
+                .parse::<DateTime>()
+                .map(|d| d.to_string())
+                .or_else(|_| r.updated_at.parse::<Timestamp>().map(|t| t.to_string()))
+                .into_iter()
+                .collect(),
             description: if r.description.is_empty() {
                 vec![]
             } else {
@@ -484,17 +464,14 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
             },
             keywords: categories
                 .map(|(_, b)| b.iter().map(|s| s.title.as_ref()).collect::<Vec<_>>())
-                .map(|v| {
+                .map_or_default(|v| {
                     v.into_iter()
                         .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
                         .collect()
-                })
-                .unwrap_or_default(),
+                }),
             name: vec![r.title.to_string()],
             prep_time: seconds_to_duration(active_time_secs),
-            recipe_category: categories
-                .map(|(a, _b)| vec![a.title.to_string()])
-                .unwrap_or_default(),
+            recipe_category: categories.map_or_default(|(a, _b)| vec![a.title.to_string()]),
             recipe_ingredient: r
                 .ingredients
                 .lines()
@@ -506,8 +483,22 @@ impl From<RecipeSageXMLRecipe<'_>> for Recipe {
                 .map(|s| RecipeRecipeInstructionsFieldEnum::Text(s.trim().replace('\n', " ")))
                 .collect(),
             recipe_yield: to_yield(extract_number(&r.r#yield).unwrap_or_default()),
-            url: url.map(|u| vec![u.to_string()]).unwrap_or_default(),
+            url: url.map_or_default(|u| vec![u.to_string()]),
             ..Default::default()
+        }
+    }
+}
+
+fn parse_secs(value: &str, field: &str, default_secs: i32) -> i32 {
+    match value.parse::<Span>() {
+        Ok(span) => span
+            .total(Unit::Second)
+            .ok()
+            .and_then(|secs| secs.round().to_i32())
+            .unwrap_or_default(),
+        Err(err) => {
+            error!(field, ?err, "Failed to time of a RecipeSage recipe");
+            default_secs
         }
     }
 }

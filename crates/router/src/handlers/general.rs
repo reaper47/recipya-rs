@@ -103,8 +103,7 @@ pub async fn download_handler(
 
     let mime_type = mime_guess::from_path(&file_path)
         .first()
-        .map(|m| m.to_string())
-        .unwrap_or_default();
+        .map_or_default(|m| m.to_string());
 
     let file = match tokio::fs::File::open(&file_path).await {
         Ok(f) => f,

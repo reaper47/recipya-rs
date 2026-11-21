@@ -206,7 +206,7 @@ where
         .filter(|n| n != &NutritionInformation::default())
         .map_or(Vec::new(), |n| vec![n]),
         prep_time: seconds_to_duration(i32::try_from(crouton.duration * 60).unwrap_or_default()),
-        recipe_category: category.map(|c| vec![c]).unwrap_or_default(),
+        recipe_category: category.map_or_default(|c| vec![c]),
         recipe_ingredient: crouton
             .ingredients
             .into_iter()
@@ -227,7 +227,7 @@ where
             acc
         }),
         recipe_yield: to_yield(crouton.serves),
-        url: source.map(|s| vec![s]).unwrap_or_default(),
+        url: source.map_or_default(|s| vec![s]),
         ..Default::default()
     }])
 }

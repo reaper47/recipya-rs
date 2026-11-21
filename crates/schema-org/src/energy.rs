@@ -21,13 +21,11 @@ impl Energy {
 
     /// Converts the energy to a number.
     pub fn to_number(&self) -> i16 {
-        Some(self.as_ref())
-            .map(|s| {
-                s.split(' ')
-                    .map(|s| s.parse::<i16>().unwrap_or_default())
-                    .sum()
-            })
-            .unwrap_or_default()
+        Some(self.as_ref()).map_or_default(|s| {
+            s.split(' ')
+                .map(|s| s.parse::<i16>().unwrap_or_default())
+                .sum()
+        })
     }
 }
 

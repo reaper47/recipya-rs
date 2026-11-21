@@ -92,14 +92,12 @@ impl From<RecipeComponents<'_>> for MealMasterRecipe {
             author: r.author.map(String::from),
             title: r.title.to_string(),
             category: items.map(|(a, _)| a.to_string()),
-            keywords: items
-                .map(|(_, b)| {
-                    b.iter()
-                        .filter(|&s| s != &"and")
-                        .map(std::string::ToString::to_string)
-                        .collect()
-                })
-                .unwrap_or_default(),
+            keywords: items.map_or_default(|(_, b)| {
+                b.iter()
+                    .filter(|&s| s != &"and")
+                    .map(std::string::ToString::to_string)
+                    .collect()
+            }),
             yield_: r.servings,
             ingredients: r.ingredients.to_sections(),
             instructions,
@@ -147,9 +145,8 @@ impl From<MealMasterRecipe> for Recipe {
                 .collect(),
             name: Some(r.title)
                 .filter(|s| !s.is_empty())
-                .map(|s| vec![s])
-                .unwrap_or_default(),
-            nutrition: r.nutrition.map(|n| vec![n]).unwrap_or_default(),
+                .map_or_default(|s| vec![s]),
+            nutrition: r.nutrition.map_or_default(|n| vec![n]),
             recipe_category: r
                 .category
                 .filter(|s| !s.is_empty())
@@ -159,8 +156,7 @@ impl From<MealMasterRecipe> for Recipe {
             recipe_yield: to_yield(i64::from(r.yield_)),
             url: Url::parse(&r.source)
                 .ok()
-                .map(|u| vec![u.to_string()])
-                .unwrap_or_default(),
+                .map_or_default(|u| vec![u.to_string()]),
             ..Default::default()
         }
     }

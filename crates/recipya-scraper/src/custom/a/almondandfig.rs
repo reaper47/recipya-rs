@@ -27,8 +27,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .select(&Selector::parse("strong")?)
             .map(|el| el.text().collect::<String>().trim().to_string())
             .find(|s| s.len() > 80)
-            .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
-            .unwrap_or_default(),
+            .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s)]),
         image: doc
             .select(&Selector::parse(
                 "article img, main img, .content-inner img, img",
@@ -42,20 +41,15 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                 })
             })
             .and_then(|el| el.value().attr("src"))
-            .map(|src| vec![RecipeImageFieldEnum::URL(src.to_string())])
-            .unwrap_or_default(),
-        name: required_text(root, "title")
-            .ok()
-            .map(|s| {
-                vec![
-                    s.split('|')
-                        .next()
-                        .map(str::trim)
-                        .map(ToString::to_string)
-                        .unwrap_or_default(),
-                ]
-            })
-            .unwrap_or_default(),
+            .map_or_default(|src| vec![RecipeImageFieldEnum::URL(src.to_string())]),
+        name: required_text(root, "title").ok().map_or_default(|s| {
+            vec![
+                s.split('|')
+                    .next()
+                    .map(str::trim)
+                    .map_or_default(ToString::to_string),
+            ]
+        }),
         recipe_ingredient: doc
             .select(&section_heading_sel)
             .find(|el| {
@@ -117,7 +111,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
 
                 sections
             })
-            .map(|sections| {
+            .map_or_default(|sections| {
                 sections
                     .into_iter()
                     .filter(|(_, items)| !items.is_empty())
@@ -126,8 +120,7 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                         RecipeRecipeIngredientFieldEnum::new_section(&name, &items)
                     })
                     .collect::<Vec<_>>()
-            })
-            .unwrap_or_default(),
+            }),
         recipe_instructions: doc
             .select(&section_heading_sel)
             .find(|el| {
@@ -141,14 +134,13 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
                     scraper::ElementRef::wrap(sib).filter(|el| el.value().name() == "ol")
                 })
             })
-            .map(|ol| {
+            .map_or_default(|ol| {
                 ol.select(&li_sel)
                     .map(|li| li.text().collect::<String>().trim().to_string())
                     .filter(|s| !s.is_empty())
                     .map(RecipeRecipeInstructionsFieldEnum::Text)
                     .collect::<Vec<_>>()
-            })
-            .unwrap_or_default(),
+            }),
         url: vec![url.to_string()],
         ..Default::default()
     })

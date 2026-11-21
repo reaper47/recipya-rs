@@ -18,15 +18,14 @@ axum.workspace = true
 base64.workspace = true
 derive_more.workspace = true
 directories = "6.0.0"
-encoding_rs = "0.8.35"
+encoding_rs = "0.8.44"
 futures-util.workspace = true
 image = { version = "0.25.10", features = ["webp"] }
 itertools.workspace = true
+jiff.workspace = true
 rapidfuzz = "0.5.0"
 rayon = "1.12.0"
 regex.workspace = true
-reqwest.workspace = true
-time = { workspace = true, features = ["formatting", "parsing"] }
 tokio.workspace = true
 tracing.workspace = true
 url.workspace = true
@@ -34,6 +33,13 @@ uuid.workspace = true
 webp = "0.3.1"
 whatlang.workspace = true
 winnow.workspace = true
+wreq-util = "0.2.1"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+wreq = { version = "0.16.3", features = ["prefix-symbols"] }
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+wreq = { version = "0.16.3" }
 
 [dev-dependencies]
 divan.workspace = true

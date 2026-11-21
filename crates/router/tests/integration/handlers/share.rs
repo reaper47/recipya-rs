@@ -1,7 +1,7 @@
 use axum::http::Method;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use time::{Duration, OffsetDateTime, PrimitiveDateTime};
+use jiff::{SignedDuration, Timestamp};
 use uuid::Uuid;
 
 use app::state::AppState;
@@ -64,10 +64,7 @@ async fn test_share_custom_expires_at_time_ok() -> Result<()> {
     let settings = UserSettingDetails::get(&state.mm, user_id).await?;
     let (recipe, _) = a_complete_recipe_for_create();
     let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
-    let expires_at = {
-        let dt = OffsetDateTime::now_utc() + Duration::days(31);
-        PrimitiveDateTime::new(dt.date(), dt.time())
-    };
+    let expires_at = Timestamp::now() + SignedDuration::from_hours(31 * 24);
 
     let res = server
         .post(&base_uri(recipe_id))
@@ -99,7 +96,7 @@ async fn test_invalid_expires_at_time_defaults_to_7_days_ok() -> Result<()> {
     let settings = UserSettingDetails::get(&state.mm, user_id).await?;
     let (recipe, _) = a_complete_recipe_for_create();
     let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
-    let now = OffsetDateTime::now_utc();
+    let now = Timestamp::now();
 
     let res = server
         .post(&base_uri(recipe_id))
@@ -109,7 +106,7 @@ async fn test_invalid_expires_at_time_defaults_to_7_days_ok() -> Result<()> {
     let share = get_first_shared_recipe(state, user_id, recipe_id).await;
     res.assert_status_ok();
     pretty_assertions::assert_eq!(
-        ((share.expires_at.assume_utc() - now).whole_hours() + 1) / 24,
+        (share.expires_at.duration_since(now).as_hours() + 1) / 24,
         7
     );
     Ok(())
@@ -123,10 +120,7 @@ async fn test_share_twice_ok() -> Result<()> {
     let settings = UserSettingDetails::get(&state.mm, user_id).await?;
     let (recipe, _) = a_complete_recipe_for_create();
     let recipe_id = Recipe::create(&state.mm, user_id, &recipe, &settings).await?;
-    let expires_at = {
-        let dt = OffsetDateTime::now_utc() + Duration::days(31);
-        PrimitiveDateTime::new(dt.date(), dt.time())
-    };
+    let expires_at = Timestamp::now() + SignedDuration::from_hours(31 * 24);
     let _ = server
         .post(&base_uri(recipe_id))
         .form(&ShareRecipeForm::new(Some(expires_at.to_string())))

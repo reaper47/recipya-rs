@@ -79,9 +79,8 @@ impl From<SaffronRecipe> for Recipe {
             cook_time: seconds_to_duration(r.cook_seconds.unwrap_or_default()),
             description: r
                 .description
-                .map(|s| vec![RecipeDescriptionFieldEnum::Text(s)])
-                .unwrap_or_default(),
-            headline: r.cookbook.map(|s| vec![s]).unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeDescriptionFieldEnum::Text(s)]),
+            headline: r.cookbook.map_or_default(|s| vec![s]),
             image: urls_to_image_object(vec![r.image.unwrap_or_default()]),
             name: vec![r.title],
             is_based_on: to_is_based_on(&r.source.unwrap_or_default()),
@@ -97,10 +96,7 @@ impl From<SaffronRecipe> for Recipe {
                 .map(RecipeRecipeInstructionsFieldEnum::Text)
                 .collect(),
             recipe_yield: to_yield(i64::from(r.servings.unwrap_or_default())),
-            url: r
-                .original_url
-                .map(|u| vec![u.to_string()])
-                .unwrap_or_default(),
+            url: r.original_url.map_or_default(|u| vec![u.to_string()]),
             ..Default::default()
         }
     }

@@ -1,7 +1,8 @@
 use diesel::prelude::*;
 use diesel::{Queryable, Selectable};
 use diesel_async::RunQueryDsl;
-use time::PrimitiveDateTime;
+use jiff::Timestamp;
+use jiff_diesel::ToDiesel;
 use uuid::Uuid;
 
 use repository::{ModelManager, schema};
@@ -25,11 +26,14 @@ pub struct ShareRecipe {
     /// The foreign key linking the shared recipe to its content.
     pub recipe_id: i64,
     /// The timestamp when the shared recipe link was generated.
-    pub created_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
     /// The timestamp when the shared recipe link expires.
-    pub expires_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
     /// The timestamp when the shared recipe was last accessed.
-    pub last_accessed: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub last_accessed: Timestamp,
     /// The number of times the shared recipe was opened.
     pub click_count: i32,
 }
@@ -40,7 +44,7 @@ pub struct ShareRecipe {
 pub(crate) struct SharedRecipeForInsert {
     pub user_id: Uuid,
     pub recipe_id: i64,
-    pub expires_at: Option<PrimitiveDateTime>,
+    pub expires_at: Option<jiff_diesel::Timestamp>,
 }
 
 impl ShareRecipe {
@@ -50,13 +54,13 @@ impl ShareRecipe {
         mm: &ModelManager,
         recipe_id: i64,
         user_id: Uuid,
-        expires_at: Option<PrimitiveDateTime>,
+        expires_at: Option<Timestamp>,
     ) -> Result<Self> {
         diesel::insert_into(schema::shares_recipes::table)
             .values(&SharedRecipeForInsert {
                 user_id,
                 recipe_id,
-                expires_at,
+                expires_at: expires_at.map(ToDiesel::to_diesel),
             })
             .on_conflict((
                 schema::shares_recipes::user_id,

@@ -66,8 +66,6 @@ pub enum Error {
     #[from]
     Config(config::Error),
     #[from]
-    HumanTime(humantime::DurationError),
-    #[from]
     Email(email::Error),
     #[from]
     Http(axum::http::Error),

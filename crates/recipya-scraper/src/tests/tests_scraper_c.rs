@@ -1,10 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use iso8601::{
-        Date::YMD,
-        Duration::YMDHMS,
-        {DateTime, Time},
-    };
     use url::Url;
 
     use crate::core::scraper::schema::*;

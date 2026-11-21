@@ -2,7 +2,7 @@ use std::default::Default;
 
 use axum::http::{Method, StatusCode};
 use axum_htmx::HX_REDIRECT;
-use time::OffsetDateTime;
+use jiff::Timestamp;
 
 use auth::token::{
     http::{AUTH_TOKEN, REFRESH_TOKEN},
@@ -442,7 +442,7 @@ mod tests_login {
         LoginForm {
             email: test_user_email(),
             password: test_user_password(),
-            remember_me: None,
+            remember_me: false,
         }
     }
 
@@ -463,7 +463,7 @@ mod tests_login {
                 r#"<h2 class="card-title self-center underline">Log in to Recipya</h2>"#,
                 r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input class="input" id="email" type="email" required name="email" placeholder="Enter email address" autocomplete="username" value=""></fieldset>"#,
                 r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input class="input" id="password" type="password" required name="password" placeholder="Enter password" autocomplete="current-password" value=""></fieldset>"#,
-                r#"<label class="fieldset-label py-2"><input class="checkbox" type="checkbox" name="remember-me" checked>Remember me</label>"#,
+                r#"<label class="fieldset-label py-2"><input class="checkbox" type="checkbox" name="remember-me">Remember me</label>"#,
                 r#"<div class="card-actions justify-end"><button class="btn btn-primary btn-block btn-sm">Log in</button></div><div class="grid text-center gap-2"><div><div class="divider uppercase">or</div><a class="btn btn-sm btn-block btn-outline" href="/auth/register">Create an account</a></div></div>"#,
             ],
         );
@@ -489,7 +489,7 @@ mod tests_login {
             &[
                 r#"<fieldset class="fieldset"><label class="label" for="email">Email</label><input class="input" id="email" type="email" required name="email" placeholder="Enter email address" autocomplete="username" value="demo@demo.com"></fieldset>"#,
                 r#"<fieldset class="fieldset"><label class="label block" for="password">Password<a class="btn btn-sm btn-ghost float-right" href="/auth/forgot-password">Forgot your password?</a></label><input class="input" id="password" type="password" required name="password" placeholder="Enter password" autocomplete="current-password" value="demodemo"></fieldset>"#,
-                r#"<label class="fieldset-label py-2"><input class="checkbox" type="checkbox" name="remember-me" checked>Remember me</label>"#,
+                r#"<label class="fieldset-label py-2"><input class="checkbox" type="checkbox" name="remember-me">Remember me</label>"#,
             ],
         );
         Ok(())
@@ -556,7 +556,7 @@ mod tests_login {
             .form(&LoginForm {
                 email: test_user_email(),
                 password: test_user_password(),
-                remember_me: Some(true),
+                remember_me: true,
             })
             .await;
 
@@ -564,7 +564,7 @@ mod tests_login {
         res.assert_header(HX_REDIRECT, "/recipes");
         let token = res.cookie(AUTH_TOKEN).value().to_string();
         let claims = validate_token(&token)?;
-        let now = usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
+        let now = usize::try_from(Timestamp::now().as_second()).unwrap_or_default();
         assert!(
             (claims.exp - now) >= 15 * 60,
             "expiration time should be 15 minutes"
@@ -592,7 +592,7 @@ mod tests_login {
             .form(&LoginForm {
                 email: Email::try_from("hello@example.com").unwrap(),
                 password: Password::try_from("123456789").unwrap(),
-                remember_me: None,
+                remember_me: false,
             })
             .await;
 
@@ -607,13 +607,14 @@ mod tests_login {
     #[tokio::test]
     async fn test_post_login_remember_me_checked_ok() -> Result<()> {
         let (server, _) = build_server_anonymous(default_config()).await?;
+        let before = usize::try_from(jiff::Timestamp::now().as_second()).unwrap_or_default();
 
         let res = server
             .post(BASE_URI)
             .form(&LoginForm {
                 email: test_user_email(),
                 password: test_user_password(),
-                remember_me: Some(true),
+                remember_me: true,
             })
             .await;
 
@@ -621,10 +622,9 @@ mod tests_login {
         res.assert_header(HX_REDIRECT, "/recipes");
         let token = res.cookie(AUTH_TOKEN).value().to_string();
         let claims = validate_token(&token)?;
-        let now = usize::try_from(OffsetDateTime::now_utc().unix_timestamp()).unwrap_or_default();
         assert!(
-            (claims.exp - now) >= 15 * 60,
-            "expiration time should be 15 minutes"
+            claims.exp >= before + 15 * 60,
+            "expiration time should be at least 15 minutes from the request"
         );
         Ok(())
     }
@@ -758,7 +758,7 @@ mod tests_register {
             .form(&LoginForm {
                 email: form.email.clone(),
                 password: form.password.clone(),
-                remember_me: Some(false),
+                remember_me: false,
             })
             .await;
         let res = server.post(BASE_URI).form(&form).await;

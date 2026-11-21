@@ -9,12 +9,11 @@ use axum::body::Bytes;
 use flate2::read::GzDecoder;
 use schema_org::Recipe;
 use tracing::error;
-use wreq::Client;
-use wreq_util::Emulation;
 
-use support::{fs::MockFs, time::DEFAULT_HTTP_CONNECTION_TIMEOUT};
+use support::{fs::MockFs, net::SsrfSafeClient};
+use url::Url;
 
-use crate::{ENABLE_JS, client::HttpClient};
+use crate::{ENABLE_JS, client::HttpClient, error::fetch_err};
 use crate::{FORBIDDEN, websites::Website};
 use crate::{Result, Scraper};
 
@@ -84,21 +83,17 @@ pub async fn scrape(website: Website, number: usize) -> Result<Recipe> {
 }
 
 async fn fetch_html(url: &str) -> Result<Bytes> {
-    let client = wreq::Client::new();
-    let res = client.get(url).send().await?;
+    let client = SsrfSafeClient::new()?;
+
+    let url = Url::parse(url)?;
+    let res = client.get(url.clone()).await?;
     let is_client_error = res.status().is_client_error();
+    let bytes = res.bytes().await.map_err(fetch_err)?;
 
-    let bytes = res.bytes().await?;
-    let bytes_vec = bytes.to_vec();
-    let text = String::from_utf8_lossy(&bytes_vec);
-
+    let text = String::from_utf8_lossy(&bytes);
     if is_client_error || text.contains(ENABLE_JS) || text.contains(FORBIDDEN) {
-        let client = Client::builder()
-            .connect_timeout(DEFAULT_HTTP_CONNECTION_TIMEOUT)
-            .emulation(Emulation::Chrome145)
-            .build()?;
-        let resp = client.get(url).send().await?;
-        Ok(resp.bytes().await?)
+        let resp = client.get(url).await?;
+        Ok(resp.bytes().await.map_err(fetch_err)?)
     } else {
         Ok(bytes)
     }
@@ -169,12 +164,12 @@ pub async fn scrape_test_websites(number: usize) -> Result<()> {
     let path = get_html_file_path(website, 0);
 
     if !path.exists() {
-        let client = wreq::Client::new();
-        match client.get(url).send().await {
+        let client = SsrfSafeClient::new().unwrap();
+        match client.get(Url::parse(url)?).await {
             Ok(res) => {
                 fs::File::create(path)
                     .unwrap()
-                    .write(&res.bytes().await?)
+                    .write(&res.bytes().await.map_err(fetch_err)?)
                     .inspect_err(|err| error!(?website, ?err, "Could not write"))
                     .unwrap();
             }

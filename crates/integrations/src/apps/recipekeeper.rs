@@ -110,14 +110,13 @@ impl NutritionComponents<'_> {
 impl From<NutritionComponents<'_>> for NutritionInformation {
     fn from(n: NutritionComponents<'_>) -> Self {
         let to_mass = |opt: Option<String>| {
-            opt.map(|s| {
+            opt.map_or_default(|s| {
                 if s == "0 g" {
                     vec![]
                 } else {
                     vec![Mass::new(s)]
                 }
             })
-            .unwrap_or_default()
         };
 
         Self {
@@ -267,8 +266,7 @@ where
                     .select(&sel_title)
                     .next()
                     .map(|el| el.text().collect::<String>())
-                    .map(Cow::Owned)
-                    .unwrap_or_default(),
+                    .map_or_default(Cow::Owned),
                 r#yield: div
                     .select(&sel_yield)
                     .next()

@@ -4,9 +4,9 @@ use axum::extract::{
     FromRequest, Multipart, Request,
     multipart::{InvalidBoundary, MultipartRejection},
 };
+use jiff::civil::{Date, DateTime};
 use schema_org::Recipe;
 use serde::{Deserialize, Serialize};
-use time::{Date, PrimitiveDateTime, macros::format_description};
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -170,7 +170,7 @@ pub struct PreviewForm {
 #[derive(Default)]
 pub struct TimelineEventForm {
     pub title: String,
-    pub date: Option<PrimitiveDateTime>,
+    pub date: Option<DateTime>,
     pub image: HashMap<String, PathBuf>,
     pub original_image_filename: Option<Uuid>,
     pub comment: Option<String>,
@@ -205,18 +205,16 @@ where
             match name {
                 "title" => form.title = text_trim(field).await.unwrap_or_default(),
                 "date" => {
-                    form.date = text_trim(field).await.and_then(|s| {
-                        Date::parse(&s, format_description!("[year]-[month]-[day]"))
-                            .ok()
-                            .map(|d| PrimitiveDateTime::new(d, time::Time::MIDNIGHT))
-                    });
+                    form.date = text_trim(field)
+                        .await
+                        .and_then(|s| s.parse::<Date>().ok())
+                        .map(|d| d.at(0, 0, 0, 0));
                 }
                 "image" => {
                     form.original_image_filename = field.file_name().map(|s| {
                         let stem = PathBuf::from(s)
                             .file_stem()
-                            .map(|s| s.to_string_lossy().into_owned())
-                            .unwrap_or_default();
+                            .map_or_default(|s| s.to_string_lossy().into_owned());
 
                         Uuid::parse_str(&stem).unwrap_or_default()
                     });

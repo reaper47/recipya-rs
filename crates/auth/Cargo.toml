@@ -20,6 +20,7 @@ base64.workspace = true
 derive_more.workspace = true
 enum_dispatch = "0.3.13"
 hmac = "0.13.0"
+jiff.workspace = true
 jsonwebtoken.workspace = true
 lazy-regex = "3.6.2"
 rand.workspace = true
@@ -27,10 +28,9 @@ serde.workspace = true
 serde_json.workspace = true
 sha2 = "0.11.1"
 support.workspace = true
-time.workspace = true
 tokio.workspace = true
 tower-cookies.workspace = true
 tracing.workspace = true
 uuid.workspace = true
 validator.workspace = true
-zeroize = { version = "1.9.1", features = ["zeroize_derive"] }
+zeroize = { version = "1.9.2", features = ["zeroize_derive"] }

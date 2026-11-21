@@ -1,11 +1,10 @@
 use std::borrow::Cow;
 use std::fmt::Display;
 use std::io::{Cursor, Read};
-use std::str::FromStr;
 
-use iso8601::{DateTime, Duration};
 use serde::Deserialize;
 use url::Url;
+use jiff::{civil::DateTime, Span};
 
 use schema_org::field::{
     AggregateRatingRatingValueFieldEnum, ItemListItemListElementFieldEnum, RecipeAuthorFieldEnum,
@@ -252,10 +251,30 @@ struct MRecipe<'a> {
 impl From<CookmlRecipe<'_>> for Recipe {
     #[allow(clippy::too_many_lines)]
     fn from(r: CookmlRecipe) -> Self {
-        let created_date = DateTime::from_str(&r.head.createdate.unwrap_or_default()).ok();
-        let changed_date = DateTime::from_str(&r.head.changedate.unwrap_or_default()).ok();
-        let prep_time = Duration::from_str(&r.head.timeprepqty.unwrap_or_default()).ok();
-        let cook_time = Duration::from_str(&r.head.timecookqty.unwrap_or_default()).ok();
+        let created_date = r
+                .head
+                .createdate
+                .as_deref()
+                .and_then(|s| s.parse::<DateTime>().ok());
+
+            let changed_date = r
+                .head
+                .changedate
+                .as_deref()
+                .and_then(|s| s.parse::<DateTime>().ok());
+
+            let prep_time = r
+                .head
+                .timeprepqty
+                .as_deref()
+                .and_then(|s| s.parse::<Span>().ok());
+
+            let cook_time = r
+                .head
+                .timecookqty
+                .as_deref()
+                .and_then(|s| s.parse::<Span>().ok());
+
         let quality = extract_number(&r.head.quality.unwrap_or_default()).ok();
         let hints = r.head.hint.unwrap_or_default();
         let (category, keywords) = hints.split_first_owned();
@@ -274,14 +293,12 @@ impl From<CookmlRecipe<'_>> for Recipe {
             carbohydrate_content: r
                 .head
                 .carbohydrates
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
-            fat_content: r.head.fat.map(|s| vec![Mass::new(s)]).unwrap_or_default(),
+                .map_or_default(|s| vec![Mass::new(s)]),
+            fat_content: r.head.fat.map_or_default(|s| vec![Mass::new(s)]),
             protein_content: r
                 .head
                 .proteins
-                .map(|s| vec![Mass::new(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![Mass::new(s)]),
             ..Default::default()
         };
 
@@ -294,58 +311,41 @@ impl From<CookmlRecipe<'_>> for Recipe {
                     ..Default::default()
                 }]
             }),
-            author: r
-                .head
-                .createuser
-                .map(|s| vec![RecipeAuthorFieldEnum::new_person(&s)])
-                .unwrap_or_default(),
-            cook_time: cook_time
-                .map(|c| vec![DurationOrText::Text(c.to_string())])
-                .unwrap_or_default(),
-            date_created: created_date
-                .map(|d| vec![d.date.to_string()])
-                .unwrap_or_default(),
-            date_modified: changed_date
-                .map(|d| vec![d.date.to_string()])
-                .unwrap_or_default(),
+            author: r.head.createuser.map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(&s)]),
+            cook_time: cook_time.map_or_default(|c| vec![DurationOrText::Text(c.to_string())]),
+            date_created: created_date.map_or_default(|d| vec![d.date().to_string()]),
+            date_modified: changed_date.map_or_default(|d| vec![d.date().to_string()]),
             estimated_cost: r
                 .head
                 .costs
-                .map(|s| vec![RecipeEstimatedCostFieldEnum::Text(s.to_string())])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeEstimatedCostFieldEnum::Text(s.to_string())]),
             image: images
                 .iter()
                 .map(|u| RecipeImageFieldEnum::URL(u.to_string()))
                 .collect(),
             in_language: r
                 .lang
-                .map(|l| vec![RecipeInLanguageFieldEnum::Text(l.to_string())])
-                .unwrap_or_default(),
+                .map_or_default(|l| vec![RecipeInLanguageFieldEnum::Text(l.to_string())]),
             keywords: keywords
                 .into_iter()
                 .map(|s| RecipeKeywordsFieldEnum::TextOrURL(s.to_string()))
                 .collect(),
             name: Some(r.head.title.to_string())
                 .filter(|v| !v.is_empty())
-                .map(|s| vec![s])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![s]),
             nutrition: if nutrition.is_empty() {
                 None
             } else {
                 Some(nutrition)
             }
             .filter(NutritionInformation::is_empty)
-            .map(|n| vec![n])
-            .unwrap_or_default(),
-            prep_time: prep_time
-                .map(|c| vec![DurationOrText::Text(c.to_string())])
-                .unwrap_or_default(),
-            recipe_category: category.map(|s| vec![s.to_string()]).unwrap_or_default(),
+            .map_or_default(|n| vec![n]),
+            prep_time: prep_time.map_or_default(|c| vec![DurationOrText::Text(c.to_string())]),
+            recipe_category: category.map_or_default(|s| vec![s.to_string()]),
             recipe_cuisine: r
                 .head
                 .country
-                .map(|s| vec![s.to_string()])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![s.to_string()]),
             recipe_ingredient: r
                 .part
                 .into_iter()

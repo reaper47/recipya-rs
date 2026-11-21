@@ -11,6 +11,7 @@ pub enum Error {
     LdJsonNotFound,
     Fetch(String),
     Filesystem,
+    InvalidUrl,
     MissingElement(String),
     NoHost,
     NoRecipeFound,
@@ -22,8 +23,10 @@ pub enum Error {
 
     #[from(serde_json::Error)]
     Deserialize,
-    #[from(wreq::Error)]
-    Wreq,
+    #[from(url::ParseError)]
+    UrlParseError,
+    #[from(support::net::Error)]
+    NetError,
 }
 
 impl_display_as_debug!(Error);
@@ -35,3 +38,7 @@ impl From<scraper::error::SelectorErrorKind> for Error {
 }
 
 impl std::error::Error for Error {}
+
+pub fn fetch_err(err: impl std::fmt::Display) -> Error {
+    Error::Fetch(err.to_string())
+}

@@ -10,7 +10,8 @@ use crate::middleware::mw_auth::mw_refresh_token;
 
 /// Defines the routes for general endpoints of the web application.
 pub fn general_routes(state: &AppState) -> Router<AppState> {
-    let protected = Router::new()
+    let routes_with_refresh_mw = Router::new()
+        .route("/", get(h::index_handler))
         .route("/download", get(h::download_handler))
         .route("/fetch", get(h::fetch_handler))
         .route("/paper-sizes", get(h::paper_sizes_handler))
@@ -24,8 +25,7 @@ pub fn general_routes(state: &AppState) -> Router<AppState> {
         .layer(from_fn_with_state(state.clone(), mw_refresh_token));
 
     Router::new()
-        .route("/", get(h::index_handler))
         .route("/health/live", get(h::health_live_handler))
         .route("/health/ready", get(h::health_ready_handler))
-        .merge(protected)
+        .merge(routes_with_refresh_mw)
 }

@@ -1,4 +1,3 @@
-use time::PrimitiveDateTime;
 use uuid::Uuid;
 
 use models::{
@@ -22,6 +21,8 @@ use test_harness::create_app_state;
 use crate::{Result, recipe::utils::a_complete_recipe_for_create};
 
 mod tests_search {
+    use jiff::Timestamp;
+
     use super::*;
 
     fn to_recipe_details(id: i64, mut recipe_c: RecipeForCreate, user_id: Uuid) -> RecipeDetails {
@@ -55,8 +56,8 @@ mod tests_search {
                 source: recipe_c.source,
                 is_favourite: false,
                 rating: recipe_c.rating,
-                created_at: PrimitiveDateTime::MIN,
-                updated_at: PrimitiveDateTime::MIN,
+                created_at: Timestamp::MIN,
+                updated_at: Timestamp::MIN,
                 user_id,
             },
             additional_images: if recipe_c.images.len() > 1 {
@@ -99,7 +100,7 @@ mod tests_search {
                     duration: v.duration,
                     content_url: v.content_url,
                     embed_url: v.embed_url,
-                    created_at: PrimitiveDateTime::MIN,
+                    created_at: Timestamp::MIN,
                 })
                 .collect(),
         }

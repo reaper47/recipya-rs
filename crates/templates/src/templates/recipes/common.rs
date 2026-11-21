@@ -27,11 +27,7 @@ pub(super) fn add_tool(tool: Option<&ToolRecipe>, messages: &Messages) -> Markup
                         }
                     }
                     input type="text" name="tool" placeholder=(messages.add_tool_input_placeholder()) class="input input-bordered input-sm w-full"
-                        value=(
-                            tool
-                                .map(|t| format!("{} {}", t.quantity, t.name))
-                                .unwrap_or_default()
-                        )
+                        value=(tool.map_or_default(|t| format!("{} {}", t.quantity, t.name)))
                         _="on keydown if event.key is 'Enter' halt the event then call addItem(event)";
                 }
                 div class="ml-2 flex gap-2" {
@@ -221,7 +217,7 @@ pub fn list_recipes(
                         (category_badge(&details.category, false))
                     }
                     input type="checkbox" name="ids" value=(recipe.id) onclick="handleSelectRecipe(this, event)" autocomplete="off"
-                          class="checkbox-select invisible checkbox checkbox-primary bg-base-100 z-1 absolute top-2 right-2 size-8 scale-75 opacity-0 transition-[opacity,scale,visibility] duration-300 group-data-[select=true]/select:visible group-data-[select=true]/select:scale-100 group-data-[select=true]/select:opacity-100";
+                          class="checkbox-select invisible checkbox checkbox-primary bg-base-100 text-base-content z-1 absolute top-2 right-2 size-8 scale-75 opacity-0 transition-[opacity,scale,visibility] duration-300 group-data-[select=true]/select:visible group-data-[select=true]/select:scale-100 group-data-[select=true]/select:opacity-100";
                     figure class="relative cursor-pointer group-data-[select=true]/select:cursor-default" hx-get={ "/recipes/" (recipe.id) } hx-target="#content" hx-push-url="true" hx-swap="innerHTML show:window:top transition:true" hx-trigger="mousedown[document.getElementById('list-recipes-wrapper').dataset.select !== 'true']" {
                         img class="h-28 w-24 object-cover rounded-t-lg sm:h-40 sm:min-w-full w-full"
                             src=(match details.all_images().first() {

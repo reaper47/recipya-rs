@@ -1,12 +1,11 @@
-use std::time::Duration;
-
-use auth::token::generate_verification_token;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use jiff::{SignedDuration, Timestamp, ToSpan};
+use jiff_diesel::ToDiesel;
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 use uuid::Uuid;
 
+use auth::token::generate_verification_token;
 use repository::{ModelManager, schema};
 
 use crate::Result;
@@ -19,8 +18,10 @@ pub struct EmailVerificationToken {
     pub id: Uuid,
     pub user_id: Uuid,
     pub token: String,
-    pub expires_at: OffsetDateTime,
-    pub created_at: OffsetDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
 }
 
 /// A struct for creating a new email verification token from client-provided data.
@@ -29,16 +30,17 @@ pub struct EmailVerificationToken {
 pub struct EmailVerificationTokenForCreate {
     pub user_id: Uuid,
     pub token: String,
-    pub expires_at: OffsetDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
 }
 
 impl EmailVerificationTokenForCreate {
     /// Creates a new email verification token for a user.
-    pub fn new(user_id: Uuid, exp_hours: u64) -> Self {
+    pub fn new(user_id: Uuid, exp_hours: i64) -> Self {
         Self {
             user_id,
             token: generate_verification_token(),
-            expires_at: OffsetDateTime::now_utc() + Duration::from_hours(exp_hours),
+            expires_at: Timestamp::now() + exp_hours.hours(),
         }
     }
 }
@@ -47,8 +49,9 @@ impl EmailVerificationToken {
     /// Creates an email verification token.
     pub async fn new(mm: &ModelManager, token_c: EmailVerificationTokenForCreate) -> Result<Self> {
         let token = diesel::insert_into(schema::email_verification_tokens::table)
-            .values(&token_c)
-            .get_result::<Self>(&mut mm.pool.get().await?)
+            .values(token_c)
+            .returning(Self::as_returning())
+            .get_result(&mut mm.pool.get().await?)
             .await?;
 
         Ok(token)
@@ -88,7 +91,7 @@ impl EmailVerificationToken {
 
     /// Checks whether the token has expired.
     pub fn is_expired(&self) -> bool {
-        OffsetDateTime::now_utc() > self.expires_at
+        Timestamp::now() > self.expires_at
     }
 }
 
@@ -100,8 +103,10 @@ pub struct PasswordResetToken {
     pub id: Uuid,
     pub user_id: Uuid,
     pub token: String,
-    pub expires_at: OffsetDateTime,
-    pub created_at: OffsetDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
 }
 
 /// A struct for creating a new password reset token from client-provided data.
@@ -110,16 +115,17 @@ pub struct PasswordResetToken {
 pub struct PasswordResetTokenForCreate {
     pub user_id: Uuid,
     pub token: String,
-    pub expires_at: OffsetDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
 }
 
 impl PasswordResetTokenForCreate {
     /// Creates a new password reset token for a user.
-    pub fn new(user_id: Uuid, exp_hours: u64) -> Self {
+    pub fn new(user_id: Uuid, exp_hours: i64) -> Self {
         Self {
             user_id,
             token: generate_verification_token(),
-            expires_at: OffsetDateTime::now_utc() + Duration::from_hours(exp_hours),
+            expires_at: Timestamp::now() + exp_hours.hours(),
         }
     }
 }
@@ -128,8 +134,9 @@ impl PasswordResetToken {
     /// Creates a new token.
     pub async fn new(mm: &ModelManager, token_c: PasswordResetTokenForCreate) -> Result<Self> {
         let token = diesel::insert_into(schema::password_reset_tokens::table)
-            .values(&token_c)
-            .get_result::<Self>(&mut mm.pool.get().await?)
+            .values(token_c)
+            .returning(Self::as_returning())
+            .get_result(&mut mm.pool.get().await?)
             .await?;
 
         Ok(token)
@@ -168,7 +175,7 @@ impl PasswordResetToken {
 
     /// Checks whether the token has expired.
     pub fn is_expired(&self) -> bool {
-        OffsetDateTime::now_utc() > self.expires_at
+        Timestamp::now() > self.expires_at
     }
 }
 
@@ -181,10 +188,13 @@ pub struct RefreshToken {
     pub user_id: Uuid,
     pub is_remember_me: bool,
     pub token: String,
-    pub expires_at: OffsetDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
     pub is_used: bool,
-    pub used_at: Option<OffsetDateTime>,
-    pub created_at: OffsetDateTime,
+    #[diesel(serialize_as = jiff_diesel::NullableTimestamp, deserialize_as = jiff_diesel::NullableTimestamp)]
+    pub used_at: Option<Timestamp>,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
 }
 
 /// A struct for creating a new password reset token from client-provided data.
@@ -194,15 +204,34 @@ pub struct RefreshTokenForCreate {
     pub user_id: Uuid,
     pub is_remember_me: bool,
     pub token: String,
+    #[diesel(serialize_as = jiff_diesel::Timestamp)]
+    pub expires_at: Timestamp,
 }
 
 impl RefreshTokenForCreate {
     /// Creates a refresh token for a user.
     pub fn new(user_id: Uuid, is_remember_me: bool) -> Self {
+        let ttl = if is_remember_me {
+            SignedDuration::from_hours(30)
+        } else {
+            SignedDuration::ZERO
+        };
+
         Self {
             user_id,
             is_remember_me,
             token: generate_verification_token(),
+            expires_at: Timestamp::now() + ttl,
+        }
+    }
+
+    /// Creates a refresh token for a user with an expiry date.
+    pub fn with_expiry(user_id: Uuid, is_remember_me: bool, expires_at: Timestamp) -> Self {
+        Self {
+            user_id,
+            is_remember_me,
+            token: generate_verification_token(),
+            expires_at,
         }
     }
 }
@@ -211,8 +240,9 @@ impl RefreshToken {
     /// Creates a new token.
     pub async fn new(mm: &ModelManager, token_c: RefreshTokenForCreate) -> Result<Self> {
         let token = diesel::insert_into(schema::refresh_tokens::table)
-            .values(&token_c)
-            .get_result::<Self>(&mut mm.pool.get().await?)
+            .values(token_c)
+            .returning(Self::as_returning())
+            .get_result(&mut mm.pool.get().await?)
             .await?;
 
         Ok(token)
@@ -255,7 +285,7 @@ impl RefreshToken {
             .filter(schema::refresh_tokens::token.eq(token))
             .set((
                 schema::refresh_tokens::is_used.eq(true),
-                schema::refresh_tokens::used_at.eq(OffsetDateTime::now_utc()),
+                schema::refresh_tokens::used_at.eq(Timestamp::now().to_diesel()),
             ))
             .execute(&mut mm.pool.get().await?)
             .await?;
@@ -265,7 +295,7 @@ impl RefreshToken {
 
     /// Checks whether the token has expired.
     pub fn is_expired(&self) -> bool {
-        OffsetDateTime::now_utc() > self.expires_at
+        Timestamp::now() > self.expires_at
     }
 
     // Check if token is valid (not expired AND not used)

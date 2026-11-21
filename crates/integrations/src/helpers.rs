@@ -1,5 +1,4 @@
-use iso8601::Duration;
-
+use jiff::SignedDuration;
 use schema_org::field::{
     QuantitativeValueValueFieldEnum, RecipeIsBasedOnFieldEnum, RecipeRecipeYieldFieldEnum,
 };
@@ -7,12 +6,13 @@ use schema_org::{AtType, CreativeWork, DurationOrText, QuantitativeValue, Recipe
 
 /// Converts seconds to a `DurationOrText` enum.
 pub fn seconds_to_duration(secs: i32) -> Vec<DurationOrText> {
-    format!("PT{secs}S")
-        .parse::<Duration>()
-        .ok()
-        .filter(|&d| d != Duration::default())
-        .map(|d| vec![DurationOrText::from(d)])
-        .unwrap_or(vec![])
+    if secs <= 0 {
+        return vec![];
+    }
+
+    vec![DurationOrText::new_text(
+        SignedDuration::from_secs(i64::from(secs)).to_string(),
+    )]
 }
 
 /// Converts a quantity value to a `RecipeRecipeYieldFieldEnum` enum.

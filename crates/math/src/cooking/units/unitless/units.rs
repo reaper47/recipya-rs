@@ -55,13 +55,11 @@ impl FromStr for Unitless {
 
                         let numerator: f64 = frac_parts
                             .first()
-                            .map(|n| n.parse::<f64>().ok().unwrap_or_default())
-                            .unwrap_or_default();
+                            .map_or_default(|n| n.parse::<f64>().ok().unwrap_or_default());
 
                         let denominator: f64 = frac_parts
                             .get(1)
-                            .map(|n| n.parse::<f64>().ok().unwrap_or_default())
-                            .unwrap_or_default();
+                            .map_or_default(|n| n.parse::<f64>().ok().unwrap_or_default());
 
                         Ok::<f64, std::num::ParseFloatError>(base + numerator / denominator)
                     })

@@ -21,5 +21,5 @@ futures-util.workspace = true
 repository.workspace = true
 tokio.workspace = true
 uuid.workspace = true
-diesel_migrations = { version = "2.3.1", features = ["postgres"] }
+diesel_migrations = { version = "2.4.0", features = ["postgres"] }
 url.workspace = true

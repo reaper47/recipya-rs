@@ -1,14 +1,14 @@
 use fluent_static::Message;
+use jiff::tz;
 use maud::{Markup, PreEscaped, html};
 use strum::IntoEnumIterator;
-use time::macros::format_description;
 
 use config::{DemoState, States};
 use l10n::Messages;
 use math::cooking::units::system::MeasurementSystem;
 use models::{
     Recipe, data::Data, language::Language, recipe::structs::recipe::Category,
-    settings::UserSettingDetails, theme::Theme, types::Timezone, user::User,
+    settings::UserSettingDetails, theme::Theme, user::User,
 };
 use nutrition::NutritionDataSource;
 
@@ -374,10 +374,7 @@ fn supported_nutrition_sources_dialog(
                                         td .py-1 {
                                             (source.updated_on.map_or_else(
                                                 || messages.unknown().to_string(),
-                                                |date| {
-                                                    date.format(format_description!("[year]-[month]-[day]"))
-                                                        .unwrap()
-                                                },
+                                                |date| date.to_string(),
                                             ))
                                         }
                                         td .py-1 {
@@ -475,7 +472,7 @@ fn settings_general(
                     }
                 }
                 select #settings-general-tz name="tz" class="block w-fit select select-bordered select-sm" hx-post="/settings/tz" hx-swap="none" {
-                        @for tz in Timezone::all() {
+                    @for tz in all_tz() {
                             option value=(tz) selected[tz == selected_tz] { (tz) }
                         }
                 }
@@ -488,6 +485,16 @@ fn paper_sizes_dialog() -> Markup {
     html! {
         dialog #paper-sizes-dialog class="justify-self-center self-center" {}
     }
+}
+
+fn all_tz() -> Vec<String> {
+    let mut all_tz: Vec<String> = tz::db()
+        .available()
+        .map(|name| name.as_str().to_owned())
+        .filter(|name| !name.to_lowercase().starts_with("etc/"))
+        .collect();
+    all_tz.sort_unstable();
+    all_tz
 }
 
 fn settings_connections(config: &SettingsForView, messages: &Messages) -> Markup {
@@ -605,13 +612,13 @@ fn settings_server(data: &Data, config: &SettingsForView, messages: &Messages) -
                                     (
                                         messages.server_configuration_table_autologin(),
                                         messages.server_configuration_table_autologin_description(),
-                                        "RECIPYA_IS_AUTOLOGIN",
+                                        "RECIPYA_AUTOLOGIN",
                                         data.states.autologin.into(),
                                     ),
                                     (
                                         messages.server_configuration_table_allow_signups(),
                                         messages.server_configuration_table_allow_signups_description(),
-                                        "RECIPYA_IS_ALLOW_SIGNUPS",
+                                        "RECIPYA_ALLOW_SIGNUPS",
                                         data.states.signups.into(),
                                     ),
                                     (

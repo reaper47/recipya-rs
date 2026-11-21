@@ -1,5 +1,5 @@
-use time::Duration;
-use tower_cookies::{Cookie, Cookies, cookie::SameSite};
+use jiff::Timestamp;
+use tower_cookies::{Cookie, Cookies, cookie::SameSite, cookie::time::SignedDuration};
 
 pub use super::Result;
 
@@ -14,19 +14,26 @@ pub fn set_auth_cookies(
     cookies: &Cookies,
     access_token: String,
     refresh_token: String,
+    refresh_expires_at: Timestamp,
     remember_me: bool,
     is_production: bool,
 ) {
     set_access_token_cookie(cookies, access_token, is_production);
-    set_refresh_token_cookie(cookies, refresh_token, remember_me, is_production);
+    set_refresh_token_cookie(
+        cookies,
+        refresh_token,
+        refresh_expires_at,
+        remember_me,
+        is_production,
+    );
 }
 
 fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production: bool) {
     let mut cookie = Cookie::new(AUTH_TOKEN, token_value);
     cookie.set_http_only(true);
-    cookie.set_same_site(SameSite::Strict);
+    cookie.set_same_site(SameSite::Lax);
     cookie.set_path("/");
-    cookie.set_max_age(Duration::minutes(15));
+    cookie.set_max_age(SignedDuration::minutes(15));
 
     if is_production {
         cookie.set_secure(true);
@@ -38,16 +45,18 @@ fn set_access_token_cookie(cookies: &Cookies, token_value: String, is_production
 fn set_refresh_token_cookie(
     cookies: &Cookies,
     token_value: String,
+    expires_at: Timestamp,
     remember_me: bool,
     is_production: bool,
 ) {
     let mut cookie = Cookie::new(REFRESH_TOKEN, token_value);
     cookie.set_http_only(true);
-    cookie.set_same_site(SameSite::Strict);
+    cookie.set_same_site(SameSite::Lax);
     cookie.set_path("/");
 
     if remember_me {
-        cookie.set_max_age(Duration::days(30));
+        let remaining_time = expires_at.duration_since(Timestamp::now());
+        cookie.set_max_age(SignedDuration::seconds(remaining_time.as_secs().max(0)));
     }
 
     if is_production {

@@ -20,7 +20,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.98.0
+          toolchain: 1.100.0
           components: clippy
 
       - uses: mozilla-actions/sccache-action@v0.0.10
@@ -72,9 +72,9 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
-          RECIPYA_IS_AUTOLOGIN: "false"
+          RECIPYA_AUTOLOGIN: "false"
           RECIPYA_IS_DEMO: "false"
-          RECIPYA_IS_ALLOW_SIGNUPS: "false"
+          RECIPYA_ALLOW_SIGNUPS: "false"
           SMTP_FROM_EMAIL: "example@gmail.com"
           SMTP_HOST: "smtp.gmail.com"
           SMTP_USERNAME: "example@gmail.com"
@@ -90,9 +90,9 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
-          RECIPYA_IS_AUTOLOGIN: "false"
+          RECIPYA_AUTOLOGIN: "false"
           RECIPYA_IS_DEMO: "false"
-          RECIPYA_IS_ALLOW_SIGNUPS: "false"
+          RECIPYA_ALLOW_SIGNUPS: "false"
           SMTP_FROM_EMAIL: "example@gmail.com"
           SMTP_HOST: "smtp.gmail.com"
           SMTP_USERNAME: "example@gmail.com"

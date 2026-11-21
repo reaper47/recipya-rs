@@ -6,6 +6,7 @@ mod websites;
 
 pub mod tests;
 
+use support::net::validate_ip;
 pub use websites::*;
 
 pub use client::{AppHttpClient, HttpClient};
@@ -51,6 +52,7 @@ impl Scraper {
 
     /// Scrapes the given URL and returns a `RecipeSchema`.
     pub async fn scrape(&self, url: &str) -> Result<Recipe> {
+        validate_ip(&url::Url::parse(url)?)?;
         let website = Website::from(url)?;
         let content = self.client.get(website, url).await?;
         let parser = Parser::new(url, &content, website);
@@ -59,6 +61,7 @@ impl Scraper {
 
     /// Fetches the content of a URL and uploads it the temporary directory.
     pub async fn fetch_and_upload_to_temp(&self, url: &str) -> Result<PathBuf> {
+        validate_ip(&url::Url::parse(url)?)?;
         let content = self.client.get_bytes(url).await?;
         let path = self
             .fs_support

@@ -1,6 +1,5 @@
 use l10n::Messages;
 use maud::{Markup, PreEscaped, html};
-use time::macros::format_description;
 
 use models::{
     data::{Data, PaginationData, PaginationHtmxData, ReportsData},
@@ -40,7 +39,7 @@ fn render_index(data: &ReportsData, messages: &Messages) -> Markup {
                 hx-trigger="refreshReports from:body"
                 hx-target="#report-list-container"
                 hx-include="#selected-report-id" {
-                input #selected-report-id type="hidden" name="selected" value=(data.selected.as_ref().map(|r| r.id).unwrap_or_default());
+                input #selected-report-id type="hidden" name="selected" value=(data.selected.as_ref().map_or_default(|r| r.id));
                 div #report-list-container {
                     div class="md:hidden divider m-0" {}
                     (render_reports_list(data, messages))
@@ -98,7 +97,7 @@ pub fn render_reports_list(data: &ReportsData, messages: &Messages) -> Markup {
                     div class="flex justify-between items-center gap-2 w-full" {
                         div .min-w-0 {
                             p class="font-bold text-sm truncate" {
-                                (report.created_at.format(format_description!("[month repr:short] [day padding:space], [year] · [hour repr:12]:[minute] [period case:upper]")).unwrap())
+                                (report.created_at.strftime("%b %e, %Y · %I:%M %p"))
                             }
                             p .text-sm {
                                 (messages.reports_execution_time(report.format_duration()))

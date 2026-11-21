@@ -3,7 +3,7 @@ mod common;
 use std::sync::LazyLock;
 
 use divan::{Bencher, counter::ItemsCount};
-use time::{PrimitiveDateTime, macros::format_description};
+use jiff::{Timestamp, civil::DateTime, tz::TimeZone};
 use uuid::Uuid;
 
 use models::{
@@ -77,12 +77,12 @@ fn full_entry() -> RecipeTimelineForCreate {
     }
 }
 
-fn a_date(s: &str) -> PrimitiveDateTime {
-    PrimitiveDateTime::parse(
-        s,
-        format_description!("[year]-[month]-[day] [hour]:[minute]:[second]"),
-    )
-    .unwrap()
+fn a_date(s: &str) -> Timestamp {
+    s.parse::<DateTime>()
+        .unwrap()
+        .to_zoned_datetime(TimeZone::UTC)
+        .unwrap()
+        .timestamp()
 }
 
 fn main() {

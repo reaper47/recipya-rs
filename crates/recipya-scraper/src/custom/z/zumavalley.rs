@@ -30,15 +30,14 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
             .select(&Selector::parse("h3")?)
             .find(|el| el.text().any(|t| t.contains("Ingredients")))
             .and_then(|h3| h3.next_sibling_element())
-            .map(|p| {
+            .map_or_default(|p| {
                 p.inner_html()
                     .split("<br>")
                     .map(|s| s.trim().to_string())
                     .filter(|s| !s.is_empty())
                     .map(RecipeRecipeIngredientFieldEnum::Text)
                     .collect()
-            })
-            .unwrap_or_default(),
+            }),
         recipe_instructions: root
             .select(&Selector::parse("ol li")?)
             .map(|n| RecipeRecipeInstructionsFieldEnum::Text(n.text().collect()))

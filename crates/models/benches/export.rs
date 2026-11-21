@@ -3,11 +3,12 @@ mod common;
 use std::{fs, path::Path};
 
 use divan::{Bencher, black_box, counter::ItemsCount};
+use jiff::{Timestamp, ToSpan};
 use tempfile::TempDir;
 
 use models::{
     Recipe, RecipeDetails,
-    export::{ExportData, ExportType},
+    export::{ExportData, ExportOptions, ExportType},
     recipe::structs::{
         media::Video,
         nutrition::{Nutrition, NutritionDetails, NutritionPerServingDetails},
@@ -18,14 +19,21 @@ use models::{
     types::{DurationSeconds, Rating, RecipeYield, Source},
 };
 use test_fixtures::RecipeImages;
-use time::Duration;
 
 use crate::common::RUNTIME;
 
 fn main() {
     let dir = TempDir::new().unwrap();
     let path = RUNTIME
-        .block_on(ExportData::new(ExportType::Json, recipes(3), dir.path()).export())
+        .block_on(
+            ExportData::new(
+                ExportType::Json,
+                recipes(3),
+                dir.path(),
+                ExportOptions::default(),
+            )
+            .export(),
+        )
         .unwrap();
     assert!(path.exists());
 
@@ -61,7 +69,14 @@ fn run(bencher: Bencher, r#type: &ExportType, n: usize) {
 
     bencher
         .counter(ItemsCount::new(n))
-        .with_inputs(|| ExportData::new(r#type.clone(), base.clone(), images.path()))
+        .with_inputs(|| {
+            ExportData::new(
+                r#type.clone(),
+                base.clone(),
+                images.path(),
+                ExportOptions::default(),
+            )
+        })
         .bench_values(|data| RUNTIME.block_on(data.export()));
 }
 
@@ -97,7 +112,14 @@ fn export_with_images(bencher: Bencher, image_bytes: usize) {
 
     bencher
         .counter(ItemsCount::new(base.len()))
-        .with_inputs(|| ExportData::new(ExportType::Json, base.clone(), images.path()))
+        .with_inputs(|| {
+            ExportData::new(
+                ExportType::Json,
+                base.clone(),
+                images.path(),
+                ExportOptions::default(),
+            )
+        })
         .bench_values(|data| RUNTIME.block_on(data.export()));
 }
 
@@ -106,7 +128,14 @@ fn export_empty(bencher: Bencher) {
     let images = TempDir::new().unwrap();
 
     bencher
-        .with_inputs(|| ExportData::new(ExportType::Json, Vec::new(), images.path()))
+        .with_inputs(|| {
+            ExportData::new(
+                ExportType::Json,
+                Vec::new(),
+                images.path(),
+                ExportOptions::default(),
+            )
+        })
         .bench_values(|data| RUNTIME.block_on(data.export()));
 }
 
@@ -134,8 +163,8 @@ fn a_complete_recipe_details() -> RecipeDetails {
             ),
             is_favourite: false,
             rating: Rating::from(4),
-            created_at: time::macros::datetime!(2023-01-01 00:00),
-            updated_at: time::macros::datetime!(2023-01-01 00:00),
+            created_at: Timestamp::constant(1_672_531_200, 0),
+            updated_at: Timestamp::constant(1_672_531_200, 0),
             user_id: uuid::Uuid::nil(),
         },
         additional_images: vec![images.additional],
@@ -225,10 +254,10 @@ fn a_complete_recipe_details() -> RecipeDetails {
         ],
         videos: vec![Video {
             video: images.video,
-            duration: Some(Duration::minutes(7)),
+            duration: Some(7.minutes()),
             content_url: Some("https://example.com/best-food.mp4".into()),
             embed_url: Some("https://example.com/embed/j43yfe3.mp4".into()),
-            created_at: time::macros::datetime!(2023-01-01 00:00),
+            created_at: Timestamp::constant(1_672_531_200, 0),
         }],
     }
 }

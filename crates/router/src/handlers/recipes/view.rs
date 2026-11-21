@@ -6,12 +6,12 @@ use axum::{
 };
 use axum_htmx::HxRequest;
 use fluent_static::support::axum::RequestLanguage;
-use iso8601::DateTime;
+use jiff::civil::DateTime;
 use tower_cookies::Cookies;
 use tracing::error;
 
 use app::{message::ToastCtx, state::AppState};
-use config::{ProductionState, States};
+use config::States;
 use l10n::Messages;
 use models::{
     Recipe,
@@ -85,7 +85,7 @@ pub async fn recipes_handler(
     set_language_cookie(
         &cookies,
         &settings.selected_locale,
-        state.config.read().await.states.production == ProductionState::On,
+        state.config.read().await.is_env_prod(),
     );
 
     Ok(templates::recipes::index(

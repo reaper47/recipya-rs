@@ -112,7 +112,7 @@ pub fn login(demo: &DemoState, signups: &SignupsState, messages: &Messages) -> M
                         input #password type="password" required .input name="password" placeholder=(messages.password_input_placeholder()) autocomplete="current-password" value=@if demo == &DemoState::On { "demodemo" };
                     }
                     label class="fieldset-label py-2" {
-                        input type="checkbox" .checkbox name="remember-me" checked;
+                        input type="checkbox" .checkbox name="remember-me";
                         (messages.login_form_remember_me())
                     }
                     div class="card-actions justify-end" {

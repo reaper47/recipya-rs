@@ -34,8 +34,7 @@ impl From<HowToTool> for ToolForCreate {
             quantity: value
                 .required_quantity
                 .first()
-                .map(FieldEnum60::quantity)
-                .unwrap_or_default(),
+                .map_or_default(FieldEnum60::quantity),
         }
     }
 }
@@ -93,8 +92,7 @@ impl From<&RecipeToolFieldEnum> for ToolForCreate {
                 quantity: tool
                     .required_quantity
                     .first()
-                    .map(FieldEnum60::quantity)
-                    .unwrap_or_default(),
+                    .map_or_default(FieldEnum60::quantity),
             },
             RecipeToolFieldEnum::Text(s) => extract_number::<i16>(s).map_or_else(
                 |_| Self {

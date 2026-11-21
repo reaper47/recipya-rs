@@ -418,8 +418,7 @@ mod tests_language {
             .await?
             .iter()
             .find(|l| &l.locale == "fr-CA")
-            .map(|l| l.id)
-            .unwrap_or_default();
+            .map_or_default(|l| l.id);
 
         let res = server
             .post(BASE_URI)
@@ -461,7 +460,7 @@ mod tests_paper_size {
 }
 
 mod tests_timezone {
-    use models::types::Timezone;
+    use jiff::tz::TimeZone;
 
     use super::*;
 
@@ -480,7 +479,7 @@ mod tests_timezone {
         let res = server
             .post(BASE_URI)
             .form(&TzPayload {
-                tz: Timezone::try_from("America/Montreal").unwrap(),
+                tz: TimeZone::get("America/Montreal")?,
             })
             .await;
 

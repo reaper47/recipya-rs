@@ -58,12 +58,10 @@ impl From<ChefTapRecipe> for Recipe {
             is_based_on: to_is_based_on(r.source.as_deref().unwrap_or_default()),
             cook_time: r
                 .cook_time
-                .map(|s| vec![DurationOrText::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s)]),
             prep_time: r
                 .prep_time
-                .map(|s| vec![DurationOrText::Text(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![DurationOrText::Text(s)]),
             name: vec![r.title],
             recipe_ingredient: r.ingredients,
             recipe_instructions: r.instructions,
@@ -154,8 +152,7 @@ where
     let title = doc
         .select(&Selector::parse("h1").unwrap())
         .next()
-        .map(|el| el.text().collect::<String>().trim().to_string())
-        .unwrap_or_default();
+        .map_or_default(|el| el.text().collect::<String>().trim().to_string());
 
     let source = doc
         .select(&Selector::parse("a").unwrap())

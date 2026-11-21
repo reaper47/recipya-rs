@@ -213,8 +213,7 @@ where
             title: doc
                 .select(&Selector::parse("h3").unwrap())
                 .next()
-                .map(|el| el.text().collect::<String>())
-                .unwrap_or_default()
+                .map_or_default(|el| el.text().collect::<String>())
                 .as_ref(),
             url: None,
             r#yield: extract_metavalue("For:"),

@@ -25,20 +25,17 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
     let row_sel = Selector::parse(".row")?;
     let ol_sel = Selector::parse("ol li")?;
 
-    let ingredients = content
-        .first()
-        .map(|c| {
-            c.select(&row_sel)
-                .map(|row| {
-                    row.text()
-                        .map(str::trim)
-                        .filter(|t| !t.is_empty())
-                        .collect::<Vec<_>>()
-                        .join(" ")
-                })
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
+    let ingredients = content.first().map_or_default(|c| {
+        c.select(&row_sel)
+            .map(|row| {
+                row.text()
+                    .map(str::trim)
+                    .filter(|t| !t.is_empty())
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            })
+            .collect::<Vec<_>>()
+    });
 
     let servings = ingredients
         .iter()
@@ -53,39 +50,32 @@ pub fn parse(doc: &Html, url: &str) -> Result<Recipe> {
         context: at_context(),
         description: extract_attr(root, "meta[property='og:description']", "content")
             .unwrap_or_default()
-            .map(|v| vec![RecipeDescriptionFieldEnum::Text(v.into())])
-            .unwrap_or_default(),
+            .map_or_default(|v| vec![RecipeDescriptionFieldEnum::Text(v.into())]),
         keywords: extract_attr(root, "meta[name='keywords']", "content")
             .unwrap_or_default()
-            .map(|v| vec![RecipeKeywordsFieldEnum::TextOrURL(v.into())])
-            .unwrap_or_default(),
+            .map_or_default(|v| vec![RecipeKeywordsFieldEnum::TextOrURL(v.into())]),
         image: extract_attr(root, "meta[property='twitter:image']", "content")
             .unwrap_or_default()
-            .map(|v| vec![RecipeImageFieldEnum::URL(v.into())])
-            .unwrap_or_default(),
+            .map_or_default(|v| vec![RecipeImageFieldEnum::URL(v.into())]),
         name: extract_attr(root, "meta[property='og:title']", "content")
             .unwrap_or_default()
-            .map(|v| vec![v.trim_end_matches("Recipe").trim().into()])
-            .unwrap_or_default(),
+            .map_or_default(|v| vec![v.trim_end_matches("Recipe").trim().into()]),
         recipe_ingredient: ingredients
             .into_iter()
             .map(RecipeRecipeIngredientFieldEnum::Text)
             .collect(),
-        recipe_instructions: content
-            .get(1)
-            .map(|c| {
-                c.select(&ol_sel)
-                    .map(|row| {
-                        row.text()
-                            .map(str::trim)
-                            .filter(|t| !t.is_empty())
-                            .collect::<Vec<_>>()
-                            .join(" ")
-                    })
-                    .map(RecipeRecipeInstructionsFieldEnum::Text)
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default(),
+        recipe_instructions: content.get(1).map_or_default(|c| {
+            c.select(&ol_sel)
+                .map(|row| {
+                    row.text()
+                        .map(str::trim)
+                        .filter(|t| !t.is_empty())
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .map(RecipeRecipeInstructionsFieldEnum::Text)
+                .collect::<Vec<_>>()
+        }),
         recipe_yield: if servings == 0 {
             vec![]
         } else {

@@ -73,18 +73,17 @@ impl NutritionComponents<'_> {
 impl From<NutritionComponents<'_>> for NutritionInformation {
     fn from(n: NutritionComponents<'_>) -> Self {
         let to_mass = |opt: Option<&str>| {
-            opt.map(|s| {
+            opt.map_or_default(|s| {
                 if s == "0 g" {
                     vec![]
                 } else {
                     vec![Mass::new(s)]
                 }
             })
-            .unwrap_or_default()
         };
 
         Self {
-            calories: n.calories.map(|s| vec![Energy::new(s)]).unwrap_or_default(),
+            calories: n.calories.map_or_default(|s| vec![Energy::new(s)]),
             carbohydrate_content: to_mass(n.carbohydrate_content),
             cholesterol_content: to_mass(n.cholesterol_content),
             context: at_context(),
@@ -124,8 +123,7 @@ impl From<RecipeComponents<'_>> for Recipe {
         Self {
             author: r
                 .author
-                .map(|s| vec![RecipeAuthorFieldEnum::new_person(s)])
-                .unwrap_or_default(),
+                .map_or_default(|s| vec![RecipeAuthorFieldEnum::new_person(s)]),
             is_based_on: to_is_based_on(
                 r.software_version
                     .replace("(unreg.) ", "")
@@ -139,12 +137,10 @@ impl From<RecipeComponents<'_>> for Recipe {
             name: vec![r.title.into()],
             nutrition: r
                 .nutrition
-                .map(|n| if n.is_empty() { vec![] } else { vec![n.into()] })
-                .unwrap_or_default(),
+                .map_or_default(|n| if n.is_empty() { vec![] } else { vec![n.into()] }),
             prep_time: r
                 .prep_time
-                .map(|t| vec![DurationOrText::Text(t.into())])
-                .unwrap_or_default(),
+                .map_or_default(|t| vec![DurationOrText::Text(t.into())]),
             recipe_category: category.map_or(Vec::new(), |s| vec![s]),
             recipe_ingredient: r.ingredients.to_sections(),
             recipe_instructions: r.instructions.to_sections(),

@@ -49,9 +49,9 @@ pub enum Error {
     #[from]
     Io(std::io::Error),
     #[from]
-    Math(math::Error),
+    Jiff(jiff::Error),
     #[from]
-    HumanTime(humantime::DurationError),
+    Math(math::Error),
     #[from]
     SimdJson(simd_json::Error),
     #[from]

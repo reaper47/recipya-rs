@@ -55,14 +55,13 @@ impl NutritionComponents<'_> {
 impl From<NutritionComponents<'_>> for NutritionInformation {
     fn from(n: NutritionComponents<'_>) -> Self {
         let to_mass = |opt: Option<&str>| {
-            opt.map(|s| {
+            opt.map_or_default(|s| {
                 if s == "0 g" {
                     vec![]
                 } else {
                     vec![Mass::new(s)]
                 }
             })
-            .unwrap_or_default()
         };
 
         Self {

@@ -1,7 +1,7 @@
 use std::{path::Path, sync::Arc};
 
 use diesel::{data_types::PgInterval, prelude::*};
-use time::{Duration, PrimitiveDateTime};
+use jiff::{Span, Timestamp};
 use uuid::Uuid;
 
 use repository::schema;
@@ -20,14 +20,26 @@ pub(crate) struct AdditionalImageForInsert {
 }
 
 /// Represents a video associated with a recipe.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Video {
     pub video: Uuid,
-    pub duration: Option<Duration>,
+    pub duration: Option<Span>,
     pub content_url: Option<String>,
     pub embed_url: Option<String>,
-    pub created_at: PrimitiveDateTime,
+    pub created_at: Timestamp,
 }
+
+impl PartialEq for Video {
+    fn eq(&self, other: &Self) -> bool {
+        self.video == other.video
+            && self.duration.map(Span::fieldwise) == other.duration.map(Span::fieldwise)
+            && self.content_url == other.content_url
+            && self.embed_url == other.embed_url
+            && self.created_at == other.created_at
+    }
+}
+
+impl Eq for Video {}
 
 impl Default for Video {
     fn default() -> Self {
@@ -36,7 +48,7 @@ impl Default for Video {
             duration: None,
             content_url: None,
             embed_url: None,
-            created_at: PrimitiveDateTime::MIN,
+            created_at: Timestamp::MIN,
         }
     }
 }
@@ -53,17 +65,29 @@ pub struct VideoRecipe {
     pub duration: Option<PgInterval>,
     pub content_url: Option<String>,
     pub embed_url: Option<String>,
-    pub created_at: PrimitiveDateTime,
+    #[diesel(serialize_as = jiff_diesel::Timestamp, deserialize_as = jiff_diesel::Timestamp)]
+    pub created_at: Timestamp,
 }
 
 /// Represents the data required to create a new video associated with a recipe.
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone)]
 pub struct VideoForCreate {
     pub video: Uuid,
-    pub duration: Option<Duration>,
+    pub duration: Option<Span>,
     pub content_url: Option<String>,
     pub embed_url: Option<String>,
 }
+
+impl PartialEq for VideoForCreate {
+    fn eq(&self, other: &Self) -> bool {
+        self.video == other.video
+            && self.duration.map(Span::fieldwise) == other.duration.map(Span::fieldwise)
+            && self.content_url == other.content_url
+            && self.embed_url == other.embed_url
+    }
+}
+
+impl Eq for VideoForCreate {}
 
 impl VideoForCreate {
     /// Creates the object from a Path.
