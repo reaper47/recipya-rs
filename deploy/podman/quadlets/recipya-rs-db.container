@@ -5,16 +5,20 @@ Description=Recipya PostgreSQL Database
 ContainerName=recipya-rs-db
 Image=docker.io/reaper99/recipya-rs-db:nightly
 Network=recipya-rs-net
+NetworkAlias=recipya-db
 
 EnvironmentFile=%h/.config/containers/systemd/recipya-rs-db.env
+Secret=db_user
+Secret=db_password
 
 Volume=recipya-rs-db:/var/lib/postgresql:z
 PublishPort=5432:5432
 
-HealthCmd=pg_isready -U postgres
+HealthCmd=pg_isready -U "$(cat /run/secrets/db_user)" -d recipya
 HealthInterval=3s
 HealthTimeout=5s
 HealthRetries=10
+Notify=healthy
 
 AutoUpdate=registry
 

@@ -61,7 +61,7 @@ pub async fn run_server(db_url: &str) -> Result<()> {
 }
 
 async fn run_server_helper(database_url: &str) -> Result<()> {
-    let config = Config::load_from_env(database_url)?;
+    let config = Config::load_from_env(&format!("{database_url}/recipya"))?;
 
     let state = AppState::new(
         config.clone(),

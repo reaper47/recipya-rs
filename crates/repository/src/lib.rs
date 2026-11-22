@@ -18,9 +18,9 @@ pub struct ModelManager {
 
 impl ModelManager {
     /// Creates a new instance of the model manager.
-    pub async fn new(database_url: impl Into<String>) -> Result<Self> {
+    pub async fn new(database_url: &str) -> Result<Self> {
         Ok(Self {
-            pool: make_db_pool(&database_url.into()).await?,
+            pool: make_db_pool(database_url).await?,
         })
     }
 
