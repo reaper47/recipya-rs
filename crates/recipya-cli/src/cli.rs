@@ -1,4 +1,5 @@
 use lexopt::Arg::{Long, Short, Value};
+use repository::build_db_url_from_env;
 use yansi::Paint;
 
 use crate::{Result, sandbox::init_sandbox, server::run_server, sponsors::generate_sponsors_image};
@@ -44,10 +45,12 @@ impl Args {
             return Ok(());
         }
 
+        let db_url = build_db_url_from_env();
+
         self.sandbox();
 
         match self.command {
-            Command::Server => run_server().await,
+            Command::Server => run_server(&db_url).await,
             Command::Sponsors => {
                 generate_sponsors_image();
                 Ok(())

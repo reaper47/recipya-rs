@@ -28,7 +28,7 @@ use support::{
 use crate::error::{Error, Result};
 
 /// Initializes and starts Recipya's web server.
-pub async fn run_server() -> Result<()> {
+pub async fn run_server(db_url: &str) -> Result<()> {
     println!(
         "Recipya v{} starting in {} mode",
         env!("CARGO_PKG_VERSION"),
@@ -39,7 +39,7 @@ pub async fn run_server() -> Result<()> {
         }
     );
 
-    create_database_if_not_exists("recipya")?;
+    create_database_if_not_exists(db_url, "recipya")?;
 
     if software::is_ffmpeg_installed() {
         println!("FFmpeg is installed");
@@ -57,11 +57,11 @@ pub async fn run_server() -> Result<()> {
         println!("{message}");
     }
 
-    run_server_helper().await
+    run_server_helper(db_url).await
 }
 
-async fn run_server_helper() -> Result<()> {
-    let config = Config::load_from_env()?;
+async fn run_server_helper(database_url: &str) -> Result<()> {
+    let config = Config::load_from_env(database_url)?;
 
     let state = AppState::new(
         config.clone(),

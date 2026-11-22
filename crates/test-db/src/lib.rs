@@ -12,7 +12,7 @@ use url::Url;
 use uuid::Uuid;
 
 use config::{Config, States};
-use repository::{DbPool, MIGRATIONS, ModelManager, make_db_pool};
+use repository::{DbPool, MIGRATIONS, ModelManager, build_db_url_from_env, make_db_pool};
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -34,7 +34,7 @@ struct DbName {
 ///
 /// # Panics
 ///
-/// Panics if the `DATABASE_URL` environment variable is not set.
+/// Panics if the `DATABASE_USER_FILE` or `DATABASE_PASSWORD_FILE` environment variables are not set.
 pub fn db_url() -> &'static String {
     static INSTANCE: OnceLock<String> = OnceLock::new();
 
@@ -52,22 +52,14 @@ pub fn default_config() -> Config {
 
 fn test_database_url() -> String {
     setup_env();
-
-    let db_url = env::var("DATABASE_URL").expect("environment variable 'DATABASE_URL' to be set");
-    let base = db_url.trim_end_matches('/').trim_end_matches("/recipya");
-
-    if base.ends_with("/recipya_test") {
-        base.to_string()
-    } else {
-        format!("{base}/recipya_test")
-    }
+    format!("{}/recipya_test", build_db_url_from_env())
 }
 
 /// Sets up the test environment by loading `.env` file and validating required variables.
 ///
 /// # Panics
 ///
-/// Panics if the `DATABASE_URL` environment variable is not set.
+/// Panics if the `DATABASE_USER_FILE` or `DATABASE_PASSWORD_FILE` environment variables are not set.
 pub fn setup_env() {
     let _ = dotenvy::dotenv();
 
@@ -76,14 +68,12 @@ pub fn setup_env() {
         std::env::set_var("APP_ENV", "test");
     }
 
-    assert!(
-        std::env::var("DATABASE_URL").is_ok(),
-        "Environment variable 'DATABASE_URL' to be set: NotPresent"
-    );
-    assert!(
-        std::env::var("APP_ENV").is_ok(),
-        "Environment variable 'APP_ENV' to be set: NotPresent"
-    );
+    for v in ["DATABASE_USER_FILE", "DATABASE_PASSWORD_FILE"] {
+        assert!(
+            std::env::var(v).is_ok(),
+            "Environment variable '{v}' to be set: NotPresent"
+        );
+    }
 }
 
 static TEST_DB_INIT: OnceCell<(TestDb, Config)> = OnceCell::const_new();
@@ -158,7 +148,7 @@ impl TestDb {
 
 fn admin_database_url() -> String {
     let _ = dotenvy::from_filename(concat!(env!("CARGO_MANIFEST_DIR"), "/../../.env"));
-    std::env::var("DATABASE_URL").expect("DATABASE_URL not set")
+    build_db_url_from_env()
 }
 
 /// AI usage:

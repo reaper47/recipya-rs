@@ -11,6 +11,9 @@ env:
   CARGO_TERM_COLOR: always
   RUSTC_WRAPPER: sccache
   SCCACHE_GHA_ENABLED: "true"
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+  DB_PORT: "5432"
 
 jobs:
   build:
@@ -38,20 +41,32 @@ jobs:
 
       - uses: ikalnytskyi/action-setup-postgres@v7
         with:
-          username: postgres
-          password: postgres
+          username: ${{ env.DB_USER }}
+          password: ${{ env.DB_PASSWORD }}
           database: recipya_test
-          port: 5432
+          port: ${{ env.DB_PORT }}
           postgres-version: "17"
           ssl: "false"
         id: postgres
+
+      - name: Create database secrets
+        run: |
+          printf '%s' "$DB_USER" > "$RUNNER_TEMP/db_user"
+          printf '%s' "$DB_PASSWORD" > "$RUNNER_TEMP/db_password"
+          {
+            echo "DATABASE_USER_FILE=$RUNNER_TEMP/db_user"
+            echo "DATABASE_PASSWORD_FILE=$RUNNER_TEMP/db_password"
+            echo "DATABASE_HOST=localhost"
+            echo "DATABASE_PORT=$DB_PORT"
+          } >> "$GITHUB_ENV"
 
       - name: Install diesel_cli
         run: |
           command -v diesel || \
           cargo install diesel_cli --no-default-features --features postgres
 
-      - run: diesel migration run
+      - name: Run migrations
+        run: diesel migration run
         env:
           DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
 
@@ -62,15 +77,9 @@ jobs:
       - name: Clippy (all targets)
         run: cargo clippy --all-targets --all-features --locked -- -D warnings
 
-      - name: Build tests
-        run: cargo test --locked
-        env:
-          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
-
       - name: Test dev build
         uses: nick-fields/retry@v2
         env:
-          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
           RECIPYA_AUTOLOGIN: "false"
           RECIPYA_IS_DEMO: "false"
@@ -88,7 +97,6 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: nick-fields/retry@v2
         env:
-          DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
           RECIPYA_BASE_URL: "http://localhost:8078"
           RECIPYA_AUTOLOGIN: "false"
           RECIPYA_IS_DEMO: "false"

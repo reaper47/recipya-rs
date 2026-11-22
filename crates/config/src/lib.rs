@@ -28,10 +28,10 @@ impl Default for Config {
 
 impl Config {
     /// Populates the Config's fields from the environment variables.
-    pub fn load_from_env() -> Result<Self> {
+    pub fn load_from_env(db_url: &str) -> Result<Self> {
         Ok(Self {
             base_url: get_env_on_load("RECIPYA_BASE_URL")?.to_string(),
-            database_url: format!("{}/recipya", get_env_on_load("DATABASE_URL")?),
+            database_url: db_url.into(),
             states: States {
                 autologin: AutologinState::from(get_env_on_load("RECIPYA_AUTOLOGIN")? == "true"),
                 demo: DemoState::from(get_env_on_load("RECIPYA_IS_DEMO")? == "true"),

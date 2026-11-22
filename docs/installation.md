@@ -22,12 +22,16 @@ mkdir recipya-rs-compose && cd recipya-rs-compose
 wget https://raw.githubusercontent.com/reaper47/recipya-rs/refs/heads/main/deploy/docker-compose.yml 
 ```
 
-2. Fetch and review the `.env` configuration file:
+2. Create a directory named `secrets` next to the Docker Compose file, then add the following files inside it:
+  - `db_user.txt`: contains the PostgreSQL username for your database
+  - `db_password.txt`: contains the PostgreSQL password for your database user
+
+3. Fetch and review the `.env` configuration file:
 ```bash
 wget -O .env https://raw.githubusercontent.com/reaper47/recipya-rs/refs/heads/main/deploy/.env.example 
 ```
 
-3. Start the services
+4. Start the services
 ```bash
 docker compose up -d
 ```
