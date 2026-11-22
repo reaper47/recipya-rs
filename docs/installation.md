@@ -78,6 +78,10 @@ docker run -d \
   --network recipya-net \
   --restart unless-stopped \
   --env-file ./.env \
+  -e DATABASE_USER_FILE=/run/secrets/db_user \
+  -e DATABASE_PASSWORD_FILE=/run/secrets/db_password \
+  -v "$(pwd)/secrets/db_user.txt:/run/secrets/db_user:ro" \
+  -v "$(pwd)/secrets/db_password.txt:/run/secrets/db_password:ro" \
   -v recipya-data:/home/recipya/.local/share/Recipya \
   -p 8078:8078 \
   reaper99/recipya-rs:nightly

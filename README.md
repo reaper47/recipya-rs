@@ -69,7 +69,11 @@ wget https://raw.githubusercontent.com/reaper47/recipya-rs/refs/heads/main/deplo
 wget -O .env https://raw.githubusercontent.com/reaper47/recipya-rs/refs/heads/main/deploy/.env.example 
 ```
 
-3. Start the services
+4. Create a directory named `secrets` next and add the following files inside it:
+  - `db_user.txt`: contains the PostgreSQL username for your database
+  - `db_password.txt`: contains the PostgreSQL password for your database user
+
+5. Start the services
 ```bash
 docker compose up -d
 ```
