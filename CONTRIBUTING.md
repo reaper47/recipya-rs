@@ -79,8 +79,8 @@ Follow these instructions to set up your development environment on Linux.
 1. Open the repository in your IDE
 1. Install the NPM dependencies: `cargo task web-install-deps`
 1. Copy the `deploy/.env.example` file to the root of the repository and rename it to `.env`
-1. Update the `DATABASE_URL` variable to point to your local Postgres database
-1. Run the SQL migrations: `diesel migration run`
+1. Review the environment variables
+1. Run the SQL migrations: `diesel migration run --database-url postgres://{user}:{password}@localhost:5432/recipya`
 1. Run `cargo run server` to start the web server
 
 #### Windows
@@ -119,14 +119,14 @@ Follow these instructions to set up your development environment on Windows if y
 1. Open the repository in your IDE
 1. Install the NPM dependencies: `cargo task web-install-deps`
 1. Copy the `deploy\.env.example` file to the root of the repository and rename it to `.env`
-1. Update the `DATABASE_URL` variable to point to your local Postgres database
-1. Run the SQL migrations: `diesel migration run`
+1. Review the environment variables
+1. Run the SQL migrations: `diesel migration run --database-url postgres://{user}:{password}@localhost:5432/recipya`
 1. Run `cargo run server` to start the web server
 
 #### Development Container
 
-You may use the devcontainer to help develop Recipya. The `DATABASE_URL` environment variable in your
-`.env` file would be `DATABASE_URL = "postgres://postgres:postgres@localhost:5432"`.
+You may use the devcontainer to help develop Recipya. The default database URL is `postgres://postgres:postgres@localhost:5432`.
+You may change the user and password by editing the secrets under `.devcontainer/secrets`.
 
 #### Useful Commands
 
@@ -138,13 +138,13 @@ Run `cargo task web-build` to build the frontend.
 
 ##### Database
 
-Run `diesel migration run` to run all pending migrations.
+Run `diesel migration run --database-url postgres://{user}:{password}@localhost:5432/recipya` to run all pending migrations.
 
 Run `diesel migration generate {migration_name}` to create a new SQL migration under [crates/repository/src/migrations](https://github.com/reaper47/recipya-rs/tree/main/crates/repository/src/migrations) when changes to the database need to be done.
 
-Run `diesel migration redo` to rerun the latest migration.
+Run `diesel migration redo --database-url postgres://{user}:{password}@localhost:5432/recipya` to rerun the latest migration.
 
-Run `diesel migration redo --all` to rerun all migrations.
+Run `diesel migration redo --all --database-url postgres://{user}:{password}@localhost:5432/recipya` to rerun all migrations.
 
 ### How to support/verify a website
 

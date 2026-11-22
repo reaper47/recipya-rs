@@ -48,9 +48,11 @@ fn sandbox_helper() -> Result<()> {
         .add_rule(PathBeneath::new(PathFd::new("./")?, read_only))?
         .add_rule(PathBeneath::new(PathFd::new("/dev")?, read_only))?
         .add_rule(PathBeneath::new(PathFd::new("/etc")?, read_only))?
-        .add_rule(PathBeneath::new(PathFd::new("/lib64")?, read_only))?
+        .add_rule(PathBeneath::new(PathFd::new("/lib64")?, read_exec))?
         .add_rule(PathBeneath::new(PathFd::new("/tmp")?, read_only))?
         .add_rule(PathBeneath::new(PathFd::new("/usr/bin")?, read_exec))?
+        .add_rule(PathBeneath::new(PathFd::new("/usr/lib")?, read_exec))?
+        .add_rule(PathBeneath::new(PathFd::new("/usr/share")?, read_only))?
         .add_rule(PathBeneath::new(PathFd::new(get_base_dir()?)?, read_write))?
         .restrict_self()?;
 

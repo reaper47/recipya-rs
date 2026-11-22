@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
 
     if let Err(err) = dotenv() {
         println!(
-            "Could not load .env file ({err}). This is expected when environment variables are injected by the host"
+            "Could not load .env file ({err}). Please ignore this message if using Docker or Podman."
         );
     }
 
