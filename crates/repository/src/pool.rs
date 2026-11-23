@@ -53,7 +53,6 @@ struct CountResult {
 /// # Panics
 ///
 /// Panics if:
-/// - The `DATABASE_URL` environment variable is not set
 /// - Unable to establish a connection to the database using the provided URL
 ///
 /// # Errors
@@ -61,11 +60,11 @@ struct CountResult {
 /// Returns an error if:
 /// - The database existence check fails
 /// - The database creation fails
-pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result::Error> {
-    let db_url = format!(
-        "{}/{db_name}",
-        std::env::var("DATABASE_URL").expect("environment variable 'DATABASE_URL' not set")
-    );
+pub fn create_database_if_not_exists(
+    db_url: &str,
+    db_name: &str,
+) -> Result<(), diesel::result::Error> {
+    let db_url = format!("{db_url}/{db_name}");
 
     let conn = &mut diesel::PgConnection::establish(&db_url)
         .unwrap_or_else(|err| panic!("Error connecting to {db_url}: {err}"));
@@ -76,7 +75,7 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
 
     match res {
         Ok(row) if row.count > 0 => {
-            println!("Connected to database '{db_url}'");
+            println!("Connected to database");
             Ok(())
         }
         Ok(_) => {
@@ -84,7 +83,7 @@ pub fn create_database_if_not_exists(db_name: &str) -> Result<(), diesel::result
 
             sql_query(format!("CREATE DATABASE {db_name}"))
                 .execute(conn)
-                .inspect(|_| println!("Connected to database '{db_url}'"))
+                .inspect(|_| println!("Connected to database"))
                 .map(|_| ())
                 .map_err(|err| {
                     eprintln!("Failed to create database '{db_name}': {err}");

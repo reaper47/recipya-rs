@@ -2,6 +2,10 @@
 
 The software can be installed using either Docker or Podman.
 
+Please first create a directory named `secrets` next and add the following files inside it:
+  - `db_user.txt`: contains the PostgreSQL username for your database
+  - `db_password.txt`: contains the PostgreSQL password for your database user
+
 ## Table of Contents
 
 * [Docker](#docker)
@@ -49,11 +53,13 @@ docker run -d \
   --network-alias recipya-db \
   --restart unless-stopped \
   -e POSTGRES_DB=recipya \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_USER_FILE=/run/secrets/db_user \
+  -e POSTGRES_PASSWORD_FILE=/run/secrets/db_password \
+  -v "$(pwd)/secrets/db_user.txt:/run/secrets/db_user:ro" \
+  -v "$(pwd)/secrets/db_password.txt:/run/secrets/db_password:ro" \
   -v recipya-rs-db:/var/lib/postgresql \
   -p 5432:5432 \
-  --health-cmd "pg_isready -U postgres" \
+  --health-cmd 'pg_isready -U "$(cat /run/secrets/db_user)" -d recipya' \
   --health-interval 3s \
   --health-timeout 5s \
   --health-retries 10 \
@@ -72,6 +78,10 @@ docker run -d \
   --network recipya-net \
   --restart unless-stopped \
   --env-file ./.env \
+  -e DATABASE_USER_FILE=/run/secrets/db_user \
+  -e DATABASE_PASSWORD_FILE=/run/secrets/db_password \
+  -v "$(pwd)/secrets/db_user.txt:/run/secrets/db_user:ro" \
+  -v "$(pwd)/secrets/db_password.txt:/run/secrets/db_password:ro" \
   -v recipya-data:/home/recipya/.local/share/Recipya \
   -p 8078:8078 \
   reaper99/recipya-rs:nightly
@@ -81,40 +91,69 @@ docker run -d \
 
 ### Pod
 
-1. Create a pod named `recipya-rs` with published ports 8078 (Recipya web server) and 5432 (PostgreSQL):
+1. Create the secrets:
 ```bash
-podman pod create --name recipya-rs -p 8078:8078 -p 5432:5432
+podman secret create db_user ./secrets/db_user.txt
+podman secret create db_password ./secrets/db_password.txt
 ```
 
-2. Create the volumes, one for the database and another for the Recipya web server:
+2. Create a pod named `recipya-rs` with published ports 8078 (Recipya web server) and 5432 (PostgreSQL):
+```bash
+podman pod create --name recipya-rs \
+    --add-host recipya-db:127.0.0.1 \
+    -p 8078:8078 -p 5432:5432
+```
+
+3. Create the volumes, one for the database and another for the Recipya web server:
 ```bash
 podman volume create recipya-rs-db
 podman volume create recipya-rs-data
 ```
 
-3. Start the database container in the recipya-rs pod:
+4. Start the database container in the recipya-rs pod:
 ```bash
-podman run -d --pod recipya-rs --name recipya-rs-db --restart unless-stopped -e POSTGRES_DB=recipya -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -v recipya-rs-db:/var/lib/postgresql reaper99/recipya-rs-db:latest
+podman run -d --pod recipya-rs --name recipya-rs-db --restart unless-stopped \
+    -e POSTGRES_DB=recipya \
+    -e POSTGRES_USER_FILE=/run/secrets/db_user \
+    -e POSTGRES_PASSWORD_FILE=/run/secrets/db_password \
+    --secret db_user \
+    --secret db_password \
+    -v recipya-rs-db:/var/lib/postgresql \
+    --health-cmd 'pg_isready -U "$(cat /run/secrets/db_user)" -d recipya' \
+    --health-interval 3s \
+    --health-timeout 5s \
+    --health-retries 10 \
+    reaper99/recipya-rs-db:nightly
 ```
 
-4. Fetch and review the `.env` configuration file:
+5. Wait for the database to be healthy:
+```bash
+until [ "$(podman inspect -f '{{.State.Health.Status}}' recipya-rs-db)" = "healthy" ]; do
+    sleep 1
+done
+```
+
+6. Fetch and review the `.env` configuration file:
 ```bash
 wget -O .env https://raw.githubusercontent.com/reaper47/recipya-rs/refs/heads/main/deploy/.env.example 
 ```
 
-5. Start the web server's container in the recipya-rs pod:
+7. Start the web server's container in the recipya-rs pod:
 ```bash
 podman run -d --pod recipya-rs --name recipya-rs-app --restart unless-stopped \
     --env-file ./.env \
+    -e DATABASE_USER_FILE=/run/secrets/db_user \
+    -e DATABASE_PASSWORD_FILE=/run/secrets/db_password \
+    --secret db_user \
+    --secret db_password \
     -v recipya-rs-data:/home/recipya/.local/share/Recipya \
     --health-cmd "curl -f http://localhost:8078/health/ready || exit 1" \
     --health-interval 30s \
     --health-timeout 10s \
     --health-start-period 5s \
     --health-retries 3 \
-    reaper99/recipya-rs:latest
+    reaper99/recipya-rs:nightly
 ```
-
 ### Quadlets
 
 This is how the [demo](https://recipya.ca) is hosted.
@@ -183,7 +222,7 @@ systemctl --user start recipya-rs-db.service
 10. To update the software:
 ```bash
 podman pull docker.io/reaper99/recipya-rs:nightly
-systemctl --user restart  recipya-rs-app.service
+systemctl --user restart recipya-rs-app.service
 ```
 
 ## Reverse proxy

@@ -126,7 +126,7 @@ impl AppState {
             data_dir,
             email_service: EmailClient::new().ok(),
             fs_support,
-            mm: ModelManager::new(config.database_url).await?,
+            mm: ModelManager::new(&config.database_url).await?,
             recipe_cache: Arc::new(Mutex::new(RecipeCache::new(
                 NonZeroUsize::new(1000).expect("lru to be initialized"),
             ))),

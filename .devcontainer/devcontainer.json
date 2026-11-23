@@ -3,7 +3,7 @@
 	"dockerComposeFile": "docker-compose.yaml",
 	"service": "app",
 	"workspaceFolder": "/workspace",
-	"forwardPorts": [7324, 5432],
+	"forwardPorts": [],
 	"remoteUser": "root",
 	"mounts": [],
 	"customizations": {

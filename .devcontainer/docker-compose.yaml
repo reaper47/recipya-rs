@@ -10,11 +10,17 @@ services:
       - ..:/workspace:cached
     command: sleep infinity
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/recipya_test
-    network_mode: host
+      DATABASE_USER_FILE: /run/secrets/db_user
+      DATABASE_PASSWORD_FILE: /run/secrets/db_password
+      DATABASE_HOST: db
+    ports:
+      - "8078:8078"
+    secrets:
+      - db_password
+      - db_user
 
   db:
-    container_name: recipya-rs-db
+    container_name: recipya-rs-devdb
     build:
       context: ..
       dockerfile: ./deploy/Dockerfile.db
@@ -24,14 +30,23 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql
     environment:
-      POSTGRES_DB: recipya_test
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: recipya
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d recipya"]
       interval: 5s
       timeout: 5s
       retries: 5
+    secrets:
+      - db_password
+      - db_user
+
+secrets:
+  db_user:
+    file: ./secrets/db_user.txt
+  db_password:
+    file: ./secrets/db_password.txt
 
 volumes:
   postgres-data:
