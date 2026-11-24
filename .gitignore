@@ -6,6 +6,7 @@ crates/l10n/locales/.translate-cache.json
 
 l10n_failures.json
 secrets/*.txt
+secrets/*.json
 venv
 
 !.devcontainer/secrets

@@ -1,8 +1,6 @@
 [package]
 name = "router"
-version.workspace = true
 publish = false
-
 authors.workspace = true
 categories.workspace = true
 description.workspace = true
@@ -13,6 +11,7 @@ license.workspace = true
 readme.workspace = true
 repository.workspace = true
 rust-version.workspace = true
+version.workspace = true
 
 [dependencies]
 app.workspace = true

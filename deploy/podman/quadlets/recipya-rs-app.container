@@ -11,6 +11,7 @@ Network=recipya-rs-net
 EnvironmentFile=%h/.config/containers/systemd/recipya-rs.env
 Secret=db_user
 Secret=db_password
+Secret=master_key
 
 PublishPort=8078:8078
 Volume=recipya-rs-data:/home/recipya/.local/share/Recipya:z

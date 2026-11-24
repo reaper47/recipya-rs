@@ -15,6 +15,27 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    api_provider_category (id) {
+        id -> Int2,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    api_providers (id) {
+        id -> Int4,
+        name -> Text,
+        category_id -> Int2,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     app (id) {
         id -> Int8,
         is_update_available -> Nullable<Bool>,
@@ -637,6 +658,32 @@ diesel::table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::TsVector as Tsvector;
 
+    user_api_keys (id) {
+        id -> Int8,
+        user_id -> Uuid,
+        provider_id -> Int4,
+        key_ciphertext -> Bytea,
+        key_version -> Int2,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
+    user_api_providers_endpoints (id) {
+        id -> Int8,
+        user_id -> Uuid,
+        provider_id -> Int4,
+        endpoint_url -> Text,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::TsVector as Tsvector;
+
     user_settings (id) {
         id -> Int8,
         user_id -> Uuid,
@@ -740,6 +787,7 @@ diesel::table! {
 }
 
 diesel::joinable!(additional_images_recipe -> recipes (recipe_id));
+diesel::joinable!(api_providers -> api_provider_category (category_id));
 diesel::joinable!(bold_indices_ingredients -> instructions (instruction_id));
 diesel::joinable!(bold_indices_ingredients -> recipes (recipe_id));
 diesel::joinable!(categories_recipes -> categories (category_id));
@@ -790,6 +838,10 @@ diesel::joinable!(shopping_lists -> users (user_id));
 diesel::joinable!(times -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> recipes (recipe_id));
 diesel::joinable!(tools_recipes -> tools (tool_id));
+diesel::joinable!(user_api_keys -> api_providers (provider_id));
+diesel::joinable!(user_api_keys -> users (user_id));
+diesel::joinable!(user_api_providers_endpoints -> api_providers (provider_id));
+diesel::joinable!(user_api_providers_endpoints -> users (user_id));
 diesel::joinable!(user_settings -> languages (language_id));
 diesel::joinable!(user_settings -> measurement_systems (measurement_system_id));
 diesel::joinable!(user_settings -> nutrition_sources (nutrition_source_id));
@@ -808,6 +860,8 @@ diesel::joinable!(videos_recipes -> recipes (recipe_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     additional_images_recipe,
+    api_provider_category,
+    api_providers,
     app,
     bold_indices_ingredients,
     categories,
@@ -856,6 +910,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     times,
     tools,
     tools_recipes,
+    user_api_keys,
+    user_api_providers_endpoints,
     user_settings,
     user_states,
     users,
