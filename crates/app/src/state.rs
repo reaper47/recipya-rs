@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::io::{Cursor, Read};
 use std::num::NonZeroUsize;
 use std::sync::Arc;
 
+use secrets::AppSecrets;
 use tokio::sync::{Mutex, RwLock, broadcast, watch};
 use url::Url;
 use uuid::Uuid;
@@ -31,6 +33,7 @@ pub struct AppState {
     pub scraper: Scraper,
 
     recipe_cache: Arc<Mutex<RecipeCache>>,
+    secrets: AppSecrets,
 }
 
 #[derive(Clone)]
@@ -106,16 +109,16 @@ impl Channels {
 }
 
 impl AppState {
-    /// Creates a new instance of `AppState` by initializing the `ModelManager`
-    /// with the provided database URL.
+    /// Creates a new instance of `AppState`.
     ///
     /// # Panics
     ///
     /// This function contains an infallible expect that will never panic in practice.
-    pub async fn new(
+    pub async fn new<R: Read>(
         config: Config,
         http_client: Arc<dyn HttpClient + Send + Sync>,
         fs_support: Arc<dyn FsSupport + Send + Sync>,
+        master_key_reader: R,
     ) -> Result<Self> {
         let data_dir = DataDir::new()?;
         data_dir.log();
@@ -131,6 +134,7 @@ impl AppState {
                 NonZeroUsize::new(1000).expect("lru to be initialized"),
             ))),
             scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
+            secrets: AppSecrets::try_new(master_key_reader)?,
         })
     }
 
@@ -150,6 +154,10 @@ impl AppState {
         http_client: Arc<dyn HttpClient + Send + Sync>,
         fs_support: Arc<dyn FsSupport + Send + Sync>,
     ) -> Result<Self> {
+        let master_key_reader = Cursor::new(
+            r#"{"active_version": 1, "keys": {"1": "PmJnTYKSH33+zz5XlEFAKz5Q6148etzJIZ/7Z+Pg+Dw="}}"#,
+        );
+
         Ok(Self {
             channels: Channels::default(),
             config: Arc::new(RwLock::new(config)),
@@ -161,6 +169,7 @@ impl AppState {
                 NonZeroUsize::new(1000).expect("lru to be initialized"),
             ))),
             scraper: Scraper::with_client(http_client, Arc::new(AppFs)),
+            secrets: AppSecrets::try_new(master_key_reader)?,
         })
     }
 

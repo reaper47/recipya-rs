@@ -14,6 +14,7 @@ services:
     secrets:
       - db_password
       - db_user
+      - master_key
 
   recipya-db:
     container_name: recipya-rs-db
@@ -41,6 +42,8 @@ secrets:
     file: ./secrets/db_user.txt
   db_password:
     file: ./secrets/db_password.txt
+  master_key:
+    file: ./secrets/master_key.json
 
 volumes:
   recipya-rs-db:

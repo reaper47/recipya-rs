@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::BufReader;
 use std::sync::Arc;
 
 use auth::types::{Email, Password};
@@ -62,11 +64,13 @@ pub async fn run_server(db_url: &str) -> Result<()> {
 
 async fn run_server_helper(database_url: &str) -> Result<()> {
     let config = Config::load_from_env(&format!("{database_url}/recipya"))?;
+    let master_key_file = load_master_key_file()?;
 
     let state = AppState::new(
         config.clone(),
         Arc::new(AppHttpClient::default()),
         Arc::new(AppFs),
+        master_key_file,
     )
     .await
     .map_err(|err| Error::Server(err.to_string()))?;
@@ -108,6 +112,13 @@ async fn run_server_helper(database_url: &str) -> Result<()> {
         .await?;
 
     Ok(())
+}
+
+fn load_master_key_file() -> Result<BufReader<File>> {
+    let path = std::env::var("RECIPYA_MASTER_KEY_FILE")
+        .expect("env variable 'RECIPYA_MASTER_KEY_FILE' to be set");
+    let file = File::open(path)?;
+    Ok(BufReader::new(file))
 }
 
 fn copy_assets_to_fs() -> Result<()> {

@@ -23,6 +23,8 @@ pub enum Error {
     Repository(repository::Error),
     #[from]
     Scraper(recipya_scraper::Error),
+    #[from]
+    Secrets(secrets::Error),
 }
 
 impl_display_as_debug!(Error);

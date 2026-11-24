@@ -1,4 +1,7 @@
 #[cfg(target_os = "linux")]
+use std::path::PathBuf;
+
+#[cfg(target_os = "linux")]
 use crate::Result;
 
 pub fn init_sandbox() {
@@ -42,7 +45,7 @@ fn sandbox_helper() -> Result<()> {
     let read_write = AccessFs::from_all(abi);
     let read_exec = read_only | AccessFs::Execute;
 
-    Ruleset::default()
+    let mut ruleset = Ruleset::default()
         .handle_access(read_write)?
         .create()?
         .add_rule(PathBeneath::new(PathFd::new("./")?, read_only))?
@@ -53,8 +56,16 @@ fn sandbox_helper() -> Result<()> {
         .add_rule(PathBeneath::new(PathFd::new("/usr/bin")?, read_exec))?
         .add_rule(PathBeneath::new(PathFd::new("/usr/lib")?, read_exec))?
         .add_rule(PathBeneath::new(PathFd::new("/usr/share")?, read_only))?
-        .add_rule(PathBeneath::new(PathFd::new(get_base_dir()?)?, read_write))?
-        .restrict_self()?;
+        .add_rule(PathBeneath::new(PathFd::new(get_base_dir()?)?, read_write))?;
+
+    if PathBuf::from("/run/secrets/master_key").exists() {
+        ruleset = ruleset.add_rule(PathBeneath::new(
+            PathFd::new("/run/secrets/master_key")?,
+            read_only,
+        ))?;
+    }
+
+    ruleset.restrict_self()?;
 
     println!("Sandboxing enabled with Landlock ABI {abi:?}");
     Ok(())

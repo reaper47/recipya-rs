@@ -9,7 +9,7 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 #### Recipes
 
 - [x] Add structured data to /recipes/{id}
-- [ ] Implement PDF file type
+- [x] Implement PDF file type
 - [ ] Implement OCR
 
 #### Cookbook
@@ -28,7 +28,7 @@ This document gives you a rough idea of the work planned ahead for Recipya. The 
 
 - [x] Move function validations to the type system
 - [ ] Update htmx to version 4.0
-- [ ] Add benchmarks
+- [x] Add benchmarks
 - [x] Prevent importing from multiple sources at the same time
 - [x] Accept importing multiple files for the same application
 
